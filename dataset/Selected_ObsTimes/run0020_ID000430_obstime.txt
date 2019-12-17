@@ -1,0 +1,6 @@
+#
+#N Pointing	tstart	tend	Obs time
+#		s
+1	210	776	566
+2	776	1900	1124
+3	1900	6629	4729
