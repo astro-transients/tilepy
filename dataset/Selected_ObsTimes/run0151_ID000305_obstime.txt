@@ -1,0 +1,6 @@
+#
+#N Pointing	tstart	tend	Obs time
+#		s
+1	210	379	169
+2	379	702	323
+3	702	1603	901
