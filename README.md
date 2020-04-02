@@ -4,7 +4,7 @@ The main two scripts are:
 
 - Pointing_PGWonFoV.py: Script to schedule GW follow-up observations with pointing telescopes by integrating the probability density covered per pointing in different regions of the GW C.R. 
 
-- Pointing_PgalonFoV.py: Script to schedule GW follow-up observations with pointing telescopes by integrating the probability density from GW observation x galaxy distribution covered per pointing in different regions of the sky.
+-Pointing_PgalonFoV.py: Script to schedule GW follow-up observations with pointing telescopes by integrating the probability density from GW observation x galaxy distribution covered per pointing in different regions of the sky.
 
 These two scripts take as input the number of the GWCosmos simulation. Then, other related information is selected by using the MergerID and RunNumber. These are:
 
@@ -23,21 +23,18 @@ In the same directory, there are other folders which are:
 
 Things to note: 
 
-- In particular, the gammapy modules will obviously just work in a gammapy env., in particular v0.9.
-- The scripts as they currently are use data from a dataset folder which should be placed relatively to this folder as  ../dataset/. 
-- The script uses a GWHESSPointingTools module and PointingPlotting which should be also placed in the correct directory ('../../GW-followup/include')
+-In particular, the gammapy modules will obviously just work in a gammapy env., in particular v0.9.
+-The scripts as they currently are use data from a dataset folder which should be placed relatively to this folder as  ../dataset/. 
+-The script uses a GWHESSPointingTools module and PointingPlotting which should be also placed in the correct directory ('../../GW-followup/include')
 
 In the dataset folder, one needs to include the following elements (to download):
-
 - GW simulations: from GWCosmos by Patricelli et al. https://figshare.com/collections/GW_COSMoS_Gravitational_Wave_COmpact_binary_SysteM_Simulations/4243595
-- BNS-GW.txt: lit of GWCosmos events with the different associated parameters.
+- BNS-GW.txt: list of GWCosmos events with the different associated parameters (included in GWCosmos file)
 - BNS-GW-new.txt same as previous but includes max and min distance
 - GRB simulations (associated to GWCosmos): found in Redmine https://forge.in2p3.fr/projects/cta-gravitational-waves/files 
 - CTA IRFs from https://www.cta-observatory.org/science/cta-performance/
-- Galaxy catalogs: a galaxy catalog is associated to each of the run identifiers of the GW simulations (a sub-sample is included in the dataset folder)
-
+- Galaxy catalogs: a galaxy catalog is associated to each of the run identifiers of the GW simulations (a sub-sample is included in the dataset folder) 
 Simulations have been performed of a subsample of events observed on-axis (theta<5deg) and for a priori selected times. These are included in the dataset folder.
-
 - BNS-GW_onAxis5deg.txt
 - BNS-GW_Time_onAxis5deg.txt
 - Selected observation times: The observation intervals to obtain 5sigma post-trials detection obtained using cssens fro ctools.
