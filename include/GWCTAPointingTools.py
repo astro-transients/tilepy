@@ -78,6 +78,7 @@ def TableImportCTA(tgalFile):
     A90=A90.astype(np.float)
     A50=A50.astype(np.float)
     OutputTable= Table([run,MergerID,RA,Dec,distance,distMin,distMax,z,theta,ndet, SNR,A90,A50],names=('run','MergerID','RA','Dec','Distance','DistMin','DistMax','redshift','theta','ndet','SNR','A90','A50'))
+    print(OutputTable)
     return OutputTable
 
 def TableImportCTA_Time(ttimeFile):

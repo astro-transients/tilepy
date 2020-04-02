@@ -9,17 +9,9 @@ from gammapy.irf import load_cta_irfs
 from astropy.coordinates import SkyCoord, Angle
 from gammapy.cube import make_map_exposure_true_energy, make_map_background_irf
 from gammapy.spectrum.models import Absorption
-from astropy.convolution import Gaussian2DKernel
-from gammapy.detect import TSMapEstimator, find_peaks
 from GWCTAPointingTools import GRB
-from gammapy.detect import compute_lima_image
 
 
-def TSEstimation(maps):
-    kernel = Gaussian2DKernel(1.0, mode="oversample")
-    estimator = TSMapEstimator()
-    images = estimator.run(maps, kernel)
-    return images
 
 def PointingSimulation(sky_model,axis,geom,pointing,livetime,offset,irfs):
     exposure = make_map_exposure_true_energy(pointing=pointing, livetime=livetime, aeff=irfs["aeff"], geom=geom)
@@ -124,7 +116,7 @@ def CubeSimulationMultiObservations(InputListrun,InputListMergerID,pointing,nP,S
     print(livetimes)
     TimeAxis=np.unique(np.concatenate((livetimes,grb.time_interval.value)))
 
-    offset_max = 2.5 * u.deg
+    #offset_max = 2.5 * u.deg
     offset = Angle("2.5 deg")
 
     energy_axis = MapAxis.from_edges(np.logspace(-2.0, 10, 10), unit="TeV", name="energy", interp="log")
