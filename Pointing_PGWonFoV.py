@@ -1,6 +1,6 @@
 import sys
 import argparse
-sys.path.append('../../GW-Followup/include')
+sys.path.append('../GW-Followup/include')
 from PointingPlotting import *
 from RankingObservationTimes import *
 
@@ -8,6 +8,7 @@ sys.path.append('./include')
 from GWCTAObservationScheduler import *
 from AnalysisTools import *
 from SimulationTools import *
+import os
 
 
 start = time.time()
@@ -35,7 +36,6 @@ parameters=args.params
 InputFileName = '../dataset/BNS-GW_onAxis5deg.txt'
 InputList = TableImportCTA(InputFileName)
 Source = SkyCoord(InputList['RA'][j], InputList['Dec'][j], frame='fk5', unit=(u.deg, u.deg))
-#print(Source)
 #Source = SkyCoord(345,-27, frame='fk5', unit=(u.deg, u.deg))
 #t = 0.5 * np.pi - HESS_Sources.dec.rad
 #p = HESS_Sources.ra.rad
@@ -50,21 +50,16 @@ name =  InputList['run'][j] + '_' + InputList['MergerID'][j]
 #galFile= "../dataset/GalaxyCatalogs/" + InputList['run'][j] +'_galaxylist.txt'
 galFile= "../dataset/GalaxyCatalogs/run0002_galaxylist.txt"
 
-InjectTimeFile = '../dataset/BNS-GW-Time_onAxis5deg.txt'
+#Get the merger time as input
+#InjectTimeFile = '../dataset/BNS-GW-Time_onAxis5deg.txt'
+InjectTimeFile = '../dataset/BNS-GW-Time_onAxis5deg_postRome.txt'
 InputTimeList = TableImportCTA_Time(InjectTimeFile)
 
 #ObservationTime0 = datetime.datetime(2017, 7, 17, 20, 15, 13)
-ObservationTime0 = datetime.datetime.strptime(InputTimeList['Time'][j], '%Y-%m-%d %H:%M:%S.%f')
-
-InputObservationFile='../dataset/Selected_ObsTimes/'+InputList['run'][j] + '_' + InputList['MergerID'][j].split('r')[-1] +'_obstime.txt'
+#ObservationTime0 = datetime.datetime.strptime(InputTimeList['Time'][j], '%Y-%m-%d %H:%M:%S.%f')
 
 
-
-import os
-#if not os.path.exists('./output/'+name):
-#    os.makedirs('./output/'+name)
-#prepath='/Users/mseglar/Documents/GitHub/CTASimulationsGW/'
-dirName='./output/%s/PGWonFoV' % name
+dirName='./output/PGWonFoV'
 if not os.path.exists(dirName):
     os.makedirs(dirName)
 print(' ')
@@ -73,11 +68,13 @@ print("Starting the CTA pointing calculation with the following parameters\n")
 print('GW file with merger ID ',InputList['MergerID'][j],'and run ',InputList['run'][j])
 print('Input times: ',InjectTimeFile)
 print("Date: ",InputTimeList['Time'][j])
+print("Observatory: ",InputTimeList['Observatory'][j])
 print("Galaxy Catalog: ",galFile)
 print("Parameters: ",parameters)
 print("Output: ",dirName)
 print("===========================================================================================")
 print(' ')
+''' 
 try:
     InputObservationList = TableImportCTA_Obs(InputObservationFile)
 except:
@@ -87,20 +84,20 @@ except:
     outfilename = dirName+'/SimuGW' + str("{:03d}".format(j)) + '.txt'
     f = open(outfilename, 'w')
     f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' ' +str(luminosity) + ' ' + str(0) + ' ' + str(0) + ' ' + str(-1) +' ' + str(0) +' '+str(-1)+' '+str(-1)+'\n')
-
-
-
-#InputObservationList = TableImportCTA_Obs(InputObservationFile)
-# ObservationTime0 = datetime.datetime.now(pytz.timezone("UTC"))
-# ObservationTime0 = ObservationTime0.replace(tzinfo=None)
+'''
 
 
 # First option: Obtain the Pointing by running the gravitational wave follow-up algorithm
-SuggestedPointings,obs0,FOV,nside=PGWonFoV(GWFile,InputObservationList,InputTimeList['Observatory'][j], ObservationTime0,parameters,dirName)
+SuggestedPointings,obs0,FOV,nside,totalPoswindow=PGWonFoV(GWFile,InputTimeList[j],Source,parameters,dirName)
 end = time.time()
 print('Execution time: ', end - start)
 
-pointingsFile = '%s/SuggestedPointings_GWOptimisation.txt' % dirName
+
+dirNameSch='./output/PGWonFoV/ScheduledObs'
+if not os.path.exists(dirNameSch):
+    os.makedirs(dirNameSch)
+
+pointingsFile = '%s/%s.txt' % (dirNameSch,name)
 ascii.write(SuggestedPointings, pointingsFile, overwrite=True, fast_writer=False)
 
 '''
@@ -125,10 +122,9 @@ print()
 if(len(SuggestedPointings)!=0):
     #Is the source inside?
 
-    Pointings = SkyCoord(SuggestedPointings['RA(deg)'], SuggestedPointings['DEC(deg)'], frame='fk5',
-                         unit=(u.deg, u.deg))
+    Pointings = SkyCoord(SuggestedPointings['RA(deg)'], SuggestedPointings['DEC(deg)'], frame='fk5',unit=(u.deg, u.deg))
     # Add the predefined windows to the table
-    predefWind = SuggestedPointings['preDefWind']
+    #predefWind = SuggestedPointings['preDefWind']
     totalPGW = sum(SuggestedPointings['PGW'])
 
     #Check if the source is covered by the scheduled pointings
@@ -137,26 +133,31 @@ if(len(SuggestedPointings)!=0):
 
     if Found==False:
         nP = -1
-        ProduceSummaryFile(InputList, InputObservationList,predefWind, nP, j,'GW',totalPGW,dirName)
+        ProduceSummaryFile(InputList, SuggestedPointings,totalPoswindow, nP, j,'GW',totalPGW,dirName,name)
         print('Source not covered')
+        print('Plotting the observations')
+        PointingPlottingGWCTA(GWFile,name,dirName,pointingsFile,FOV,InputTimeList['Observatory'][j])
     else:
-        ProduceSummaryFile(InputList, InputObservationList,predefWind, nP, j,'GW',totalPGW,dirName)
+        ProduceSummaryFile(InputList, SuggestedPointings,totalPoswindow, nP, j,'GW',totalPGW,dirName,name)
         print('Found in scheduled observation:', nP)
         if type(nP) != int:
             nP = nP[0]
-        print('Observation corresponds to the predefined window number:', np.int(predefWind[nP]))
-        print(InputObservationList[nP])
+        #print('Observation corresponds to the predefined window number:', np.int(predefWind[nP]))
+        print(SuggestedPointings[nP])
         #outfilename = '%s/SuggestedPointings_GALOptimisation.txt' % dirName
         #ascii.write(SuggestedPointings, outfilename, overwrite=True,fast_writer=False)
         print()
+
+        print('Plotting the observations')
+        PointingPlottingGWCTA(GWFile,name,dirName,pointingsFile,FOV,InputTimeList['Observatory'][j])
+        '''
         print("===========================================================================================")
         print("Starting the simulation of the CTA observations\n")
         IRFfile="../dataset/IRF-prod3b-v2/bcf/"+InputTimeList['Observatory'][j]+'_z'+str(InputTimeList['MeanZen'][j])+'_0.5h/irf_file.fits'
         print('Using IRF file:',IRFfile)
         gcat=LoadGalaxiesSimulation(galFile)
 
-        print('Plotting the observations')
-        PointingPlotting(GWFile,gcat,name,dirName,pointingsFile)
+
 
 
         ##RankingTimes(ObservationTime0, GWFile, gcat,parameters, dirName, pointingsFile)
@@ -175,6 +176,7 @@ if(len(SuggestedPointings)!=0):
 
         # Analysis of the simulations in 4D
         ##LikelihoodFit_Analysis_4DCube(dirName)
+        '''
 else:
     print('No observations are scheduled')
     filepath='../dataset/GammaCatalogV1.0/'+str(InputList['run'][j]) + '_' + str(InputList['MergerID'][j].split('r')[-1]) + ".fits"
@@ -184,6 +186,6 @@ else:
     f = open(outfilename, 'w')
     f.write(
         'RunList' + ' ' + 'MergerID' + ' ' + 'Distance' + ' ' + 'Theta' + ' ' + 'A90' + ' ' + 'Luminosity' + ' ' + 'TotalInputObs' + ' ' + 'Obs' + ' ' + 'FirstCovered' + ' ' + 'TimesFound' + ' ' + 'WindowinInputList' + ' ' + 'TotalProb' + '\n')
-    f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' ' +str(luminosity) + ' ' + str(len(InputObservationList)) + ' ' + str(0) + ' ' + str(-1) +' ' + str(0) +' '+str(-1)+' '+str(-1)+'\n')
+    f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' ' +str(luminosity) + ' ' + str(totalPoswindow) + ' ' + str(0) + ' ' + str(-1) +' ' + str(0) +' '+str(-1)+' '+str(-1)+'\n')
 
 

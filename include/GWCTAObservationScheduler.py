@@ -1,6 +1,7 @@
 import sys
 sys.path.append('./include')
 from GWCTAPointingTools import *
+from ObservingTimes import *
 from astropy.table import Table
 import datetime
 import healpy as hp
@@ -14,7 +15,7 @@ else:
 
 ############################################
 
-#              General definitions              #
+#              General definitions         #
 
 ############################################
 iers_url_mirror='ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
@@ -22,8 +23,12 @@ iers_url_mirror='ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
 
 iers.IERS.iers_table = iers.IERS_A.open(download_file(iers_url_mirror, cache=True))
 
-def PGWonFoV(filename,InputObservationList,UseObs,ObservationTime0,parameters,dirName):
-
+def PGWonFoV(filename,InputChar,TC,parameters,dirName):
+    UseObs =InputChar['Observatory']
+    run=InputChar['run']
+    mergerID=InputChar['MergerID']
+    zenith=InputChar['Zenith']
+    ObservationTime0= datetime.datetime.strptime(InputChar['Time'], '%Y-%m-%d %H:%M:%S.%f')
     # Main parameters
 
     ##################
@@ -42,6 +47,7 @@ def PGWonFoV(filename,InputObservationList,UseObs,ObservationTime0,parameters,di
         doplot = (parser.getboolean(section, 'doplot'))
         Duration = int(parser.get(section, 'Duration'))
         MinDuration = int(parser.get(section, 'MinDuration'))
+        MinSlewing = int(parser.get(section, 'MinSlewing'))
         SecondRound = (parser.getboolean(section, 'SecondRound'))
         PercentCoverage = float(parser.get(section, 'PercentCoverage'))
         ReducedNside = int(parser.get(section, 'ReducedNside'))
@@ -62,7 +68,7 @@ def PGWonFoV(filename,InputObservationList,UseObs,ObservationTime0,parameters,di
     else:
         print('Observed from the',UseObs)
         observatory =CTANorthObservatory()
-    #observatory =CTANorthObservatory()
+
     # link to the GW map
     name = filename.split('.')[0].split('/')[-1]
     #if('G' in filename):
@@ -90,6 +96,7 @@ def PGWonFoV(filename,InputObservationList,UseObs,ObservationTime0,parameters,di
     print('Loading GW map from ', filename)
     tprob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     prob = hp.pixelfunc.ud_grade(tprob,ReducedNside,power=-2)
+
     nside = ReducedNside
 
     highres=hp.pixelfunc.ud_grade(prob, HRnside, power=-2)
@@ -105,69 +112,72 @@ def PGWonFoV(filename,InputObservationList,UseObs,ObservationTime0,parameters,di
         print("Found a 3D reconstruction")
 
 
-    #print('----------   NEW FOLLOW-UP ATTEMPT   ----------')
-    #SlewingTime=datetime.timedelta(seconds=210)
-    ObservationTime=ObservationTime0+datetime.timedelta(seconds=np.float64(InputObservationList['tI'][0]))
-    time = NextWindowTools.NextObservationWindow(ObservationTime, observatory)
-    #WindowDurations = [15, 17, 20, 23, 27, 33, 40, 50, 64, 85,119,178,296,595,1905]
-    WindowDurations= InputObservationList['Interval']
-    NightDarkRuns = NextWindowTools.CheckWindowCreateArray(time, observatory, WindowDurations)
-    print(NightDarkRuns)
-    #NightDarkRuns = NightDarkObservation(ObservationTime0, CTANorthObservatory(),MaxNights,Duration,MinDuration)
+    # print('----------   NEW FOLLOW-UP ATTEMPT   ----------')
+    # Computation of observation times considering Moon and Sun in 24 hours
+    # If observations are possible right now or in less than XX seconds, Prompt=True
+    # Check wheather the probability is enough to start observations (This can be done in the future)
+    # The effective first window is obtained
 
-    predefWind=InputObservationList['pointingNumber']
-    counter=0
-    for j in range(0, len(NightDarkRuns)):
-        if (len(ObservationTimearray) < MaxRuns):
-            ObservationTime = NightDarkRuns[j]
-            print('iteration',j)
-            ObsBool,yprob=ZenithAngleCut(prob,nside,ObservationTime,MinProbCut,max_zenith,observatory.Location,False)
+
+    #ToDO need to change that to no max integration time (limited by visibility)
+    #ToDo need to change the maximum latency to 48 hours
+    totalTime = 7200
+    # If prompt=True
+    followupDelay=30
+    SlewingTime=210
+    total_followupDelay=followupDelay+SlewingTime
+
+
+    # Else, continue
+    #total_followupDelay=0
+    print(totalTime, total_followupDelay, run, mergerID, TC,observatory,zenith)
+    # Obtain the times from the comparison to a given spectrum and sensitivities computed by cssens
+    # Minimum set to 10 seconds!
+    # Starting of observation and duration of observation
+    tstar, tobs = ObtainObservingTimes(totalTime, total_followupDelay, run, mergerID, TC,observatory,zenith)
+
+    counter = 0
+    # Loop where probabilities are computed comes here
+    Duration=[]
+    for j in range(0,len(tobs),1):
+        if(j>MaxRuns):
+            break
+        else:
+            ObservationTime = ObservationTime0 + datetime.timedelta(seconds=tstar[j])
+            #print(ObservationTime)
+
+            ObsBool, yprob = ZenithAngleCut(prob, nside, ObservationTime, MinProbCut, max_zenith, observatory.Location,
+                                        False)
+            #print(ObsBool)
             if ObsBool:
                 # Round 1
-                P_GW,TC,pixlist,ipixlistHR = ComputeProbability2D(prob,highres,radecs,ReducedNside,HRnside,MinProbCut,ObservationTime,observatory.Location,max_zenith,FOV,name,pixlist,ipixlistHR,counter,dirName,False,doplot)
-
-                if ((P_GW <= MinProbCut)and SecondRound):
-                    #Try Round 2
-                    #print('The minimum probability cut being', MinProbCut * 100, '% is, unfortunately, not reached.')
-                    yprob1=highres
-                    P_GW, TC, pixlist1,ipixlistHR1 = ComputeProbability2D(prob,yprob1, radecs,ReducedNside,HRnside,MinProbCut, ObservationTime,observatory.Location, max_zenith,FOV, name, pixlist1,ipixlistHR1, counter,dirName,False,doplot)
-                    if ((P_GW <= MinProbCut)):
-                        print('Fail')
-                    else:
-                        Round.append(2)
-                        P_GWarray.append(P_GW)
-                        RAarray.append(TC.ra.deg)
-                        DECarray.append(TC.dec.deg)
-                        ObservationTimearray.append(ObservationTime)
-                        PreDefWindow.append(predefWind[j])
-                        counter = counter + 1
-                else:
-                    Round.append(1)
-                    P_GWarray.append(P_GW)
-                    RAarray.append(TC.ra.deg)
-                    DECarray.append(TC.dec.deg)
+                #print('Round ',j,'counter',counter)
+                P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(prob, highres, radecs, ReducedNside, HRnside,
+                                                                 MinProbCut, ObservationTime, observatory.Location,
+                                                                 max_zenith, FOV, name, pixlist, ipixlistHR, counter,
+                                                              dirName, False, doplot)
+                print('P_GW',P_GW)
+                if ((P_GW >= MinProbCut)):
+                    P_GWarray.append(np.float('{:1.4f}'.format(np.float(P_GW))))
+                    RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
+                    DECarray.append(np.float('{:3.4f}'.format(np.float(TC.dec.deg))))
                     ObservationTimearray.append(ObservationTime)
-                    PreDefWindow.append(predefWind[j])
-                    counter=counter+1
-        else:
-            break
+                    Duration.append(tobs[j])
+                    #PreDefWindow.append(predefWind[j])
+                    #ObservationTime = ObservationTime0 + datetime.timedelta(seconds=tstar)
+                    counter = counter + 1
+                else:
+                    print('Probability too low')
 
-
-    print()
-    print("===========================================================================================")
-    print()
-    print("===========================================================================================")
-    print()
-    print("Total GW probability covered: ", sum(P_GWarray), "Number of runs that fulfill darkness condition  :",
-                  len(NightDarkRuns), "Number of effective pointings: ", len(ObservationTimearray))
+            #else:
+            #    break
 
     print()
     print("===========================================================================================")
     print()
     # List of suggested pointings
-    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,PreDefWindow,Round], names=['Observation Time UTC','RA(deg)','DEC(deg)','PGW','preDefWind','Round'])
-    return(SuggestedPointings,ObservationTime0,FOV,nside)
-
+    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,Duration], names=['Observation Time UTC','RA(deg)','DEC(deg)','PGW','Duration'])
+    return (SuggestedPointings, ObservationTime0, FOV, nside,len(tobs))
 
 def PGalonFoV(filename,galFile,InputObservationList,UseObs,distance,Edistance_max,Edistance_min,ObservationTime0,parameters,dirName):
 

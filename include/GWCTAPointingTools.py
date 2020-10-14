@@ -1,7 +1,6 @@
 import sys
 sys.path.append('../../GW-Followup/include')
 from GWHESSPointingTools import *
-
 from gammapy.spectrum.models import TableModel, AbsorbedSpectralModel
 #from gammapy.spectrum.models import PowerLaw
 
@@ -78,7 +77,7 @@ def TableImportCTA(tgalFile):
     A90=A90.astype(np.float)
     A50=A50.astype(np.float)
     OutputTable= Table([run,MergerID,RA,Dec,distance,distMin,distMax,z,theta,ndet, SNR,A90,A50],names=('run','MergerID','RA','Dec','Distance','DistMin','DistMax','redshift','theta','ndet','SNR','A90','A50'))
-    print(OutputTable)
+    #print(OutputTable)
     return OutputTable
 
 def TableImportCTA_Time(ttimeFile):
@@ -88,7 +87,7 @@ def TableImportCTA_Time(ttimeFile):
     time=[]
     for i in range(len(time1)):
         time.append((time1[i] + ' ' + time2[i]).split('"')[1])
-    OutputTable = Table([run,MergerID,time,MeanAlt,Observatory],names=['run', 'MergerID', 'Time', 'MeanZen', 'Observatory'])
+    OutputTable = Table([run,MergerID,time,MeanAlt,Observatory],names=['run', 'MergerID', 'Time', 'Zenith', 'Observatory'])
 
     return OutputTable
 
@@ -137,18 +136,21 @@ def IsSourceInside(Pointings,HESS_Sources,FOV,nside):
             Found=True
     return Found, Npoiting
 
-def ProduceSummaryFile(InputList,InputObservationList,SuccesfulPointings,foundIn,j,typeSimu,totalProb,dirName):
-    print(InputList['run'][j])
-    print(InputList['MergerID'][j].split('r')[-1])
+def ProduceSummaryFile(InputList,InputObservationList,allPossiblePoint,foundIn,j,typeSimu,totalProb,dirName,name):
+    #print(InputList['run'][j])
+    #print(InputList['MergerID'][j].split('r')[-1])
     filepath='../dataset/GammaCatalogV1.0/'+str(InputList['run'][j]) + '_' + str(InputList['MergerID'][j].split('r')[-1]) + ".fits"
     fitsfile = fits.open(filepath)
     luminosity = fitsfile[0].header['EISO']
+    dirNameFile = dirName+'/SummaryFile'
+    if not os.path.exists(dirNameFile):
+        os.makedirs(dirNameFile)
     # Obtain the luminosity
     if foundIn ==-1:
-        outfilename = dirName+'/Simu' +typeSimu+ str("{:03d}".format(j)) + '.txt'
+        outfilename = dirNameFile+'/'+name+'_Simu' +typeSimu+ str("{:03d}".format(j)) + '.txt'
         f = open(outfilename, 'w')
-        f.write('RunList' + ' ' + 'MergerID' + ' ' + 'Distance' + ' ' + 'Theta' + ' ' + 'A90' + ' ' + 'Luminosity' + ' ' + 'TotalInputObs' + ' ' + 'Obs' + ' ' + 'FirstCovered' + ' ' + 'TimesFound' + ' ' + 'WindowinInputList' + ' ' + 'TotalProb' + '\n')
-        f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' ' +str(luminosity) + ' ' + str(len(InputObservationList)) + ' ' + str(len(SuccesfulPointings)) + ' ' + str(foundIn) +' ' + str(0) +' '+str(-1)+' '+str(totalProb)+'\n')
+        f.write('RunList' + ' ' + 'MergerID' + ' ' + 'Distance' + ' ' + 'Theta' + ' ' + 'A90' + ' ' + 'Luminosity' + ' ' + 'TotalObservations' + ' ' + 'Obs' + ' ' + 'FirstCovered' + ' ' + 'TimesFound' + ' ' + 'WindowinInputList' + ' ' + 'TotalProb' + '\n')
+        f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' ' +str(luminosity) + ' ' + str(len(InputObservationList)) + ' ' + str(allPossiblePoint) + ' ' + str(foundIn) +' ' + str(0) +' '+str(-1)+' '+str(totalProb)+'\n')
     else:
         if type(foundIn) != int:
             foundFirst = foundIn[0]
@@ -157,15 +159,13 @@ def ProduceSummaryFile(InputList,InputObservationList,SuccesfulPointings,foundIn
             foundFirst=foundIn
             foundTimes=1
 
-        finalObs=InputObservationList['tF']
+        duration=InputObservationList['Duration']
 
-        outfilename = dirName+'/SimuGW' +typeSimu+ str("{:03d}".format(j)) + '.txt'
+        outfilename = dirNameFile+'/'+name+'_Simu' +typeSimu+ str("{:03d}".format(j)) + '.txt'
         # print(outfilename)
         f = open(outfilename, 'w')
-        f.write(
-            'RunList' + ' ' + 'MergerID' + ' ' + 'Distance' + ' ' + 'Theta' + ' ' + 'A90' + ' ' + 'Luminosity' + ' ' + 'TotalInputObs' + ' ' + 'Obs' + ' ' + 'FirstCovered' + ' ' + 'TimesFound' + ' ' + 'WindowinInputList' + ' ' + 'TotalProb' + '\n')
-        f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' '  + str(luminosity) + ' ' + str(len(InputObservationList)) + ' ' + str(len(SuccesfulPointings)) + ' ' + str(foundFirst) +' ' + str(foundTimes) + ' '+str(finalObs[InputObservationList['pointingNumber']==SuccesfulPointings[foundFirst].data].data[0])+' '+str(totalProb)+'\n')
-
+        f.write('RunList' + ' ' + 'MergerID' + ' ' + 'Distance' + ' ' + 'Theta' + ' ' + 'A90' + ' ' + 'Lum' + ' ' + 'Duration'+ '  '+'TotObs' + ' ' + 'TotalPossible' + ' ' + 'FirstCovered' + ' ' + 'TimesFound' + ' ' + 'TotalProb' + '\n')
+        f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' '  + str(luminosity) + ' ' + str(duration[foundFirst]) + ' '+ str(len(InputObservationList)) + ' ' + str(allPossiblePoint) + ' ' + str(foundFirst) + ' ' + str(foundTimes) + ' ' +str(totalProb)+'\n')
 
 class NextWindowTools:
 
