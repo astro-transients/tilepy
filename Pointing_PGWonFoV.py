@@ -61,7 +61,7 @@ InputTimeList = TableImportCTA_Time(InjectTimeFile)
 
 dirName='./output/PGWonFoV'
 if not os.path.exists(dirName):
-    os.makedirs(dirName)
+    os.makedir(dirName)
 print(' ')
 print("===========================================================================================")
 print("Starting the CTA pointing calculation with the following parameters\n")
@@ -88,7 +88,7 @@ except:
 
 
 # First option: Obtain the Pointing by running the gravitational wave follow-up algorithm
-SuggestedPointings,obs0,FOV,nside,totalPoswindow=PGWonFoV(GWFile,InputTimeList[j],Source,parameters,dirName)
+SuggestedPointings,obs0,FOV,nside,totalPoswindow=PGWonFoV_WindowOptimisation(GWFile,InputTimeList[j],Source,parameters,dirName)
 end = time.time()
 print('Execution time: ', end - start)
 
@@ -179,7 +179,7 @@ if(len(SuggestedPointings)!=0):
         '''
 else:
     print('No observations are scheduled')
-    filepath='../dataset/GammaCatalogV1.0/'+str(InputList['run'][j]) + '_' + str(InputList['MergerID'][j].split('r')[-1]) + ".fits"
+    filepath='../dataset/GammaCatalogV2.0/'+str(InputList['run'][j]) + '_' + str(InputList['MergerID'][j].split('r')[-1]) + ".fits"
     fitsfile = fits.open(filepath)
     luminosity = fitsfile[0].header['EISO']
     outfilename = dirName+'/SimuGW' + str("{:03d}".format(j)) + '.txt'
