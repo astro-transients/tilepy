@@ -3,7 +3,7 @@ sys.path.append('../../GW-Followup/include')
 from GWHESSPointingTools import *
 from gammapy.spectrum.models import TableModel, AbsorbedSpectralModel
 #from gammapy.spectrum.models import PowerLaw
-
+from ObservingTimes import ObtainSingleObservingTimes
 iers_url_mirror='ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
 #iers.IERS.iers_table = iers.IERS_A.open(download_file(iers.IERS_A_URL, cache=True))
 
@@ -51,6 +51,21 @@ def GiveProbToGalaxy(prob,cat,distance,Edistance_max,Edistance_min,MinimumProbCu
     
     return tGals,TotalProb
 
+
+def LoadGalaxies_GladeCTASimu(tgalFile):
+    '''
+    Load galaxy catalog as an Astropy Table
+    '''
+
+    print("Loading galaxy catalogue from " + tgalFile)
+
+    name, dist, z, ra, dec, flag = np.genfromtxt(tgalFile, usecols=(0, 1, 2, 3, 4, 5), skip_header=3, unpack=True,dtype='str')  # ra, dec in degrees
+    ra=ra.astype(np.float)
+    dec=dec.astype(np.float)
+    z=z.astype(np.float)
+    dist = dist.astype(np.float)
+    tcat = Table([name, ra, dec, dist, z, flag], names=('Galaxy','RAJ2000', 'DEJ2000', 'Dist', 'z', 'flag'))
+    return tcat
 def LoadGalaxiesSimulation(tgalFile):
     '''
     Load galaxy catalog as an Astropy Table
@@ -80,6 +95,21 @@ def TableImportCTA(tgalFile):
     #print(OutputTable)
     return OutputTable
 
+def TableImportCTA_Glade(tgalFile):
+    run,gal,MergerID,RA,Dec,distance,z,theta,ndet,SNR,A90,A50 = np.genfromtxt(tgalFile,usecols=(0, 1, 2, 3,4,5,6,7,8,9,10,11),skip_header=2, unpack=True,dtype='str')
+    RA=RA.astype(np.float)
+    Dec=Dec.astype(np.float)
+    z=z.astype(np.float)
+    distance = distance.astype(np.float)
+    theta=theta.astype(np.float)
+    ndet=ndet.astype(np.float)
+    SNR=SNR.astype(np.float)
+    A90=A90.astype(np.float)
+    A50=A50.astype(np.float)
+    OutputTable= Table([run,gal,MergerID,RA,Dec,distance,z,theta,ndet, SNR,A90,A50],names=('run','Galaxy','MergerID','RA','Dec','Distance','redshift','theta','ndet','SNR','A90','A50'))
+    print(OutputTable)
+    return OutputTable
+
 def TableImportCTA_Time(ttimeFile):
 
     run,MergerID,time1,time2,MeanAlt,Observatory = np.genfromtxt(ttimeFile,usecols=(0, 1, 2, 3,4,5),skip_header=1, unpack=True,dtype='str')
@@ -104,6 +134,8 @@ def TableImportCTA_LS(tgalFile):
     distance = distance.astype(np.float)
     OutputTable= Table([eventid,RA,Dec,distance],names=('MergerID','RA','Dec','Distance'))
     return OutputTable
+
+
 
 def IsSourceInside(Pointings,HESS_Sources,FOV,nside):
     tt = 0.5 * np.pi - HESS_Sources.dec.rad
@@ -187,7 +219,6 @@ class NextWindowTools:
         #print(cumsumWindow)
         #print(datetime.timedelta(seconds=np.float64(cumsumWindow[j])) for j in range(LastItem))
         arr = np.array([time + datetime.timedelta(seconds=np.float64(cumsumWindow[j])) for j in range(LastItem)])
-        #print('ARRRRRRRRR',arr)
         return arr
     @classmethod
     def NextObservationWindow(cls,time, obsSite):
@@ -205,6 +236,13 @@ class NextWindowTools:
             print('No window is found')
             return False
 
+    @classmethod
+    def EndObservationWindow(cls,time, obsSite):
+        time = Tools.NextSunrise(time,obsSite)
+        # Check if the night ends before due to the moon.
+        if(Tools.IsDarkness(time, obsSite) is False):
+            time = Tools.PreviousMoonset(time,obsSite)
+        return time
 class GRB(object):
     """
         Class to store GRB properties.
@@ -277,3 +315,243 @@ class GRB(object):
             spectral_model=spectral_model,
             energy_interval=energy_interval,
         )
+
+def ZenithAngleCut_TwoTimes(prob, nside, time, time1, MinProbCut,max_zenith,observatory):
+    '''
+    Mask in the pixels with zenith angle larger than max_zenith
+    '''
+
+    # Initial time
+    frame = co.AltAz(obstime=time, location=observatory)
+    pprob = prob
+
+    mzenith = hp.ma(pprob)
+    maskzenith = np.zeros(hp.nside2npix(nside), dtype=np.bool)
+
+    pixel_theta, pixel_phi = hp.pix2ang(nside, np.arange(hp.nside2npix(nside)))
+    ra = np.rad2deg(pixel_phi)
+    dec = np.rad2deg(0.5 * np.pi - pixel_theta)
+    targetCoord_map = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
+    altaz_map = targetCoord_map.transform_to(frame)
+    maskzenith[altaz_map.alt.value < 90-max_zenith] = 1
+    mzenith.mask = maskzenith
+    #hp.mollview(mzenith)
+    #plt.show()
+    #plt.savefig("/Users/mseglar/Documents/GitLab/gw-follow-up-simulations/Zenithmask_%g.png")
+
+    yprob = ma.masked_array(pprob, mzenith.mask)
+    #hp.mollview(yprob)
+    #plt.savefig("/Users/mseglar/Documents/GitLab/gw-follow-up-simulations/Zenithmask_prob_%g.png")
+
+    #print('Integrated probability of the masked map', np.sum(yprob))
+
+    # End time
+    frame = co.AltAz(obstime=time1, location=observatory)
+    ppprob = pprob
+
+    mzenith = hp.ma(ppprob)
+    maskzenith = np.zeros(hp.nside2npix(nside), dtype=np.bool)
+
+    pixel_theta, pixel_phi = hp.pix2ang(nside, np.arange(hp.nside2npix(nside)))
+    ra = np.rad2deg(pixel_phi)
+    dec = np.rad2deg(0.5 * np.pi - pixel_theta)
+    targetCoord_map = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
+    altaz_map = targetCoord_map.transform_to(frame)
+    maskzenith[altaz_map.alt.value < 90-max_zenith] = 1
+    mzenith.mask = maskzenith
+
+    #plt.savefig("/Users/mseglar/Documents/GitLab/gw-follow-up-simulations/Zenithmask_%g.png")
+
+    xprob = ma.masked_array(yprob, mzenith.mask)
+
+    if np.sum(yprob) < MinProbCut:
+        ObsBool = False
+    else:
+        ObsBool = True
+
+
+    return ObsBool, yprob
+
+
+def ComputeProbability2D_SelectClusters(prob, highres, radecs, ReducedNside, HRnside, MinProbCut, TotalExposure, time,DelayObs, observatory, max_zenith, FOV,
+                         run, mergerID, ipixlist, ipixlistHR, counter, dirName, usegreytime, plot):
+    '''
+    Compute probability in 2D by taking the highest value pixel
+    '''
+    radius = FOV
+
+    frame = co.AltAz(obstime=time, location=observatory.Location)
+    thisaltaz = radecs.transform_to(frame)
+    pix_alt1 = thisaltaz.alt.value
+
+    if usegreytime:
+        moonaltazs = get_moon(Time(time)).transform_to(AltAz(obstime=Time(time), location=observatory.Location))
+        # Zenith and Moon angular distance mask
+        pix_ra = radecs.ra.value[
+            (thisaltaz.alt.value > 90 - max_zenith) & (thisaltaz.separation(moonaltazs) > 30 * u.deg)]
+        pix_dec = radecs.dec.value[
+            (thisaltaz.alt.value > 90 - max_zenith) & (thisaltaz.separation(moonaltazs) > 30 * u.deg)]
+
+    else:
+        # Zenith angle mask
+        pix_ra = radecs.ra.value[(thisaltaz.alt.value > 90 - max_zenith)]
+        pix_dec = radecs.dec.value[thisaltaz.alt.value > 90 - max_zenith]
+        pix_alt = pix_alt1[thisaltaz.alt.value > 90 - max_zenith]
+        pix_zen = 90 - pix_alt
+
+    phipix = np.deg2rad(pix_ra)
+    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
+
+    ipix = hp.ang2pix(ReducedNside, thetapix, phipix)
+
+    dp_Pix_Fov = np.empty(len(pix_ra), dtype=object)
+    exposure = np.empty(len(pix_ra), dtype=object)
+    zenith_end = np.empty(len(pix_ra), dtype=object)
+    #print(len(phipix),len(thetapix),len(ipix),len(pix_ra),len(pix_dec), len(dp_Pix_Fov), len(pix_alt), len(zenith_end), len(exposure))
+
+    cat_pix = Table([ipix, pix_ra, pix_dec, dp_Pix_Fov, pix_zen, zenith_end, exposure], names=('PIX', 'PIXRA', 'PIXDEC', 'PIXFOVPROB','ZENITH_INI','ZENITH_END','EXPOSURE'))
+
+    dp_dV_FOV = []
+
+    xyzpix = hp.ang2vec(thetapix, phipix)
+
+    for i in range(0, len(cat_pix)):
+        ipix_discfull = hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
+        maskComputeProb = [np.isin(ipix_discfull, ipixlistHR, invert=True)]
+        dp_dV_FOV.append(highres[ipix_discfull[maskComputeProb]].sum())
+
+    cat_pix['PIXFOVPROB'] = dp_dV_FOV
+
+    # Mask already observed pixels
+
+    mask = [np.isin(cat_pix['PIX'], ipixlist, invert=True)]
+
+    if all(np.isin(cat_pix['PIX'], ipixlist, invert=False)):
+        maskcat_pix = cat_pix
+    else:
+        maskcat_pix = cat_pix[mask]
+
+    # Sort table
+    sortcat = maskcat_pix[np.flipud(np.argsort(maskcat_pix['PIXFOVPROB']))]
+
+    # Fill column for time that one needs to observe them to get 5sigma for the highest of the list
+    if(np.any(sortcat['ZENITH_INI']<30)):
+        texp20 = ObtainSingleObservingTimes(TotalExposure, DelayObs, run, mergerID, observatory, zenith=20)
+        print("AQUI 20", texp20)
+        sortcat['EXPOSURE'][sortcat['ZENITH_INI'] < 30] = texp20
+        # Cat20 = sortcat[sortcat['ZENITH_INI'] < 30]
+        # print(Cat30)
+        # print("time + datetime.timedelta(seconds=texp20)",time + datetime.timedelta(seconds=texp20))
+        # print("observatory.Location",observatory.Location)
+        frame = co.AltAz(obstime=time + datetime.timedelta(seconds=texp20), location=observatory.Location)
+        catCoord20 = co.SkyCoord(sortcat['PIXRA'][sortcat['ZENITH_INI'] < 30], sortcat['PIXDEC'][sortcat['ZENITH_INI'] < 30], frame='fk5', unit=(u.deg, u.deg))
+        thisaltaz20 = catCoord20.transform_to(frame)
+        pix_zen20 = 90 - thisaltaz20.alt.value
+        sortcat["ZENITH_END"][sortcat['ZENITH_INI'] < 30] = pix_zen20
+
+    mask1 = sortcat['ZENITH_INI'] >= 30
+    mask2 = sortcat['ZENITH_INI'] <= 55
+
+    if (sortcat['ZENITH_INI'][mask1&mask2].any()):
+        texp40 = ObtainSingleObservingTimes(TotalExposure, DelayObs, run, mergerID, observatory, zenith=40)
+        print("AQUI 40",texp40)
+        sortcat['EXPOSURE'][(30 <= sortcat['ZENITH_INI']) & (sortcat['ZENITH_INI'] <= 55)] = texp40
+        # Cat40 = sortcat[(30 < sortcat['ZENITH_INI']) & (sortcat['ZENITH_INI'] < 55)]
+        # print(Cat40)
+        frame = co.AltAz(obstime=time + datetime.timedelta(seconds=texp40), location=observatory.Location)
+        catCoord40 = co.SkyCoord(sortcat['PIXRA'][(30 <= sortcat['ZENITH_INI']) & (sortcat['ZENITH_INI'] <= 55)], sortcat['PIXDEC'][(30 <= sortcat['ZENITH_INI']) & (sortcat['ZENITH_INI'] <= 55)], frame='fk5', unit=(u.deg, u.deg))
+        # print("radecs",radecs)
+        thisaltaz40 = catCoord40.transform_to(frame)
+        pix_zen40 = thisaltaz40.alt.value
+        sortcat["ZENITH_END"][(30 <= sortcat['ZENITH_INI']) & (sortcat['ZENITH_INI'] <= 55)] = pix_zen40
+
+    if(np.any(sortcat['ZENITH_INI']>55)):
+        texp60 = ObtainSingleObservingTimes(TotalExposure, DelayObs, run, mergerID, observatory, zenith=60)
+        print("AQUI 60",texp60,"DelayObs",DelayObs )
+        # Cat60 = sortcat[sortcat['ZENITH_INI'] >55]
+        sortcat['EXPOSURE'][sortcat['ZENITH_INI'] > 55] = texp60
+        frame = co.AltAz(obstime=time + datetime.timedelta(seconds=texp60), location=observatory.Location)
+        catCoord60 = co.SkyCoord(sortcat['PIXRA'][sortcat['ZENITH_INI'] >55], sortcat['PIXDEC'][sortcat['ZENITH_INI'] >55], frame='fk5', unit=(u.deg, u.deg))
+        #print("radecs",radecs)
+        thisaltaz60 = catCoord60.transform_to(frame)
+        pix_zen60 = thisaltaz60.alt.value
+        sortcat["ZENITH_END"][sortcat['ZENITH_INI'] > 55] = pix_zen60
+
+    # Visible at the end of the window ??? => Zenith angle at the end  :)
+
+    # Mask if it is not
+    mask = [np.isin(sortcat['ZENITH_END'], 66, invert=True)]
+    maskcat_zen = sortcat[mask]
+
+    sortcat = maskcat_zen[np.flipud(np.argsort(maskcat_zen['PIXFOVPROB']))]
+
+    # Chose highest
+
+    targetCoord = co.SkyCoord(sortcat['PIXRA'][:1][0], sortcat['PIXDEC'][:1][0], frame='fk5', unit=(u.deg, u.deg))
+    # print('targetCoord',targetCoord)
+
+    P_GW = sortcat['PIXFOVPROB'][:1][0]
+
+    ObsExp = sortcat['EXPOSURE'][:1][0]
+    ZenIni = sortcat['ZENITH_INI'][:1][0]
+    ZenEnd = sortcat['ZENITH_END'][:1][0]
+
+    # Include to the list of pixels already observed
+
+    phip = float(np.deg2rad(targetCoord.ra.deg))
+    thetap = float(0.5 * np.pi - np.deg2rad(targetCoord.dec.deg))
+    xyz = hp.ang2vec(thetap, phip)
+    # ipix_discComputeProb = hp.query_disc(HRnside, xyz, np.deg2rad(radius))
+    # maskComputeProb=[np.isin(ipix_discComputeProb, ipixlist,invert=True)]
+    # print('maskedP_GW',highres[ipix_discComputeProb[maskComputeProb]].sum())
+    if (P_GW >= MinProbCut):
+        ipixlistHR.extend(hp.query_disc(HRnside, xyz, np.deg2rad(radius)))
+        ipix_disc = hp.query_disc(ReducedNside, xyz, np.deg2rad(radius))
+        ipixlist.extend(ipix_disc)
+
+    ######################################
+
+    # PLOT THE RESULTS
+    if plot:
+        #path = dirName + '/EvolutionPlot'
+        path = '%s/Pointing_Plotting/%s_%s/EvolutionPlot' % (dirName,run,mergerID)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        # nside = 1024
+
+        # hp.mollview(highres,title="With FoV circle")
+
+        hp.gnomview(prob, xsize=500, ysize=500, rot=[targetCoord.ra.deg, targetCoord.dec.deg], reso=8.0)
+        hp.graticule()
+        # print('This skymap has nside equals to',hp.npix2nside(len(highres)))
+        # plt.savefig('%s/Pointing-prob_%g.png' % (path, counter))
+
+        ipix_discplot = hp.query_disc(HRnside, xyz, np.deg2rad(radius))
+        tt, pp = hp.pix2ang(HRnside, ipix_discplot)
+        ra2 = np.rad2deg(pp)
+        dec2 = np.rad2deg(0.5 * np.pi - tt)
+        skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
+        # hp.visufunc.projplot(skycoord.ra, skycoord.dec, 'y.', lonlat=True, coord="C")
+        # plt.show()
+        # observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
+
+        hp.visufunc.projplot(sortcat['PIXRA'][:1], sortcat['PIXDEC'][:1], 'r.', lonlat=True, coord="C")
+        MaxCoord = SkyCoord(sortcat['PIXRA'][:1], sortcat['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
+        separations = skycoord.separation(MaxCoord)
+        tempmask = separations < (radius + 0.01 * radius) * u.deg
+        tempmask2 = separations > (radius - 0.01 * radius) * u.deg
+        hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'g.', lonlat=True,
+                             coord="C", linewidth=0.1)
+        plt.savefig('%s/Pointing-prob-FoV_%g.png' % (path, counter))
+
+        altcoord = np.empty(100)
+        azcoord = np.random.rand(100) * 360
+        # for i in range(0,1):
+        #    altcoord.fill(90-(max_zenith-5*i))
+        #    RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,location=observatory)
+        #    RandomCoord_radec = RandomCoord.transform_to('fk5')
+        #    hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
+        # plt.show()
+        # plt.savefig('%s/Pointing-zencut_%g.png' % (path,counter))
+
+    return P_GW, targetCoord,ObsExp, ZenIni, ZenEnd, ipixlist, ipixlistHR

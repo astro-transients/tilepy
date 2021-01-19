@@ -1,7 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="e075a1a7-a2ba-47ee-8d94-8208281570f6" name="Default Changelist" comment="" />
+    <list default="true" id="e075a1a7-a2ba-47ee-8d94-8208281570f6" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Pointing_PGWonFoV.py" beforeDir="false" afterPath="$PROJECT_DIR$/Pointing_PGWonFoV.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/PGWinFoV.ini" beforeDir="false" afterPath="$PROJECT_DIR$/configs/PGWinFoV.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dataset/BNS-GW-Time_onAxis5deg.txt" beforeDir="false" afterPath="$PROJECT_DIR$/dataset/BNS-GW-Time_onAxis5deg.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/GWCTAObservationScheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/include/GWCTAObservationScheduler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/GWCTAPointingTools.py" beforeDir="false" afterPath="$PROJECT_DIR$/include/GWCTAPointingTools.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/ObservingTimes.py" beforeDir="false" afterPath="$PROJECT_DIR$/include/ObservingTimes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/gwUtilities.py" beforeDir="false" afterPath="$PROJECT_DIR$/include/gwUtilities.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/run0019_MergerID000070/PGWonFoV/EvolutionPlot/Pointing-zencut_0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/run0019_MergerID000070/PGWonFoV/EvolutionPlot/Pointing-zencut_1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/run0019_MergerID000070/PGWonFoV/Pointing_Plotting/Pointings.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/run0019_MergerID000070/PGWonFoV/SimuGWGW003.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/run0019_MergerID000070/PGWonFoV/SuggestedPointings_GWOptimisation_test.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/run0019_MergerID000070/PGWonFoV/analysis_3d/LikelihoodFit_Analysis_ResultPlots/Background.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/run0019_MergerID000070/PGWonFoV/analysis_3d/LikelihoodFit_Analysis_ResultPlots/Counts.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/run0019_MergerID000070/PGWonFoV/analysis_3d/LikelihoodFit_Analysis_ResultPlots/Exposure.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/run0019_MergerID000070/PGWonFoV/analysis_3d/LikelihoodFit_Analysis_ResultPlots/Significance.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/run0019_MergerID000070/PGWonFoV/analysis_3d/LikelihoodFit_Analysis_ResultPlots/histogram_SQRT_TS.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/run0019_MergerID000070/PGWonFoV/analysis_3d/background_singleObs_dynamic.fits" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/run0019_MergerID000070/PGWonFoV/analysis_3d/counts_singleObs_dynamic.fits" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output/run0019_MergerID000070/PGWonFoV/analysis_3d/exposure_singleObs_dynamic.fits" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/Comparison_CoveringSourceCoordinates.py" beforeDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,16 +63,52 @@
         </counts>
       </usages-collector>
     </session>
+    <session id="1347062912">
+      <usages-collector id="statistics.lifecycle.project">
+        <counts>
+          <entry key="project.closed" value="3" />
+          <entry key="project.open.time.1" value="1" />
+          <entry key="project.open.time.18" value="1" />
+          <entry key="project.open.time.3" value="2" />
+          <entry key="project.open.time.8" value="1" />
+          <entry key="project.opened" value="5" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.extensions.open">
+        <counts>
+          <entry key="ini" value="2" />
+          <entry key="py" value="16" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.types.open">
+        <counts>
+          <entry key="PLAIN_TEXT" value="2" />
+          <entry key="Python" value="16" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.extensions.edit">
+        <counts>
+          <entry key="ini" value="11" />
+          <entry key="py" value="8606" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.types.edit">
+        <counts>
+          <entry key="PLAIN_TEXT" value="11" />
+          <entry key="Python" value="8606" />
+        </counts>
+      </usages-collector>
+    </session>
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.5">
+    <splitter split-orientation="horizontal" split-proportion="0.38026124">
       <split-first>
-        <leaf>
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/Pointing_PGWonFoV.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="573">
-                  <caret line="50" column="39" lean-forward="true" selection-start-line="50" selection-start-column="39" selection-end-line="50" selection-end-column="39" />
+                <state relative-caret-position="1785">
+                  <caret line="181" column="39" selection-start-line="181" selection-start-column="39" selection-end-line="181" selection-end-column="39" />
                   <folding>
                     <element signature="e#0#10#0" expanded="true" />
                   </folding>
@@ -57,25 +117,47 @@
             </entry>
           </file>
           <file pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/include/AnalysisTools.py">
+            <entry file="file://$PROJECT_DIR$/tools/GetRandomInjectionTime_DecideObs.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-1220">
-                  <caret line="27" column="46" selection-start-line="27" selection-start-column="46" selection-end-line="27" selection-end-column="46" />
+                <state relative-caret-position="445">
+                  <caret line="48" column="44" lean-forward="true" selection-start-line="48" selection-start-column="44" selection-end-line="48" selection-end-column="44" />
                   <folding>
-                    <element signature="e#0#56#0" expanded="true" />
+                    <element signature="e#1#32#0" expanded="true" />
                   </folding>
                 </state>
               </provider>
             </entry>
           </file>
           <file pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/include/GWCTAObservationScheduler.py">
+            <entry file="file://$PROJECT_DIR$/tools/GetObservationTimeThroughTransit.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="352">
-                  <caret line="181" column="55" selection-start-line="181" selection-start-column="55" selection-end-line="181" selection-end-column="55" />
+                <state relative-caret-position="-2176" />
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/tools/PlotScheduling.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="480">
+                  <caret line="32" column="8" selection-start-line="32" selection-start-column="8" selection-end-line="32" selection-end-column="8" />
                   <folding>
-                    <element signature="e#577#5895#0" />
-                    <element signature="e#12796#19185#0" />
+                    <element signature="e#0#10#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/include/SimulationTools_dev.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state>
+                  <folding>
+                    <element signature="e#0#18#0" expanded="true" />
+                    <element signature="e#1688#3068#0" />
+                    <element signature="e#3204#7257#0" />
+                    <element signature="e#7409#12446#0" />
+                    <element signature="e#12599#17753#0" />
+                    <element signature="e#17905#21563#0" />
                   </folding>
                 </state>
               </provider>
@@ -84,17 +166,8 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/configs/PGWinFoV.ini">
               <provider selected="true" editor-type-id="text-editor">
-                <state>
-                  <caret column="1" selection-start-column="1" selection-end-column="36" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/configs/PGalinFoV.ini">
-              <provider selected="true" editor-type-id="text-editor">
-                <state>
-                  <caret column="1" selection-start-column="1" selection-end-column="41" />
+                <state relative-caret-position="15">
+                  <caret line="1" column="15" selection-start-line="1" selection-start-column="15" selection-end-line="1" selection-end-column="15" />
                 </state>
               </provider>
             </entry>
@@ -102,35 +175,8 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/include/GWCTAPointingTools.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="75">
-                  <caret line="5" column="45" selection-start-line="5" selection-start-column="45" selection-end-line="5" selection-end-column="45" />
-                  <folding>
-                    <element signature="e#332#1557#0" />
-                    <element signature="e#1956#2713#0" />
-                    <element signature="e#3222#3453#0" />
-                    <element signature="e#3493#3810#0" />
-                    <element signature="e#3870#5070#0" />
-                    <element signature="e#6952#8791#0" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/include/SimulationTools.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="375">
-                  <caret line="174" column="144" selection-start-line="174" selection-start-column="144" selection-end-line="174" selection-end-column="144" />
-                  <folding>
-                    <element signature="e#1#19#0" expanded="true" />
-                    <element signature="e#1272#1413#0" />
-                    <element signature="e#1494#2307#0" />
-                    <element signature="e#2484#3864#0" />
-                    <element signature="e#4000#8052#0" />
-                    <element signature="e#8204#13241#0" />
-                    <element signature="e#13394#18585#0" />
-                    <element signature="e#18737#22432#0" />
-                  </folding>
+                <state relative-caret-position="1883">
+                  <caret line="468" column="57" selection-start-line="468" selection-start-column="44" selection-end-line="468" selection-end-column="57" />
                 </state>
               </provider>
             </entry>
@@ -138,14 +184,31 @@
         </leaf>
       </split-first>
       <split-second>
-        <leaf>
-          <file pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/Pointing_PgalonFoV.py">
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/include/GWCTAObservationScheduler.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="349">
-                  <caret line="68" column="31" lean-forward="true" selection-start-line="68" selection-start-column="31" selection-end-line="68" selection-end-column="31" />
+                <state relative-caret-position="173">
+                  <caret line="15" column="3" lean-forward="true" selection-start-line="15" selection-start-column="3" selection-end-line="15" selection-end-column="3" />
                   <folding>
-                    <element signature="e#0#10#0" expanded="true" />
+                    <element signature="e#772#6971#0" />
+                    <element signature="e#7052#14969#0" />
+                    <element signature="e#14357#22052#0" />
+                    <element signature="e#22111#28500#0" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/include/ObservingTimes.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="-3938">
+                  <caret line="226" column="37" selection-start-line="226" selection-start-column="37" selection-end-line="226" selection-end-column="37" />
+                  <folding>
+                    <element signature="e#245#256#0" expanded="true" />
+                    <element signature="e#620#1219#0" />
+                    <element signature="e#1267#1391#0" />
                   </folding>
                 </state>
               </provider>
@@ -159,26 +222,53 @@
     <findStrings>
       <find>galaxy</find>
       <find>tableModel</find>
+      <find>print</find>
+      <find>sensi</find>
+      <find>ParseCatalog</find>
+      <find>ZenithAngleCut</find>
+      <find>ObservationTime</find>
+      <find>ObservationTime(</find>
+      <find>ObtainObservingTimes</find>
+      <find>NextWindowTools</find>
+      <find>observatory</find>
+      <find>ObtainSingleObservingTimes</find>
+      <find>time</find>
+      <find>totaltime</find>
+      <find>interObsSlew</find>
+      <find>radecs</find>
+      <find>Duration</find>
+      <find>PointingPlottingGWCTA</find>
+      <find>pix_alt</find>
+      <find>MinProbCut</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/include/GWCTAPointingTools.py" />
         <option value="$PROJECT_DIR$/include/SimulationTools.py" />
         <option value="$PROJECT_DIR$/include/AnalysisTools.py" />
+        <option value="$PROJECT_DIR$/Pointing_PgalonFoV.py" />
+        <option value="$PROJECT_DIR$/tools/3DComparison.py" />
+        <option value="$PROJECT_DIR$/include/AnalysisTools_dev.py" />
+        <option value="$PROJECT_DIR$/include/gwUtilities.py" />
+        <option value="$PROJECT_DIR$/tools/PlotScheduling.py" />
+        <option value="$PROJECT_DIR$/configs/PGWinFoV.ini" />
+        <option value="$PROJECT_DIR$/include/GWCTAPointingTools.py" />
+        <option value="$PROJECT_DIR$/tools/GetRandomInjectionTime_DecideObs.py" />
         <option value="$PROJECT_DIR$/include/GWCTAObservationScheduler.py" />
         <option value="$PROJECT_DIR$/Pointing_PGWonFoV.py" />
-        <option value="$PROJECT_DIR$/Pointing_PgalonFoV.py" />
+        <option value="$PROJECT_DIR$/include/ObservingTimes.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" fullScreen="true">
-    <option name="width" value="1440" />
-    <option name="height" value="900" />
+  <component name="ProjectFrameBounds">
+    <option name="x" value="8" />
+    <option name="y" value="23" />
+    <option name="width" value="1399" />
+    <option name="height" value="877" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -190,18 +280,23 @@
         <subPane>
           <expand>
             <path>
-              <item name="code" type="b2602c69:ProjectViewProjectNode" />
-              <item name="code" type="462c0819:PsiDirectoryNode" />
+              <item name="gw-follow-up-simulations" type="b2602c69:ProjectViewProjectNode" />
+              <item name="gw-follow-up-simulations" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="code" type="b2602c69:ProjectViewProjectNode" />
-              <item name="code" type="462c0819:PsiDirectoryNode" />
+              <item name="gw-follow-up-simulations" type="b2602c69:ProjectViewProjectNode" />
+              <item name="gw-follow-up-simulations" type="462c0819:PsiDirectoryNode" />
               <item name="configs" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="code" type="b2602c69:ProjectViewProjectNode" />
-              <item name="code" type="462c0819:PsiDirectoryNode" />
+              <item name="gw-follow-up-simulations" type="b2602c69:ProjectViewProjectNode" />
+              <item name="gw-follow-up-simulations" type="462c0819:PsiDirectoryNode" />
               <item name="include" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="gw-follow-up-simulations" type="b2602c69:ProjectViewProjectNode" />
+              <item name="gw-follow-up-simulations" type="462c0819:PsiDirectoryNode" />
+              <item name="tools" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -239,16 +334,12 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="1440" height="900" extended-state="0" />
+    <frame x="8" y="23" width="1399" height="877" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Favorites" side_tool="true" />
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.068358" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.0" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Version Control" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Python Console" />
-      <window_info anchor="bottom" id="Terminal" />
-      <window_info anchor="bottom" id="Event Log" side_tool="true" />
+      <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="bottom" id="Run" order="2" />
@@ -256,6 +347,10 @@
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="8" visible="true" weight="0.18598726" />
+      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
+      <window_info anchor="bottom" id="Python Console" order="10" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -265,35 +360,10 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/include/SimulationTools.py">
+    <entry file="file://$PROJECT_DIR$/Pointing_PgalonFoV.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="375">
-          <caret line="174" column="144" selection-start-line="174" selection-start-column="144" selection-end-line="174" selection-end-column="144" />
-          <folding>
-            <element signature="e#1#19#0" expanded="true" />
-            <element signature="e#1272#1413#0" />
-            <element signature="e#1494#2307#0" />
-            <element signature="e#2484#3864#0" />
-            <element signature="e#4000#8052#0" />
-            <element signature="e#8204#13241#0" />
-            <element signature="e#13394#18585#0" />
-            <element signature="e#18737#22432#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/include/GWCTAPointingTools.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
-          <caret line="5" column="45" selection-start-line="5" selection-start-column="45" selection-end-line="5" selection-end-column="45" />
-          <folding>
-            <element signature="e#332#1557#0" />
-            <element signature="e#1956#2713#0" />
-            <element signature="e#3222#3453#0" />
-            <element signature="e#3493#3810#0" />
-            <element signature="e#3870#5070#0" />
-            <element signature="e#6952#8791#0" />
-          </folding>
+        <state relative-caret-position="349">
+          <caret line="68" column="31" selection-start-line="68" selection-start-column="31" selection-end-line="68" selection-end-column="31" />
         </state>
       </provider>
     </entry>
@@ -304,50 +374,124 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/configs/PGWinFoV.ini">
+    <entry file="file://$PROJECT_DIR$/include/SimulationTools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="1" selection-start-column="1" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/include/GWCTAObservationScheduler.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="352">
-          <caret line="181" column="55" selection-start-line="181" selection-start-column="55" selection-end-line="181" selection-end-column="55" />
-          <folding>
-            <element signature="e#577#5895#0" />
-            <element signature="e#12796#19185#0" />
-          </folding>
+        <state relative-caret-position="2445">
+          <caret line="174" column="23" selection-start-line="174" selection-start-column="23" selection-end-line="174" selection-end-column="23" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/include/AnalysisTools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1220">
+        <state relative-caret-position="29">
           <caret line="27" column="46" selection-start-line="27" selection-start-column="46" selection-end-line="27" selection-end-column="46" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/include/AnalysisTools_dev.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="330">
+          <caret line="26" column="43" selection-start-line="26" selection-start-column="43" selection-end-line="26" selection-end-column="43" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tools/3DComparison.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-622" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tools/Comparison_CoveringSourceCoordinates.py" />
+    <entry file="file://$PROJECT_DIR$/tools/PlotScheduling.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="480">
+          <caret line="32" column="8" selection-start-line="32" selection-start-column="8" selection-end-line="32" selection-end-column="8" />
           <folding>
-            <element signature="e#0#56#0" expanded="true" />
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/include/SimulationTools_dev.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+            <element signature="e#1688#3068#0" />
+            <element signature="e#3204#7257#0" />
+            <element signature="e#7409#12446#0" />
+            <element signature="e#12599#17753#0" />
+            <element signature="e#17905#21563#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/configs/PGWinFoV.ini">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="1" column="15" selection-start-line="1" selection-start-column="15" selection-end-line="1" selection-end-column="15" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/include/GWCTAPointingTools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1883">
+          <caret line="468" column="57" selection-start-line="468" selection-start-column="44" selection-end-line="468" selection-end-column="57" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tools/GetObservationTimeThroughTransit.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2176" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/include/GWCTAObservationScheduler.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="173">
+          <caret line="15" column="3" lean-forward="true" selection-start-line="15" selection-start-column="3" selection-end-line="15" selection-end-column="3" />
+          <folding>
+            <element signature="e#772#6971#0" />
+            <element signature="e#7052#14969#0" />
+            <element signature="e#14357#22052#0" />
+            <element signature="e#22111#28500#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/include/gwUtilities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="345">
+          <caret line="25" selection-start-line="25" selection-end-line="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tools/GetRandomInjectionTime_DecideObs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="445">
+          <caret line="48" column="44" lean-forward="true" selection-start-line="48" selection-start-column="44" selection-end-line="48" selection-end-column="44" />
+          <folding>
+            <element signature="e#1#32#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Pointing_PGWonFoV.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="573">
-          <caret line="50" column="39" lean-forward="true" selection-start-line="50" selection-start-column="39" selection-end-line="50" selection-end-column="39" />
+        <state relative-caret-position="1785">
+          <caret line="181" column="39" selection-start-line="181" selection-start-column="39" selection-end-line="181" selection-end-column="39" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Pointing_PgalonFoV.py">
+    <entry file="file://$PROJECT_DIR$/include/ObservingTimes.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="349">
-          <caret line="68" column="31" lean-forward="true" selection-start-line="68" selection-start-column="31" selection-end-line="68" selection-end-column="31" />
+        <state relative-caret-position="-3938">
+          <caret line="226" column="37" selection-start-line="226" selection-start-column="37" selection-end-line="226" selection-end-column="37" />
           <folding>
-            <element signature="e#0#10#0" expanded="true" />
+            <element signature="e#245#256#0" expanded="true" />
+            <element signature="e#620#1219#0" />
+            <element signature="e#1267#1391#0" />
           </folding>
         </state>
       </provider>

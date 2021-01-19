@@ -1,4 +1,4 @@
-run MergerID Time "Mean Altitude" Observatory
+run MergerID Time Zenith Observatory
 run0016 MergerID000340 "2019-07-30 23:59:28.685987" 40 North
 run0017 MergerID000132 "2019-09-27 16:17:47.607279" 20 South
 run0017 MergerID000261 "2020-01-28 21:22:33.309404" 20 South
