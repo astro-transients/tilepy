@@ -4,12 +4,14 @@ from GWHESSPointingTools import *
 from gammapy.spectrum.models import TableModel, AbsorbedSpectralModel
 #from gammapy.spectrum.models import PowerLaw
 from ObservingTimes import ObtainSingleObservingTimes
-iers_url_mirror='ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
+
+#iers_url_mirror='ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
 #iers.IERS.iers_table = iers.IERS_A.open(download_file(iers.IERS_A_URL, cache=True))
 
-iers.IERS.iers_table = iers.IERS_A.open(download_file(iers_url_mirror, cache=True))
+#iers.IERS.iers_table = iers.IERS_A.open(download_file(iers_url_mirror, cache=True))
 
-
+iers_file='./finals2000A.all'
+iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
 def GiveProbToGalaxy(prob,cat,distance,Edistance_max,Edistance_min,MinimumProbCutForCatalogue):
     #Cut cat to a cube in distance!

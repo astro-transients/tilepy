@@ -61,7 +61,7 @@ InputTimeList = TableImportCTA_Time(InjectTimeFile)
 
 dirName='./output/PGWonFoV'
 if not os.path.exists(dirName):
-    os.makedir(dirName)
+    os.makedirs(dirName)
 print(' ')
 print("===========================================================================================")
 print("Starting the CTA pointing calculation with the following parameters\n")
