@@ -33,7 +33,8 @@ parameters=args.params
 #####      Files     ######
 ###########################
 
-InputFileName = '../dataset/BNS-GW_onAxis5deg.txt'
+#InputFileName = '../dataset/BNS-GW_onAxis5deg.txt'
+InputFileName = '../dataset/BNS-GW-new.txt'
 InputList = TableImportCTA(InputFileName)
 Source = SkyCoord(InputList['RA'][j], InputList['Dec'][j], frame='fk5', unit=(u.deg, u.deg))
 #Source = SkyCoord(345,-27, frame='fk5', unit=(u.deg, u.deg))
@@ -47,13 +48,14 @@ GWFile = "../dataset/skymaps/" + InputList['run'][j] + '_' + InputList['MergerID
 name =  InputList['run'][j] + '_' + InputList['MergerID'][j]
 
 
-#galFile= "../dataset/GalaxyCatalogs/" + InputList['run'][j] +'_galaxylist.txt'
+# galFile= "../dataset/GalaxyCatalogs/" + InputList['run'][j] +'_galaxylist.txt'
 galFile= "../dataset/GalaxyCatalogs/run0002_galaxylist.txt"
 
-#Get the merger time as input
-#InjectTimeFile = '../dataset/BNS-GW-Time_onAxis5deg.txt'
-InjectTimeFile = '../dataset/BNS-GW-Time_onAxis5deg_postRome.txt'
-InputTimeList = TableImportCTA_Time(InjectTimeFile)
+# Get the merger time as input
+# InjectTimeFile = '../dataset/BNS-GW-Time_onAxis5deg.txt'
+# InjectTimeFile = '../dataset/BNS-GW-Time_onAxis5deg_postRome.txt'
+InjectTimeFile = "../dataset/BNS-GW-Time_run1_fromGWHotspot.txt"
+InputTimeList = TableImportCTA_TimeNoZenith(InjectTimeFile)
 
 #ObservationTime0 = datetime.datetime(2017, 7, 17, 20, 15, 13)
 #ObservationTime0 = datetime.datetime.strptime(InputTimeList['Time'][j], '%Y-%m-%d %H:%M:%S.%f')
@@ -61,7 +63,7 @@ InputTimeList = TableImportCTA_Time(InjectTimeFile)
 
 dirName='./output/PGWonFoV'
 if not os.path.exists(dirName):
-    os.makedir(dirName)
+    os.makedirs(dirName)
 print(' ')
 print("===========================================================================================")
 print("Starting the CTA pointing calculation with the following parameters\n")
@@ -130,7 +132,7 @@ if(len(SuggestedPointings)!=0):
     #Check if the source is covered by the scheduled pointings
     Found,nP=IsSourceInside(Pointings,Source,FOV,nside)
     #ProduceSummaryFile(InputList['run'][j],InputList['MergerID'][j], InputObservationList, predefWind,nP,j)
-
+    print('===== PRODUCING SUMMARY FILE =======')
     if Found==False:
         nP = -1
         ProduceSummaryFile(InputList, SuggestedPointings,totalPoswindow, nP, j,'GW',totalPGW,dirName,name)
