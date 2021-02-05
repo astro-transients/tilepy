@@ -4,11 +4,14 @@ from GWHESSPointingTools import *
 from gammapy.spectrum.models import TableModel, AbsorbedSpectralModel
 #from gammapy.spectrum.models import PowerLaw
 from ObservingTimes import ObtainSingleObservingTimes
-iers_url_mirror='ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
-#iers.IERS.iers_table = iers.IERS_A.open(download_file(iers.IERS_A_URL, cache=True))
 
-iers.IERS.iers_table = iers.IERS_A.open(download_file(iers_url_mirror, cache=True))
+#iers.IERS.iers_table = iers.IERS_A.open(download_file(iers_url_mirror, cache=True))
+# iers_url_mirror='ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
+# iers.IERS.iers_table = iers.IERS_A.open(download_file(iers.IERS_A_URL, cache=True))
 
+# iers.IERS.iers_table = iers.IERS_A.open(download_file(iers_url_mirror, cache=True))
+iers_file = './finals2000A.all'
+iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
 
 def GiveProbToGalaxy(prob,cat,distance,Edistance_max,Edistance_min,MinimumProbCutForCatalogue):
@@ -559,6 +562,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, ReducedNside, HRn
                 tempmask2 = separations > (radius - 0.01 * radius) * u.deg
                 hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'g.', lonlat=True,
                              coord="C", linewidth=0.1)
+<<<<<<< HEAD
                 plt.savefig('%s/Pointing-prob-FoV_%g.png' % (path, counter))
 
                 altcoord = np.empty(100)
@@ -570,5 +574,18 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, ReducedNside, HRn
                 #    hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
                 # plt.show()
                 # plt.savefig('%s/Pointing-zencut_%g.png' % (path,counter))
+=======
+        plt.savefig('%s/Pointing-prob-FoV_%g.png' % (path, counter))
+
+        altcoord = np.empty(100)
+        azcoord = np.random.rand(100) * 360
+        # for i in range(0,1):
+        #    altcoord.fill(90-(max_zenith-5*i))
+        #    RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,location=observatory)
+        #    RandomCoord_radec = RandomCoord.transform_to('fk5')
+        #    hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
+        # plt.show()
+        # plt.savefig('%s/Pointing-zencut_%g.png' % (path,counter))
+>>>>>>> dbb6a10d71810cfb5ecd0ba4a90ac0ad7fc267a8
 
     return P_GW, targetCoord,ObsExp, ZenIni, ZenEnd, ipixlist, ipixlistHR
