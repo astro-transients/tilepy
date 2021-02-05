@@ -293,7 +293,7 @@ def ObtainObservingTimes(totaltime,delayAlert,run,id,observatory,zenith):
         #tstart=tstart+obst+tslewbtwn
 
 
-def ObtainSingleObservingTimes(totaltime, tstart, run, id, observatory, zenith):
+def ObtainSingleObservingTimes(TotalExposure, tstart, run, id, observatory, zenith):
     dt = 10 #talert should include initial slewing
     x1 = 2
     x2 = 10000
@@ -463,7 +463,7 @@ def ObtainSingleObservingTimes(totaltime, tstart, run, id, observatory, zenith):
     # Associating a GRB to the BNS mergers
     #######################################################
 
-    InputGRB = "../dataset/GammaCatalogV1.0/%s_%s.fits" % (run, id.split('ger')[1])
+    InputGRB = "../dataset/GammaCatalogV2.0/%s_%s.fits" % (run, id.split('ger')[1])
     hdu_list = fits.open(InputGRB)
     # hdu_list.info()
 
@@ -495,12 +495,14 @@ def ObtainSingleObservingTimes(totaltime, tstart, run, id, observatory, zenith):
     # in the case of i!=0, this time should be the already performed observing time
 
     # increasing the observing time to get the GRB detection
-    print("DelayObs, TotalExposure",tstart, totaltime)
-    if tstart >= totaltime:
-        obst = False
-        print("ESTE CASO, OBST = ",obst)
-        return (obst)
 
+    # This case never happens with the new scheme.
+    # Commented for the moment
+    #if tstart >= totaltime:
+    #    obst = False
+    #    print("tstart",tstart ," >= totaltime", totaltime)
+    #    return obst
+    totaltime = TotalExposure + tstart
     for m in range(0, totaltime-(tstart+dt), 1):
         t = tstart + m + dt
         print("INCREASE from ", tstart," to t",t)
@@ -509,14 +511,14 @@ def ObtainSingleObservingTimes(totaltime, tstart, run, id, observatory, zenith):
         averagefluxn = fluencen * intl / obst  # ph/cm2/s
         if averagefluxn > sensi(obst): # The detection is possible
             print('averagefluxn',averagefluxn, " sensi(obst)",sensi(obst))
-            if tstart + obst < totaltime: # In a reasonable time
-                return(obst)
+            if tstart + obst < totaltime:
+                return obst
             else:
                 obst = False
-                return(obst)
+                return obst
         if tstart + obst >= totaltime: # No observations will be scheduled
             obst = False
-            return(obst)
+            return obst
 
 
 

@@ -32,7 +32,7 @@ if __name__ == "__main__":
     #Table with: injection times, duration of the window , time of observation of the source
 
 
-    for j in range(9000,12000):
+    for j in range(18000,18949):
         print('Iteration number',j,'out of',len(InputList))
         AuxObservationTime = randomDate("2016-1-1 0:00:00", "2016-12-31 23:59:60", random.random())
         print(AuxObservationTime)
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
 
     ObservationTable = Table([runA, IDA,ObsTime, Observatory],names=['run','MergerID','Time','Observatory'])
-    outfilename='ObservationTable_run4_fromGWHotspot.txt'
+    outfilename='ObservationTable_run7_fromGWHotspot.txt'
     ascii.write(ObservationTable, outfilename,overwrite=True)
 
 
