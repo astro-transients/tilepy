@@ -1,6 +1,16 @@
-output
+ggwf*
+log
+output*
 tools/analysisResults
 include/__pycache__
 .DS_Store
 include/.DS_Store
 tools/.DS_Store
+submit_arrayjob.sh
+CTA_simu_job.sh
+test*
+__pycache__
+.idea
+*.egg-info
+*.egg
+*.eggs
