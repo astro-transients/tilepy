@@ -171,6 +171,17 @@ def TableImportCTA_TimeNoZenith(ttimeFile):
 
     return OutputTable
 
+def TableImportCTA_SetOfTimes(ttimeFile):
+
+    trial,time1,time2,Observatory = np.genfromtxt(ttimeFile,usecols=(0, 1, 2, 3),skip_header=1, unpack=True,dtype='str')
+    time=[]
+    for i in range(len(time1)):
+        time.append((time1[i] + ' ' + time2[i]).split('"')[1])
+    OutputTable = Table([run,MergerID,time,Observatory],names=['trial', 'Time', 'Observatory'])
+
+    return OutputTable
+
+
 def TableImportCTA_Time(ttimeFile):
 
     run,MergerID,time1,time2,MeanAlt,Observatory = np.genfromtxt(ttimeFile,usecols=(0, 1, 2, 3,4,5),skip_header=1, unpack=True,dtype='str')
@@ -195,8 +206,6 @@ def TableImportCTA_LS(tgalFile):
     distance = distance.astype(np.float)/1000 #to Mpc!
     OutputTable= Table([eventid,RA,Dec,distance],names=('MergerID','RA','Dec','Distance'))
     return OutputTable
-
-
 
 def IsSourceInside(Pointings,HESS_Sources,FOV,nside):
     tt = 0.5 * np.pi - HESS_Sources.dec.rad
