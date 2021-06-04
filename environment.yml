@@ -1,0 +1,16 @@
+name: gammagwfollowup
+channels:
+  - default
+  - cta-observatory
+  - conda-forge
+dependencies:
+  - python=3.6
+  - gammapy=0.9
+  - astropy~=3.0.5
+  - ipython
+  - numpy
+  - pip
+  - pip:
+      - MOCpy
+      - pytz
+      - healpy==1.11

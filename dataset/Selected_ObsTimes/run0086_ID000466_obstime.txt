@@ -1,3 +1,0 @@
-#
-#N Pointing	tstart	tend	Obs time
-#		s
