@@ -5,7 +5,6 @@
 # are described and implemented in the following.
 #####################################################################
 # Packages
-# Packages
 
 import matplotlib.pyplot as plt
 import numpy as np

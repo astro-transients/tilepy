@@ -13,4 +13,4 @@ dependencies:
   - pip:
       - MOCpy
       - pytz
-      - healpy==1.11
+      - healpy

@@ -6,10 +6,10 @@ import healpy as hp
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
-from astropy.utils.data import download_file
 from astropy.utils import iers
 import astropy.coordinates as co
 import datetime
+
 
 
 # iers_url_mirror='ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
@@ -545,3 +545,85 @@ def PointingPlottingGWCTA(filename,name,dirName,PointingsFile,FOV,UseObs):
 
     #dist = cat['Dist']
     #hp.visufunc.projscatter(cat['RAJ2000'][dist < 200], cat['DEJ2000'][dist < 200], lonlat=True, marker='.',color='g', linewidth=0.1, coord='C')
+
+
+def PointingPlottingGW_ZenithSteps(filename,name,dirName,FOV,InputTimeObs):
+
+    print()
+    print('-------------------   PLOTTING SCHEDULE   --------------------')
+    print()
+
+    UseObs = InputTimeObs['Observatory']
+    time = InputTimeObs['Time']
+
+    # Observatory
+    if UseObs == 'South':
+        print('Observed form the', UseObs)
+        observatory = CTASouthObservatory()
+    else:
+        print('Observed from the', UseObs)
+        observatory = CTANorthObservatory()
+
+    if ('G' in filename):
+        names = filename.split("_")
+        name = names[0]
+
+
+    print('Loading GW map from ', filename)
+    prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
+    npix = len(prob)
+    nside = hp.npix2nside(npix)
+
+    has3D=True
+    if(len(distnorm)==0):
+        print("Found a generic map without 3D information")
+    # flag the event for special treatment
+        has3D=False
+    else:
+        print("Found a 3D reconstruction")
+
+    print('----------   BUILDING A MAP   ----------')
+
+    try:
+        converted_time = datetime.datetime.strptime(time, '%Y-%m-%d %H:%M:%S.%f')
+    except ValueError:
+        try:
+            converted_time = datetime.datetime.strptime(time, '%Y-%m-%d %H:%M:%S.%f ')
+        except ValueError:
+            converted_time = datetime.datetime.strptime(time, '%Y-%m-%d %H:%M:%S')
+
+    radius = FOV
+
+    #t = 0.5 * np.pi - Coordinates[0].dec.rad
+    #p = Coordinates[0].ra.rad
+    #xyz = hp.ang2vec(t, p)
+
+    #ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+
+    #tt, pp = hp.pix2ang(nside, ipix_disc)
+    #ra2 = np.rad2deg(pp)
+    #dec2 = np.rad2deg(0.5 * np.pi - tt)
+
+    #skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
+
+
+    #frame = co.AltAz(obstime=converted_time, location=observatory.Location)
+    #altaz_all = skycoord.transform_to(frame)
+
+    dirName = '%s/Pointing_Plotting/%s' % (dirName,name)
+    if not os.path.exists(dirName):
+        os.makedirs(dirName)
+
+    max_zenith=45
+    hp.mollview(prob)
+    for i in range(0,6):
+        altcoord = np.empty(2500-200*i)
+        azcoord = np.random.rand(2500-200*i) * 360
+        altcoord.fill(max_zenith+5*i)
+        print(max_zenith+5*i)
+        RandomCoord = co.SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,location=observatory.Location)
+        RandomCoord_radec = RandomCoord.transform_to('fk5')
+        hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, lonlat=True)
+    #plt.show()
+    hp.graticule()
+    plt.savefig('%s/Pointings.png'%dirName)
