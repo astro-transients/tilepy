@@ -2,17 +2,19 @@
 
 ## Installation
 
+We clone the repo, create an environment to work, activate the enviroment and install the package.
 
 ```python
-git clone 
+git clone  git@drf-gitlab.cea.fr:multimessenger-IRFU/cta/gw-follow-up-simulations.git 
 conda env create -n gammagwfollowup -f environment.yml
 conda activate gammagwfollowup
 pip install .      
 ```
 Requirements of the installation: 
 
-- The current version of the package **only** runs with `python=3.6`.
-- The rest of the requirements are specified in the environment.yml, including the gammapy version of the codes. 
+- The current version of the package **only** runs with `python=3.6`. Careful as well with the versions of matplotlib and healpy, they should be the ones explicited in the requirements.yml, otherwise there will be conflicts between them when plotting skymaps.  
+- Note that by creating the env from the environment.yml, the libraries and versions needed will be installed.
+- Note that everytime we made changes to the package, we should update the installation of the package doing ```pip install .``` in the folder where the setup.py is. 
 
 ## Description
 
@@ -21,7 +23,7 @@ Package including functions to perform GW follow-up scheduling and simulations i
  
 - tools: Includes several scripts that have been used so far for different aims. 
 - include: The main functions used by the two main scripts are in this folder. It includes the Pointing Tools specifically for CTA (the others are in GWHESSPointing tool which is imported by GWCTAPointingTools), the CTA observation scheduler, simulation tools and analysis tools (both using gammapy)
-- dataset: Some files that have been used in the past and in ongoing simulation efforts. The important file in this folder finals2000.all
+- dataset: Some files that have been used in the past and in ongoing simulation efforts. The important file in this folder finals2000.all. To have the entire dataset, 
 
 
 ## Help
