@@ -300,10 +300,9 @@ def LoadPointingsGW(tpointingFile):
 
     print("Loading pointings from " + tpointingFile)
 
-    time1,time2, ra, dec,Pgw = np.genfromtxt(tpointingFile, usecols=(0, 1, 2,3,4), dtype="str", skip_header=1,
+    time1,time2, ra, dec = np.genfromtxt(tpointingFile, usecols=(0, 1, 2,3), dtype="str", skip_header=1,
                                              delimiter=' ',
                                              unpack=True)  # ra, dec in degrees
-
     time1 = np.atleast_1d(time1)
     time2 = np.atleast_1d(time2)
     ra = np.atleast_1d(ra)
@@ -320,9 +319,10 @@ def LoadPointingsGW(tpointingFile):
     ra = ra.astype(np.float)
     dec = dec.astype(np.float)
     coordinates = co.SkyCoord(ra,dec, frame='fk5', unit=(u.deg, u.deg))
-    Pgw = Pgw.astype(np.float)
+    #pgw = Pgw.astype(np.float)
+    pgw = np.genfromtxt(tpointingFile, usecols=5, skip_header=1,delimiter=' ',unpack=True)
 
-    return time, coordinates , Pgw
+    return time, coordinates , pgw
 
 
 def LoadPointingsGAL(tpointingFile):

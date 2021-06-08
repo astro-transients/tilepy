@@ -52,7 +52,7 @@ def fs(x, a, b, c, d):
 
 
 def spectrum(x):
-    return (x/1)**(-2.1)
+    return (x/1)**(-2.2)
 
 
 def ObtainObservingTimes(totaltime,delayAlert,run,id,observatory,dirName,zenith):
