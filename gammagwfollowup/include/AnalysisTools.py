@@ -2,6 +2,8 @@ from gammapy.maps import Map
 from gammapy.extern.pathlib import Path
 from astropy.convolution import Gaussian2DKernel
 from gammapy.detect import TSMapEstimator, find_peaks
+from astropy.coordinates import SkyCoord
+import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -13,17 +15,26 @@ def TSEstimation(maps):
     return images
 
 
-def LikelihoodFit_Analysis_3DCube(dirName):
-    path = "LikelihoodFit_Analysis_ResultPlots"
-    fullpath=Path(dirName+'/analysis_3d/'+path)
+def LikelihoodFit_Analysis_3DCube(dirname, GRBPos):
+
+    dirname = str(dirname)
+    plotspath = '/Plots'
+    fullpath = Path(dirname+plotspath)
     fullpath.mkdir(exist_ok=True)
 
     counter=0
+
+    #maps = {
+    #        "counts": Map.read(path + "counts_singleObs_dynamic.fits").sum_over_axes(),
+    #        "background": Map.read(path + "background_singleObs_dynamic.fits").sum_over_axes(),
+    #        "exposure": Map.read(path + "exposure_singleObs_dynamic.fits").sum_over_axes()
+    #}
     maps = {
-            "counts": Map.read(dirName+'/analysis_3d/'+ "counts_singleObs_dynamic.fits").sum_over_axes(),
-            "background": Map.read(dirName+'/analysis_3d/' + "background_singleObs_dynamic.fits").sum_over_axes(),
-            "exposure": Map.read(dirName+'/analysis_3d/' + "exposure_singleObs_dynamic.fits").sum_over_axes()
+            "counts": Map.read(dirname + "/counts_singleObs.fits").sum_over_axes(),
+            "background": Map.read(dirname + "/background_singleObs.fits").sum_over_axes(),
+            "exposure": Map.read(dirname + "/exposure_singleObs.fits").sum_over_axes()
     }
+
 
 
 
@@ -53,19 +64,37 @@ def LikelihoodFit_Analysis_3DCube(dirName):
 
     print('------------------ Find hotspot in TS ----------------------- ')
 
-    sources = find_peaks(images["sqrt_ts"], threshold=3) # FOR TS
+    sources = find_peaks(images["sqrt_ts"], threshold=5) # FOR TS
 
-    print(sources)
+    #print(sources)
     plt.gca().scatter(sources["ra"],sources["dec"],transform=plt.gca().get_transform("icrs"),color="none",edgecolor="white",marker="o",s=600,lw=1.5,);
     plt.savefig(str(fullpath)+'/Significance.png')
 
-    sources = find_peaks(images["sqrt_ts"], threshold=0) # FOR TS
+    sources = find_peaks(images["sqrt_ts"], threshold=5) # FOR TS
     plt.figure(figsize=(10, 5))
 
+    hotspotsCoord = SkyCoord(sources["ra"],sources["dec"], frame='fk5', unit=(u.deg, u.deg))
+
+    # Angular distance is compatible with same object
+
+    print('#######################')
+    nSource=0
+    for i in range(len(hotspotsCoord)):
+        if hotspotsCoord[i].separation(GRBPos) < 0.1*u.deg:
+            print('Source detected!!!')
+            print('Sigma =',sources['value'][i])
+            nSource+=1
+
+    print('From all the hotspots, there is ', nSource, 'compatible with the injected GRB')
+    print('#######################')
     mu, sigma = 0, 1  # mean and standard deviation
     count, bins, ignored =plt.hist(sources['value'].data,100, histtype='step',fill=False,density=True, stacked=True)
-    plt.plot(bins, 1 / (sigma * np.sqrt(2 * np.pi)) *np.exp(- (bins - mu) ** 2 / (2 * sigma ** 2)),linewidth = 1, color = 'r')
+    plt.grid()
+    plt.ylabel('#')
+    plt.xlabel('Significance [$\sigma$]')
+    # plt.plot(bins, 1 / (sigma * np.sqrt(2 * np.pi)) *np.exp(- (bins - mu) ** 2 / (2 * sigma ** 2)),linewidth = 1, color = 'r')
     plt.savefig(str(fullpath)+'/histogram_SQRT_TS.png')
+
 
 
     '''
@@ -88,10 +117,9 @@ def LikelihoodFit_Analysis_3DCube(dirName):
 
     '''
 
-def LikelihoodFit_Analysis_4DCube(dirname):
+def LikelihoodFit_Analysis_4DCube(path):
     #ToDo This function may not work. Gammapy doesnt support temporal analysis and anyways it may not be justified (too slow)
 
-    path = dirname
     counter = 0
     mapsCounts = Map.read(str(path / "counts.fits"))
     for i in range(0, mapsCounts.data.shape[0]):
