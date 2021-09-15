@@ -1,6 +1,6 @@
 import os
 from .GWHESSPointingTools import Tools
-from gammapy.spectrum.models import TableModel, AbsorbedSpectralModel
+from gammapy.spectrum.models import TableModel, AbsorbedSpectralModel, PowerLaw
 from .ObservingTimes import ObtainSingleObservingTimes
 import matplotlib.pyplot as plt
 import numpy as np
@@ -97,11 +97,6 @@ def LoadGalaxiesSimulation(tgalFile):
     tcat = Table([ra, dec, dist], names=('RAJ2000', 'DEJ2000', 'Dist'))
     return tcat
 
-# To be finished
-def SummaryFileReadCTA(summaryFile):
-    print('This function needs to be adapted to the output')
-    nP, Found = np.genfromtxt(summaryFile,usecols=(8,9),skip_header=1, unpack=True,dtype='str')
-    return nP, Found
 
 def PointingFileReadCTA(pointingFile):
 
@@ -268,6 +263,13 @@ def ProduceSummaryFile(InputList,InputObservationList,allPossiblePoint,foundIn,j
         f.write('RunList' + ' ' + 'MergerID' + ' ' + 'Distance' + ' ' + 'Theta' + ' ' + 'A90' + ' ' + 'Lum' + ' ' + 'Duration'+ '  '+'TotObs' + ' ' + 'TotalPossible' + ' ' + 'FirstCovered' + ' ' + 'TimesFound' + ' ' + 'TotalProb' + 'ObsInfo'+'\n')
         f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' '  + str(luminosity) + ' ' + str(duration[foundFirst]) + ' '+ str(len(InputObservationList)) + ' ' + str(allPossiblePoint) + ' ' + str(foundFirst) + ' ' + str(foundTimes) + ' ' +str(totalProb)+ ' '+ 'True' +'\n')
 
+
+def ReadSummaryFile(summaryFile):
+    print('Note that this function needs to be adapted to the output')
+    nP, Found = np.genfromtxt(summaryFile,usecols=(8,9),skip_header=1, unpack=True,dtype='str')
+    return nP, Found
+
+
 class NextWindowTools:
 
     @classmethod
@@ -359,22 +361,22 @@ class GRB(object):
         energy_interval=data[1].data.field(0)*u.GeV
         time_interval=data[2].data.field(0)* u.s
         flux=data[3].data
-        z=0.0 # No EBL correction for the moment, it is already 0.01 corrected
-        name=filepath.split('/')[-1].split('.')[0]
-        spectral_model=[]
+        z = 0.0 # No EBL correction for the moment, it is already 0.01 corrected
+        name = filepath.split('/')[-1].split('.')[0]
+        spectral_model = []
         for interval in range(0,len(time_interval)):
-            flux_t=flux[interval]* u.Unit('1 / (cm2 s GeV)')
-            newflux=flux_t #Use Factor 1000000.0  if needed
+            flux_t = flux[interval]* u.Unit('1 / (cm2 s GeV)')
+            newflux = flux_t #Use Factor 1000000.0  if needed
             #print(np.log(energy_interval.value))
             #print(np.log(flux_t.value))
-            table_model = TableModel(energy=energy_interval,values=newflux,norm=1.,values_scale='log')
+            table_model = TableModel(energy=energy_interval,values=newflux,values_scale='log')
             table_model.plot(energy_range=(0.001, 10) * u.TeV)
             #name='/Users/mseglar/Documents/GitHub/CTASimulationsGW/run0017_MergerID000132_skymap/PGalonFoVanalysis_3d/plot'+str(interval)
             #plt.show()
-            #plt.savefig('Muere.png')
+            #plt.savefig('SpectralModel.png')
             #spectral_model.append(SpectralModel(spectral_model=table_model))
             spectral_model.append(AbsorbedSpectralModel(spectral_model=table_model,absorption=absorption,parameter=z,parameter_name='redshift'))
-            #spectral_model.append(PowerLaw(index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"))
+            #spectral_model.append(PowerLaw(index=2.2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"))
 
         return cls(
             filepath=filepath,

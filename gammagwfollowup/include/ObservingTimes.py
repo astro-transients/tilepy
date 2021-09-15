@@ -500,7 +500,7 @@ def ObtainSingleObservingTimes(TotalExposure, tstart, interObsSlew , run, id, ob
     for j in range(1, maxcounter):
         #t = tstart + m + interObsSlew
         t = tstart + j*steps + interObsSlew
-        #print("INCREASE from tstart = ", tstart," to t = ",t, "Total time = ",totaltime)
+        print("INCREASE from tstart = ", tstart," to t = ",t, "Total time = ",totaltime)
 
         fluencen, errorn = integrate.quad(lambda x: flux(x), tstart, t)  # ph/cm2/GeV
         obst = t - (tstart+interObsSlew)

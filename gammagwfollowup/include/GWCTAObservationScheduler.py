@@ -263,6 +263,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
     P_GWarray = []
     ObservationTimearray= []
     Exposure = []
+    Delay = []
     ZenIniarray = []
     ZenEndarray = []
     ObsBoolarray = []
@@ -408,6 +409,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
                         ZenEndarray.append(np.float('{:1.4f}'.format(np.float(ZenEnd))))
                         ObsBoolarray.append('True')
                         Exposure.append(ObsExp)
+                        Delay.append(DelayObs)
                         counter = counter + 1
                     elif((P_GW <= MinProbCut) and (P_GW>0)): # Although OBS AND NIGHT WAS TRUE
                         print("===== RESULTS ========")
@@ -419,6 +421,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
                         ZenIniarray.append(0)
                         ZenEndarray.append(0)
                         Exposure.append(0)
+                        Delay.append(0)
                         ObsBoolarray.append('ProbTooLow')
                     else:
                         print("===== RESULTS ========")
@@ -430,6 +433,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
                         ZenIniarray.append(0)
                         ZenEndarray.append(0)
                         Exposure.append(0)
+                        Delay.append(0)
                         ObsBoolarray.append('ProbZero')
             else:
                 # The event hasnt been found to be on the temporal FoV of the instrument
@@ -443,6 +447,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
                 ZenIniarray.append(0)
                 ZenEndarray.append(0)
                 Exposure.append(0)
+                Delay.append(0)
                 ObsBoolarray.append('NoTemporalFoV')
 
         ObservationTime = TendNight + datetime.timedelta(seconds=43200)  # Auxiliary jump of 12 hours to the next day
@@ -452,7 +457,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
     print()
     # List of suggested pointings
     print("TOTAL POSSIBLE: ",counterTotalPossible,"DONE: ",counter)
-    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray, Obsarray, P_GWarray,ObsBoolarray,ZenIniarray, ZenEndarray, Exposure], names=['Observation Time UTC','RA(deg)','DEC(deg)','Observatory','PGW','ObsInfo','ZenIni','ZenEnd','Duration'])
+    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray, Obsarray, P_GWarray,ObsBoolarray,ZenIniarray, ZenEndarray, Exposure, Delay], names=['Observation Time UTC','RA(deg)','DEC(deg)','Observatory','PGW','ObsInfo','ZenIni','ZenEnd','Duration', 'Delay'])
     return (SuggestedPointings, ObservationTime0, FOV, nside, counter)
 
 def PGalonFoV(filename,galFile,InputObservationList,UseObs,distance,Edistance_max,Edistance_min,ObservationTime0,parameters,dirName):

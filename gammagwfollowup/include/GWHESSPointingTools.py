@@ -717,7 +717,6 @@ def ComputeProbability2D(prob,highres, radecs,ReducedNside,HRnside,MinProbCut, t
 
     # Include to the list of pixels already observed
 
-
     #ipix_discComputeProb = hp.query_disc(HRnside, xyz, np.deg2rad(radius))
     #maskComputeProb=[np.isin(ipix_discComputeProb, ipixlist,invert=True)]
     #print('maskedP_GW',highres[ipix_discComputeProb[maskComputeProb]].sum())
