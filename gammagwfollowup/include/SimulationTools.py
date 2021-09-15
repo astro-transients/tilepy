@@ -472,7 +472,7 @@ def CubeSimulationSingleObservation_singleSpectrum(InputListrun,InputListMergerI
     # This matches the format that is it given in the LC evolution, so a merge is posible.
     #livetime = 3600*u.second
     livetime = Pointings['Duration']*u.second
-    print("livetime is ",livetime)
+    #print("livetime is ",livetime)
     #print('GRB simulation should take into account this:',InputObservationTime)
     #print('Livetime of the observation is:',livetimes[0])
     #TimeAxis=np.unique(np.concatenate((livetimes,grb.time_interval.value)))
