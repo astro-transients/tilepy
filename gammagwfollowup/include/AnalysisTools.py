@@ -6,7 +6,7 @@ from astropy.coordinates import SkyCoord
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
-
+from astropy.io import ascii
 
 def TSEstimation(maps):
     kernel = Gaussian2DKernel(2.5, mode="oversample")
@@ -64,12 +64,13 @@ def LikelihoodFit_Analysis_3DCube(dirname, GRBPos):
 
     print('------------------ Find hotspot in TS ----------------------- ')
 
-    sources = find_peaks(images["sqrt_ts"], threshold=5) # FOR TS
+    sources = find_peaks(images["sqrt_ts"], threshold=3) # FOR TS
 
-    #print(sources)
+    print(sources)
     plt.gca().scatter(sources["ra"],sources["dec"],transform=plt.gca().get_transform("icrs"),color="none",edgecolor="white",marker="o",s=600,lw=1.5,);
     plt.savefig(str(fullpath)+'/Significance.png')
 
+    sources3sig = find_peaks(images["sqrt_ts"], threshold=3)  # FOR TS
     sources = find_peaks(images["sqrt_ts"], threshold=5) # FOR TS
     plt.figure(figsize=(10, 5))
 
@@ -79,11 +80,15 @@ def LikelihoodFit_Analysis_3DCube(dirname, GRBPos):
 
     print('#######################')
     nSource=0
+    SigmaCandidates = []
+    Found = False
     for i in range(len(hotspotsCoord)):
         if hotspotsCoord[i].separation(GRBPos) < 0.1*u.deg:
             print('Source detected!!!')
             print('Sigma =',sources['value'][i])
+            SigmaCandidates.append(sources['value'][i])
             nSource+=1
+            Found='True'
 
     print('From all the hotspots, there is ', nSource, 'compatible with the injected GRB')
     print('#######################')
@@ -95,7 +100,19 @@ def LikelihoodFit_Analysis_3DCube(dirname, GRBPos):
     # plt.plot(bins, 1 / (sigma * np.sqrt(2 * np.pi)) *np.exp(- (bins - mu) ** 2 / (2 * sigma ** 2)),linewidth = 1, color = 'r')
     plt.savefig(str(fullpath)+'/histogram_SQRT_TS.png')
 
+    ## Produce hotspot summary file
+    filename3sig = str(fullpath)+'Hotspots_above_3sigma.txt'
+    sources3sig.rename_column('value', 'sigma')
+    sources3sig.remove_column('x')
+    sources3sig.remove_column('y')
+    ascii.write(sources3sig, filename3sig, overwrite=True, fast_writer=False)
 
+    ## Analysis summary
+
+    outfilename = str(fullpath)+'Summary_Test.txt'
+    f = open(outfilename, 'w')
+    f.write('Found' + ' ' + 'SigmaAssociations'+'\n')
+    f.write(str(Found) + ' ' + str(SigmaCandidates))
 
     '''
     print('====== SPECTRAL ANALYSIS ? =======')
