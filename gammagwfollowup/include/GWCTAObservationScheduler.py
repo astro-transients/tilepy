@@ -309,7 +309,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
     TotalNights = 2
     counter = 0
     counterTotalPossible = 0
-    #MaxRuns = 20
+    MaxRuns = 20
     #GrbsensMax = 16384
     AuxTimeNextTry = 900   # 15 minutes.  Allows to check if 15 minutes later there is a better opportunity
     #MinProbCut = 0.005

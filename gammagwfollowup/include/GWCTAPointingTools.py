@@ -245,8 +245,8 @@ def ProduceSummaryFile(InputList,InputObservationList,allPossiblePoint,foundIn,j
     if foundIn ==-1:
         outfilename = outDir+'/SummaryFile/'+name+'_SimuS' +typeSimu+ str("{:03d}".format(j)) + '.txt'
         f = open(outfilename, 'w')
-        f.write('RunList' + ' ' + 'MergerID' + ' ' + 'Distance' + ' ' + 'Theta' + ' ' + 'A90' + ' ' + 'Luminosity' + ' ' + 'TotalObservations' + ' ' + 'Obs' + ' ' + 'FirstCovered' + ' ' + 'TimesFound' + ' ' + 'WindowinInputList' + ' ' + 'TotalProb'+ ' ' +'ObsInfo' + '\n')
-        f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' ' +str(luminosity) + ' ' + str(len(InputObservationList)) + ' ' + str(allPossiblePoint) + ' ' + str(foundIn) +' ' + str(0) +' '+str(-1)+' '+str(totalProb)+' '+'True'+'\n')
+        f.write('RunList' + ' ' + 'MergerID' + ' ' + 'Distance' + ' ' + 'Theta' + ' ' + 'A90' + ' ' + 'Luminosity' + ' ' + 'TotalObservations' + ' ' + 'TotalPossible' + ' ' + 'FirstCovered' + ' ' + 'TimesFound' + ' '  + 'TotalProb'+ ' ' +'ObsInfo' + '\n')
+        f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' ' +str(luminosity) + ' ' + str(len(InputObservationList)) + ' ' + str(allPossiblePoint) + ' ' + str(foundIn) +' ' + str(0) +' '+str(totalProb)+' '+'True'+'\n')
     else:
         if type(foundIn) != int:
             foundFirst = foundIn[0]
@@ -260,8 +260,8 @@ def ProduceSummaryFile(InputList,InputObservationList,allPossiblePoint,foundIn,j
         outfilename = outDir+'/SummaryFile/'+name+'_SimuSF' +typeSimu+ str("{:03d}".format(j)) + '.txt'
         # print(outfilename)
         f = open(outfilename, 'w')
-        f.write('RunList' + ' ' + 'MergerID' + ' ' + 'Distance' + ' ' + 'Theta' + ' ' + 'A90' + ' ' + 'Lum' + ' ' + 'Duration'+ '  '+'TotObs' + ' ' + 'TotalPossible' + ' ' + 'FirstCovered' + ' ' + 'TimesFound' + ' ' + 'TotalProb'+ ' ' + 'ObsInfo'+'\n')
-        f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' '  + str(luminosity) + ' ' + str(duration[foundFirst]) + ' '+ str(len(InputObservationList)) + ' ' + str(allPossiblePoint) + ' ' + str(foundFirst) + ' ' + str(foundTimes) + ' ' +str(totalProb)+ ' '+ 'True' +'\n')
+        f.write('RunList' + ' ' + 'MergerID' + ' ' + 'Distance' + ' ' + 'Theta' + ' ' + 'A90' + ' ' + 'Luminosity' + ' ' + 'TotalObservations' + ' ' + 'TotalPossible' + ' ' + 'FirstCovered' + ' ' + 'TimesFound' + ' ' + 'TotalProb'+ ' ' + 'ObsInfo'+'\n')
+        f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' '  + str(luminosity) + ' '+ str(len(InputObservationList)) + ' ' + str(allPossiblePoint) + ' ' + str(foundFirst) + ' ' + str(foundTimes) + ' ' +str(totalProb)+ ' '+ 'True' +'\n')
 
 
 def ReadSummaryFile(summaryFile):
