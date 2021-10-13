@@ -361,7 +361,7 @@ class GRB(object):
         energy_interval=data[1].data.field(0)*u.GeV
         time_interval=data[2].data.field(0)* u.s
         flux=data[3].data
-        z = 0.0 # No EBL correction for the moment, it is already 0.01 corrected
+        z = 0.0 # No EBL correction for the moment, needs to be added
         name = filepath.split('/')[-1].split('.')[0]
         spectral_model = []
         for interval in range(0,len(time_interval)):

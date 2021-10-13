@@ -31,7 +31,7 @@ def PointingSimulation(sky_model,axis,geom,pointing,livetime,offset,irfs):
     return npred,counts, background,exposure
 
 def DynamicPointingSimulation(slew,step,TimeAxis,efLivetime,spatial_model,grb,axis,geom,geom3D,pointing,LCintervals,offset,irfs,Cube4DMap,Background4DMap,Exposure4DMap):
-
+# ToDo: need to update this function
     LC_intTimes=[]
     boolmask=False
 
@@ -68,9 +68,9 @@ def DynamicPointingSimulation(slew,step,TimeAxis,efLivetime,spatial_model,grb,ax
     return Cube4DMap,Background4DMap,Exposure4DMap
 
 def CubeSimulationMultiObservations(InputListrun,InputListMergerID,pointing,nP,Source,IRFfilename,InputObservationTime, datasetDir, outDir):
-
+    # ToDo: need to update this function
     absorption = Absorption.read_builtin('dominguez')
-    filepath = datasetDir +'/GammaCatalogV1.0/'+InputListrun + '_' + InputListMergerID.split('r')[-1] + ".fits"
+    filepath = datasetDir +'/GammaCatalogV2.0/'+InputListrun + '_' + InputListMergerID.split('r')[-1] + ".fits"
 
     #filepath='/Users/mseglar/Documents/GitHub/CTASimulationsGW/GRBtemplates/SGRB001.fits'
     grb = GRB.from_fitsfile(filepath=filepath, absorption=absorption)
@@ -166,9 +166,9 @@ def CubeSimulationMultiObservations(InputListrun,InputListMergerID,pointing,nP,S
     maps["exposure"].write(str(path / "exposure_multiObs.fits"), overwrite=True)
 
 def CubeSimulationMultiObservations_dynamicSpectrum(InputListrun,InputListMergerID,pointing,nP,Source,IRFfilename,InputObservationTime,datasetDir,outDir):
-
+    # ToDo: need to update this function
     absorption = Absorption.read_builtin('dominguez')
-    filepath= datasetDir +'/GammaCatalogV1.0/'+InputListrun + '_' + InputListMergerID.split('r')[-1] + ".fits"
+    filepath= datasetDir +'/GammaCatalogV2.0/'+InputListrun + '_' + InputListMergerID.split('r')[-1] + ".fits"
 
     #filepath='/Users/mseglar/Documents/GitHub/CTASimulationsGW/GRBtemplates/SGRB001.fits'
     grb = GRB.from_fitsfile(filepath=filepath, absorption=absorption)
@@ -287,7 +287,7 @@ def CubeSimulationMultiObservations_dynamicSpectrum(InputListrun,InputListMerger
 
 
 def CubeSimulationSingleObservation_dynamicSpectrum(InputListrun,InputListMergerID,nP,Source,IRFfilename,InputObservationTime,pointing,datasetDir,outDir):
-
+    # ToDo: need to update this function
     absorption = Absorption.read_builtin('dominguez')
     filepath= datasetDir +'/GammaCatalogV2.0/'+InputListrun + '_' + InputListMergerID.split('r')[-1] + ".fits"
 
@@ -420,7 +420,6 @@ def BinnedZenithAngle(zenithAngle):
 
 def CubeSimulationSingleObservation_singleSpectrum(InputListrun,InputListMergerID,nP,Source,IRFfilename,zenithAngle,Pointings,datasetDir,outDir):
 
-
     path = '/' + InputListrun + '_' + InputListMergerID + '_' + str(nP)
     fullpath=Path(outDir+path)
     fullpath.mkdir(exist_ok=True)
@@ -482,10 +481,11 @@ def CubeSimulationSingleObservation_singleSpectrum(InputListrun,InputListMergerI
     pointing = SkyCoord(RAP,DecP, unit="deg", frame="fk5")
 
     print(grb.spectral_model[0])
+
+    #ToDo: Select the grb that corresponds to time of the observation (now, set to 6 for testing)
+    spectral_model = grb.spectral_model[6]
     #spectral_model = PowerLaw(index=2.2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV")
 
-    #ToDo: Select the grb that corresponds to time of the observation (now, set to 6 as default)
-    spectral_model = grb.spectral_model[6]
     sky_model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
     npred, counts, background, exposure= PointingSimulation(sky_model,axis,geom3D,pointing,livetime,offset,irfs)
     Cube3DMap.data = counts
