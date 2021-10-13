@@ -44,75 +44,83 @@ def LikelihoodFit_Analysis_3DCube(dirname, GRBPos):
 
     print('Plotting results')
 
-    plt.figure(figsize=(15, 5))
+    plt.figure(figsize=(5, 5))
     maps["background"].sum_over_axes().plot(stretch="sqrt",add_cbar=True)
     plt.savefig(str(fullpath)+'/Background.png')
 
-    plt.figure(figsize=(15, 5))
+    plt.figure(figsize=(5, 5))
     maps["exposure"].sum_over_axes().plot(stretch="sqrt",add_cbar=True)
     plt.savefig(str(fullpath)+'/Exposure.png')
 
 
-    plt.figure(figsize=(15, 5))
+    plt.figure(figsize=(5, 5))
     maps["counts"].sum_over_axes().plot(stretch="sqrt",add_cbar=True)
     plt.savefig(str(fullpath)+'/Counts.png')
-    plt.figure(figsize=(15, 5))
 
+    plt.figure(figsize=(5, 5))
     #images["significance"].sum_over_axes().plot(stretch="sqrt",add_cbar=True)
     #sources = find_peaks(images["significance"].sum_over_axes(), threshold=4) #FOR LIMA
     images["sqrt_ts"].sum_over_axes().plot(stretch="sqrt",add_cbar=True)
 
     print('------------------ Find hotspot in TS ----------------------- ')
 
-    sources = find_peaks(images["sqrt_ts"], threshold=3) # FOR TS
-
-    print(sources)
-    plt.gca().scatter(sources["ra"],sources["dec"],transform=plt.gca().get_transform("icrs"),color="none",edgecolor="white",marker="o",s=600,lw=1.5,);
-    plt.savefig(str(fullpath)+'/Significance.png')
-
+    sourcesall = find_peaks(images["sqrt_ts"], threshold=0) # FOR TS
     sources3sig = find_peaks(images["sqrt_ts"], threshold=3)  # FOR TS
-    sources = find_peaks(images["sqrt_ts"], threshold=5) # FOR TS
-    plt.figure(figsize=(10, 5))
+    sources5sig = find_peaks(images["sqrt_ts"], threshold=5) # FOR TS
 
-    hotspotsCoord = SkyCoord(sources["ra"],sources["dec"], frame='fk5', unit=(u.deg, u.deg))
-
-    # Angular distance is compatible with same object
-
-    print('#######################')
-    nSource=0
-    SigmaCandidates = []
-    Found = False
-    for i in range(len(hotspotsCoord)):
-        if hotspotsCoord[i].separation(GRBPos) < 0.1*u.deg:
-            print('Source detected!!!')
-            print('Sigma =',sources['value'][i])
-            SigmaCandidates.append(sources['value'][i])
-            nSource+=1
-            Found='True'
-
-    print('From all the hotspots, there is ', nSource, 'compatible with the injected GRB')
-    print('#######################')
-    mu, sigma = 0, 1  # mean and standard deviation
-    count, bins, ignored =plt.hist(sources['value'].data,100, histtype='step',fill=False,density=True, stacked=True)
+    plt.figure(figsize=(15, 5))
+    #mu, sigma = 0, 1  # mean and standard deviation
+    plt.hist(sourcesall['value'].data,100, histtype='step',fill=False, stacked=True)
+    #plt.axis([0, 20, 0, 20])
     plt.grid()
     plt.ylabel('#')
     plt.xlabel('Significance [$\sigma$]')
-    # plt.plot(bins, 1 / (sigma * np.sqrt(2 * np.pi)) *np.exp(- (bins - mu) ** 2 / (2 * sigma ** 2)),linewidth = 1, color = 'r')
     plt.savefig(str(fullpath)+'/histogram_SQRT_TS.png')
 
-    ## Produce hotspot summary file
-    filename3sig = str(fullpath)+'Hotspots_above_3sigma.txt'
-    sources3sig.rename_column('value', 'sigma')
-    sources3sig.remove_column('x')
-    sources3sig.remove_column('y')
-    ascii.write(sources3sig, filename3sig, overwrite=True, fast_writer=False)
 
-    ## Analysis summary
+    # Produce hotspot summary file
+    print('Hotspots above 3 sigma:')
+    print(sources3sig)
+    if sources3sig:
+        filename3sig = str(fullpath)+'/Hotspots_above_3sigma.txt'
+        sources3sig.rename_column('value', 'sigma')
+        sources3sig.remove_column('x')
+        sources3sig.remove_column('y')
+        ascii.write(sources3sig, filename3sig, overwrite=True, fast_writer=False)
 
-    outfilename = str(fullpath)+'Summary_Test.txt'
+    Found = False
+    SigmaCandidates = []
+    if sources5sig:
+        print('Hotspots above 5 sigma:')
+        print(sources5sig)
+        #plt.gca().scatter(sources5sig["ra"],sources5sig["dec"],transform=plt.gca().get_transform("icrs"),color="none",edgecolor="white",marker="o",s=600,lw=1.5,);
+        #plt.savefig(str(fullpath)+'/Significance_5sigma.png')
+        #plt.figure(figsize=(10, 5))
+
+        hotspotsCoord = SkyCoord(sources5sig["ra"],sources5sig["dec"], frame='fk5', unit=(u.deg, u.deg))
+
+        # Angular distance is compatible with same object
+
+        print('############ ASSOCIATIONS ###########')
+        nSource=0
+
+        for i in range(len(hotspotsCoord)):
+            if hotspotsCoord[i].separation(GRBPos) < 0.1*u.deg:
+                print('Source detected!!!')
+                print('Sigma =',sources5sig['value'][i])
+                SigmaCandidates.append(sources5sig['value'][i])
+                nSource+=1
+                Found='True'
+
+        print('From all the hotspots, there is ', nSource, 'compatible with the injected GRB')
+
+    ## Analysis summary of 5sigma spots
+    outfilename = str(fullpath) + '/Summary_5sigma.txt'
     f = open(outfilename, 'w')
-    f.write('Found' + ' ' + 'SigmaAssociations'+'\n')
+    f.write('Found' + ' ' + '5SigmaAssociations' + '\n')
     f.write(str(Found) + ' ' + str(SigmaCandidates))
+
+
 
     '''
     print('====== SPECTRAL ANALYSIS ? =======')
