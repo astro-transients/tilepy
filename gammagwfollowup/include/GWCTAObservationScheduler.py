@@ -310,8 +310,8 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
     counter = 0
     counterTotalPossible = 0
     #MaxRuns = 20
-    GrbsensMax = 16384
-    AuxTimeNextTry = 1800   # 30 minutes.  Allows to check if 30 minutes later there is a better opportunity
+    #GrbsensMax = 16384
+    AuxTimeNextTry = 900   # 15 minutes.  Allows to check if 15 minutes later there is a better opportunity
     #MinProbCut = 0.005
 
 
@@ -341,7 +341,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
             print("Night number", nights, " window starts at", TstartNight, "finishes at", TendNight)
 
             # Look for the first time that the C.R. observable is > 5%
-            TemporalBin = datetime.timedelta(seconds = 900) # Every 15 minutes
+            TemporalBin = datetime.timedelta(seconds = 600) # Every 10 minutes
             for i in range(0, 24):
                 checkTime = TstartNight + i*TemporalBin
                 if((TendNight-checkTime).total_seconds()<0):

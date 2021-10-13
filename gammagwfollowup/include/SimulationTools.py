@@ -450,11 +450,11 @@ def CubeSimulationSingleObservation_singleSpectrum(InputListrun,InputListMergerI
     print('GRB:',filepath)
     print()
 
-    for i in range(0,len(grb.spectral_model)):
-        grb.spectral_model[i].plot(energy_range=(0.001, 10) * u.TeV)
+    #for i in range(0,len(grb.spectral_model)):
+    #    grb.spectral_model[i].plot(energy_range=(0.001, 10) * u.TeV)
     #plt.show()
-    plt.grid()
-    plt.savefig(str(fullpath)+'/Fits_Spectra.png')
+    #plt.grid()
+    #plt.savefig(str(fullpath)+'/Fits_Spectra.png')
 
     # Get Spectral model from fits!
 
@@ -468,14 +468,8 @@ def CubeSimulationSingleObservation_singleSpectrum(InputListrun,InputListMergerI
     axis = MapAxis.from_edges(np.logspace(-3.0, 1.0, 20), unit="TeV", name="energy", interp="log")
 
     ###########################################
-    # TimeRun => Pointing time relative to MERGER!
-    # This matches the format that is it given in the LC evolution, so a merge is posible.
-    #livetime = 3600*u.second
-    livetime = Pointings['Duration']*u.second
-    #print("livetime is ",livetime)
-    #print('GRB simulation should take into account this:',InputObservationTime)
-    #print('Livetime of the observation is:',livetimes[0])
-    #TimeAxis=np.unique(np.concatenate((livetimes,grb.time_interval.value)))
+
+    livetime = 1800*u.second
 
     offset = Angle("2.5 deg")
 
@@ -488,7 +482,10 @@ def CubeSimulationSingleObservation_singleSpectrum(InputListrun,InputListMergerI
     pointing = SkyCoord(RAP,DecP, unit="deg", frame="fk5")
 
     print(grb.spectral_model[0])
-    spectral_model = PowerLaw(index=2.2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV")
+    #spectral_model = PowerLaw(index=2.2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV")
+
+    #ToDo: Select the grb that corresponds to time of the observation (now, set to 6 as default)
+    spectral_model = grb.spectral_model[6]
     sky_model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
     npred, counts, background, exposure= PointingSimulation(sky_model,axis,geom3D,pointing,livetime,offset,irfs)
     Cube3DMap.data = counts
@@ -507,8 +504,6 @@ def CubeSimulationSingleObservation_singleSpectrum(InputListrun,InputListMergerI
     }
 
     #print(maps)
-
-
 
     # write maps
     maps["counts"].write(str(fullpath / "counts_singleObs.fits"), overwrite=True)
