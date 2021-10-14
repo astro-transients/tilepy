@@ -77,7 +77,7 @@ def ObtainObservingTimes(totaltime,delayAlert,run,id,observatory,dirName,zenith)
         
     if int(zenith)==20:
         # sensitivity CTA North, zenit=20 deg
-        sensifilenorthz20 = dirName + "/cssensSensitivity/grbsens-5.0sigma_t1s-t16384s_irf-North_z20_0.5h.txt"  # "sensitivity-5sigma_irf-North_z20_0.5.txt"
+        sensifilenorthz20 = dirName + "/grbsens_output_v2_May_2021/grbsens-5.0sigma_t1s-t16384s_irf-North_z20_0.5h.txt"  # "sensitivity-5sigma_irf-North_z20_0.5.txt"
 
         SensiListNorthz20 = ParseCatalog(sensifilenorthz20)
         ndatasnz20 = len(SensiListNorthz20)
@@ -100,7 +100,7 @@ def ObtainObservingTimes(totaltime,delayAlert,run,id,observatory,dirName,zenith)
     elif int(zenith)==40:
         ###############
         # sensitivity CTA North, zenit=40 deg
-        sensifilenorthz40 = dirName +"/cssensSensitivity/grbsens-5.0sigma_t1s-t16384s_irf-North_z40_0.5h.txt"
+        sensifilenorthz40 = dirName +"/grbsens_output_v2_May_2021/grbsens-5.0sigma_t1s-t16384s_irf-North_z40_0.5h.txt"
 
         SensiListNorthz40 = ParseCatalog(sensifilenorthz40)
         ndatasnz40 = len(SensiListNorthz40)
@@ -124,7 +124,7 @@ def ObtainObservingTimes(totaltime,delayAlert,run,id,observatory,dirName,zenith)
     else:
         ###############
         # sensitivity CTA North, zenit=60 deg
-        sensifilenorthz60 = dirName +"/cssensSensitivity/grbsens-5.0sigma_t1s-t16384s_irf-North_z60_0.5h.txt"
+        sensifilenorthz60 = dirName +"/grbsens_output_v2_May_2021/grbsens-5.0sigma_t1s-t16384s_irf-North_z60_0.5h.txt"
 
         SensiListNorthz60 = ParseCatalog(sensifilenorthz60)
         ndatasnz60 = len(SensiListNorthz60)
@@ -150,7 +150,7 @@ def ObtainObservingTimes(totaltime,delayAlert,run,id,observatory,dirName,zenith)
         ###############
         # sensitivity CTA South, zenit=20 deg
 
-        sensifilesouthz20 = dirName +"/cssensSensitivity/grbsens-5.0sigma_t1s-t16384s_irf-South_z20_0.5h.txt"
+        sensifilesouthz20 = dirName +"/grbsens_output_v2_May_2021/grbsens-5.0sigma_t1s-t16384s_irf-South_z20_0.5h.txt"
 
         SensiListSouthz20 = ParseCatalog(sensifilesouthz20)
         ndatassz20 = len(SensiListSouthz20)
@@ -173,7 +173,7 @@ def ObtainObservingTimes(totaltime,delayAlert,run,id,observatory,dirName,zenith)
     elif int(zenith)==40:
         ###############
         # sensitivity CTA South, zenit=40 deg
-        sensifilesouthz40 = dirName+"/cssensSensitivity/grbsens-5.0sigma_t1s-t16384s_irf-South_z40_0.5h.txt"
+        sensifilesouthz40 = dirName+"/grbsens_output_v2_May_2021/grbsens-5.0sigma_t1s-t16384s_irf-South_z40_0.5h.txt"
 
         SensiListSouthz40 = ParseCatalog(sensifilesouthz40)
         ndatassz40 = len(SensiListSouthz40)
@@ -196,7 +196,7 @@ def ObtainObservingTimes(totaltime,delayAlert,run,id,observatory,dirName,zenith)
     else:
         ###############
         # sensitivity CTA South, zenit=40 deg
-        sensifilesouthz60 = dirName +"/cssensSensitivity/grbsens-5.0sigma_t1s-t16384s_irf-South_z60_0.5h.txt"
+        sensifilesouthz60 = dirName +"/grbsens_output_v2_May_2021/grbsens-5.0sigma_t1s-t16384s_irf-South_z60_0.5h.txt"
 
         SensiListSouthz60 = ParseCatalog(sensifilesouthz60)
         ndatassz60 = len(SensiListSouthz60)
@@ -313,7 +313,7 @@ def ObtainSingleObservingTimes(TotalExposure, tstart, interObsSlew , run, id, ob
 
         if int(zenith) == 20:
             # sensitivity CTA North, zenit=20 deg
-            sensifilenorthz20 = dirName + "/cssensSensitivity/grbsens-5.0sigma_t1s-t16384s_irf-North_z20_0.5h.txt"  # "sensitivity-5sigma_irf-North_z20_0.5.txt"
+            sensifilenorthz20 = dirName + "/grbsens_output_v2_May_2021/grbsens-5.0sigma_t1s-t16384s_irf-North_z20_0.5h.txt"  # "sensitivity-5sigma_irf-North_z20_0.5.txt"
 
             SensiListNorthz20 = ParseCatalog(sensifilenorthz20)
             ndatasnz20 = len(SensiListNorthz20)
@@ -337,7 +337,7 @@ def ObtainSingleObservingTimes(TotalExposure, tstart, interObsSlew , run, id, ob
         elif int(zenith) == 40:
             ###############
             # sensitivity CTA North, zenit=40 deg
-            sensifilenorthz40 = dirName + "/cssensSensitivity/grbsens-5.0sigma_t1s-t16384s_irf-North_z40_0.5h.txt"
+            sensifilenorthz40 = dirName + "/grbsens_output_v2_May_2021/grbsens-5.0sigma_t1s-t16384s_irf-North_z40_0.5h.txt"
 
             SensiListNorthz40 = ParseCatalog(sensifilenorthz40)
             ndatasnz40 = len(SensiListNorthz40)
@@ -362,7 +362,7 @@ def ObtainSingleObservingTimes(TotalExposure, tstart, interObsSlew , run, id, ob
         else:
             ###############
             # sensitivity CTA North, zenit=60 deg
-            sensifilenorthz60 = dirName + "/cssensSensitivity/grbsens-5.0sigma_t1s-t16384s_irf-North_z60_0.5h.txt"
+            sensifilenorthz60 = dirName + "/grbsens_output_v2_May_2021/grbsens-5.0sigma_t1s-t16384s_irf-North_z60_0.5h.txt"
 
             SensiListNorthz60 = ParseCatalog(sensifilenorthz60)
             ndatasnz60 = len(SensiListNorthz60)
@@ -387,7 +387,7 @@ def ObtainSingleObservingTimes(TotalExposure, tstart, interObsSlew , run, id, ob
             ###############
             # sensitivity CTA South, zenit=20 deg
 
-            sensifilesouthz20 = dirName + "/cssensSensitivity/grbsens-5.0sigma_t1s-t16384s_irf-South_z20_0.5h.txt"
+            sensifilesouthz20 = dirName + "/grbsens_output_v2_May_2021/grbsens-5.0sigma_t1s-t16384s_irf-South_z20_0.5h.txt"
 
             SensiListSouthz20 = ParseCatalog(sensifilesouthz20)
             ndatassz20 = len(SensiListSouthz20)
@@ -411,7 +411,7 @@ def ObtainSingleObservingTimes(TotalExposure, tstart, interObsSlew , run, id, ob
         elif int(zenith) == 40:
             ###############
             # sensitivity CTA South, zenit=40 deg
-            sensifilesouthz40 = dirName + "/cssensSensitivity/grbsens-5.0sigma_t1s-t16384s_irf-South_z40_0.5h.txt"
+            sensifilesouthz40 = dirName + "/grbsens_output_v2_May_2021/grbsens-5.0sigma_t1s-t16384s_irf-South_z40_0.5h.txt"
 
             SensiListSouthz40 = ParseCatalog(sensifilesouthz40)
             ndatassz40 = len(SensiListSouthz40)
@@ -435,7 +435,7 @@ def ObtainSingleObservingTimes(TotalExposure, tstart, interObsSlew , run, id, ob
         else:
             ###############
             # sensitivity CTA South, zenit=40 deg
-            sensifilesouthz60 = dirName + "/cssensSensitivity/grbsens-5.0sigma_t1s-t16384s_irf-South_z60_0.5h.txt"
+            sensifilesouthz60 = dirName + "/grbsens_output_v2_May_2021/grbsens-5.0sigma_t1s-t16384s_irf-South_z60_0.5h.txt"
 
             SensiListSouthz60 = ParseCatalog(sensifilesouthz60)
             ndatassz60 = len(SensiListSouthz60)
