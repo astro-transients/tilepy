@@ -457,7 +457,7 @@ def EvolutionPlot(galPointing,tname):
     ax.set_xlabel('Time',fontsize=14)
     ax.grid()
     ax.legend(bbox_to_anchor=(1.02, 1), loc=2, borderaxespad=0.)
-    plt.savefig("%s/ZenithvsTime.png"%tname)
+    plt.savefig("%s/AltitudevsTime.png"%tname)
 
 
 def RankingTimes(ObservationTime, filename, cat, parameters, observatory, targetType, dirName, PointingFile):
