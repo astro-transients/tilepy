@@ -1915,60 +1915,56 @@ def strTimeProp(start, end, format, prop):
 
 ######################################################
 
-def ModifyCataloguePIX(pix_ra1, pix_dec1, test_time, maxz, prob,cat, FOV, totaldPdV,nside, NewNside, minz):
-    
-    #To do:
-    #for a faster time:
-    #subtract the summed pixels
-    #chose only visbile pixels / done
-    #adjust the number of interations and pixel
-    
+
+def ModifyCataloguePIX(pix_ra1, pix_dec1, test_time, maxz, prob, cat, FOV, totaldPdV, nside, NewNside, minz,
+                       observatory):
+    # To do:
+    # for a faster time:
+    # subtract the summed pixels
+    # chose only visbile pixels / done
+    # adjust the number of interations and pixel
+
     #####################
-    #pprob = hp.pixelfunc.ud_grade(prob, 64)#power = -2
-    #pixel_theta, pixel_phi = hp.pix2ang((hp.npix2nside(len(pprob))), np.arange(len(pprob)))
-    
-    #pix_ra1 = np.rad2deg(pixel_phi)
-    #pix_dec1 = np.rad2deg(0.5 * np.pi - pixel_theta)
+    # pprob = hp.pixelfunc.ud_grade(prob, 64)#power = -2
+    # pixel_theta, pixel_phi = hp.pix2ang((hp.npix2nside(len(pprob))), np.arange(len(pprob)))
+
+    # pix_ra1 = np.rad2deg(pixel_phi)
+    # pix_dec1 = np.rad2deg(0.5 * np.pi - pixel_theta)
     ##################
-    
-    #Cuts on azimuth angle  (in the probability region)
-    observatory = co.EarthLocation(lat=-23.271333 * u.deg,lon=16.5 * u.deg, height=1800 * u.m)
-    
-    
+
+    # Cuts on azimuth angle  (in the probability region)
+
     frame = co.AltAz(obstime=test_time, location=observatory)
-    
+
     radecs = co.SkyCoord(pix_ra1, pix_dec1, frame='fk5', unit=(u.deg, u.deg))
     thisaltaz = radecs.transform_to(frame)
-    
-    #pix_alt1 = thisaltaz.alt.value
-    
+
+    # pix_alt1 = thisaltaz.alt.value
+
     pix_ra = radecs.ra.value[thisaltaz.alt.value > 90 - (minz)]
     pix_dec = radecs.dec.value[thisaltaz.alt.value > 90 - (minz)]
-    #pix_alt = pix_alt1[thisaltaz.alt.value > 90 - (minz)]
-    
-    dp_Pix_Fov = np.empty(len(pix_ra), dtype=object)
-    
-    cat_pix = Table([pix_ra, pix_dec, dp_Pix_Fov ], names=('PIXRA', 'PIXDEC', 'PIXFOVPROB'))
+    # pix_alt = pix_alt1[thisaltaz.alt.value > 90 - (minz)]
 
-    
+    dp_Pix_Fov = np.empty(len(pix_ra), dtype=object)
+
+    cat_pix = Table([pix_ra, pix_dec, dp_Pix_Fov], names=('PIXRA', 'PIXDEC', 'PIXFOVPROB'))
+
     ##############################################################
-    #Possible:  select the pixels that only have a prob > certain value
+    # Possible:  select the pixels that only have a prob > certain value
     #       To do so attribute for each pix its prob: start with nside initial, put in table prob, reduce resolution, make cut...
-    #Note : maybe highest PROBFOV pix is not visible ? ? ? check fullfills requirements
+    # Note : maybe highest PROBFOV pix is not visible ? ? ? check fullfills requirements
     ###############################################################
-    
+
     dp_dV_FOV = []
 
-    #iteration on chosen pixel to calculate the probability on their field of view using galaxies
+    # iteration on chosen pixel to calculate the probability on their field of view using galaxies
     for l in range(0, len(cat_pix)):
-        dp_dV_FOV.append(ComputePGalinFOV(prob,cat,cat_pix[l], FOV, totaldPdV, nside,UsePix=True))
-
+        dp_dV_FOV.append(PGalinFOV(prob, cat, cat_pix[l], FOV, totaldPdV, nside, UsePix=True))
 
     cat_pix['PIXFOVPROB'] = dp_dV_FOV
 
     ttcat = cat_pix[np.flipud(np.argsort(cat_pix['PIXFOVPROB']))]
     return ttcat
-
 
 
 def Get90RegionPixReduced(hpxx, percentage, Nnside):

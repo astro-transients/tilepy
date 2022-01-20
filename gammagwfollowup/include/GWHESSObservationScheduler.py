@@ -576,7 +576,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
     #    name = names[0]
 
     print()
-    print('-------------------   NEW LVC EVENT   --------------------')
+    print('-------------------   NEW EVENT   --------------------')
     print()
 
     print('Loading GW map from ', filename)
@@ -642,9 +642,9 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
     print('MaxRuns: ', MaxRuns, 'MinimumProbCutForCatalogue: ', MinimumProbCutForCatalogue)
 
     if(UseGreytime):
-        NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0, HESSObservatory(),MaxNights,Duration,MinDuration)
+        NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0, Observatory,MaxNights,Duration,MinDuration)
     else:
-        NightDarkRuns = NightDarkObservation(ObservationTime0, HESSObservatory(), MaxNights,Duration,MinDuration)
+        NightDarkRuns = NightDarkObservation(ObservationTime0,Observatory, MaxNights,Duration,MinDuration)
 
     totalProb = 0.
     n = 0
@@ -668,7 +668,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
                 ObservationTime = NightDarkRuns[j - 1]
                 nextround = False
             visible, altaz, tGals_aux = VisibleAtTime(ObservationTime, tGals_aux, max_zenith,
-                                                      HESSObservatory().Location)
+                                                      Observatory.Location)
 
             if (visible):
 
@@ -680,7 +680,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
 
                 finalGals = visiGals[mask]
                 visiPix = ModifyCataloguePIX(pix_ra1, pix_dec1, ObservationTime, max_zenith, prob, finalGals, FOV,
-                                             sum_dP_dV, nside, NewNside, minz)
+                                             sum_dP_dV, nside, NewNside, minz,Observatory.Location)
 
                 if (visiPix['PIXFOVPROB'][:1] > probCut):
                     n = n + 1
@@ -690,7 +690,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
                     # print("TARGET COORDINATES AND DETAILS...")
                     # print("=================================")
                     # print(finalGals['RAJ2000', 'DEJ2000', 'Bmag', 'Dist', 'Alt', 'dp_dV','dp_dV_FOV'][:1])
-                    p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbPGALIntegrateFoV(prob, ObservationTime,Observatory.Location,
+                    p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbPGALIntegrateFoV(prob, ObservationTime, Observatory.Location,
                                                                                                visiPix, True, visiGals,
                                                                                                tGals_aux, sum_dP_dV,
                                                                                                alreadysumipixarray1,
