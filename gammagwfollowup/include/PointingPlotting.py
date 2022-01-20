@@ -102,7 +102,8 @@ def PlotPointingsTogether(prob,time,targetCoord1,n1,targetCoord2,n2,nside, FOV,d
         #plt.savefig("Pointing_Plotting/PointingFOV_Comparison.png")
 
 
-def PlotPointings(prob,cat,time, targetCoord, Totalprob, nside, FOV, name, dirName, doplot=True):
+def PlotPointings(prob, cat, time, targetCoord, Totalprob, nside, FOV, maxzenith, observatory, name, dirName,
+                  doplot=True):
     radius = FOV
 
     t = 0.5 * np.pi - targetCoord[0].dec.rad
@@ -126,22 +127,23 @@ def PlotPointings(prob,cat,time, targetCoord, Totalprob, nside, FOV, name, dirNa
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
         skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
-        observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
+        observatory = observatory.Location
         frame = co.AltAz(obstime=time[0], location=observatory)
         altaz_all = skycoord.transform_to(frame)
 
         dirName = '%s/Pointing_Plotting' % dirName
         if not os.path.exists(dirName):
             os.makedirs(dirName)
-        #path = os.path.dirname(os.path.realpath(__file__)) + '/Pointing_Plotting'
-        #if not os.path.exists(path):
+        # path = os.path.dirname(os.path.realpath(__file__)) + '/Pointing_Plotting'
+        # if not os.path.exists(path):
         #    os.mkdir(path, 493)
 
-        hp.mollview(prob, rot=[180,0],coord='C', title="GW prob map (Ecliptic) + %s %g  %s/%s/%s %s:%s:%s UTC" %
-                                                  (name, Totalprob * 100, time[0].day, time[0].month, time[0].year,
-                                                   time[0].hour, time[0].minute, time[0].second))
+        hp.mollview(prob, rot=[180, 0], coord='C', title="GW prob map (Ecliptic) + %s %g  %s/%s/%s %s:%s:%s UTC" %
+                                                         (name, Totalprob * 100, time[0].day, time[0].month,
+                                                          time[0].year,
+                                                          time[0].hour, time[0].minute, time[0].second))
         hp.graticule()
-        #plt.show()
+        # plt.show()
         theta = np.random.rand(400) * 360
         tarcoordra = np.empty(400)
         tarcoorddec = np.empty(400)
@@ -153,9 +155,20 @@ def PlotPointings(prob,cat,time, targetCoord, Totalprob, nside, FOV, name, dirNa
             tarcoorddec.fill(targetCoord[j].dec.deg)
             racoord = tarcoordra + Fov_array * np.cos(theta)
             deccoord = tarcoorddec + Fov_array * np.sin(theta)
-            hp.visufunc.projscatter(racoord, deccoord, lonlat=True, marker='.', color=colors[1],coord='C')
-        #plt.show()
-        plt.savefig('%s/Pointings.png'%dirName)
+            hp.visufunc.projscatter(racoord, deccoord, lonlat=True, marker='.', color=colors[j], coord='C')
+
+            # Plotting the visibility of the instrument as specified in the config
+
+            altcoord = np.empty(1000)
+            altcoord.fill(90 - maxzenith)
+            azcoord = np.random.rand(1000) * 360
+            # print(time)
+            RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time[j],
+                                   location=observatory)
+            RandomCoord_radec = RandomCoord.transform_to('fk5')
+            hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True)
+            # plt.show()
+            plt.savefig('%s/Pointings%s.png' % (dirName, j))
 
         dist = cat['Dist']
         hp.visufunc.projscatter(cat['RAJ2000'][dist < 200], cat['DEJ2000'][dist < 200], lonlat=True, marker='.',
@@ -165,7 +178,7 @@ def PlotPointings(prob,cat,time, targetCoord, Totalprob, nside, FOV, name, dirNa
         # draw observation position, which is equivalent to galaxy with highest
         # probability
 
-        #hp.visufunc.projscatter(targetCoord.ra.deg, targetCoord.dec.deg, lonlat=True, marker='.', color=colors[1],coord=['E','G'])
+        # hp.visufunc.projscatter(targetCoord.ra.deg, targetCoord.dec.deg, lonlat=True, marker='.', color=colors[1],coord=['E','G'])
 
         # plt.savefig("Pointing_Plotting/G274296Pointing_Comparison_%g_%g:%g.png" % (time.day, time.hour, time.minute))
         # draw circle of HESS-I FoV around best fit position
@@ -174,24 +187,23 @@ def PlotPointings(prob,cat,time, targetCoord, Totalprob, nside, FOV, name, dirNa
 
         # Draw H.E.S.S. FOV
 
-        #dec = np.empty(500)
-        #dec.fill(10)
-        #ra = np.random.rand(500) * 360
-        #hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
+        # dec = np.empty(500)
+        # dec.fill(10)
+        # ra = np.random.rand(500) * 360
+        # hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
 
-        #dec = np.empty(500)
-        #dec.fill(-10)
-        #hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
+        # dec = np.empty(500)
+        # dec.fill(-10)
+        # hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
 
-        #dec = np.random.rand(500) * 20 - 10
-        #ra = np.empty(500)
-        #ra.fill(130)
-        #hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
+        # dec = np.random.rand(500) * 20 - 10
+        # ra = np.empty(500)
+        # ra.fill(130)
+        # hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
 
-        #ra = np.empty(500)
-        #ra.fill(-100)
-        #hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
-
+        # ra = np.empty(500)
+        # ra.fill(-100)
+        # hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
 
         '''
         ra = np.random.rand(500) * 130
@@ -225,9 +237,9 @@ def PlotPointings(prob,cat,time, targetCoord, Totalprob, nside, FOV, name, dirNa
                                location=observatory)
         RandomCoord_radec = RandomCoord.transform_to('fk5')
         hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord=['E','G'])
-        
+
         #plt.show()
-        
+
         #LOAD galaxies
         c_icrs= SkyCoord(ra=cat['RAJ2000'][dist<200]*u.degree, dec=cat['DEJ2000'][dist<200]*u.degree, frame='icrs')
         subset0=c_icrs[(np.absolute(c_icrs.galactic.l.value-180)>0)&(np.absolute(c_icrs.galactic.l.value-180)<30)]
@@ -348,7 +360,8 @@ def LoadPointingsGAL(tpointingFile):
     Pgal = Pgal.astype(np.float)
     return time, coordinates ,Pgw, Pgal
 
-def PointingPlotting(filename,cat,name,dirName,PointingsFile1):
+
+def PointingPlotting(filename,cat, observatory, params, name,dirName,PointingsFile1):
 
     # link to the GW map => will come from the alert message
     #GWurl = ('https://dcc.ligo.org/P1500071/public/783865_bayestar.fits.gz')
@@ -359,15 +372,22 @@ def PointingPlotting(filename,cat,name,dirName,PointingsFile1):
     if ('G' in filename):
         names = filename.split("_")
         name = names[0]
+    ##################
+    cfg = params
+    parser = ConfigParser()
+    parser.read(cfg)
+    parser.sections()
+    section = 'GWBestGalaxyParameters'
+    try:
+        max_zenith = int(parser.get(section, 'max_zenith'))
+        FOV = float(parser.get(section, 'FOV'))
+    except Exception as x:
+        print(x)
 
-    # effective FoV of single pointing => probably we just assume HESS-I/hybrid observations (feedback from the DAQ on the availability of telescopes probably too complex)
-    #TODO: this has to match the values used previously => read them from the parameter.ini file
-    FOV = 2.5
 
-
-    print()
-    print('-------------------   NEW LVC EVENT   --------------------')
-    print()
+    #print()
+    #print('-------------------   NEW LVC EVENT   --------------------')
+    #print()
 
     print('Loading GW map from ', filename)
     prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
@@ -401,7 +421,7 @@ def PointingPlotting(filename,cat,name,dirName,PointingsFile1):
 
     Probarray1 = np.atleast_1d(Probarray1) #making sure to have an array on which we can call the sum() function
 
-    print('----------   BUILDING A MAP   ----------')
+    print('----------   PLOTTING THE SCHEDULING   ----------')
     print('Total probability of map 1 that maximises PGW= {0:.5f}'.format(sum(Probarray1)))
     #print('Total probability of map 2 that maximases PGal= ', sum(Probarray2))
     converted_time1=[]
@@ -427,8 +447,9 @@ def PointingPlotting(filename,cat,name,dirName,PointingsFile1):
 
 
     #PlotPointingsTogether(prob,converted_time1[0],Coordinates1,sum(Probarray1),name1,Coordinates2,sum(Probarray2),name2, nside, FOV, doplot=True)
-    PlotPointings(prob,cat,converted_time1,Coordinates1,sum(Probarray1), nside, FOV, name, dirName, doplot=True)
+    PlotPointings(prob,cat,converted_time1,Coordinates1,sum(Probarray1), nside, FOV, max_zenith, observatory, name, dirName, doplot=True)
     #PlotPointings(converted_time2[0],Coordinates2, sum(Probarray2), nside, FOV,name2,doplot=True)
+
 
 def PointingPlottingGWCTA(filename,name,dirName,PointingsFile,FOV,UseObs):
 
