@@ -145,10 +145,15 @@ def VisibilityWindow(ObservationTime,galPointing,AltitudeCut,nights,UseGreytime,
     WINDOW=[]
     ZENITH=[]
     SZENITH=[]
+
     try:
         auxtime = datetime.datetime.strptime(galPointing['Time'][0], '%Y-%m-%d %H:%M:%S.%f')
     except ValueError:
-        auxtime = datetime.datetime.strptime(galPointing['Time'][0], '%Y-%m-%d %H:%M:%S')
+        try:
+            auxtime = datetime.datetime.strptime(galPointing['Time'][0], '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            auxtime = datetime.datetime.strptime(galPointing['Time'][0], '%Y-%m-%d %H:%M')
+
     #frame = co.AltAz(obstime=auxtime, location=observatory)
     timeInitial=auxtime-datetime.timedelta(minutes=30)
     for i in range(0,len(source)):
@@ -264,20 +269,23 @@ def GetObservationPeriod(inputtime0,msource,AltitudeCut,observatory,nights,plotn
 
     return (str(ScheduledTimes[0]).split('.')[0]+'-->'+str(ScheduledTimes[-1]).split('.')[0]),msourcealtazs.alt
 
-def GetVisibility(time,radecs):
-    #Se tiene que ver el FoV entero, no vale solo algo mas del centro MEJORAR ESTE CRITERIOOOOOOOOOOO
-    observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1835 * u.m)
+def GetVisibility(time,radecs,max_zenith, observatory):
+
+
     visibility = []
     altitude = []
 
     for i in range(0,len(time)):
         try:
-            auxtime = datetime.datetime.strptime(time[i], '%Y-%m-%d %H:%M')
+            auxtime = datetime.datetime.strptime(time[i], '%Y-%m-%d %H:%M:%S.%f')
         except ValueError:
-            auxtime = datetime.datetime.strptime(time[i], '%Y-%m-%d %H:%M')
-        frame = co.AltAz(obstime=auxtime, location=observatory)
+            try:
+                auxtime = datetime.datetime.strptime(time[i], '%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                auxtime = datetime.datetime.strptime(time[i], '%Y-%m-%d %H:%M')
+        frame = co.AltAz(obstime=auxtime, location=observatory.Location)
         thisaltaz = radecs.transform_to(frame)
-        visible = thisaltaz.alt.value > (90-60)
+        visible = thisaltaz.alt.value > (90-max_zenith)
 
         if(visible):
             visibility.append(auxtime)
@@ -286,9 +294,9 @@ def GetVisibility(time,radecs):
         #    visibility.append(auxtime)
              altitude.append(thisaltaz.alt.value)
     lasttime=auxtime+datetime.timedelta(minutes=30)
-    frame = co.AltAz(obstime=lasttime, location=observatory)
+    frame = co.AltAz(obstime=lasttime, location=observatory.Location)
     thisaltaz = radecs.transform_to(frame)
-    visible = thisaltaz.alt.value > (90 - 60)
+    visible = thisaltaz.alt.value > (90 - max_zenith)
 
     if (visible):
         visibility.append(auxtime)
@@ -297,7 +305,7 @@ def GetVisibility(time,radecs):
         #    visibility.append(auxtime)
         altitude.append(thisaltaz.alt.value)
 
-    window = (visibility[0].strftime('%H:%M:%S')).split(':')[0]+':'+(visibility[0].strftime('%H:%M:%S')).split(':')[1] +'-'+ (visibility[-1].strftime('%H:%M:%S')).split(':')[0] +':'+(visibility[-1].strftime('%H:%M:%S')).split(':')[1]
+    window = visibility[0].strftime('%H:%M:%S') +'-'+ visibility[-1].strftime('%H:%M:%S')
     return window,altitude
 
 def ProbabilitiesinPointings(cat,galPointing,FOV, totaldPdV,prob,nside):
@@ -372,7 +380,7 @@ def Sortingby(galPointing,name):
     print(gwgalPointing)
     outfilename='%s/RankingObservationTimes_Complete.txt' % name
     ascii.write(gwgalPointing[np.argsort(gwgalPointing['Pointing'])], outfilename, overwrite=True)
-    
+
     gwgalPointing.remove_column('Pgal')
     gwgalPointing.remove_column('Pgw')
     gwgalPointing.remove_column('RA(HH:MM:SS) Dec (DD:MM:SS)')
@@ -383,7 +391,7 @@ def Sortingby(galPointing,name):
     gwgalPointingGW.rename_column('PriorityGW', 'Priority')
     outfilename='%s/RankingObservationTimesPGW_forShifters.txt' % name
     ascii.write(gwgalPointingGW[np.argsort(gwgalPointingGW['Pointing'])], outfilename, overwrite=True)
-    
+
     #file to send to shifters in case PGal is used
     gwgalPointing.remove_column('PriorityGW')
     gwgalPointing.rename_column('PriorityGal','Priority')
