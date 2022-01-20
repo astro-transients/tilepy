@@ -26,6 +26,13 @@ from scipy.stats import norm
 import time
 import os
 
+from six.moves import configparser
+import six
+if six.PY2:
+  ConfigParser = configparser.SafeConfigParser
+else:
+  ConfigParser = configparser.ConfigParser
+
 #iers_url_mirror='ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
 #IERS_A_URL_MIRROR = 'https://datacenter.iers.org/data/9/finals2000A.all'
 #iers.IERS.iers_table = iers.IERS_A.open(download_file(iers.IERS_A_URL, cache=True))
@@ -117,9 +124,9 @@ class Tools:
         # MOON altitude
         moonAlt = Tools.MoonAlt(obsTime,obsSite)
         # MOON azimuth
-        #moonAz = Tools.MoonAz(obsTime)
+        #moonAz = Tools.MoonAz(obsTime,obsSite)
         # MOON phase
-        moonPhase = Tools.MoonPhase(obsTime)
+        moonPhase = Tools.MoonPhase(obsTime,obsSite)
 
         if sunAlt > gSunDown:
             return False
@@ -130,19 +137,19 @@ class Tools:
         return True
 
     @classmethod
-    def MoonPhase(cls, obsTime):
-        hess = HESSObservatory()
+    def MoonPhase(cls, obsTime, obsSite):
         moon = ephem.Moon()
         obs = ephem.Observer()
-        obs.lon = str(hess.Lon / u.deg)
-        obs.lat = str(hess.Lat / u.deg)
-        obs.elev = hess.Height / u.m
+        obs.lon = str(obsSite.Lon / u.deg)
+        obs.lat = str(obsSite.Lat / u.deg)
+        obs.elev = obsSite.Height / u.m
         obs.date = obsTime
         moon.compute(obs)
 
         #print("Phase of the moon = %s percent" % moon.phase)
 
         return moon.phase
+
 
 
     @classmethod
@@ -167,14 +174,14 @@ class Tools:
         #print('Altitude of the moon = ',moon.alt * 180. / np.pi)
         return moon.alt * 180. / np.pi
 
+
     @classmethod
-    def MoonAz(cls, obsTime):
-        hess = HESSObservatory()
+    def MoonAz(cls, obsTime, obsSite):
         moon = ephem.Moon()
         obs = ephem.Observer()
-        obs.lon = str(hess.Lon / u.deg)
-        obs.lat = str(hess.Lat / u.deg)
-        obs.elev = hess.Height / u.m
+        obs.lon = str(obsSite.Lon / u.deg)
+        obs.lat = str(obsSite.Lat / u.deg)
+        obs.elev = obsSite.Height / u.m
         obs.date = obsTime
         moon.compute(obs)
         print('Azimuth of the moon = ',moon.az * 180. / np.pi)
