@@ -1559,7 +1559,7 @@ def SubstractGalaxiesCircle(galaux, ra,dec ,talreadysumipixarray,tsum_dP_dV,FOV,
 
 #####################################################
 
-def PGalinFOV(prob,cat,galpix,FOV, totaldPdV,nside,UsePix):
+def ComputePGalinFOV(prob,cat,galpix,FOV, totaldPdV,nside,UsePix):
     '''
         Computes probability Pgal in FoV
     '''
@@ -1611,7 +1611,7 @@ def ModifyCatalogue(prob,cat, FOV, totaldPdV,nside):
     #print('len(SelectedGals[RAJ2000])',len(SelectedGals['RAJ2000']))
     for l in range(0, len(cat['dp_dV'])):
         if(l<len(SelectedGals['dp_dV'])):
-            dp_dV_FOV.append(PGalinFOV(prob,cat, SelectedGals[l], FOV, totaldPdV,nside,UsePix=False))
+            dp_dV_FOV.append(ComputePGalinFOV(prob,cat, SelectedGals[l], FOV, totaldPdV,nside,UsePix=False))
         else:
             dp_dV_FOV.append(0)
 
@@ -1622,7 +1622,7 @@ def ModifyCatalogue(prob,cat, FOV, totaldPdV,nside):
     return tcat
 
 
-def ComputeProbPGALIntegrateFoV(prob,time, centerPoint,UsePix, visiGals, allGalsaftercuts, tsum_dP_dV, talreadysumipixarray, nside,
+def ComputeProbPGALIntegrateFoV(prob,time,observatory, centerPoint,UsePix, visiGals, allGalsaftercuts, tsum_dP_dV, talreadysumipixarray, nside,
                                 thisminz,max_zenith,FOV,counter, tname,dirName, doplot):
     '''
         Same as ComputeProbBCFOV but it does not return circle coordinates.
@@ -1641,7 +1641,7 @@ def ComputeProbPGALIntegrateFoV(prob,time, centerPoint,UsePix, visiGals, allGals
 
     dp_dVfinal = visiGals['dp_dV']
 
-    # Array of indices of pixels inside circle of HESS-I FoV
+    # Array of indices of pixels inside circle of FoV
 
     radius = FOV
     #print('FOV',FOV)
@@ -1694,7 +1694,6 @@ def ComputeProbPGALIntegrateFoV(prob,time, centerPoint,UsePix, visiGals, allGals
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
         skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
-        observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
 
         frame = co.AltAz(obstime=time, location=observatory)
         altaz_all = skycoord.transform_to(frame)
@@ -1725,7 +1724,7 @@ def ComputeProbPGALIntegrateFoV(prob,time, centerPoint,UsePix, visiGals, allGals
         # probability
         # hp.visufunc.projscatter(finalGals['RAJ2000'][:1], finalGals['DEJ2000'][:1], lonlat=True, marker='.', color='r',linewidth=0.1)
 
-        # draw circle of HESS-I FoV around best fit position
+        # draw circle of FoV around best fit position
 
         hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'r.', lonlat=True,
                              coord="C")
@@ -1962,7 +1961,7 @@ def ModifyCataloguePIX(pix_ra1, pix_dec1, test_time, maxz, prob,cat, FOV, totald
 
     #iteration on chosen pixel to calculate the probability on their field of view using galaxies
     for l in range(0, len(cat_pix)):
-        dp_dV_FOV.append(PGalinFOV(prob,cat,cat_pix[l], FOV, totaldPdV, nside,UsePix=True))
+        dp_dV_FOV.append(ComputePGalinFOV(prob,cat,cat_pix[l], FOV, totaldPdV, nside,UsePix=True))
 
 
     cat_pix['PIXFOVPROB'] = dp_dV_FOV

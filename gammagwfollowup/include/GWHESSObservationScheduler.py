@@ -337,7 +337,7 @@ def BestCandidateonPGal(filename,ObservationTime0,galFile):
     return SuggestedPointings,cat
 
 
-def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName):
+def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName,Observatory):
     
     # Main Parameters
 
@@ -469,7 +469,6 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName)
                 mask, minz = FulfillsRequirement(visiGals, max_zenith,FOV,FulFillReq_Percentage,UsePix=False)
                 if UseGreytime:
                     maskgrey=FulfillsRequirementGreyObservations(ObservationTime,visiGals,HESSObservatory().Location)
-                    # Todo: Produce plot to check that this is OK!
                     finalGals=visiGals[mask&maskgrey]
                 if not UseGreytime:
                     finalGals = visiGals[mask]
@@ -487,7 +486,7 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName)
                             mask, minz = FulfillsRequirement(visiGals2, max_zenith,FOV,FulFillReq_Percentage,UsePix=False)
 
                             finalGals2 = visiGals2[mask]
-                            p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = ComputeProbPGALIntegrateFoV(prob,ObservationTime,finalGals2,False,visiGals2,tGals_aux2,sum_dP_dV, alreadysumipixarray2,nside, minz,max_zenith, FOV,counter,name,dirName,doplot)
+                            p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = ComputeProbPGALIntegrateFoV(prob,ObservationTime,Observatory.Location,finalGals2,False,visiGals2,tGals_aux2,sum_dP_dV, alreadysumipixarray2,nside, minz,max_zenith, FOV,counter,name,dirName,doplot)
 
                             RAarray.append(np.float('{:3.4f}'.format(np.float(finalGals2['RAJ2000'][:1]))))
                             DECarray.append(np.float('{:3.4f}'.format(np.float(finalGals2['DEJ2000'][:1]))))
@@ -498,7 +497,7 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName)
                         #print("TARGET COORDINATES AND DETAILS...")
                         #print("=================================")
                         #print(finalGals['RAJ2000', 'DEJ2000', 'Bmag', 'Dist', 'Alt', 'dp_dV','dp_dV_FOV'][:1])
-                        p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbPGALIntegrateFoV(prob,ObservationTime,finalGals,False, visiGals,tGals_aux, sum_dP_dV,alreadysumipixarray1,nside, minz,max_zenith, FOV, counter,name, dirName,doplot)
+                        p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbPGALIntegrateFoV(prob,ObservationTime,Observatory.Location,finalGals,False, visiGals,tGals_aux, sum_dP_dV,alreadysumipixarray1,nside, minz,max_zenith, FOV, counter,name, dirName,doplot)
                         RAarray.append(np.float('{:3.4f}'.format(np.float(finalGals['RAJ2000'][:1]))))
                         DECarray.append(np.float('{:3.4f}'.format(np.float(finalGals['DEJ2000'][:1]))))
                         Round.append(1)
@@ -522,7 +521,7 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName)
     SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,P_GALarray,Round], names=['Observation Time UTC','RA(deg)','DEC(deg)','PGW','Pgal','Round'])
     return SuggestedPointings,cat
 
-def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, parameters,dirName):
+def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, parameters,dirName, Observatory):
 
     # Main Parameters
 
@@ -691,7 +690,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
                     # print("TARGET COORDINATES AND DETAILS...")
                     # print("=================================")
                     # print(finalGals['RAJ2000', 'DEJ2000', 'Bmag', 'Dist', 'Alt', 'dp_dV','dp_dV_FOV'][:1])
-                    p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbPGALIntegrateFoV(prob, ObservationTime,
+                    p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbPGALIntegrateFoV(prob, ObservationTime,Observatory.Location,
                                                                                                visiPix, True, visiGals,
                                                                                                tGals_aux, sum_dP_dV,
                                                                                                alreadysumipixarray1,
