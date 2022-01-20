@@ -6,8 +6,7 @@ from .GWHESSPointingTools import (NightDarkObservation,
                                   VisibleAtTime, FulfillsRequirement, SimpleGWprob,ComputeProbBCFOV,
                                   Tools,LoadGalaxies_SteMgal, CorrelateGalaxies_LVC_SteMass, SubstractPointings,
                                   ModifyCatalogue,FulfillsRequirementGreyObservations,ComputeProbPGALIntegrateFoV,
-                                  ModifyCataloguePIX, HESSObservatory
-                                  )
+                                  ModifyCataloguePIX)
 import random
 import numpy as np
 from astropy.table import Table
@@ -26,7 +25,7 @@ else:
 
 ############################################
 
-def PGWinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName):
+def PGWinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName,Observatory):
 
     # Main parameters
 
@@ -107,25 +106,25 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName):
 
     print('----------   NEW FOLLOW-UP ATTEMPT   ----------')
     if(UseGreytime):
-        NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0, HESSObservatory(),MaxNights,Duration,MinDuration)
+        NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0,Observatory,MaxNights,Duration,MinDuration)
 
     else:
-        NightDarkRuns = NightDarkObservation(ObservationTime0, HESSObservatory(),MaxNights,Duration,MinDuration)
+        NightDarkRuns = NightDarkObservation(ObservationTime0,Observatory,MaxNights,Duration,MinDuration)
 
     counter=0
     for j in range(0, len(NightDarkRuns)):
         if (len(ObservationTimearray) < MaxRuns):
             ObservationTime = NightDarkRuns[j]
-            ObsBool,yprob=ZenithAngleCut(prob,nside,ObservationTime,MinProbCut,max_zenith,HESSObservatory().Location,UseGreytime)
+            ObsBool,yprob=ZenithAngleCut(prob,nside,ObservationTime,MinProbCut,max_zenith,Observatory.Location,UseGreytime)
             if ObsBool:
                 # Round 1
-                P_GW,TC,pixlist,ipixlistHR = ComputeProbability2D(prob,highres,radecs,ReducedNside,HRnside,MinProbCut,ObservationTime,HESSObservatory().Location,max_zenith,FOV,name,pixlist,ipixlistHR,counter,dirName,UseGreytime,doplot)
+                P_GW,TC,pixlist,ipixlistHR = ComputeProbability2D(prob,highres,radecs,ReducedNside,HRnside,MinProbCut,ObservationTime,Observatory.Location,max_zenith,FOV,name,pixlist,ipixlistHR,counter,dirName,UseGreytime,doplot)
                 print(ObservationTime,'P_GW of the observation,',P_GW)
                 if ((P_GW <= MinProbCut)and SecondRound):
                     #Try Round 2
                     #print('The minimum probability cut being', MinProbCut * 100, '% is, unfortunately, not reached.')
                     yprob1=highres
-                    P_GW, TC, pixlist1,ipixlistHR1 = ComputeProbability2D(prob,yprob1,radecs, nside,ReducedNside,HRnside,PercentCoverage, ObservationTime,HESSObservatory().Location, max_zenith,FOV, name, pixlist1,ipixlistHR1, counter,dirName,UseGreytime,doplot)
+                    P_GW, TC, pixlist1,ipixlistHR1 = ComputeProbability2D(prob,yprob1,radecs, nside,ReducedNside,HRnside,PercentCoverage, ObservationTime,Observatory.Location, max_zenith,FOV, name, pixlist1,ipixlistHR1, counter,dirName,UseGreytime,doplot)
                     if ((P_GW <= MinProbCut)):
                         print('Fail')
                     else:
@@ -256,7 +255,7 @@ def BestCandidateonPGal(filename,ObservationTime0,galFile):
     
     #Time in UTC
 
-    NightDarkRuns = NightDarkObservation(ObservationTime0,HESSObservatory(),MaxNights,Duration,MinDuration)
+    NightDarkRuns = NightDarkObservation(ObservationTime0,Observatory,MaxNights,Duration,MinDuration)
 
     totalProb=0.
     
@@ -264,7 +263,7 @@ def BestCandidateonPGal(filename,ObservationTime0,galFile):
         if (len(ObservationTimearray) < MaxRuns):
             ObservationTime = NightDarkRuns[j]
             
-            visible, altaz, tGals_aux = VisibleAtTime(ObservationTime, tGals_aux, max_zenith,HESSObservatory().Location)
+            visible, altaz, tGals_aux = VisibleAtTime(ObservationTime, tGals_aux, max_zenith,Observatory.Location)
             
             if (visible):
                 
@@ -281,7 +280,7 @@ def BestCandidateonPGal(filename,ObservationTime0,galFile):
                     # final galaxies within the FoV
                     if((probability< (2*probCut)) and (sum(P_GWarray)>0.40)and SecondRound): #This notes LIGOVirgo type of signal
                         #print('probability',probability)
-                        visible, altaz, tGals_aux2 = VisibleAtTime(ObservationTime, tGals_aux2, max_zenith,HESSObservatory().Location)
+                        visible, altaz, tGals_aux2 = VisibleAtTime(ObservationTime, tGals_aux2, max_zenith,Observatory.Location)
                         if (visible):
                             visiMask = altaz.alt.value > 90 - (max_zenith + FOV)
                             visiGals2 = tGals_aux2[visiMask]
@@ -441,9 +440,9 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName,
     print('MaxRuns: ',MaxRuns,'MinimumProbCutForCatalogue: ',MinimumProbCutForCatalogue)
 
     if(UseGreytime):
-        NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0, HESSObservatory(),MaxNights,Duration,MinDuration)
+        NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0,Observatory,MaxNights,Duration,MinDuration)
     else:
-        NightDarkRuns = NightDarkObservation(ObservationTime0,HESSObservatory(),MaxNights,Duration,MinDuration)
+        NightDarkRuns = NightDarkObservation(ObservationTime0,Observatory,MaxNights,Duration,MinDuration)
     
     # print('EffectiveRunsTime',len(NightDarkRuns),'being',NightDarkRuns)
     
@@ -453,7 +452,7 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName,
     for j in range(0, len(NightDarkRuns)):
         if (len(ObservationTimearray) < MaxRuns):
             ObservationTime = NightDarkRuns[j]
-            visible, altaz, tGals_aux = VisibleAtTime(ObservationTime, tGals_aux, max_zenith,HESSObservatory().Location)
+            visible, altaz, tGals_aux = VisibleAtTime(ObservationTime, tGals_aux, max_zenith,Observatory.Location)
             
             if (visible):
                 
@@ -464,7 +463,7 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName,
                 
                 mask, minz = FulfillsRequirement(visiGals, max_zenith,FOV,FulFillReq_Percentage,UsePix=False)
                 if UseGreytime:
-                    maskgrey=FulfillsRequirementGreyObservations(ObservationTime,visiGals,HESSObservatory().Location)
+                    maskgrey=FulfillsRequirementGreyObservations(ObservationTime,visiGals,Observatory.Location)
                     finalGals=visiGals[mask&maskgrey]
                 if not UseGreytime:
                     finalGals = visiGals[mask]
@@ -473,7 +472,7 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName,
                     # final galaxies within the FoV
                     if ((finalGals['dp_dV_FOV'][:1] < (2 * probCut)) and (sum(P_GWarray) > 0.40) and SecondRound):  # This notes LIGOVirgo type of signal
                         print('probability', finalGals['dp_dV_FOV'][:1])
-                        visible, altaz, tGals_aux2 = VisibleAtTime(ObservationTime, tGals_aux2, max_zenith,HESSObservatory().Location)
+                        visible, altaz, tGals_aux2 = VisibleAtTime(ObservationTime, tGals_aux2, max_zenith,Observatory.Location)
                         if (visible):
                             visiMask = altaz.alt.value > 90 - (max_zenith + FOV)
                             visiGals2 = tGals_aux2[visiMask]

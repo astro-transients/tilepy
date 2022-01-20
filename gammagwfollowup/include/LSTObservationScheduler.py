@@ -4,7 +4,7 @@
 ############################################################################
 
 
-from .GWHESSObservationScheduler import PGWinFoV, PGalinFOV
+from .GWHESSObservationScheduler import PGWinFoV, PGalinFoV
 from .RankingObservationTimes import RankingTimes
 from .PointingPlotting import PointingPlotting
 from astropy.coordinates import SkyCoord
