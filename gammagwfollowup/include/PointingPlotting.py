@@ -1,6 +1,5 @@
 from .GWHESSPointingTools import (LoadHealpixMap, TransformRADec,
-                                  CTANorthObservatory,CTASouthObservatory
-                                  )
+                                  CTANorthObservatory,CTASouthObservatory)
 import os
 import healpy as hp
 import matplotlib.pyplot as plt
@@ -8,8 +7,14 @@ import numpy as np
 from astropy import units as u
 from astropy.utils import iers
 import astropy.coordinates as co
+from astropy.coordinates import SkyCoord
 import datetime
-
+from six.moves import configparser
+import six
+if six.PY2:
+  ConfigParser = configparser.SafeConfigParser
+else:
+  ConfigParser = configparser.ConfigParser
 
 
 # iers_url_mirror='ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
