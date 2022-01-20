@@ -1173,7 +1173,8 @@ def FulfillsRequirement_MinProb(thisGals_aux, maxz):
 def Afterglow():
     print('Afterglow!')
 
-def ComputeProbBCFOVSimple(prob,time, visiGals, allGals, tsum_dP_dV, nside, thisminz,max_zenith, FOV, tname,
+
+def ComputeProbBCFOVSimple(prob,time,observatory, visiGals, allGals, tsum_dP_dV, nside, thisminz,max_zenith, FOV, tname,
                            tsavedcircle,dirName, doplot):
     '''Computes probability pgal and pgw in FoV and draws everything
 
@@ -1183,8 +1184,8 @@ def ComputeProbBCFOVSimple(prob,time, visiGals, allGals, tsum_dP_dV, nside, this
 
     --------
 
-	P_Gal: Probability of galaxies within H.E.S.S. FoV in the LIGO signal region
-	P_GW: Total probability within H.E.S.S. FoV of the Ligo signal.
+	P_Gal: Probability of galaxies within FoV in the LIGO signal region
+	P_GW: Total probability within FoV of the Ligo signal.
 	noncircleGal: Table of galaxies that are outside the circle(s) and inside the LIGO signal region
 
 
@@ -1199,7 +1200,7 @@ def ComputeProbBCFOVSimple(prob,time, visiGals, allGals, tsum_dP_dV, nside, this
     dp_dVfinal = visiGals['dp_dV']
     # dp_dV = tGals['dp_dV']
 
-    # Array of indices of pixels inside circle of HESS-I FoV
+    # Array of indices of pixels inside circle of FoV
 
     radius = FOV
 
@@ -1241,9 +1242,8 @@ def ComputeProbBCFOVSimple(prob,time, visiGals, allGals, tsum_dP_dV, nside, this
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
         skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
-        observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
 
-        frame = co.AltAz(obstime=time, location=observatory)
+        frame = co.AltAz(obstime=time, location=observatory.Location)
         altaz_all = skycoord.transform_to(frame)
         tmask = altaz_all.alt.value > 90 - thisminz
 
@@ -1275,7 +1275,7 @@ def ComputeProbBCFOVSimple(prob,time, visiGals, allGals, tsum_dP_dV, nside, this
         hp.visufunc.projscatter(visiGals['RAJ2000'][:1], visiGals['DEJ2000'][:1], lonlat=True, marker='.', color='r',
                                 linewidth=0.1)
 
-        # draw circle of HESS-I FoV around best fit position
+        # draw circle of FoV around best fit position
 
         # hp.visufunc.projscatter(allGals['RAJ2000'], allGals['DEJ2000'], lonlat=True, marker='.', color='g',linewidth=0.1)
         # plt.show()
@@ -1322,7 +1322,7 @@ def ComputeProbBCFOVSimple(prob,time, visiGals, allGals, tsum_dP_dV, nside, this
 
     return P_Gal, P_GW, talreadysumipixarray2
 
-def ComputeProbBCFOV(prob,time, finalGals, visiGals, allGals, tsum_dP_dV, talreadysumipixarray, nside, thisminz,max_zenith, FOV, tname,
+def ComputeProbBCFOV(prob,time, observatory, finalGals, visiGals, allGals, tsum_dP_dV, talreadysumipixarray, nside, thisminz,max_zenith, FOV, tname,
                      tsavedcircle, dirName,doplot):
     '''Computes probability Pgal and Pgw in FoV but it takes into account a list of pixels to avoid recounting already observed zones.
     Returns saved circle too (is it really needed? )
@@ -1332,8 +1332,8 @@ def ComputeProbBCFOV(prob,time, finalGals, visiGals, allGals, tsum_dP_dV, talrea
 
     --------
 
-	P_Gal: Probability of galaxies within H.E.S.S. FoV in the LIGO signal region
-	P_GW: Total probability within H.E.S.S. FoV of the Ligo signal.
+	P_Gal: Probability of galaxies within FoV in the LIGO signal region
+	P_GW: Total probability within  FoV of the Ligo signal.
 	noncircleGal: Table of galaxies that are outside the circle(s) and inside the LIGO signal region
 
 
@@ -1348,7 +1348,7 @@ def ComputeProbBCFOV(prob,time, finalGals, visiGals, allGals, tsum_dP_dV, talrea
     dp_dVfinal = visiGals['dp_dV']
     # dp_dV = tGals['dp_dV']
 
-    # Array of indices of pixels inside circle of HESS-I FoV
+    # Array of indices of pixels inside circle of  FoV
 
     radius = FOV
 
@@ -1400,7 +1400,6 @@ def ComputeProbBCFOV(prob,time, finalGals, visiGals, allGals, tsum_dP_dV, talrea
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
         skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
-        observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
 
         frame = co.AltAz(obstime=time, location=observatory)
         altaz_all = skycoord.transform_to(frame)
@@ -1432,7 +1431,7 @@ def ComputeProbBCFOV(prob,time, finalGals, visiGals, allGals, tsum_dP_dV, talrea
         # probability
         ###### hp.visufunc.projscatter(finalGals['RAJ2000'][:1], finalGals['DEJ2000'][:1], lonlat=True, marker='.', color='r',linewidth=0.1)
 
-        # draw circle of HESS-I FoV around best fit position
+        # draw circle of FoV around best fit position
 
         ######hp.visufunc.projscatter(allGals['RAJ2000'], allGals['DEJ2000'], lonlat=True, marker='.', color='g',linewidth=0.1)
         # plt.show()
