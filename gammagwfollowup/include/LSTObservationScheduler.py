@@ -117,6 +117,7 @@ def GetSchedule_GW(URL, date, observatory,datasetDir,outDir):
         print("Previous pointings: ", PointingsFile)
         print("Catalog: ", galFile)
         print("Parameters: ", parameters)
+        print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
         SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName,observatory)
@@ -127,7 +128,7 @@ def GetSchedule_GW(URL, date, observatory,datasetDir,outDir):
         # date = datetime.datetime.utcnow()
         # date = datetime.datetime(2021,6,8,14,20,20)
         done = "False"
-        galaxies = "GLADE.txt"
+        galaxies = datasetDir + "/GLADE.txt"
         params = "./configs/PGWinFoV.ini"
 
         ObservationTime = date
@@ -151,6 +152,7 @@ def GetSchedule_GW(URL, date, observatory,datasetDir,outDir):
         print("Previous pointings: ", PointingsFile)
         print("Catalog: ", galFile)
         print("Parameters: ", parameters)
+        print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
         SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName, observatory)
@@ -290,6 +292,7 @@ def GetSchedule_GBM(URL, date, observatory,datasetDir,outDir):
         print("Previous pointings: ", PointingsFile)
         print("Catalog: ", galFile)
         print("Parameters: ", parameters)
+        print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
         SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName, observatory)
@@ -324,6 +327,7 @@ def GetSchedule_GBM(URL, date, observatory,datasetDir,outDir):
         print("Previous pointings: ", PointingsFile)
         print("Catalog: ", galFile)
         print("Parameters: ", parameters)
+        print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
         SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName,observatory)
@@ -338,8 +342,7 @@ def GetSchedule_GBM(URL, date, observatory,datasetDir,outDir):
         ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
         print()
         cat = LoadGalaxies(galFile)
-        RankingTimes(ObservationTime, filename, cat, parameters,observatory, targetType, dirName,
-                     '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+        RankingTimes(ObservationTime, filename, cat, parameters,observatory, targetType, dirName,'%s/SuggestedPointings_GWOptimisation.txt' % dirName)
         PointingPlotting(filename, cat, observatory, params, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
     else:
         FOLLOWUP = False

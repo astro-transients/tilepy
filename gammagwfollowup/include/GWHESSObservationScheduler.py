@@ -32,7 +32,8 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName,O
     ##################
     cfg = parameters
     parser = ConfigParser()
-
+    parser.read(cfg)
+    parser.sections()
     section = 'GWBestGalaxyParameters'
 
     try:

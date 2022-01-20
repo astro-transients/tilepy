@@ -140,32 +140,129 @@ def load_pointingFile(tpointingFile):
     #print(Pointings)
     return Pointings
 
-
-def VisibilityWindow(ObservationTime,galPointing,AltitudeCut,nights,UseGreytime,dirName):
+def VisibilityWindow(ObservationTime,galPointing,AltitudeCut,nights,UseGreytime,dirName,max_zenith,observatory):
     source = SkyCoord(galPointing['RAJ2000'],galPointing['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
     WINDOW=[]
     ZENITH=[]
     SZENITH=[]
     try:
-        auxtime = datetime.datetime.strptime(galPointing['Time'][0], '%Y-%m-%d %H:%M')
+        auxtime = datetime.datetime.strptime(galPointing['Time'][0], '%Y-%m-%d %H:%M:%S.%f')
     except ValueError:
-        auxtime = datetime.datetime.strptime(galPointing['Time'][0], '%Y-%m-%d %H:%M')
+        auxtime = datetime.datetime.strptime(galPointing['Time'][0], '%Y-%m-%d %H:%M:%S')
     #frame = co.AltAz(obstime=auxtime, location=observatory)
     timeInitial=auxtime-datetime.timedelta(minutes=30)
     for i in range(0,len(source)):
-        NonValidwindow,Stepzenith = GetVisibility(galPointing['Time'],source[i])
-        window, zenith = GetObservationPeriod(timeInitial, source[i],AltitudeCut,nights,i,dirName,UseGreytime,False)
-        print(window)
+        NonValidwindow,Stepzenith = GetVisibility(galPointing['Time'],source[i],max_zenith, observatory)
+        window, zenith = GetObservationPeriod(timeInitial, source[i],AltitudeCut,observatory,nights,i,dirName,UseGreytime,False)
+        #print(window)
         WINDOW.append(window)
         ZENITH.append(zenith)
         SZENITH.append(Stepzenith)
-        window, zenith = GetObservationPeriod(ObservationTime, source[i],AltitudeCut,nights,i,dirName,UseGreytime,True)
+        window, zenith = GetObservationPeriod(ObservationTime, source[i],AltitudeCut,observatory,nights,i,dirName,UseGreytime,True)
 
     galPointing['Observation window'] = WINDOW
     galPointing['Array of zenith angles']=ZENITH
     galPointing['Zenith angles in steps'] = SZENITH
 
     return galPointing
+
+
+def GetObservationPeriod(inputtime0,msource,AltitudeCut,observatory,nights,plotnumber,dirName,UseGreytime,doplot):
+
+
+    inputtime=Time(inputtime0)
+    initialframe= AltAz(obstime=inputtime,location=observatory.Location)
+
+    ##############################################################################
+    suninitial= get_sun(inputtime).transform_to(initialframe)
+
+    if(suninitial.alt< -18.*u.deg):
+        hoursinDay=12
+    else:
+        hoursinDay =24
+    delta_day = np.linspace(0, hoursinDay+24*(nights-1), 1000*nights)*u.hour
+    interval=(hoursinDay+24*(nights-1))/(1000.*nights)
+
+    x=np.arange(int(hoursinDay/interval), dtype=int)
+    firstN=np.full_like(x,1)
+    ratio2=24./interval
+    otherN=[]
+    for i in range(2,nights+1):
+        otherN.extend(np.full_like(np.arange(int(ratio2)),i))
+    NightsCounter = []
+    NightsCounter.extend(firstN)
+    NightsCounter.extend(otherN)
+
+    while len(NightsCounter)!=len(delta_day):
+        NightsCounter.extend([nights])
+    #print('After',len(NightsCounter),'vs',len(delta_day))
+    times = inputtime + delta_day
+    frame= AltAz(obstime=times,location=observatory.Location)
+
+    ##############################################################################
+    #SUN
+    sunaltazs = get_sun(times).transform_to(frame)
+    #MOON
+    moon = get_moon(times)
+    moonaltazs = moon.transform_to(frame)
+    msourcealtazs = msource.transform_to(frame)
+
+    #Add Moon phase
+    moonPhase = np.full(len(msourcealtazs),Tools.MoonPhase(inputtime0,observatory))
+    #print(moonPhase)
+    #Moon Distance
+
+    MoonDistance=msourcealtazs.separation(moonaltazs)
+    ##############################################################################
+    if UseGreytime:
+        Altitudes = Table([times,msourcealtazs.alt, sunaltazs.alt, moonaltazs.alt,moonPhase,MoonDistance,NightsCounter],
+                           names=['Time UTC', 'Alt Source', 'Alt Sun', 'AltMoon','moonPhase','MoonDistance','NightsCounter'])
+        #selectedTimes=Altitudes['Time UTC']
+        selection=[(Altitudes['Alt Sun'] < -18.) & (Altitudes['Alt Source']> AltitudeCut) & (Altitudes['AltMoon'] < -0.5)]
+        DTaltitudes=Altitudes[selection]
+        newtimes=[]
+        newtimes.extend(DTaltitudes['Time UTC'].mjd)
+        selectionGreyness= [(Altitudes['AltMoon'] < gMoonGrey)&(Altitudes['AltMoon'] > gMoonDown)&(Altitudes['moonPhase'] <gMoonPhase)&(Altitudes['Alt Sun'] < gSunDown) & (Altitudes['MoonDistance']>MoonSourceSeparation)&(Altitudes['MoonDistance']<MaxMoonSourceSeparation)&(Altitudes['Alt Source']> AltitudeCut)]
+        GTaltitudes=Altitudes[selectionGreyness]
+        newtimes.extend(GTaltitudes['Time UTC'].mjd)
+        newtimes=sorted(newtimes)
+        ScheduledTimes=Time(newtimes,format='mjd').iso
+    else:
+        Altitudes = Table([times,msourcealtazs.alt, sunaltazs.alt, moonaltazs.alt,NightsCounter],
+                           names=['Time UTC', 'Alt Source', 'Alt Sun', 'AltMoon','NightsCounter'])
+        Times=Altitudes['Time UTC']
+        selection=[(Altitudes['Alt Sun'] < -18.) & (Altitudes['Alt Source']> AltitudeCut) & (Altitudes['AltMoon'] < -0.5)]
+        ScheduledTimes=Times[selection]
+
+    #print(ScheduledTimes)
+    #doplot=True
+    if doplot:
+        plotDir = '%s/TransitPlots' % dirName
+        if not os.path.exists(plotDir):
+            os.makedirs(plotDir)
+
+        plt.figure(figsize=(20, 12))
+        plt.plot(delta_day, sunaltazs.alt, color='r', label='Sun')
+        plt.plot(delta_day, moonaltazs.alt, color=[0.75]*3, ls='--', label='Moon')
+        plt.scatter(delta_day, msourcealtazs.alt,c=msourcealtazs.az, label='Point source', lw=0, s=8,cmap='viridis')
+        plt.fill_between(delta_day.to('hr').value, 0, 90,sunaltazs.alt < -0*u.deg, color='0.5', zorder=0)
+        plt.fill_between(delta_day.to('hr').value, 0, 90,(sunaltazs.alt < -18*u.deg)&(moonaltazs.alt < -0.5*u.deg), color='k', zorder=0)
+        plt.colorbar().set_label('Azimuth [deg]')
+        plt.legend(loc='upper left')
+        #x=np.arange(0, len(ZENITH), 1)
+        #ax.set_xticks(x)
+        #ax.set_xticklabels(hour)
+        #print('hour axis',inputtime.tt.datetime.hour+delta_day.to('hr').value)
+        #plt.xlim(inputtime.tt.datetime.hour+delta_day.to('hr').value)
+        #plt.xlim(0,hoursinDay+24*(nights-1))
+        #plt.xticks(ScheduledTimes['Times UTC'])
+        plt.ylim(0, 90)
+        #plt.xlabel('Hours after injections')
+        plt.ylabel('Altitude [deg]')
+        plt.grid()
+        plt.savefig('%s/Source%g.png' % (plotDir, plotnumber))
+
+    return (str(ScheduledTimes[0]).split('.')[0]+'-->'+str(ScheduledTimes[-1]).split('.')[0]),msourcealtazs.alt
 
 def GetVisibility(time,radecs):
     #Se tiene que ver el FoV entero, no vale solo algo mas del centro MEJORAR ESTE CRITERIOOOOOOOOOOO
@@ -301,106 +398,6 @@ def Sortingby(galPointing,name):
     #ascii.write(gggalPointing[np.argsort(gggalPointing['Pointing'])], outfilename,overwrite=True)
 
 
-
-def GetObservationPeriod(inputtime0,msource,AltitudeCut,nights,plotnumber,dirName,UseGreytime,doplot):
-
-    observatory=EarthLocation(lat=-23.271778*u.deg, lon=16.50022*u.deg, height=1835 *u.m)
-    inputtime=Time(inputtime0)
-    initialframe= AltAz(obstime=inputtime,location=observatory)
-
-    ##############################################################################
-    suninitial= get_sun(inputtime).transform_to(initialframe)
-
-    if(suninitial.alt< -18.*u.deg):
-        hoursinDay=12
-    else:
-        hoursinDay =24
-    delta_day = np.linspace(0, hoursinDay+24*(nights-1), 1000*nights)*u.hour
-    interval=(hoursinDay+24*(nights-1))/(1000.*nights)
-
-    x=np.arange(int(hoursinDay/interval), dtype=int)
-    firstN=np.full_like(x,1)
-    ratio2=24./interval
-    otherN=[]
-    for i in range(2,nights+1):
-        otherN.extend(np.full_like(np.arange(int(ratio2)),i))
-    NightsCounter = []
-    NightsCounter.extend(firstN)
-    NightsCounter.extend(otherN)
-
-    while len(NightsCounter)!=len(delta_day):
-        NightsCounter.extend([nights])
-    #print('After',len(NightsCounter),'vs',len(delta_day))
-    times = inputtime + delta_day
-    frame= AltAz(obstime=times,location=observatory)
-
-    ##############################################################################
-    #SUN
-    sunaltazs = get_sun(times).transform_to(frame)
-    #MOON
-    moon = get_moon(times)
-    moonaltazs = moon.transform_to(frame)
-    msourcealtazs = msource.transform_to(frame)
-
-    #Add Moon phase
-    moonPhase = np.full(len(msourcealtazs),Tools.MoonPhase(inputtime0))
-    #print(moonPhase)
-    #Moon Distance
-
-    MoonDistance=msourcealtazs.separation(moonaltazs)
-    ##############################################################################
-    if UseGreytime:
-        Altitudes = Table([times,msourcealtazs.alt, sunaltazs.alt, moonaltazs.alt,moonPhase,MoonDistance,NightsCounter],
-                           names=['Time UTC', 'Alt Source', 'Alt Sun', 'AltMoon','moonPhase','MoonDistance','NightsCounter'])
-        #selectedTimes=Altitudes['Time UTC']
-        selection=[(Altitudes['Alt Sun'] < -18.) & (Altitudes['Alt Source']> AltitudeCut) & (Altitudes['AltMoon'] < -0.5)]
-        DTaltitudes=Altitudes[selection]
-        newtimes=[]
-        newtimes.extend(DTaltitudes['Time UTC'].mjd)
-        selectionGreyness= [(Altitudes['AltMoon'] < 50)&(Altitudes['AltMoon'] > -0.5)&(Altitudes['moonPhase'] <gMoonPhase)&(Altitudes['Alt Sun'] < -18.) & (Altitudes['MoonDistance']>MoonSourceSeparation)&(Altitudes['Alt Source']> AltitudeCut)]
-        GTaltitudes=Altitudes[selectionGreyness]
-        newtimes.extend(GTaltitudes['Time UTC'].mjd)
-        newtimes=sorted(newtimes)
-        ScheduledTimes=Time(newtimes,format='mjd').iso
-    else:
-        Altitudes = Table([times,msourcealtazs.alt, sunaltazs.alt, moonaltazs.alt,NightsCounter],
-                           names=['Time UTC', 'Alt Source', 'Alt Sun', 'AltMoon','NightsCounter'])
-        Times=Altitudes['Time UTC']
-        selection=[(Altitudes['Alt Sun'] < -18.) & (Altitudes['Alt Source']> AltitudeCut) & (Altitudes['AltMoon'] < -0.5)]
-        ScheduledTimes=Times[selection]
-
-    #print(ScheduledTimes)
-    #doplot=True
-    if doplot:
-        plotDir = '%s/TransitPlots' % dirName
-        if not os.path.exists(plotDir):
-            os.makedirs(plotDir)
-
-        plt.figure(figsize=(20, 12))
-        plt.plot(delta_day, sunaltazs.alt, color='r', label='Sun')
-        plt.plot(delta_day, moonaltazs.alt, color=[0.75]*3, ls='--', label='Moon')
-        plt.scatter(delta_day, msourcealtazs.alt,c=msourcealtazs.az, label='Point source', lw=0, s=8,cmap='viridis')
-        plt.fill_between(delta_day.to('hr').value, 0, 90,sunaltazs.alt < -0*u.deg, color='0.5', zorder=0)
-        plt.fill_between(delta_day.to('hr').value, 0, 90,(sunaltazs.alt < -18*u.deg)&(moonaltazs.alt < -0.5*u.deg), color='k', zorder=0)
-        plt.colorbar().set_label('Azimuth [deg]')
-        plt.legend(loc='upper left')
-        #x=np.arange(0, len(ZENITH), 1)
-        #ax.set_xticks(x)
-        #ax.set_xticklabels(hour)
-        #print('hour axis',inputtime.tt.datetime.hour+delta_day.to('hr').value)
-        #plt.xlim(inputtime.tt.datetime.hour+delta_day.to('hr').value)
-        #plt.xlim(0,hoursinDay+24*(nights-1))
-        #plt.xticks(ScheduledTimes['Times UTC'])
-        plt.ylim(0, 90)
-        #plt.xlabel('Hours after injections')
-        plt.ylabel('Altitude [deg]')
-        plt.grid()
-        print("plotDir, plotnumber",plotDir, plotnumber)
-        plt.savefig('%s/Source%g.png' % (plotDir, plotnumber))
-
-    return (str(ScheduledTimes[0]).split('.')[0]+'-->'+str(ScheduledTimes[-1]).split('.')[0]),msourcealtazs.alt
-
-
 def EvolutionPlot(galPointing,tname):
     cm = plt.get_cmap('gist_rainbow')
 
@@ -442,14 +439,15 @@ def EvolutionPlot(galPointing,tname):
     ax.legend(bbox_to_anchor=(1.02, 1), loc=2, borderaxespad=0.)
     plt.savefig("%s/ZenithvsTime.png"%tname)
 
-def RankingTimes(ObservationTime,filename,cat,parameters,dirName,PointingFile):
+
+def RankingTimes(ObservationTime, filename, cat, parameters, observatory, targetType, dirName, PointingFile):
     # Main parameters
 
     ##################
     cfg = parameters
     parser = ConfigParser()
-    print(parser.read(cfg))
-    print(parser.sections())
+    parser.read(cfg)
+    parser.sections()
     section = 'GWBestGalaxyParameters'
 
     try:
@@ -458,35 +456,29 @@ def RankingTimes(ObservationTime,filename,cat,parameters,dirName,PointingFile):
         FOV = float(parser.get(section, 'FOV'))
         MinimumProbCutForCatalogue = float(parser.get(section, 'MinimumProbCutForCatalogue'))
         UseGreytime = (parser.getboolean(section, 'UseGreytime'))
-        Mangrove = (parser.getboolean(section, 'Mangrove'))
 
     except Exception as x:
         print(x)
 
-    #print(UseGreytime)
     #########################
 
     # Load galaxy catalog
-    #TODO: need variable location for this!!
-    galFile = '/Users/mseglar/Documents/CurrentPhD/HESS/GW/GLADE/GLADE_2.3clean.txt'
-    #cat = LoadGalaxies(galFile)
-    print('done loading galaxies')
+    # TODO: need variable location for this!!
+    # galFile = '/Users/mseglar/Documents/CurrentPhD/HESS/GW/GLADE/GLADE_2.3clean.txt'
+    # cat = LoadGalaxies(galFile)
+    # print('done loading galaxies')
 
-    #PointingFile = '/Users/mseglar/Documents/CurrentPhD/HESS/GW/Follow-up/ContinuePointing/G275404_SuggestedPointings_GALOptimisation.txt'
-    #PointingFile = '/Users/mseglar/Documents/GitHub/GWfollowup/'
     point = load_pointingFile(PointingFile)
-
-    #filename = '/Users/mseglar/Documents/CurrentPhD/HESS/GW/Follow-up/ContinuePointing/G275404_bayestar.fits'
 
     ################################################################
 
-    #if ('G' in filename):
+    # if ('G' in filename):
     #    names = filename.split("_")
     #    name = names[0]
     name = filename.split('.')[0].split('/')[-1]
 
     print()
-    print('-------------------   NEW LVC EVENT   --------------------s')
+    print('---------  RANKING THE OBSERVATIONS AND PRODUCING THE OUTPUT FILES   ----------')
     print()
 
     print('Loading GW map from ', filename)
@@ -494,26 +486,23 @@ def RankingTimes(ObservationTime,filename,cat,parameters,dirName,PointingFile):
     npix = len(prob)
     nside = hp.npix2nside(npix)
 
-    has3D=True
-    if(len(distnorm)==0):
+    has3D = True
+    if (len(distnorm) == 0):
         print("Found a generic map without 3D information")
-    # flag the event for special treatment
-        has3D=False
+        # flag the event for special treatment
+        has3D = False
     else:
         print("Found a 3D reconstruction")
-    #hp.mollview(prob, title="GW prob map (Ecliptic)")
-        # plt.show
-    
+    # hp.mollview(prob, title="GW prob map (Ecliptic)")
+    # plt.show
+
     # correlate GW map with galaxy catalog, retrieve ordered list
-    if not Mangrove:
-        tGals, sum_dP_dV = CorrelateGalaxies_LVC(prob, distmu, distsigma, distnorm, cat, has3D,MinimumProbCutForCatalogue)
-    else:
-        tGals, sum_dP_dV = CorrelateGalaxies_LVC_SteMass(prob, distmu, distsigma, thisDistance, thisDistanceErr, distnorm, cat, has3D,MinimumProbCutForCatalogue)
+    tGals, sum_dP_dV = CorrelateGalaxies_LVC(prob, distmu, distsigma, distnorm, cat, has3D, MinimumProbCutForCatalogue)
+    point = ProbabilitiesinPointings(tGals, point, FOV, sum_dP_dV, prob, nside)
+    point = VisibilityWindow(ObservationTime, point, 90 - max_zenith, nights, UseGreytime, dirName, max_zenith,
+                             observatory)
 
-    point = ProbabilitiesinPointings(tGals,point,FOV,sum_dP_dV,prob,nside)
-    point = VisibilityWindow(ObservationTime,point,90-max_zenith,nights,UseGreytime,dirName)
-
-    EvolutionPlot(point,dirName)
-    Sortingby(point,dirName)
+    EvolutionPlot(point, dirName)
+    Sortingby(point, targetType, dirName)
 
 
