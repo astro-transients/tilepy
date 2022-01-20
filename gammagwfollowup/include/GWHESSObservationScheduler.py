@@ -26,10 +26,6 @@ else:
 
 ############################################
 
-# hardcoded variables in include files are a no-go!
-#    galFile = '/Users/mseglar/Documents/CurrentPhD/HESS/GW/GLADE/GLADE_2.3clean.txt'
-
-
 def PGWinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName):
 
     # Main parameters

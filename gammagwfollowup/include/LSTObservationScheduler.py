@@ -28,7 +28,7 @@ def getdate(x):
         return None
 
 
-def GetSchedule_GW(URL, date, observatory):
+def GetSchedule_GW(URL, date, observatory,datasetDir,outDir):
     FOLLOWUP = True
     targetType = 'GW_Pointing'
 
@@ -91,16 +91,16 @@ def GetSchedule_GW(URL, date, observatory):
         # date = datetime.datetime.utcnow()
         # date = datetime.datetime(2019,7,28,20,20,20)
         done = "False"
-        galaxies = "GLADE.txt"
+        galaxies = datasetDir + "/GLADE.txt"
         params = "./configs/PGalinFoV.ini"
-        output = "./GWoutput"
+
 
         #ObservationTime = getdate(date)
         ObservationTime = date
         PointingsFile = done
         galFile = galaxies
         parameters = params
-        outputDir = "%s/%s" % (output, name)
+        outputDir = "%s/%s" % (outDir, name)
 
         if not os.path.exists(outputDir):
             os.makedirs(outputDir)
@@ -129,13 +129,12 @@ def GetSchedule_GW(URL, date, observatory):
         done = "False"
         galaxies = "GLADE.txt"
         params = "./configs/PGWinFoV.ini"
-        output = "./GWoutput"
 
         ObservationTime = date
         PointingsFile = done
         galFile = galaxies
         parameters = params
-        outputDir = "%s/%s" % (output, name)
+        outputDir = "%s/%s" % (outDir, name)
 
         if not os.path.exists(outputDir):
             os.makedirs(outputDir)
@@ -176,7 +175,7 @@ def GetSchedule_GW(URL, date, observatory):
     return SuggestedPointings, FOLLOWUP
 
 
-def GetSchedule_GBM(URL, date, observatory):
+def GetSchedule_GBM(URL, date, observatory,datasetDir,outDir):
     FOLLOWUP = True
     targetType = 'GBM_Pointing'
 
@@ -267,15 +266,14 @@ def GetSchedule_GBM(URL, date, observatory):
         # date = datetime.datetime.utcnow()
         # date = datetime.datetime(2021,3,3,14,20,20)
         done = "False"
-        galaxies = "GLADE.txt"
+        galaxies = datasetDir + "/GLADE.txt"
         params = "./configs/PGalinFoV.ini"
-        output = "./GRBoutput"
 
         ObservationTime = date
         PointingsFile = done
         galFile = galaxies
         parameters = params
-        outputDir = "%s/%s" % (output, name)
+        outputDir = "%s/%s" % (outDir, name)
 
         if not os.path.exists(outputDir):
             os.makedirs(outputDir)
@@ -302,15 +300,14 @@ def GetSchedule_GBM(URL, date, observatory):
         # date = datetime.datetime.utcnow()
         # date = datetime.datetime(2021, 11, 30, 15, 15, 15)
         done = "False"
-        galaxies = "GLADE.txt"
+        galaxies = datasetDir + "/GLADE.txt"
         params = "./configs/PGWinFoV.ini"
-        output = "./GRBoutput"
 
         ObservationTime = date
         PointingsFile = done
         galFile = galaxies
         parameters = params
-        outputDir = "%s/%s" % (output, name)
+        outputDir = "%s/%s" % (outDir, name)
 
         if not os.path.exists(outputDir):
             os.makedirs(outputDir)
