@@ -35,20 +35,28 @@ iers_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), '../dataset
 iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 #iers.IERS.iers_table = iers.IERS_A.open(download_file(iers_url_mirror, cache=True))
 
-#Darkness criteria: max sun and moon altitude in degrees.
+#################################################
+#   Global parameters about darkness criteria   #
+#################################################
+# max sun and moon altitude in degrees.
+cfg = "./configs/Visibility.ini"
+parser = ConfigParser()
+parser.read(cfg)
+parser.sections()
+section = 'visibility'
 
-gSunDown = -18
-#HorizonSun = '-17:43:48'
-HorizonSun = '-18:00:00'
-gMoonDown = -0.5
-HorizonMoon = '-00:30:00'
-gMoonGrey=50  #Altitude in degrees
-gMoonPhase=60 #Phase in %
-MoonSourceSeparation=30 #Separation in degrees
-# The twilight definitions specify the position of the center of the Sun,
-# while the rising and setting functions normally pay attention to the top edge of an object instead!
+try:
+    gSunDown = int(parser.get(section, 'gSunDown'))
+    HorizonSun = parser.get(section, 'HorizonSun')
+    gMoonDown = float(parser.get(section, 'gMoonDown'))
+    HorizonMoon = (parser.get(section, 'HorizonMoon'))
+    gMoonGrey = int(parser.get(section, 'gMoonGrey')) # Altitude in degrees
+    gMoonPhase = int(parser.get(section, 'gMoonPhase'))  # Phase in %
+    MoonSourceSeparation = int(parser.get(section, 'MoonSourceSeparation')) # Separation in degrees
+    MaxMoonSourceSeparation = int(parser.get(section, 'MaxMoonSourceSeparation'))  # Max separation in degrees
 
-
+except Exception as x:
+    print(x)
 
 ######################################################
 
