@@ -19,7 +19,7 @@ setup(name='gammagwfollowup',
           'ipython',
           'matplotlib==2.2.2',
           'MOCpy==0.6.0',
-          'numpy',
+          'numpy==1.19.5',
           'pandas',
           'pytz==2021.1',
           'ephem==3.7.6.0'

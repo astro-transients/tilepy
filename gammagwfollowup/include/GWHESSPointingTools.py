@@ -25,7 +25,7 @@ import numpy.ma as ma
 from scipy.stats import norm
 import time
 import os
-
+import numpy.ma as ma
 from six.moves import configparser
 import six
 if six.PY2:
@@ -669,7 +669,7 @@ def ZenithAngleCut(prob, nside, time, MinProbCut,max_zenith,observatory,usegreyt
 
     return ObsBool, yprob
 
-def ComputeProbability2D(prob,highres, radecs,ReducedNside,HRnside,MinProbCut, time,observatory,max_zenith, FOV, tname, ipixlist,ipixlistHR, counter,dirName, usegreytime,plot):
+def ComputeProbability2D(prob,highres,radecs,ReducedNside,HRnside,MinProbCut, time,observatory,max_zenith, FOV, tname, ipixlist,ipixlistHR, counter,dirName, usegreytime,plot):
     '''
     Compute probability in 2D by taking the highest value pixel
     '''
@@ -681,6 +681,7 @@ def ComputeProbability2D(prob,highres, radecs,ReducedNside,HRnside,MinProbCut, t
 
     if usegreytime:
         moonaltazs = get_moon(Time(time)).transform_to(AltAz(obstime=Time(time),location=observatory))
+
         #Zenith and Moon angular distance mask
         pix_ra = radecs.ra.value[(thisaltaz.alt.value > 90-max_zenith)&(thisaltaz.separation(moonaltazs)>30* u.deg)]
         pix_dec = radecs.dec.value[(thisaltaz.alt.value > 90 - max_zenith)&(thisaltaz.separation(moonaltazs)>30* u.deg)]
@@ -705,37 +706,42 @@ def ComputeProbability2D(prob,highres, radecs,ReducedNside,HRnside,MinProbCut, t
 
     xyzpix = hp.ang2vec(thetapix, phipix)
 
+    # This is really time-consuming! Should change the logic..
     for i in range(0, len(cat_pix)):
+        # Pixels associated to a disk of radius centered in xyzpix[i] for HR NSIDE
         ipix_discfull = hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
-        maskComputeProb = [np.isin(ipix_discfull, ipixlistHR, invert=True)]
-        dp_dV_FOV.append(highres[ipix_discfull[maskComputeProb]].sum())
-
+        if len(ipixlistHR) == 0:
+            # No mask needed
+            HRprob = highres[ipix_discfull].sum()
+        else:
+            # Mask the ipix_discfull with the pixels that are already observed. I think the problem is here
+            maskComputeProb = np.isin(ipix_discfull, ipixlistHR, invert=True)
+            # Obtain list of pixel ID after the mask what has been observed already
+            m_ipix_discfull = ma.masked_array(ipix_discfull, mask=maskComputeProb)
+            HRprob = highres[m_ipix_discfull].sum()
+            #HRprob = 0
+            #for j in ipix_discfullNotCovered:
+            #    HRprob = HRprob+highres[j]
+        dp_dV_FOV.append(HRprob)
     cat_pix['PIXFOVPROB'] = dp_dV_FOV
 
     # Mask already observed pixels
-    #print('ipixlist',ipixlist)
-
-    mask=[np.isin(cat_pix['PIX'], ipixlist,invert=True)]
-
+    mask = np.isin(cat_pix['PIX'], ipixlist,invert=True)
     if all(np.isin(cat_pix['PIX'], ipixlist,invert=False)):
         maskcat_pix = cat_pix
     else:
-        maskcat_pix=cat_pix[mask]
+        maskcat_pix = cat_pix[mask]
 
     # Sort table
     sortcat = maskcat_pix[np.flipud(np.argsort(maskcat_pix['PIXFOVPROB']))]
     # Chose highest
 
     targetCoord = co.SkyCoord(sortcat['PIXRA'][:1],sortcat['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
-    #print('targetCoord',targetCoord)
 
     P_GW = sortcat['PIXFOVPROB'][:1]
 
     # Include to the list of pixels already observed
 
-    #ipix_discComputeProb = hp.query_disc(HRnside, xyz, np.deg2rad(radius))
-    #maskComputeProb=[np.isin(ipix_discComputeProb, ipixlist,invert=True)]
-    #print('maskedP_GW',highres[ipix_discComputeProb[maskComputeProb]].sum())
     if(P_GW >= MinProbCut):
         phip = float(np.deg2rad(targetCoord.ra.deg))
         thetap = float(0.5 * np.pi - np.deg2rad(targetCoord.dec.deg))
@@ -758,7 +764,6 @@ def ComputeProbability2D(prob,highres, radecs,ReducedNside,HRnside,MinProbCut, t
 
         hp.gnomview(prob, xsize=500, ysize=500, rot=[targetCoord.ra.deg, targetCoord.dec.deg], reso=8.0)
         hp.graticule()
-        #print('This skymap has nside equals to',hp.npix2nside(len(highres)))
         plt.savefig('%s/Pointing-prob_%g.png' % (path,counter))
 
         ipix_discplot = hp.query_disc(HRnside, xyz, np.deg2rad(radius))

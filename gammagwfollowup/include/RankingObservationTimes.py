@@ -123,7 +123,7 @@ def load_pointingFile(tpointingFile):
                                              unpack=True)  # ra, dec in degrees
     time1 = np.atleast_1d(time1)
     time2 = np.atleast_1d(time2)
-    print(ra)
+    #print(ra)
     ra = np.atleast_1d(ra)
     dec = np.atleast_1d(dec)
 
@@ -226,11 +226,11 @@ def GetObservationPeriod(inputtime0,msource,AltitudeCut,observatory,nights,plotn
         Altitudes = Table([times,msourcealtazs.alt, sunaltazs.alt, moonaltazs.alt,moonPhase,MoonDistance,NightsCounter],
                            names=['Time UTC', 'Alt Source', 'Alt Sun', 'AltMoon','moonPhase','MoonDistance','NightsCounter'])
         #selectedTimes=Altitudes['Time UTC']
-        selection=[(Altitudes['Alt Sun'] < -18.) & (Altitudes['Alt Source']> AltitudeCut) & (Altitudes['AltMoon'] < -0.5)]
+        selection=(Altitudes['Alt Sun'] < -18.) & (Altitudes['Alt Source']> AltitudeCut) & (Altitudes['AltMoon'] < -0.5)
         DTaltitudes=Altitudes[selection]
         newtimes=[]
         newtimes.extend(DTaltitudes['Time UTC'].mjd)
-        selectionGreyness = [(Altitudes['AltMoon'] < gMoonGrey)&(Altitudes['AltMoon'] > gMoonDown)&(Altitudes['moonPhase'] <gMoonPhase)&(Altitudes['Alt Sun'] < gSunDown) & (Altitudes['MoonDistance']>MoonSourceSeparation)&(Altitudes['MoonDistance']<MaxMoonSourceSeparation)&(Altitudes['Alt Source']> AltitudeCut)]
+        selectionGreyness = (Altitudes['AltMoon'] < gMoonGrey)&(Altitudes['AltMoon'] > gMoonDown)&(Altitudes['moonPhase'] <gMoonPhase)&(Altitudes['Alt Sun'] < gSunDown) & (Altitudes['MoonDistance']>MoonSourceSeparation)&(Altitudes['MoonDistance']<MaxMoonSourceSeparation)&(Altitudes['Alt Source']> AltitudeCut)
         GTaltitudes = Altitudes[selectionGreyness]
         newtimes.extend(GTaltitudes['Time UTC'].mjd)
         newtimes = sorted(newtimes)
@@ -238,12 +238,12 @@ def GetObservationPeriod(inputtime0,msource,AltitudeCut,observatory,nights,plotn
     else:
         Altitudes = Table([times,msourcealtazs.alt, sunaltazs.alt, moonaltazs.alt,NightsCounter],
                            names=['Time UTC', 'Alt Source', 'Alt Sun', 'AltMoon','NightsCounter'])
-        print(Altitudes)
+        #print(Altitudes)
         Times=Altitudes['Time UTC']
-        selection=[(Altitudes['Alt Sun'] < -18.) & (Altitudes['Alt Source']> AltitudeCut) & (Altitudes['AltMoon'] < -0.5)]
+        selection=(Altitudes['Alt Sun'] < -18.) & (Altitudes['Alt Source']> AltitudeCut) & (Altitudes['AltMoon'] < -0.5)
         ScheduledTimes=Times[selection]
 
-    if doplot:
+    '''if doplot:
         plotDir = '%s/TransitPlots' % dirName
         if not os.path.exists(plotDir):
             os.makedirs(plotDir)
@@ -268,7 +268,7 @@ def GetObservationPeriod(inputtime0,msource,AltitudeCut,observatory,nights,plotn
         #plt.xlabel('Hours after injections')
         plt.ylabel('Altitude [deg]')
         plt.grid()
-        plt.savefig('%s/Source%g.png' % (plotDir, plotnumber))
+        plt.savefig('%s/Source%g.png' % (plotDir, plotnumber))'''
 
     return (str(ScheduledTimes[0]).split('.')[0]+'-->'+str(ScheduledTimes[-1]).split('.')[0]),msourcealtazs.alt
 
@@ -433,7 +433,7 @@ def EvolutionPlot(galPointing,tname):
     for j in range(0,len(time)):
         selecttime=time[j].split(" ")
         hour.append(selecttime[1].split('.')[0])
-        print(time[j])
+        #print(time[j])
     try:
         lasttime = datetime.datetime.strptime(time[len(time) - 1], '%Y-%m-%d %H:%M') + datetime.timedelta(minutes=30)
     except ValueError:
@@ -481,12 +481,6 @@ def RankingTimes(ObservationTime, filename, cat, parameters, observatory, target
         print(x)
 
     #########################
-
-    # Load galaxy catalog
-    # TODO: need variable location for this!!
-    # galFile = '/Users/mseglar/Documents/CurrentPhD/HESS/GW/GLADE/GLADE_2.3clean.txt'
-    # cat = LoadGalaxies(galFile)
-    # print('done loading galaxies')
 
     point = load_pointingFile(PointingFile)
 

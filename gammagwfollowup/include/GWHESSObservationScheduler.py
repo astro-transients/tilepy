@@ -54,7 +54,7 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName,O
     except Exception as x:
         print(x)
 
-    print('GWBestGalaxyParameters:', max_zenith,MaxNights,FOV, MaxRuns, MinProbCut, doplot, Duration, MinDuration, SecondRound,ReducedNside,HRnside,UseGreytime)
+    print('Parameters:', max_zenith,MaxNights,FOV, MaxRuns, MinProbCut, doplot, Duration, MinDuration, SecondRound,ReducedNside,HRnside,UseGreytime)
     #########################
 
     # link to the GW map
@@ -120,7 +120,6 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName,O
             if ObsBool:
                 # Round 1
                 P_GW,TC,pixlist,ipixlistHR = ComputeProbability2D(prob,highres,radecs,ReducedNside,HRnside,MinProbCut,ObservationTime,Observatory.Location,max_zenith,FOV,name,pixlist,ipixlistHR,counter,dirName,UseGreytime,doplot)
-                print(ObservationTime,'P_GW of the observation,',P_GW)
                 if ((P_GW <= MinProbCut)and SecondRound):
                     #Try Round 2
                     #print('The minimum probability cut being', MinProbCut * 100, '% is, unfortunately, not reached.')

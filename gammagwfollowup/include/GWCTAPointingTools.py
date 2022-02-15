@@ -488,14 +488,14 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, ReducedNside, HRn
 
     for i in range(0, len(cat_pix)):
         ipix_discfull = hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
-        maskComputeProb = [np.isin(ipix_discfull, ipixlistHR, invert=True)]
+        maskComputeProb = np.isin(ipix_discfull, ipixlistHR, invert=True)
         dp_dV_FOV.append(highres[ipix_discfull[maskComputeProb]].sum())
 
     cat_pix['PIXFOVPROB'] = dp_dV_FOV
 
     # Mask already observed pixels
 
-    mask = [np.isin(cat_pix['PIX'], ipixlist, invert=True)]
+    mask = np.isin(cat_pix['PIX'], ipixlist, invert=True)
 
     if all(np.isin(cat_pix['PIX'], ipixlist, invert=False)):
         maskcat_pix = cat_pix
@@ -560,7 +560,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, ReducedNside, HRn
         sortcat = sortcat[maskExposure]
 
     # Mask if it is not visible at the end of the window
-    mask = [np.isin(sortcat['ZENITH_END'], 66, invert=True)]
+    mask = np.isin(sortcat['ZENITH_END'], 66, invert=True)
     maskcat_zen = sortcat[mask]
     if(len(sortcat[mask]) == 0):
         P_GW = 0
