@@ -394,7 +394,7 @@ def PointingPlotting(filename,cat, observatory, params, name,dirName,PointingsFi
     #print('-------------------   NEW LVC EVENT   --------------------')
     #print()
 
-    print('Loading GW map from ', filename)
+    print('Loading map from ', filename)
     prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     npix = len(prob)
     nside = hp.npix2nside(npix)
@@ -481,7 +481,7 @@ def PointingPlottingGWCTA(filename,name,dirName,PointingsFile,FOV,UseObs):
         name = names[0]
 
 
-    print('Loading GW map from ', filename)
+    print('Loading map from ', filename)
     prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     npix = len(prob)
     nside = hp.npix2nside(npix)
@@ -595,7 +595,7 @@ def PointingPlottingGW_ZenithSteps(filename,name,dirName,FOV,InputTimeObs):
         name = names[0]
 
 
-    print('Loading GW map from ', filename)
+    print('Loading map from ', filename)
     prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     npix = len(prob)
     nside = hp.npix2nside(npix)

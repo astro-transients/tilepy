@@ -79,7 +79,7 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName,O
     print('-------------------   NEW LVC EVENT   --------------------')
     print()
 
-    print('Loading GW map from ', filename)
+    print('Loading map from ', filename)
     tprob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     prob = hp.pixelfunc.ud_grade(tprob,ReducedNside,power=-2)
     nside = ReducedNside
@@ -220,7 +220,7 @@ def BestCandidateonPGal(filename,ObservationTime0,galFile):
     print('-------------------   NEW LVC EVENT   --------------------')
     print()
     
-    print('Loading GW map from ', filename)
+    print('Loading map from ', filename)
     prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     npix = len(prob)
     nside = hp.npix2nside(npix)
@@ -380,7 +380,7 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName,
     #    name = names[0]
     
     
-    print('Loading GW map from ', filename)
+    print('Loading map from ', filename)
     prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     npix = len(prob)
     nside = hp.npix2nside(npix)
@@ -574,7 +574,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
     print('-------------------   NEW EVENT   --------------------')
     print()
 
-    print('Loading GW map from ', filename)
+    print('Loading map from ', filename)
     prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     npix = len(prob)
     nside = hp.npix2nside(npix)

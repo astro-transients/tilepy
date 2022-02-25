@@ -671,17 +671,15 @@ def ZenithAngleCut(prob, nside, time, MinProbCut,max_zenith,observatory,usegreyt
 
 def ComputeProbability2D(prob,highres,radecs,ReducedNside,HRnside,MinProbCut, time,observatory,max_zenith, FOV, tname, ipixlist,ipixlistHR, counter,dirName, usegreytime,plot):
     '''
-    Compute probability in 2D by taking the highest value pixel
+    Compute probability in 2D by taking the highest probability in FoV value
     '''
     radius = FOV
-    #P_GW = prob[ipix_disc].sum()
     frame = co.AltAz(obstime=time, location=observatory)
     thisaltaz = radecs.transform_to(frame)
     #pix_alt1 = thisaltaz.alt.value
 
     if usegreytime:
         moonaltazs = get_moon(Time(time)).transform_to(AltAz(obstime=Time(time),location=observatory))
-
         #Zenith and Moon angular distance mask
         pix_ra = radecs.ra.value[(thisaltaz.alt.value > 90-max_zenith)&(thisaltaz.separation(moonaltazs)>30* u.deg)]
         pix_dec = radecs.dec.value[(thisaltaz.alt.value > 90 - max_zenith)&(thisaltaz.separation(moonaltazs)>30* u.deg)]
@@ -706,7 +704,9 @@ def ComputeProbability2D(prob,highres,radecs,ReducedNside,HRnside,MinProbCut, ti
 
     xyzpix = hp.ang2vec(thetapix, phipix)
 
-    # This is really time-consuming! Should change the logic..
+
+    # Grid-scheme and the connection between HR and LR
+
     for i in range(0, len(cat_pix)):
         # Pixels associated to a disk of radius centered in xyzpix[i] for HR NSIDE
         ipix_discfull = hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
@@ -717,13 +717,16 @@ def ComputeProbability2D(prob,highres,radecs,ReducedNside,HRnside,MinProbCut, ti
             # Mask the ipix_discfull with the pixels that are already observed. I think the problem is here
             maskComputeProb = np.isin(ipix_discfull, ipixlistHR, invert=True)
             # Obtain list of pixel ID after the mask what has been observed already
-            m_ipix_discfull = ma.masked_array(ipix_discfull, mask=maskComputeProb)
+            m_ipix_discfull = ma.compressed(ma.masked_array(ipix_discfull, mask = np.logical_not(maskComputeProb)))
             HRprob = highres[m_ipix_discfull].sum()
             #HRprob = 0
             #for j in ipix_discfullNotCovered:
             #    HRprob = HRprob+highres[j]
+            #print('Length of list of pixels:', m_ipix_discfull, 'vs', ipix_discfull, 'vs', ipixlistHR)
+            #print('Comparison to see if mask is considered: ',HRprob, 'vs',highres[ipix_discfull].sum())
         dp_dV_FOV.append(HRprob)
     cat_pix['PIXFOVPROB'] = dp_dV_FOV
+
 
     # Mask already observed pixels
     mask = np.isin(cat_pix['PIX'], ipixlist,invert=True)
@@ -799,7 +802,7 @@ def SubstractPointings2D(tpointingFile,prob,nside,FOV,pixlist):
     rap, decP = np.genfromtxt(tpointingFile, usecols=(2, 3), dtype="str", skip_header=1,
                                              delimiter=' ',
                                              unpack=True)  # ra, dec in degrees
-    coordinates=TransformRADec(rap, decP)
+    coordinates = TransformRADec(rap, decP)
     P_GW = []
     for i in range(0,len(rap)):
         t = 0.5 * np.pi - coordinates[i].dec.rad
@@ -814,6 +817,7 @@ def SubstractPointings2D(tpointingFile,prob,nside,FOV,pixlist):
                 effectiveipix_disc.append(ipix_disc[j])
             pixlist.append(ipix_disc[j])
         P_GW.append(prob[effectiveipix_disc].sum())
+        #print('Coordinates ra:', rap[i], 'dec:', decP[i], 'Pgw:', P_GW[i],'vs', prob[ipix_disc].sum())
         #print('effectiveipix_disc',effectiveipix_disc)
         #print('-----------')
         #print(prob[effectiveipix_disc].sum())
@@ -828,17 +832,17 @@ def TransformRADec(vra,vdec):
         ra=[]
         dec=[]
         for i in range(0,len(vra)):
-            coord=SkyCoord(vra[i].split('"')[1],vdec[i].split('"')[0],frame='fk5')
+            coord = SkyCoord(vra[i].split('"')[1],vdec[i].split('"')[0],frame='fk5')
             print(coord)
             ra.append(coord.ra.deg)
             dec.append(coord.dec.deg)
     else:
-        print(vra,vdec)
+        #print(vra,vdec)
         ra = vra.astype(np.float)
         dec = vdec.astype(np.float)
         #np.float(vra)
         #dec = np.float(vdec)
-    print(ra,dec)
+    #print(ra,dec)
     coordinates = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
     return coordinates
 
@@ -1513,7 +1517,7 @@ def SubstractPointings(tpointingFile,galaxies,talreadysumipixarray,tsum_dP_dV,FO
     #Read PointingsFile
 
     print("Loading pointings from " + tpointingFile)
-    rap, decP, = np.genfromtxt(tpointingFile, usecols=(3,4), dtype="str", skip_header=1,
+    rap, decP, = np.genfromtxt(tpointingFile, usecols=(2,3), dtype="str", skip_header=1,
                                              delimiter=' ',
                                              unpack=True)  # ra, dec in degrees
 
@@ -1531,15 +1535,17 @@ def SubstractPointings(tpointingFile,galaxies,talreadysumipixarray,tsum_dP_dV,FO
         updatedGalaxies,pgwcircle,pgalcircle,talreadysumipixarray =SubstractGalaxiesCircle(updatedGalaxies,ra[i], dec[i],talreadysumipixarray,tsum_dP_dV,FOV,prob,nside)
         PGW.append(pgwcircle)
         PGAL.append(pgalcircle)
+        print('Coordinates ra:', ra[i], 'dec:', dec[i], 'Pgw:', pgwcircle, 'PGAL:', pgalcircle)
     return ra,dec,updatedGalaxies, PGW, PGAL,talreadysumipixarray
 
 def SubstractGalaxiesCircle(galaux, ra,dec ,talreadysumipixarray,tsum_dP_dV,FOV,prob,nside):
+
     radius = FOV
     coordinates = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
-    #print('coordinatesPointing',coordinates)
+
     targetCoord = co.SkyCoord(galaux['RAJ2000'], galaux['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
     dp_dVfinal = galaux['dp_dV']
-    #print('coordinatesPointing[0].dec.rad',coordinates.dec.rad)
+
 
     t = 0.5 * np.pi - coordinates.dec.rad
     p = coordinates.ra.rad
@@ -1554,7 +1560,8 @@ def SubstractGalaxiesCircle(galaux, ra,dec ,talreadysumipixarray,tsum_dP_dV,FOV,
 
     P_GW = prob[effectiveipix_disc].sum()
     P_Gal = dp_dVfinal[targetCoord.separation(coordinates).deg < radius].sum() / tsum_dP_dV
-    #Define galaxies that are outside the FoV
+
+    print('PGW',P_GW, 'P_GAL',P_Gal)
 
     newgalaxies = galaux[targetCoord.separation(coordinates).deg > radius]
 

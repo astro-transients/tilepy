@@ -111,7 +111,7 @@ def PGWonFoV(filename,InputChar,TC,parameters,dirName):
     print('-------------------   NEW LVC EVENT   --------------------')
     print()
 
-    print('Loading GW map from ', filename)
+    print('Loading map from ', filename)
     tprob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     prob = hp.pixelfunc.ud_grade(tprob,ReducedNside,power=-2)
 
@@ -273,7 +273,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
     print('-------------------   NEW LVC EVENT   --------------------')
     print()
 
-    print('Loading GW map from ', filename)
+    print('Loading map from ', filename)
     tprob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     prob = hp.pixelfunc.ud_grade(tprob,ReducedNside,power=-2)
 
@@ -518,7 +518,7 @@ def PGalonFoV(filename,galFile,InputObservationList,UseObs,distance,Edistance_ma
     #print('-------------------   NEW LVC EVENT   --------------------')
     #print()
     
-    print('Loading GW map from ', filename)
+    print('Loading map from ', filename)
     prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     npix = len(prob)
     nside = hp.npix2nside(npix)
