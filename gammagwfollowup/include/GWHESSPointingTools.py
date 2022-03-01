@@ -46,7 +46,7 @@ iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 #   Global parameters about darkness criteria   #
 #################################################
 # max sun and moon altitude in degrees.
-cfg = "./configs/Visibility.ini"
+cfg = "./configs/FollowupParameters.ini"
 parser = ConfigParser()
 parser.read(cfg)
 parser.sections()
@@ -401,6 +401,129 @@ class Tools:
             #print('You got here')
         print(YouAreInside)
         return YouAreInside
+
+#####################################################
+
+## Parse Observation Parameters
+
+#####################################################
+
+class ObservationParameters(object):
+    # Stores all the parameters in the .ini file
+    # Observatory
+    def __init__(self, name=None, Lat=None, Lon=None, Height=None,
+                 gSunDown=None, HorizonSun = None, gMoonDown = None, HorizonMoon = None, gMoonGrey = None, gMoonPhase = None, MoonSourceSeparation = None, MaxMoonSourceSeparation = None, max_zenith = None, FOV = None, MaxRuns = None,
+                 MaxNights = None, Duration = None, MinDuration = None, UseGreytime= None,
+                 MinimumProbCutForCatalogue = None, MinProbCut = None, doplot=None, SecondRound = None, FulFillReq_Percentage = None, PercentCoverage = None, ReducedNside = None, HRnside = None, Mangrove = None):
+        self.name = name
+        self.Lat = Lat * u.deg
+        self.Lon = Lon * u.deg
+        self.Height = Height * u.m
+        self.Location = EarthLocation(lat=self.Lat, lon=self.Lon,
+                                      height=self.Height)
+
+        # Visibility
+        self.gSunDown = gSunDown
+        self.HorizonSun = HorizonSun
+        self.gMoonDown = gMoonDown
+        self.HorizonMoon = HorizonMoon
+        self.gMoonGrey = gMoonGrey
+        self.gMoonPhase = gMoonPhase
+        self.MoonSourceSeparation = MoonSourceSeparation
+        self.MaxMoonSourceSeparation = MaxMoonSourceSeparation
+
+        # Operations
+        self.max_zenith = max_zenith
+        self.FOV = FOV
+        self.MaxRuns = MaxRuns
+        self.MaxNights = MaxNights
+        self.Duration = Duration
+        self.MinDuration = MinDuration
+        self.UseGreytime = UseGreytime
+
+        # Tiling
+        self.MinimumProbCutForCatalogue = MinimumProbCutForCatalogue
+        self.MinProbCut = MinProbCut
+        self.doplot = doplot
+        self.SecondRound = SecondRound
+        self.FulFillReq_Percentage = FulFillReq_Percentage
+        self.PercentCoverage = PercentCoverage
+        self.ReducedNside = ReducedNside
+        self.HRnside = HRnside
+        self.Mangrove = Mangrove
+
+    def __str__(self):
+        txt = ''
+        txt += '----------------- Main parsed observation parameters ----------------- \n'.format()
+        txt += 'Name: {}\n'.format(self.name)
+        txt += 'Max zenith: {}\n'.format(self.max_zenith)
+        txt += 'FOV: {}\n'.format(self.FOV)
+        txt += '----------------------------------------------------------------------\n'.format()
+        return txt
+
+    @classmethod
+    def from_configfile(cls,filepath):
+        ##################
+        cfg = filepath
+        parser = ConfigParser()
+        parser.read(cfg)
+        parser.sections()
+        section = 'observatory'
+        try:
+            name = str(parser.get(section, 'name'))
+            Lat = float(parser.get(section, 'Lat'))
+            Lon = float(parser.get(section, 'Lon'))
+            Height = float(parser.get(section, 'Height'))
+        except Exception as x:
+            print(x)
+
+        section = 'visibility'
+        try:
+            gSunDown = int(parser.get(section, 'gSunDown'))
+            HorizonSun = parser.get(section, 'HorizonSun')
+            gMoonDown = float(parser.get(section, 'gMoonDown'))
+            HorizonMoon = (parser.get(section, 'HorizonMoon'))
+            gMoonGrey = int(parser.get(section, 'gMoonGrey'))  # Altitude in degrees
+            gMoonPhase = int(parser.get(section, 'gMoonPhase'))  # Phase in %
+            MoonSourceSeparation = int(parser.get(section, 'MoonSourceSeparation'))  # Separation in degrees
+            MaxMoonSourceSeparation = int(parser.get(section, 'MaxMoonSourceSeparation'))  # Max separation in degrees
+
+        except Exception as x:
+            print(x)
+
+        section = 'operations'
+        try:
+            max_zenith = int(parser.get(section, 'max_zenith'))
+            FOV = float(parser.get(section, 'FOV'))
+            MaxRuns = int(parser.get(section, 'MaxRuns'))
+            MaxNights = int(parser.get(section, 'MaxNights'))
+            Duration = int(parser.get(section, 'Duration'))
+            MinDuration = int(parser.get(section, 'MinDuration'))
+            UseGreytime = (parser.getboolean(section, 'UseGreytime'))
+        except Exception as x:
+            print(x)
+
+        section = 'tiling'
+        try:
+            MinimumProbCutForCatalogue = float(parser.get(section, 'MinimumProbCutForCatalogue'))
+            MinProbCut = float(parser.get(section, 'MinProbCut'))
+            doplot = (parser.getboolean(section, 'doplot'))
+            SecondRound = (parser.getboolean(section, 'SecondRound'))
+            FulFillReq_Percentage = float(parser.get(section, 'FulFillReq_Percentage'))
+            PercentCoverage = float(parser.get(section, 'PercentCoverage'))
+            ReducedNside = int(parser.get(section, 'ReducedNside'))
+            HRnside = int(parser.get(section, 'HRnside'))
+            Mangrove = (parser.getboolean(section, 'Mangrove'))
+        except Exception as x:
+            print(x)
+
+        #print('Parameters:', max_zenith,MaxNights,FOV, MaxRuns, MinProbCut, doplot, Duration, MinDuration, SecondRound,ReducedNside,HRnside,UseGreytime)
+
+        return cls(name = name,Lat = Lat,Lon = Lon, Height = Height,gSunDown = gSunDown, HorizonSun = HorizonSun, gMoonDown = gMoonDown,
+        HorizonMoon = HorizonMoon, gMoonGrey = gMoonGrey, gMoonPhase = gMoonPhase, MoonSourceSeparation = MoonSourceSeparation, MaxMoonSourceSeparation = MaxMoonSourceSeparation, max_zenith = max_zenith,
+        FOV = FOV, MaxRuns = MaxRuns, MaxNights = MaxNights, Duration = Duration, MinDuration = MinDuration, UseGreytime = UseGreytime, MinimumProbCutForCatalogue = MinimumProbCutForCatalogue,
+        MinProbCut = MinProbCut, doplot = doplot, SecondRound = SecondRound, FulFillReq_Percentage = FulFillReq_Percentage, PercentCoverage = PercentCoverage,
+        ReducedNside = ReducedNside, HRnside = HRnside, Mangrove = Mangrove)
 
 
 ######################################################

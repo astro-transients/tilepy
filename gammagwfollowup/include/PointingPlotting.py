@@ -1,5 +1,5 @@
 from .GWHESSPointingTools import (LoadHealpixMap, TransformRADec,
-                                  CTANorthObservatory,CTASouthObservatory)
+                                  CTANorthObservatory,CTASouthObservatory,ObservationParameters)
 import os
 import healpy as hp
 import matplotlib.pyplot as plt
@@ -366,7 +366,7 @@ def LoadPointingsGAL(tpointingFile):
     return time, coordinates ,Pgw, Pgal
 
 
-def PointingPlotting(filename,cat, observatory, params, name,dirName,PointingsFile1):
+def PointingPlotting(filename,cat, parameters, name,dirName,PointingsFile1):
 
     # link to the GW map => will come from the alert message
     #GWurl = ('https://dcc.ligo.org/P1500071/public/783865_bayestar.fits.gz')
@@ -378,17 +378,10 @@ def PointingPlotting(filename,cat, observatory, params, name,dirName,PointingsFi
         names = filename.split("_")
         name = names[0]
     ##################
-    cfg = params
-    parser = ConfigParser()
-    parser.read(cfg)
-    parser.sections()
-    section = 'GWBestGalaxyParameters'
-    try:
-        max_zenith = int(parser.get(section, 'max_zenith'))
-        FOV = float(parser.get(section, 'FOV'))
-    except Exception as x:
-        print(x)
 
+    # Main parameters
+    obspar = ObservationParameters.from_configfile(parameters)
+    print(obspar)
 
     #print()
     #print('-------------------   NEW LVC EVENT   --------------------')
@@ -419,10 +412,6 @@ def PointingPlotting(filename,cat, observatory, params, name,dirName,PointingsFi
     #PointingsFile2='./983950_bayestar_SuggestedPointings_GWOptimisation.txt'
 
     name1 = filename.split('.')[0].split('/')[-1]
-    #name2='TEST'
-    #ObservationTimearray2, Coordinates2, ProbGW, Probarray2 = LoadPointingsGAL(PointingsFile2)
-
-    #print ObservationTimearray, P_GWarray
 
     Probarray1 = np.atleast_1d(Probarray1) #making sure to have an array on which we can call the sum() function
 
@@ -440,20 +429,11 @@ def PointingPlotting(filename,cat, observatory, params, name,dirName,PointingsFi
             except ValueError:
                 converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S'))
 
-    '''
-    converted_time2=[]
-    for i in range(0,len(ObservationTimearray2)):
-        time2 = ObservationTimearray2[i]
-        try:
-            converted_time2.append(datetime.datetime.strptime(time2, '%Y-%m-%d %H:%M:%S.%f '))
-        except ValueError:
-            converted_time2.append(datetime.datetime.strptime(time2, '%Y-%m-%d %H:%M:%S '))
-    '''
 
 
-    #PlotPointingsTogether(prob,converted_time1[0],Coordinates1,sum(Probarray1),name1,Coordinates2,sum(Probarray2),name2, nside, FOV, doplot=True)
-    PlotPointings(prob,cat,converted_time1,Coordinates1,sum(Probarray1), nside, FOV, max_zenith, observatory, name, dirName, doplot=True)
-    #PlotPointings(converted_time2[0],Coordinates2, sum(Probarray2), nside, FOV,name2,doplot=True)
+    #PlotPointingsTogether(prob,converted_time1[0],Coordinates1,sum(Probarray1),name1,Coordinates2,sum(Probarray2),name2, nside, obspar.FOV, doplot=True)
+    PlotPointings(prob,cat,converted_time1,Coordinates1,sum(Probarray1), nside, obspar.FOV, obspar.max_zenith, obspar, name, dirName, doplot=True)
+    #PlotPointings(converted_time2[0],Coordinates2, sum(Probarray2), nside, obspar.FOV,name2,doplot=True)
 
 
 def PointingPlottingGWCTA(filename,name,dirName,PointingsFile,FOV,UseObs):

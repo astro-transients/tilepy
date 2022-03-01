@@ -14,7 +14,7 @@ from astropy.utils import iers
 from astropy.utils.data import download_file
 import copy
 from .GWHESSPointingTools import (LoadHealpixMap, Tools, CorrelateGalaxies_LVC,
-                                  CorrelateGalaxies_LVC_SteMass)
+                                  CorrelateGalaxies_LVC_SteMass, ObservationParameters)
 
 from six.moves import configparser
 import six
@@ -460,25 +460,12 @@ def EvolutionPlot(galPointing,tname):
     plt.savefig("%s/AltitudevsTime.png"%tname)
 
 
-def RankingTimes(ObservationTime, filename, cat, parameters, observatory, targetType, dirName, PointingFile):
+def RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName, PointingFile):
     # Main parameters
 
-    ##################
-    cfg = parameters
-    parser = ConfigParser()
-    parser.read(cfg)
-    parser.sections()
-    section = 'GWBestGalaxyParameters'
-
-    try:
-        max_zenith = int(parser.get(section, 'max_zenith'))
-        nights = int(parser.get(section, 'MaxNights'))
-        FOV = float(parser.get(section, 'FOV'))
-        MinimumProbCutForCatalogue = float(parser.get(section, 'MinimumProbCutForCatalogue'))
-        UseGreytime = (parser.getboolean(section, 'UseGreytime'))
-
-    except Exception as x:
-        print(x)
+    # Main parameters
+    obspar = ObservationParameters.from_configfile(parameters)
+    print(obspar)
 
     #########################
 
@@ -511,10 +498,10 @@ def RankingTimes(ObservationTime, filename, cat, parameters, observatory, target
     # plt.show
 
     # correlate GW map with galaxy catalog, retrieve ordered list
-    tGals, sum_dP_dV = CorrelateGalaxies_LVC(prob, distmu, distsigma, distnorm, cat, has3D, MinimumProbCutForCatalogue)
-    point = ProbabilitiesinPointings(tGals, point, FOV, sum_dP_dV, prob, nside)
-    point = VisibilityWindow(ObservationTime, point, 90 - max_zenith, nights, UseGreytime, dirName, max_zenith,
-                             observatory)
+    tGals, sum_dP_dV = CorrelateGalaxies_LVC(prob, distmu, distsigma, distnorm, cat, has3D, obspar.MinimumProbCutForCatalogue)
+    point = ProbabilitiesinPointings(tGals, point, obspar.FOV, sum_dP_dV, prob, nside)
+    point = VisibilityWindow(ObservationTime, point, 90 - obspar.max_zenith, obspar.MaxNights, obspar.UseGreytime, dirName, obspar.max_zenith,
+                             obspar)
 
     EvolutionPlot(point, dirName)
     Sortingby(point, targetType, dirName)

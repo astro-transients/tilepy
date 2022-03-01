@@ -28,7 +28,7 @@ def getdate(x):
         return None
 
 
-def GetSchedule_GW(URL, date, observatory,datasetDir,outDir):
+def GetSchedule_GW(URL, date,datasetDir,outDir):
     FOLLOWUP = True
     targetType = 'GW_Pointing'
 
@@ -92,7 +92,7 @@ def GetSchedule_GW(URL, date, observatory,datasetDir,outDir):
         # date = datetime.datetime(2019,7,28,20,20,20)
         done = "False"
         galaxies = datasetDir + "/GLADE.txt"
-        params = "./configs/PGalinFoV.ini"
+        params = "./configs/FollowupParameters.ini"
 
 
         #ObservationTime = getdate(date)
@@ -120,16 +120,13 @@ def GetSchedule_GW(URL, date, observatory,datasetDir,outDir):
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
-        SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName,observatory)
+        SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName)
 
     else:
-        # date = datetime.datetime.now()
-        # date = datetime.datetime.now(timezone.utc)
-        # date = datetime.datetime.utcnow()
-        # date = datetime.datetime(2021,6,8,14,20,20)
+
         done = "False"
         galaxies = datasetDir + "/GLADE.txt"
-        params = "./configs/PGWinFoV.ini"
+        params = "./configs/FollowupParameters.ini"
 
         ObservationTime = date
         PointingsFile = done
@@ -155,7 +152,7 @@ def GetSchedule_GW(URL, date, observatory,datasetDir,outDir):
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
-        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName, observatory)
+        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName)
 
     print(SuggestedPointings)
     print("===========================================================================================")
@@ -167,9 +164,9 @@ def GetSchedule_GW(URL, date, observatory,datasetDir,outDir):
         ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
         print()
         cat = LoadGalaxies(galFile)
-        RankingTimes(ObservationTime, filename, cat, parameters, observatory, targetType, dirName,
+        RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName,
                      '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
-        PointingPlotting(filename, cat,observatory,params, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+        PointingPlotting(filename, cat,parameters, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
     else:
         FOLLOWUP = False
         print('No observations are scheduled')
@@ -177,7 +174,7 @@ def GetSchedule_GW(URL, date, observatory,datasetDir,outDir):
     return SuggestedPointings, FOLLOWUP
 
 
-def GetSchedule_GBM(URL, date, observatory,datasetDir,outDir):
+def GetSchedule_GBM(URL, date,datasetDir,outDir):
     FOLLOWUP = True
     targetType = 'GBM_Pointing'
 
@@ -269,7 +266,7 @@ def GetSchedule_GBM(URL, date, observatory,datasetDir,outDir):
         # date = datetime.datetime(2021,3,3,14,20,20)
         done = "False"
         galaxies = datasetDir + "/GLADE.txt"
-        params = "./configs/PGalinFoV.ini"
+        params = "./configs/FollowupParameters.ini"
 
         ObservationTime = date
         PointingsFile = done
@@ -295,7 +292,7 @@ def GetSchedule_GBM(URL, date, observatory,datasetDir,outDir):
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
-        SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName, observatory)
+        SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName)
 
     else:
         # date = datetime.datetime.now()
@@ -304,7 +301,7 @@ def GetSchedule_GBM(URL, date, observatory,datasetDir,outDir):
         # date = datetime.datetime(2021, 11, 30, 15, 15, 15)
         done = "False"
         galaxies = datasetDir + "/GLADE.txt"
-        params = "./configs/PGWinFoV.ini"
+        params = "./configs/FollowupParameters.ini"
 
         ObservationTime = date
         PointingsFile = done
@@ -330,7 +327,7 @@ def GetSchedule_GBM(URL, date, observatory,datasetDir,outDir):
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
-        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName,observatory)
+        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName)
 
         print(SuggestedPointings)
         print("===========================================================================================")
@@ -342,13 +339,12 @@ def GetSchedule_GBM(URL, date, observatory,datasetDir,outDir):
         ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
         print()
         cat = LoadGalaxies(galFile)
-        RankingTimes(ObservationTime, filename, cat, parameters,observatory, targetType, dirName,'%s/SuggestedPointings_GWOptimisation.txt' % dirName)
-        PointingPlotting(filename, cat, observatory, params, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+        RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName,'%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+        PointingPlotting(filename, cat, parameters, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
     else:
         FOLLOWUP = False
         print('No observations are scheduled')
 
-    #print ("followup", FOLLOWUP)
     return SuggestedPointings, FOLLOWUP
 
 

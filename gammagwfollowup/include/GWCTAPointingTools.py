@@ -346,14 +346,6 @@ class GRB(object):
         txt += 'Name: {}\n'.format(self.name)
         txt += 'Redshift: {}\n'.format(self.z)
         txt += 'Times:\n'.format(self.time_interval)
-        #txt += 'Energy steps:\n'.format(self.energy_interval)
-        #txt += 'Flux:\n'.format(self.spectral_model)
-        #for t in self.time_interval:
-        #    txt += '{} -- {}\n'.format(t[0], t[1])
-
-        #if self.stack_obs is not None:
-        #    txt += str(self.stack_obs.total_stats_safe_range)
-
         return txt
     @classmethod
     def from_fitsfile(cls,filepath,absorption):
