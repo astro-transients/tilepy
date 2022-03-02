@@ -39,7 +39,7 @@ else:
 iers_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), '../dataset/finals2000A.all')
 iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
-def PGWonFoV(filename,InputChar,TC,parameters,dirName):
+def PGWonFoV_WindowsfromIRFs(filename,InputChar,TC,parameters,dirName):
     UseObs =InputChar['Observatory']
     run=InputChar['run']
     mergerID=InputChar['MergerID']
@@ -111,7 +111,7 @@ def PGWonFoV(filename,InputChar,TC,parameters,dirName):
     print('-------------------   NEW LVC EVENT   --------------------')
     print()
 
-    print('Loading GW map from ', filename)
+    print('Loading map from ', filename)
     tprob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     prob = hp.pixelfunc.ud_grade(tprob,ReducedNside,power=-2)
 
@@ -263,6 +263,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
     P_GWarray = []
     ObservationTimearray= []
     Exposure = []
+    Delay = []
     ZenIniarray = []
     ZenEndarray = []
     ObsBoolarray = []
@@ -272,7 +273,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
     print('-------------------   NEW LVC EVENT   --------------------')
     print()
 
-    print('Loading GW map from ', filename)
+    print('Loading map from ', filename)
     tprob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     prob = hp.pixelfunc.ud_grade(tprob,ReducedNside,power=-2)
 
@@ -308,9 +309,9 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
     TotalNights = 2
     counter = 0
     counterTotalPossible = 0
-    #MaxRuns = 20
-    GrbsensMax = 16384
-    AuxTimeNextTry = 1800   # 30 minutes.  Allows to check if 30 minutes later there is a better opportunity
+    MaxRuns = 20
+    #GrbsensMax = 16384
+    AuxTimeNextTry = 900   # 15 minutes.  Allows to check if 15 minutes later there is a better opportunity
     #MinProbCut = 0.005
 
 
@@ -340,7 +341,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
             print("Night number", nights, " window starts at", TstartNight, "finishes at", TendNight)
 
             # Look for the first time that the C.R. observable is > 5%
-            TemporalBin = datetime.timedelta(seconds = 900) # Every 15 minutes
+            TemporalBin = datetime.timedelta(seconds = 600) # Every 10 minutes
             for i in range(0, 24):
                 checkTime = TstartNight + i*TemporalBin
                 if((TendNight-checkTime).total_seconds()<0):
@@ -408,6 +409,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
                         ZenEndarray.append(np.float('{:1.4f}'.format(np.float(ZenEnd))))
                         ObsBoolarray.append('True')
                         Exposure.append(ObsExp)
+                        Delay.append(DelayObs)
                         counter = counter + 1
                     elif((P_GW <= MinProbCut) and (P_GW>0)): # Although OBS AND NIGHT WAS TRUE
                         print("===== RESULTS ========")
@@ -419,6 +421,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
                         ZenIniarray.append(0)
                         ZenEndarray.append(0)
                         Exposure.append(0)
+                        Delay.append(0)
                         ObsBoolarray.append('ProbTooLow')
                     else:
                         print("===== RESULTS ========")
@@ -430,6 +433,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
                         ZenIniarray.append(0)
                         ZenEndarray.append(0)
                         Exposure.append(0)
+                        Delay.append(0)
                         ObsBoolarray.append('ProbZero')
             else:
                 # The event hasnt been found to be on the temporal FoV of the instrument
@@ -443,6 +447,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
                 ZenIniarray.append(0)
                 ZenEndarray.append(0)
                 Exposure.append(0)
+                Delay.append(0)
                 ObsBoolarray.append('NoTemporalFoV')
 
         ObservationTime = TendNight + datetime.timedelta(seconds=43200)  # Auxiliary jump of 12 hours to the next day
@@ -452,10 +457,10 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
     print()
     # List of suggested pointings
     print("TOTAL POSSIBLE: ",counterTotalPossible,"DONE: ",counter)
-    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray, Obsarray, P_GWarray,ObsBoolarray,ZenIniarray, ZenEndarray, Exposure], names=['Observation Time UTC','RA(deg)','DEC(deg)','Observatory','PGW','ObsInfo','ZenIni','ZenEnd','Duration'])
+    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray, Obsarray, P_GWarray,ObsBoolarray,ZenIniarray, ZenEndarray, Exposure, Delay], names=['Observation Time UTC','RA(deg)','DEC(deg)','Observatory','PGW','ObsInfo','ZenIni','ZenEnd','Duration', 'Delay'])
     return (SuggestedPointings, ObservationTime0, FOV, nside, counter)
 
-def PGalonFoV(filename,galFile,InputObservationList,UseObs,distance,Edistance_max,Edistance_min,ObservationTime0,parameters,dirName):
+def PGalonFoV_WindowsFromList(filename,galFile,InputObservationList,UseObs,distance,Edistance_max,Edistance_min,ObservationTime0,parameters,dirName):
 
 
     # Main Parameters
@@ -513,7 +518,7 @@ def PGalonFoV(filename,galFile,InputObservationList,UseObs,distance,Edistance_ma
     #print('-------------------   NEW LVC EVENT   --------------------')
     #print()
     
-    print('Loading GW map from ', filename)
+    print('Loading map from ', filename)
     prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     npix = len(prob)
     nside = hp.npix2nside(npix)
@@ -586,7 +591,7 @@ def PGalonFoV(filename,galFile,InputObservationList,UseObs,distance,Edistance_ma
                             mask, minz = FulfillsRequirement(visiGals2, max_zenith,FOV,FulFillReq_Percentage,UsePix=False)
 
                             finalGals2 = visiGals2[mask]
-                            p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = ComputeProbPGALIntegrateFoV(prob,ObservationTime,finalGals2,False,visiGals2,tGals_aux2,sum_dP_dV, alreadysumipixarray2,nside, minz,max_zenith, FOV,counter,name,dirName,doplot)
+                            p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = ComputeProbPGALIntegrateFoV(prob,ObservationTime,observatory.Location,finalGals2,False,visiGals2,tGals_aux2,sum_dP_dV, alreadysumipixarray2,nside, minz,max_zenith, FOV,counter,name,dirName,doplot)
 
 
                             RAarray.append(finalGals2['RAJ2000'][:1])
@@ -598,7 +603,7 @@ def PGalonFoV(filename,galFile,InputObservationList,UseObs,distance,Edistance_ma
                         #print("TARGET COORDINATES AND DETAILS...")
                         #print("=================================")
                         #print(finalGals['RAJ2000', 'DEJ2000', 'Bmag', 'Dist', 'Alt', 'dp_dV','dp_dV_FOV'][:1])
-                        p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbPGALIntegrateFoV(prob,ObservationTime,finalGals,False, visiGals,tGals_aux, sum_dP_dV,alreadysumipixarray1,nside, minz,max_zenith, FOV, counter,name,dirName,doplot)
+                        p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbPGALIntegrateFoV(prob,ObservationTime,observatory.Location,finalGals,False, visiGals,tGals_aux, sum_dP_dV,alreadysumipixarray1,nside, minz,max_zenith, FOV, counter,name,dirName,doplot)
                         RAarray.append(finalGals['RAJ2000'][:1])
                         DECarray.append(finalGals['DEJ2000'][:1])
                         PreDefWindow.append(predefWind[j])
@@ -622,162 +627,3 @@ def PGalonFoV(filename,galFile,InputObservationList,UseObs,distance,Edistance_ma
     # List of suggested pointings
     SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray ,P_GWarray,P_GALarray,PreDefWindow,Round], names=['Observation Time UTC','RA(deg)','DEC(deg)','PGW','Pgal','preDefWind','Round'])
     return SuggestedPointings,cat,FOV,nside
-
-def PGalonFoV_PixRegion(filename,ObservationTime0):
-
-    # Main Parameters
-
-    ###############################
-    max_zenith = 60
-    MaxNights = 1
-    FOV = 2.5
-    MaxRuns = 20  # Maximum number of pointings/runs
-    probCut = 0.005
-    MinimumProbCutForCatalogue = 0.01
-    doplot = False
-    FulFillReq_Percentage = 0.75
-    NewNside = 64
-    PercentCoverage = 0.99
-    Duration=5
-    MinDuration=1
-    ###############################
-
-    # load galaxy catalog from local file
-    # this could be done at the beginning of the night to save time
-    galFile='./GLADE_2clean.txt'
-
-    cat = LoadGalaxies(galFile)
-    print('done loading galaxies')
-
-    name = filename.split('.')[0].split('/')[-1]
-
-    # name = "Default"
-    # if ('G' in filename):
-    #    names = filename.split("_")
-    #    name = names[0]
-
-    print()
-    print('-------------------   NEW LVC EVENT   --------------------')
-    print()
-
-    print('Loading GW map from ', filename)
-    prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
-    npix = len(prob)
-    nside = hp.npix2nside(npix)
-
-    has3D = True
-    if (len(distnorm) == 0):
-        print("Found a generic map without 3D information")
-        # flag the event for special treatment
-        has3D = False
-    else:
-        print("Found a 3D reconstruction")
-
-    # correlate GW map with galaxy catalog, retrieve ordered list
-    tGals, sum_dP_dV = CorrelateGalaxies_LVC(prob, distmu, distsigma, distnorm, cat, has3D, MinimumProbCutForCatalogue)
-    tGals_aux = tGals
-    tGals_aux2 = tGals
-
-    P_GALarray = []
-    P_GWarray = []
-    ObservationTimearray = []
-    RAarray = []
-    DECarray = []
-    alreadysumipixarray1 = []
-    alreadysumipixarray2 = []
-
-
-    # In case one wants to see if a next round would give us better results..
-    # So the time will be j-1
-    nextround = False
-    Round = []
-    print('----------   NEW FOLLOW-UP ATTEMPT   ----------')
-    print('MaxRuns: ', MaxRuns, 'MinimumProbCutForCatalogue: ', MinimumProbCutForCatalogue)
-
-    SlewingTime = datetime.timedelta(minutes=210)
-    ObservationTime = ObservationTime0 + SlewingTime
-    time = NextWindowTools.NextObservationWindow(ObservationTime, CTANorthObservatory())
-    WindowDurations = [15, 17, 20, 23, 27, 33, 40, 50, 64, 85,119,178,296,595,1905]
-    NightDarkRuns = NextWindowTools.CheckWindowCreateArray(time, CTANorthObservatory(), WindowDurations)
-
-    totalProb = 0.
-    n = 0
-
-    ###############################
-
-    # Get the RA & DEC of pixles of the pixels in an enclosed probability region (% precised by PercentCoverage).
-    # Reduce these RA DEC to angles in maps with smaller resolution (NewNside)
-
-
-    pix_ra1, pix_dec1, area = Get90RegionPixReduced(prob, PercentCoverage, NewNside)
-
-
-
-    ##############################
-
-    for j in range(0, len(NightDarkRuns)):
-        if (len(ObservationTimearray) < MaxRuns):
-            ObservationTime = NightDarkRuns[j]
-            if (nextround):
-                ObservationTime = NightDarkRuns[j - 1]
-                nextround = False
-            visible, altaz, tGals_aux = VisibleAtTime(ObservationTime, tGals_aux, max_zenith,
-                                                      CTANorthObservatory().Location)
-
-            if (visible):
-
-                # select galaxies within the slightly enlarged visiblity window
-                visiMask = altaz.alt.value > 90 - (max_zenith + FOV)
-                visiGals = tGals_aux[visiMask]
-
-                mask, minz = FulfillsRequirement(visiGals, max_zenith, FOV, FulFillReq_Percentage, UsePix=True)
-
-                finalGals = visiGals[mask]
-                visiPix = ModifyCataloguePIX(pix_ra1, pix_dec1, ObservationTime, max_zenith, prob, finalGals, FOV,
-                                             sum_dP_dV, nside, NewNside, minz)
-
-                if (visiPix['PIXFOVPROB'][:1] > probCut):
-                    n = n + 1
-                    # final galaxies within the FoV
-
-                    # print("\n=================================")
-                    # print("TARGET COORDINATES AND DETAILS...")
-                    # print("=================================")
-                    # print(finalGals['RAJ2000', 'DEJ2000', 'Bmag', 'Dist', 'Alt', 'dp_dV','dp_dV_FOV'][:1])
-                    p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbPGALIntegrateFoV(prob, ObservationTime,
-                                                                                               visiPix, True, visiGals,
-                                                                                               tGals_aux, sum_dP_dV,
-                                                                                               alreadysumipixarray1,
-                                                                                               nside, minz, max_zenith,
-                                                                                               FOV, name, doplot)
-                    RAarray.append(visiPix['PIXRA'][:1])
-                    DECarray.append(visiPix['PIXDEC'][:1])
-                    Round.append(1)
-                    P_GALarray.append(p_gal)
-                    P_GWarray.append(p_gw)
-                    ObservationTimearray.append(ObservationTime)
-
-                else:
-                    print("Optimal pointing position is: ")
-                    print(visiPix['PIXRA', 'PIXDEC', 'PIXFOVPROB'][:1])
-                    print("NOT passing the cut on dp_dV_FOV > ", probCut)
-
-        else:
-            break
-
-    print()
-    print("===========================================================================================")
-    print()
-    # List of suggested pointings
-    SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round],
-                               names=['Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'PGW',
-                                      'Pgal', 'Round'], )
-    print(SuggestedPointings)
-    print("Name", name, "Total GW probability covered: ", sum(P_GWarray), "Total Gal probability covered: ", sum(P_GALarray),
-    "Number of runs that fulfill darkness condition  :", len(NightDarkRuns), "Number of effective pointings: ",
-    len(ObservationTimearray))
-    return SuggestedPointings,cat,area
-
-    #print("===========================================================================================")
-    #print()
-    #print()

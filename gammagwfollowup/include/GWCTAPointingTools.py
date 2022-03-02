@@ -1,6 +1,6 @@
 import os
 from .GWHESSPointingTools import Tools
-from gammapy.spectrum.models import TableModel, AbsorbedSpectralModel
+from gammapy.spectrum.models import TableModel, AbsorbedSpectralModel, PowerLaw
 from .ObservingTimes import ObtainSingleObservingTimes
 import matplotlib.pyplot as plt
 import numpy as np
@@ -97,11 +97,6 @@ def LoadGalaxiesSimulation(tgalFile):
     tcat = Table([ra, dec, dist], names=('RAJ2000', 'DEJ2000', 'Dist'))
     return tcat
 
-# To be finished
-def SummaryFileReadCTA(summaryFile):
-    print('This function needs to be adapted to the output')
-    nP, Found = np.genfromtxt(summaryFile,usecols=(8,9),skip_header=1, unpack=True,dtype='str')
-    return nP, Found
 
 def PointingFileReadCTA(pointingFile):
 
@@ -171,6 +166,16 @@ def TableImportCTA_TimeNoZenith(ttimeFile):
 
     return OutputTable
 
+def TableImportCTA_SetOfTimes(ttimeFile):
+    trial,run, MergerID,time1,time2,Observatory = np.genfromtxt(ttimeFile,usecols=(0, 1, 2, 3,4,5),skip_header=1, unpack=True,dtype='str')
+    time=[]
+    for i in range(len(time1)):
+        time.append((time1[i] + ' ' + time2[i]).split('"')[1])
+    OutputTable = Table([run,MergerID,trial,time,Observatory],names=['run', 'MergerID','trial', 'Time', 'Observatory'])
+
+    return OutputTable
+
+
 def TableImportCTA_Time(ttimeFile):
 
     run,MergerID,time1,time2,MeanAlt,Observatory = np.genfromtxt(ttimeFile,usecols=(0, 1, 2, 3,4,5),skip_header=1, unpack=True,dtype='str')
@@ -195,8 +200,6 @@ def TableImportCTA_LS(tgalFile):
     distance = distance.astype(np.float)/1000 #to Mpc!
     OutputTable= Table([eventid,RA,Dec,distance],names=('MergerID','RA','Dec','Distance'))
     return OutputTable
-
-
 
 def IsSourceInside(Pointings,HESS_Sources,FOV,nside):
     tt = 0.5 * np.pi - HESS_Sources.dec.rad
@@ -242,8 +245,8 @@ def ProduceSummaryFile(InputList,InputObservationList,allPossiblePoint,foundIn,j
     if foundIn ==-1:
         outfilename = outDir+'/SummaryFile/'+name+'_SimuS' +typeSimu+ str("{:03d}".format(j)) + '.txt'
         f = open(outfilename, 'w')
-        f.write('RunList' + ' ' + 'MergerID' + ' ' + 'Distance' + ' ' + 'Theta' + ' ' + 'A90' + ' ' + 'Luminosity' + ' ' + 'TotalObservations' + ' ' + 'Obs' + ' ' + 'FirstCovered' + ' ' + 'TimesFound' + ' ' + 'WindowinInputList' + ' ' + 'TotalProb' +'ObsInfo' + '\n')
-        f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' ' +str(luminosity) + ' ' + str(len(InputObservationList)) + ' ' + str(allPossiblePoint) + ' ' + str(foundIn) +' ' + str(0) +' '+str(-1)+' '+str(totalProb)+' '+'True'+'\n')
+        f.write('RunList' + ' ' + 'MergerID' + ' ' + 'Distance' + ' ' + 'Theta' + ' ' + 'A90' + ' ' + 'Luminosity' + ' ' + 'TotalObservations' + ' ' + 'TotalPossible' + ' ' + 'FirstCovered' + ' ' + 'TimesFound' + ' '  + 'TotalProb'+ ' ' +'ObsInfo' + '\n')
+        f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' ' +str(luminosity) + ' ' + str(len(InputObservationList)) + ' ' + str(allPossiblePoint) + ' ' + str(foundIn) +' ' + str(0) +' '+str(totalProb)+' '+'True'+'\n')
     else:
         if type(foundIn) != int:
             foundFirst = foundIn[0]
@@ -257,8 +260,15 @@ def ProduceSummaryFile(InputList,InputObservationList,allPossiblePoint,foundIn,j
         outfilename = outDir+'/SummaryFile/'+name+'_SimuSF' +typeSimu+ str("{:03d}".format(j)) + '.txt'
         # print(outfilename)
         f = open(outfilename, 'w')
-        f.write('RunList' + ' ' + 'MergerID' + ' ' + 'Distance' + ' ' + 'Theta' + ' ' + 'A90' + ' ' + 'Lum' + ' ' + 'Duration'+ '  '+'TotObs' + ' ' + 'TotalPossible' + ' ' + 'FirstCovered' + ' ' + 'TimesFound' + ' ' + 'TotalProb' + 'ObsInfo'+'\n')
-        f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' '  + str(luminosity) + ' ' + str(duration[foundFirst]) + ' '+ str(len(InputObservationList)) + ' ' + str(allPossiblePoint) + ' ' + str(foundFirst) + ' ' + str(foundTimes) + ' ' +str(totalProb)+ ' '+ 'True' +'\n')
+        f.write('RunList' + ' ' + 'MergerID' + ' ' + 'Distance' + ' ' + 'Theta' + ' ' + 'A90' + ' ' + 'Luminosity' + ' ' + 'TotalObservations' + ' ' + 'TotalPossible' + ' ' + 'FirstCovered' + ' ' + 'TimesFound' + ' ' + 'TotalProb'+ ' ' + 'ObsInfo'+'\n')
+        f.write(str(InputList['run'][j])+ ' ' +InputList['MergerID'][j].split('r')[-1]+ ' ' + str(InputList['Distance'][j])+ ' '+str(InputList['theta'][j])+ ' ' +str(InputList['A90'][j])+ ' '  + str(luminosity) + ' '+ str(len(InputObservationList)) + ' ' + str(allPossiblePoint) + ' ' + str(foundFirst) + ' ' + str(foundTimes) + ' ' +str(totalProb)+ ' '+ 'True' +'\n')
+
+
+def ReadSummaryFile(summaryFile):
+    print('Note that this function needs to be adapted to the output')
+    nP, Found = np.genfromtxt(summaryFile,usecols=(8,9),skip_header=1, unpack=True,dtype='str')
+    return nP, Found
+
 
 class NextWindowTools:
 
@@ -336,14 +346,6 @@ class GRB(object):
         txt += 'Name: {}\n'.format(self.name)
         txt += 'Redshift: {}\n'.format(self.z)
         txt += 'Times:\n'.format(self.time_interval)
-        #txt += 'Energy steps:\n'.format(self.energy_interval)
-        #txt += 'Flux:\n'.format(self.spectral_model)
-        #for t in self.time_interval:
-        #    txt += '{} -- {}\n'.format(t[0], t[1])
-
-        #if self.stack_obs is not None:
-        #    txt += str(self.stack_obs.total_stats_safe_range)
-
         return txt
     @classmethod
     def from_fitsfile(cls,filepath,absorption):
@@ -351,22 +353,22 @@ class GRB(object):
         energy_interval=data[1].data.field(0)*u.GeV
         time_interval=data[2].data.field(0)* u.s
         flux=data[3].data
-        z=0.0 # No EBL correction for the moment, it is already 0.01 corrected
-        name=filepath.split('/')[-1].split('.')[0]
-        spectral_model=[]
+        z = 0.0 # No EBL correction for the moment, needs to be added
+        name = filepath.split('/')[-1].split('.')[0]
+        spectral_model = []
         for interval in range(0,len(time_interval)):
-            flux_t=flux[interval]* u.Unit('1 / (cm2 s GeV)')
-            newflux=flux_t #Use Factor 1000000.0  if needed
+            flux_t = flux[interval]* u.Unit('1 / (cm2 s GeV)')
+            newflux = flux_t #Use Factor 1000000.0  if needed
             #print(np.log(energy_interval.value))
             #print(np.log(flux_t.value))
-            table_model = TableModel(energy=energy_interval,values=newflux,norm=1.,values_scale='log')
+            table_model = TableModel(energy=energy_interval,values=newflux,values_scale='log')
             table_model.plot(energy_range=(0.001, 10) * u.TeV)
             #name='/Users/mseglar/Documents/GitHub/CTASimulationsGW/run0017_MergerID000132_skymap/PGalonFoVanalysis_3d/plot'+str(interval)
             #plt.show()
-            #plt.savefig('Muere.png')
+            #plt.savefig('SpectralModel.png')
             #spectral_model.append(SpectralModel(spectral_model=table_model))
             spectral_model.append(AbsorbedSpectralModel(spectral_model=table_model,absorption=absorption,parameter=z,parameter_name='redshift'))
-            #spectral_model.append(PowerLaw(index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"))
+            #spectral_model.append(PowerLaw(index=2.2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"))
 
         return cls(
             filepath=filepath,
@@ -478,14 +480,14 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, ReducedNside, HRn
 
     for i in range(0, len(cat_pix)):
         ipix_discfull = hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
-        maskComputeProb = [np.isin(ipix_discfull, ipixlistHR, invert=True)]
+        maskComputeProb = np.isin(ipix_discfull, ipixlistHR, invert=True)
         dp_dV_FOV.append(highres[ipix_discfull[maskComputeProb]].sum())
 
     cat_pix['PIXFOVPROB'] = dp_dV_FOV
 
     # Mask already observed pixels
 
-    mask = [np.isin(cat_pix['PIX'], ipixlist, invert=True)]
+    mask = np.isin(cat_pix['PIX'], ipixlist, invert=True)
 
     if all(np.isin(cat_pix['PIX'], ipixlist, invert=False)):
         maskcat_pix = cat_pix
@@ -550,7 +552,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, ReducedNside, HRn
         sortcat = sortcat[maskExposure]
 
     # Mask if it is not visible at the end of the window
-    mask = [np.isin(sortcat['ZENITH_END'], 66, invert=True)]
+    mask = np.isin(sortcat['ZENITH_END'], 66, invert=True)
     maskcat_zen = sortcat[mask]
     if(len(sortcat[mask]) == 0):
         P_GW = 0
