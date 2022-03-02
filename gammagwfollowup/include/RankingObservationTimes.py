@@ -361,7 +361,7 @@ def PGGPGalinFOV(cat,ra,dec,prob,totaldPdV,FOV,nside):
     return P_GW,Pgal_inFoV
 
 
-def Sortingby(galPointing,targetType, name):
+def Sortingby(galPointing,targetType, name, exposure):
 
     gggalPointing = galPointing[np.flipud(np.argsort(galPointing['Pgal']))]
     prioritygal = list(range(len(galPointing['Pgal'])))
@@ -400,7 +400,7 @@ def Sortingby(galPointing,targetType, name):
     target = [(targetType+ '_' + name.split('/')[2] +'_{0}').format(element) for element in gwgalPointing['Pointing']]
     gwgalPointing['Target'] = target
     gwgalPointing.rename_column('Pointing','Id')
-    gwgalPointing['Duration'] = 15
+    gwgalPointing['Duration'] = exposure
 
     gwgalPointing_TH = gwgalPointing['Target', 'Id', 'RAJ2000','DEJ2000','Time','Duration']
     #new_order = ['Target', 'Id', 'RAJ2000','DEJ2000']  # List or tuple
@@ -504,6 +504,6 @@ def RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName
                              obspar)
 
     EvolutionPlot(point, dirName)
-    Sortingby(point, targetType, dirName)
+    Sortingby(point, targetType, dirName, obspar.Duration)
 
 
