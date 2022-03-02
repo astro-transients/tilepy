@@ -25,6 +25,13 @@ import numpy.ma as ma
 from scipy.stats import norm
 import time
 import os
+import numpy.ma as ma
+from six.moves import configparser
+import six
+if six.PY2:
+  ConfigParser = configparser.SafeConfigParser
+else:
+  ConfigParser = configparser.ConfigParser
 
 #iers_url_mirror='ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
 #IERS_A_URL_MIRROR = 'https://datacenter.iers.org/data/9/finals2000A.all'
@@ -35,20 +42,28 @@ iers_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), '../dataset
 iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 #iers.IERS.iers_table = iers.IERS_A.open(download_file(iers_url_mirror, cache=True))
 
-#Darkness criteria: max sun and moon altitude in degrees.
+#################################################
+#   Global parameters about darkness criteria   #
+#################################################
+# max sun and moon altitude in degrees.
+cfg = "./configs/FollowupParameters.ini"
+parser = ConfigParser()
+parser.read(cfg)
+parser.sections()
+section = 'visibility'
 
-gSunDown = -18
-#HorizonSun = '-17:43:48'
-HorizonSun = '-18:00:00'
-gMoonDown = -0.5
-HorizonMoon = '-00:30:00'
-gMoonGrey=50  #Altitude in degrees
-gMoonPhase=60 #Phase in %
-MoonSourceSeparation=30 #Separation in degrees
-# The twilight definitions specify the position of the center of the Sun,
-# while the rising and setting functions normally pay attention to the top edge of an object instead!
+try:
+    gSunDown = int(parser.get(section, 'gSunDown'))
+    HorizonSun = parser.get(section, 'HorizonSun')
+    gMoonDown = float(parser.get(section, 'gMoonDown'))
+    HorizonMoon = (parser.get(section, 'HorizonMoon'))
+    gMoonGrey = int(parser.get(section, 'gMoonGrey')) # Altitude in degrees
+    gMoonPhase = int(parser.get(section, 'gMoonPhase'))  # Phase in %
+    MoonSourceSeparation = int(parser.get(section, 'MoonSourceSeparation')) # Separation in degrees
+    MaxMoonSourceSeparation = int(parser.get(section, 'MaxMoonSourceSeparation'))  # Max separation in degrees
 
-
+except Exception as x:
+    print(x)
 
 ######################################################
 
@@ -57,6 +72,7 @@ MoonSourceSeparation=30 #Separation in degrees
 ######################################################
 class HESSObservatory:
     def __init__(self):
+        self.Name ='HESS'
         self.Lat = -23.271778 * u.deg
         self.Lon = 16.50022 * u.deg
         self.Height = 1835 * u.m
@@ -66,18 +82,17 @@ class HESSObservatory:
 class CTASouthObservatory:
 
     def __init__(self):
-        self.Name='South'
+        self.Name ='South'
         self.Lat = -24.5 * u.deg
         self.Lon = -70.17 * u.deg
         self.Height = 2635 * u.m
         self.Location = EarthLocation(lat=self.Lat, lon=self.Lon,
                                       height=self.Height)
 
-
 class CTANorthObservatory:
 
     def __init__(self):
-        self.Name='North'
+        self.Name ='North'
         self.Lat = 28.75 * u.deg
         self.Lon = 17.5 * u.deg
         self.Height = 2200 * u.m
@@ -109,9 +124,9 @@ class Tools:
         # MOON altitude
         moonAlt = Tools.MoonAlt(obsTime,obsSite)
         # MOON azimuth
-        #moonAz = Tools.MoonAz(obsTime)
+        #moonAz = Tools.MoonAz(obsTime,obsSite)
         # MOON phase
-        moonPhase = Tools.MoonPhase(obsTime)
+        moonPhase = Tools.MoonPhase(obsTime,obsSite)
 
         if sunAlt > gSunDown:
             return False
@@ -122,19 +137,19 @@ class Tools:
         return True
 
     @classmethod
-    def MoonPhase(cls, obsTime):
-        hess = HESSObservatory()
+    def MoonPhase(cls, obsTime, obsSite):
         moon = ephem.Moon()
         obs = ephem.Observer()
-        obs.lon = str(hess.Lon / u.deg)
-        obs.lat = str(hess.Lat / u.deg)
-        obs.elev = hess.Height / u.m
+        obs.lon = str(obsSite.Lon / u.deg)
+        obs.lat = str(obsSite.Lat / u.deg)
+        obs.elev = obsSite.Height / u.m
         obs.date = obsTime
         moon.compute(obs)
 
         #print("Phase of the moon = %s percent" % moon.phase)
 
         return moon.phase
+
 
 
     @classmethod
@@ -159,14 +174,14 @@ class Tools:
         #print('Altitude of the moon = ',moon.alt * 180. / np.pi)
         return moon.alt * 180. / np.pi
 
+
     @classmethod
-    def MoonAz(cls, obsTime):
-        hess = HESSObservatory()
+    def MoonAz(cls, obsTime, obsSite):
         moon = ephem.Moon()
         obs = ephem.Observer()
-        obs.lon = str(hess.Lon / u.deg)
-        obs.lat = str(hess.Lat / u.deg)
-        obs.elev = hess.Height / u.m
+        obs.lon = str(obsSite.Lon / u.deg)
+        obs.lat = str(obsSite.Lat / u.deg)
+        obs.elev = obsSite.Height / u.m
         obs.date = obsTime
         moon.compute(obs)
         print('Azimuth of the moon = ',moon.az * 180. / np.pi)
@@ -385,6 +400,129 @@ class Tools:
             #print('You got here')
         print(YouAreInside)
         return YouAreInside
+
+#####################################################
+
+## Parse Observation Parameters
+
+#####################################################
+
+class ObservationParameters(object):
+    # Stores all the parameters in the .ini file
+    # Observatory
+    def __init__(self, name=None, Lat=None, Lon=None, Height=None,
+                 gSunDown=None, HorizonSun = None, gMoonDown = None, HorizonMoon = None, gMoonGrey = None, gMoonPhase = None, MoonSourceSeparation = None, MaxMoonSourceSeparation = None, max_zenith = None, FOV = None, MaxRuns = None,
+                 MaxNights = None, Duration = None, MinDuration = None, UseGreytime= None,
+                 MinimumProbCutForCatalogue = None, MinProbCut = None, doplot=None, SecondRound = None, FulFillReq_Percentage = None, PercentCoverage = None, ReducedNside = None, HRnside = None, Mangrove = None):
+        self.name = name
+        self.Lat = Lat * u.deg
+        self.Lon = Lon * u.deg
+        self.Height = Height * u.m
+        self.Location = EarthLocation(lat=self.Lat, lon=self.Lon,
+                                      height=self.Height)
+
+        # Visibility
+        self.gSunDown = gSunDown
+        self.HorizonSun = HorizonSun
+        self.gMoonDown = gMoonDown
+        self.HorizonMoon = HorizonMoon
+        self.gMoonGrey = gMoonGrey
+        self.gMoonPhase = gMoonPhase
+        self.MoonSourceSeparation = MoonSourceSeparation
+        self.MaxMoonSourceSeparation = MaxMoonSourceSeparation
+
+        # Operations
+        self.max_zenith = max_zenith
+        self.FOV = FOV
+        self.MaxRuns = MaxRuns
+        self.MaxNights = MaxNights
+        self.Duration = Duration
+        self.MinDuration = MinDuration
+        self.UseGreytime = UseGreytime
+
+        # Tiling
+        self.MinimumProbCutForCatalogue = MinimumProbCutForCatalogue
+        self.MinProbCut = MinProbCut
+        self.doplot = doplot
+        self.SecondRound = SecondRound
+        self.FulFillReq_Percentage = FulFillReq_Percentage
+        self.PercentCoverage = PercentCoverage
+        self.ReducedNside = ReducedNside
+        self.HRnside = HRnside
+        self.Mangrove = Mangrove
+
+    def __str__(self):
+        txt = ''
+        txt += '----------------- Main parsed observation parameters ----------------- \n'.format()
+        txt += 'Name: {}\n'.format(self.name)
+        txt += 'Max zenith: {}\n'.format(self.max_zenith)
+        txt += 'FOV: {}\n'.format(self.FOV)
+        txt += '----------------------------------------------------------------------\n'.format()
+        return txt
+
+    @classmethod
+    def from_configfile(cls,filepath):
+        ##################
+        cfg = filepath
+        parser = ConfigParser()
+        parser.read(cfg)
+        parser.sections()
+        section = 'observatory'
+        try:
+            name = str(parser.get(section, 'name'))
+            Lat = float(parser.get(section, 'Lat'))
+            Lon = float(parser.get(section, 'Lon'))
+            Height = float(parser.get(section, 'Height'))
+        except Exception as x:
+            print(x)
+
+        section = 'visibility'
+        try:
+            gSunDown = int(parser.get(section, 'gSunDown'))
+            HorizonSun = parser.get(section, 'HorizonSun')
+            gMoonDown = float(parser.get(section, 'gMoonDown'))
+            HorizonMoon = (parser.get(section, 'HorizonMoon'))
+            gMoonGrey = int(parser.get(section, 'gMoonGrey'))  # Altitude in degrees
+            gMoonPhase = int(parser.get(section, 'gMoonPhase'))  # Phase in %
+            MoonSourceSeparation = int(parser.get(section, 'MoonSourceSeparation'))  # Separation in degrees
+            MaxMoonSourceSeparation = int(parser.get(section, 'MaxMoonSourceSeparation'))  # Max separation in degrees
+
+        except Exception as x:
+            print(x)
+
+        section = 'operations'
+        try:
+            max_zenith = int(parser.get(section, 'max_zenith'))
+            FOV = float(parser.get(section, 'FOV'))
+            MaxRuns = int(parser.get(section, 'MaxRuns'))
+            MaxNights = int(parser.get(section, 'MaxNights'))
+            Duration = int(parser.get(section, 'Duration'))
+            MinDuration = int(parser.get(section, 'MinDuration'))
+            UseGreytime = (parser.getboolean(section, 'UseGreytime'))
+        except Exception as x:
+            print(x)
+
+        section = 'tiling'
+        try:
+            MinimumProbCutForCatalogue = float(parser.get(section, 'MinimumProbCutForCatalogue'))
+            MinProbCut = float(parser.get(section, 'MinProbCut'))
+            doplot = (parser.getboolean(section, 'doplot'))
+            SecondRound = (parser.getboolean(section, 'SecondRound'))
+            FulFillReq_Percentage = float(parser.get(section, 'FulFillReq_Percentage'))
+            PercentCoverage = float(parser.get(section, 'PercentCoverage'))
+            ReducedNside = int(parser.get(section, 'ReducedNside'))
+            HRnside = int(parser.get(section, 'HRnside'))
+            Mangrove = (parser.getboolean(section, 'Mangrove'))
+        except Exception as x:
+            print(x)
+
+        #print('Parameters:', max_zenith,MaxNights,FOV, MaxRuns, MinProbCut, doplot, Duration, MinDuration, SecondRound,ReducedNside,HRnside,UseGreytime)
+
+        return cls(name = name,Lat = Lat,Lon = Lon, Height = Height,gSunDown = gSunDown, HorizonSun = HorizonSun, gMoonDown = gMoonDown,
+        HorizonMoon = HorizonMoon, gMoonGrey = gMoonGrey, gMoonPhase = gMoonPhase, MoonSourceSeparation = MoonSourceSeparation, MaxMoonSourceSeparation = MaxMoonSourceSeparation, max_zenith = max_zenith,
+        FOV = FOV, MaxRuns = MaxRuns, MaxNights = MaxNights, Duration = Duration, MinDuration = MinDuration, UseGreytime = UseGreytime, MinimumProbCutForCatalogue = MinimumProbCutForCatalogue,
+        MinProbCut = MinProbCut, doplot = doplot, SecondRound = SecondRound, FulFillReq_Percentage = FulFillReq_Percentage, PercentCoverage = PercentCoverage,
+        ReducedNside = ReducedNside, HRnside = HRnside, Mangrove = Mangrove)
 
 
 ######################################################
@@ -653,12 +791,11 @@ def ZenithAngleCut(prob, nside, time, MinProbCut,max_zenith,observatory,usegreyt
 
     return ObsBool, yprob
 
-def ComputeProbability2D(prob,highres, radecs,ReducedNside,HRnside,MinProbCut, time,observatory,max_zenith, FOV, tname, ipixlist,ipixlistHR, counter,dirName, usegreytime,plot):
+def ComputeProbability2D(prob,highres,radecs,ReducedNside,HRnside,MinProbCut, time,observatory,max_zenith, FOV, tname, ipixlist,ipixlistHR, counter,dirName, usegreytime,plot):
     '''
-    Compute probability in 2D by taking the highest value pixel
+    Compute probability in 2D by taking the highest probability in FoV value
     '''
     radius = FOV
-    #P_GW = prob[ipix_disc].sum()
     frame = co.AltAz(obstime=time, location=observatory)
     thisaltaz = radecs.transform_to(frame)
     #pix_alt1 = thisaltaz.alt.value
@@ -689,37 +826,47 @@ def ComputeProbability2D(prob,highres, radecs,ReducedNside,HRnside,MinProbCut, t
 
     xyzpix = hp.ang2vec(thetapix, phipix)
 
-    for i in range(0, len(cat_pix)):
-        ipix_discfull = hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
-        maskComputeProb = [np.isin(ipix_discfull, ipixlistHR, invert=True)]
-        dp_dV_FOV.append(highres[ipix_discfull[maskComputeProb]].sum())
 
+    # Grid-scheme and the connection between HR and LR
+
+    for i in range(0, len(cat_pix)):
+        # Pixels associated to a disk of radius centered in xyzpix[i] for HR NSIDE
+        ipix_discfull = hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
+        if len(ipixlistHR) == 0:
+            # No mask needed
+            HRprob = highres[ipix_discfull].sum()
+        else:
+            # Mask the ipix_discfull with the pixels that are already observed. I think the problem is here
+            maskComputeProb = np.isin(ipix_discfull, ipixlistHR, invert=True)
+            # Obtain list of pixel ID after the mask what has been observed already
+            m_ipix_discfull = ma.compressed(ma.masked_array(ipix_discfull, mask = np.logical_not(maskComputeProb)))
+            HRprob = highres[m_ipix_discfull].sum()
+            #HRprob = 0
+            #for j in ipix_discfullNotCovered:
+            #    HRprob = HRprob+highres[j]
+            #print('Length of list of pixels:', m_ipix_discfull, 'vs', ipix_discfull, 'vs', ipixlistHR)
+            #print('Comparison to see if mask is considered: ',HRprob, 'vs',highres[ipix_discfull].sum())
+        dp_dV_FOV.append(HRprob)
     cat_pix['PIXFOVPROB'] = dp_dV_FOV
 
+
     # Mask already observed pixels
-    #print('ipixlist',ipixlist)
-
-    mask=[np.isin(cat_pix['PIX'], ipixlist,invert=True)]
-
+    mask = np.isin(cat_pix['PIX'], ipixlist,invert=True)
     if all(np.isin(cat_pix['PIX'], ipixlist,invert=False)):
         maskcat_pix = cat_pix
     else:
-        maskcat_pix=cat_pix[mask]
+        maskcat_pix = cat_pix[mask]
 
     # Sort table
     sortcat = maskcat_pix[np.flipud(np.argsort(maskcat_pix['PIXFOVPROB']))]
     # Chose highest
 
     targetCoord = co.SkyCoord(sortcat['PIXRA'][:1],sortcat['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
-    #print('targetCoord',targetCoord)
 
     P_GW = sortcat['PIXFOVPROB'][:1]
 
     # Include to the list of pixels already observed
 
-    #ipix_discComputeProb = hp.query_disc(HRnside, xyz, np.deg2rad(radius))
-    #maskComputeProb=[np.isin(ipix_discComputeProb, ipixlist,invert=True)]
-    #print('maskedP_GW',highres[ipix_discComputeProb[maskComputeProb]].sum())
     if(P_GW >= MinProbCut):
         phip = float(np.deg2rad(targetCoord.ra.deg))
         thetap = float(0.5 * np.pi - np.deg2rad(targetCoord.dec.deg))
@@ -742,7 +889,6 @@ def ComputeProbability2D(prob,highres, radecs,ReducedNside,HRnside,MinProbCut, t
 
         hp.gnomview(prob, xsize=500, ysize=500, rot=[targetCoord.ra.deg, targetCoord.dec.deg], reso=8.0)
         hp.graticule()
-        #print('This skymap has nside equals to',hp.npix2nside(len(highres)))
         plt.savefig('%s/Pointing-prob_%g.png' % (path,counter))
 
         ipix_discplot = hp.query_disc(HRnside, xyz, np.deg2rad(radius))
@@ -778,7 +924,7 @@ def SubstractPointings2D(tpointingFile,prob,nside,FOV,pixlist):
     rap, decP = np.genfromtxt(tpointingFile, usecols=(2, 3), dtype="str", skip_header=1,
                                              delimiter=' ',
                                              unpack=True)  # ra, dec in degrees
-    coordinates=TransformRADec(rap, decP)
+    coordinates = TransformRADec(rap, decP)
     P_GW = []
     for i in range(0,len(rap)):
         t = 0.5 * np.pi - coordinates[i].dec.rad
@@ -793,6 +939,7 @@ def SubstractPointings2D(tpointingFile,prob,nside,FOV,pixlist):
                 effectiveipix_disc.append(ipix_disc[j])
             pixlist.append(ipix_disc[j])
         P_GW.append(prob[effectiveipix_disc].sum())
+        #print('Coordinates ra:', rap[i], 'dec:', decP[i], 'Pgw:', P_GW[i],'vs', prob[ipix_disc].sum())
         #print('effectiveipix_disc',effectiveipix_disc)
         #print('-----------')
         #print(prob[effectiveipix_disc].sum())
@@ -807,17 +954,17 @@ def TransformRADec(vra,vdec):
         ra=[]
         dec=[]
         for i in range(0,len(vra)):
-            coord=SkyCoord(vra[i].split('"')[1],vdec[i].split('"')[0],frame='fk5')
+            coord = SkyCoord(vra[i].split('"')[1],vdec[i].split('"')[0],frame='fk5')
             print(coord)
             ra.append(coord.ra.deg)
             dec.append(coord.dec.deg)
     else:
-        print(vra,vdec)
+        #print(vra,vdec)
         ra = vra.astype(np.float)
         dec = vdec.astype(np.float)
         #np.float(vra)
         #dec = np.float(vdec)
-    print(ra,dec)
+    #print(ra,dec)
     coordinates = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
     return coordinates
 
@@ -1158,7 +1305,8 @@ def FulfillsRequirement_MinProb(thisGals_aux, maxz):
 def Afterglow():
     print('Afterglow!')
 
-def ComputeProbBCFOVSimple(prob,time, visiGals, allGals, tsum_dP_dV, nside, thisminz,max_zenith, FOV, tname,
+
+def ComputeProbBCFOVSimple(prob,time,observatory, visiGals, allGals, tsum_dP_dV, nside, thisminz,max_zenith, FOV, tname,
                            tsavedcircle,dirName, doplot):
     '''Computes probability pgal and pgw in FoV and draws everything
 
@@ -1168,8 +1316,8 @@ def ComputeProbBCFOVSimple(prob,time, visiGals, allGals, tsum_dP_dV, nside, this
 
     --------
 
-	P_Gal: Probability of galaxies within H.E.S.S. FoV in the LIGO signal region
-	P_GW: Total probability within H.E.S.S. FoV of the Ligo signal.
+	P_Gal: Probability of galaxies within FoV in the LIGO signal region
+	P_GW: Total probability within FoV of the Ligo signal.
 	noncircleGal: Table of galaxies that are outside the circle(s) and inside the LIGO signal region
 
 
@@ -1184,7 +1332,7 @@ def ComputeProbBCFOVSimple(prob,time, visiGals, allGals, tsum_dP_dV, nside, this
     dp_dVfinal = visiGals['dp_dV']
     # dp_dV = tGals['dp_dV']
 
-    # Array of indices of pixels inside circle of HESS-I FoV
+    # Array of indices of pixels inside circle of FoV
 
     radius = FOV
 
@@ -1226,9 +1374,8 @@ def ComputeProbBCFOVSimple(prob,time, visiGals, allGals, tsum_dP_dV, nside, this
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
         skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
-        observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
 
-        frame = co.AltAz(obstime=time, location=observatory)
+        frame = co.AltAz(obstime=time, location=observatory.Location)
         altaz_all = skycoord.transform_to(frame)
         tmask = altaz_all.alt.value > 90 - thisminz
 
@@ -1260,7 +1407,7 @@ def ComputeProbBCFOVSimple(prob,time, visiGals, allGals, tsum_dP_dV, nside, this
         hp.visufunc.projscatter(visiGals['RAJ2000'][:1], visiGals['DEJ2000'][:1], lonlat=True, marker='.', color='r',
                                 linewidth=0.1)
 
-        # draw circle of HESS-I FoV around best fit position
+        # draw circle of FoV around best fit position
 
         # hp.visufunc.projscatter(allGals['RAJ2000'], allGals['DEJ2000'], lonlat=True, marker='.', color='g',linewidth=0.1)
         # plt.show()
@@ -1307,7 +1454,7 @@ def ComputeProbBCFOVSimple(prob,time, visiGals, allGals, tsum_dP_dV, nside, this
 
     return P_Gal, P_GW, talreadysumipixarray2
 
-def ComputeProbBCFOV(prob,time, finalGals, visiGals, allGals, tsum_dP_dV, talreadysumipixarray, nside, thisminz,max_zenith, FOV, tname,
+def ComputeProbBCFOV(prob,time, observatory, finalGals, visiGals, allGals, tsum_dP_dV, talreadysumipixarray, nside, thisminz,max_zenith, FOV, tname,
                      tsavedcircle, dirName,doplot):
     '''Computes probability Pgal and Pgw in FoV but it takes into account a list of pixels to avoid recounting already observed zones.
     Returns saved circle too (is it really needed? )
@@ -1317,8 +1464,8 @@ def ComputeProbBCFOV(prob,time, finalGals, visiGals, allGals, tsum_dP_dV, talrea
 
     --------
 
-	P_Gal: Probability of galaxies within H.E.S.S. FoV in the LIGO signal region
-	P_GW: Total probability within H.E.S.S. FoV of the Ligo signal.
+	P_Gal: Probability of galaxies within FoV in the LIGO signal region
+	P_GW: Total probability within  FoV of the Ligo signal.
 	noncircleGal: Table of galaxies that are outside the circle(s) and inside the LIGO signal region
 
 
@@ -1333,7 +1480,7 @@ def ComputeProbBCFOV(prob,time, finalGals, visiGals, allGals, tsum_dP_dV, talrea
     dp_dVfinal = visiGals['dp_dV']
     # dp_dV = tGals['dp_dV']
 
-    # Array of indices of pixels inside circle of HESS-I FoV
+    # Array of indices of pixels inside circle of  FoV
 
     radius = FOV
 
@@ -1385,7 +1532,6 @@ def ComputeProbBCFOV(prob,time, finalGals, visiGals, allGals, tsum_dP_dV, talrea
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
         skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
-        observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
 
         frame = co.AltAz(obstime=time, location=observatory)
         altaz_all = skycoord.transform_to(frame)
@@ -1417,7 +1563,7 @@ def ComputeProbBCFOV(prob,time, finalGals, visiGals, allGals, tsum_dP_dV, talrea
         # probability
         ###### hp.visufunc.projscatter(finalGals['RAJ2000'][:1], finalGals['DEJ2000'][:1], lonlat=True, marker='.', color='r',linewidth=0.1)
 
-        # draw circle of HESS-I FoV around best fit position
+        # draw circle of FoV around best fit position
 
         ######hp.visufunc.projscatter(allGals['RAJ2000'], allGals['DEJ2000'], lonlat=True, marker='.', color='g',linewidth=0.1)
         # plt.show()
@@ -1493,7 +1639,7 @@ def SubstractPointings(tpointingFile,galaxies,talreadysumipixarray,tsum_dP_dV,FO
     #Read PointingsFile
 
     print("Loading pointings from " + tpointingFile)
-    rap, decP, = np.genfromtxt(tpointingFile, usecols=(3,4), dtype="str", skip_header=1,
+    rap, decP, = np.genfromtxt(tpointingFile, usecols=(2,3), dtype="str", skip_header=1,
                                              delimiter=' ',
                                              unpack=True)  # ra, dec in degrees
 
@@ -1511,15 +1657,17 @@ def SubstractPointings(tpointingFile,galaxies,talreadysumipixarray,tsum_dP_dV,FO
         updatedGalaxies,pgwcircle,pgalcircle,talreadysumipixarray =SubstractGalaxiesCircle(updatedGalaxies,ra[i], dec[i],talreadysumipixarray,tsum_dP_dV,FOV,prob,nside)
         PGW.append(pgwcircle)
         PGAL.append(pgalcircle)
+        print('Coordinates ra:', ra[i], 'dec:', dec[i], 'Pgw:', pgwcircle, 'PGAL:', pgalcircle)
     return ra,dec,updatedGalaxies, PGW, PGAL,talreadysumipixarray
 
 def SubstractGalaxiesCircle(galaux, ra,dec ,talreadysumipixarray,tsum_dP_dV,FOV,prob,nside):
+
     radius = FOV
     coordinates = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
-    #print('coordinatesPointing',coordinates)
+
     targetCoord = co.SkyCoord(galaux['RAJ2000'], galaux['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
     dp_dVfinal = galaux['dp_dV']
-    #print('coordinatesPointing[0].dec.rad',coordinates.dec.rad)
+
 
     t = 0.5 * np.pi - coordinates.dec.rad
     p = coordinates.ra.rad
@@ -1534,7 +1682,8 @@ def SubstractGalaxiesCircle(galaux, ra,dec ,talreadysumipixarray,tsum_dP_dV,FOV,
 
     P_GW = prob[effectiveipix_disc].sum()
     P_Gal = dp_dVfinal[targetCoord.separation(coordinates).deg < radius].sum() / tsum_dP_dV
-    #Define galaxies that are outside the FoV
+
+    print('PGW',P_GW, 'P_GAL',P_Gal)
 
     newgalaxies = galaux[targetCoord.separation(coordinates).deg > radius]
 
@@ -1545,7 +1694,7 @@ def SubstractGalaxiesCircle(galaux, ra,dec ,talreadysumipixarray,tsum_dP_dV,FOV,
 
 #####################################################
 
-def PGalinFOV(prob,cat,galpix,FOV, totaldPdV,nside,UsePix):
+def ComputePGalinFOV(prob,cat,galpix,FOV, totaldPdV,nside,UsePix):
     '''
         Computes probability Pgal in FoV
     '''
@@ -1597,7 +1746,7 @@ def ModifyCatalogue(prob,cat, FOV, totaldPdV,nside):
     #print('len(SelectedGals[RAJ2000])',len(SelectedGals['RAJ2000']))
     for l in range(0, len(cat['dp_dV'])):
         if(l<len(SelectedGals['dp_dV'])):
-            dp_dV_FOV.append(PGalinFOV(prob,cat, SelectedGals[l], FOV, totaldPdV,nside,UsePix=False))
+            dp_dV_FOV.append(ComputePGalinFOV(prob,cat, SelectedGals[l], FOV, totaldPdV,nside,UsePix=False))
         else:
             dp_dV_FOV.append(0)
 
@@ -1608,7 +1757,7 @@ def ModifyCatalogue(prob,cat, FOV, totaldPdV,nside):
     return tcat
 
 
-def ComputeProbPGALIntegrateFoV(prob,time, centerPoint,UsePix, visiGals, allGalsaftercuts, tsum_dP_dV, talreadysumipixarray, nside,
+def ComputeProbPGALIntegrateFoV(prob,time,observatory, centerPoint,UsePix, visiGals, allGalsaftercuts, tsum_dP_dV, talreadysumipixarray, nside,
                                 thisminz,max_zenith,FOV,counter, tname,dirName, doplot):
     '''
         Same as ComputeProbBCFOV but it does not return circle coordinates.
@@ -1627,7 +1776,7 @@ def ComputeProbPGALIntegrateFoV(prob,time, centerPoint,UsePix, visiGals, allGals
 
     dp_dVfinal = visiGals['dp_dV']
 
-    # Array of indices of pixels inside circle of HESS-I FoV
+    # Array of indices of pixels inside circle of FoV
 
     radius = FOV
     #print('FOV',FOV)
@@ -1680,7 +1829,6 @@ def ComputeProbPGALIntegrateFoV(prob,time, centerPoint,UsePix, visiGals, allGals
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
         skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
-        observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
 
         frame = co.AltAz(obstime=time, location=observatory)
         altaz_all = skycoord.transform_to(frame)
@@ -1711,7 +1859,7 @@ def ComputeProbPGALIntegrateFoV(prob,time, centerPoint,UsePix, visiGals, allGals
         # probability
         # hp.visufunc.projscatter(finalGals['RAJ2000'][:1], finalGals['DEJ2000'][:1], lonlat=True, marker='.', color='r',linewidth=0.1)
 
-        # draw circle of HESS-I FoV around best fit position
+        # draw circle of FoV around best fit position
 
         hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'r.', lonlat=True,
                              coord="C")
@@ -1902,60 +2050,56 @@ def strTimeProp(start, end, format, prop):
 
 ######################################################
 
-def ModifyCataloguePIX(pix_ra1, pix_dec1, test_time, maxz, prob,cat, FOV, totaldPdV,nside, NewNside, minz):
-    
-    #To do:
-    #for a faster time:
-    #subtract the summed pixels
-    #chose only visbile pixels / done
-    #adjust the number of interations and pixel
-    
+
+def ModifyCataloguePIX(pix_ra1, pix_dec1, test_time, maxz, prob, cat, FOV, totaldPdV, nside, NewNside, minz,
+                       observatory):
+    # To do:
+    # for a faster time:
+    # subtract the summed pixels
+    # chose only visbile pixels / done
+    # adjust the number of interations and pixel
+
     #####################
-    #pprob = hp.pixelfunc.ud_grade(prob, 64)#power = -2
-    #pixel_theta, pixel_phi = hp.pix2ang((hp.npix2nside(len(pprob))), np.arange(len(pprob)))
-    
-    #pix_ra1 = np.rad2deg(pixel_phi)
-    #pix_dec1 = np.rad2deg(0.5 * np.pi - pixel_theta)
+    # pprob = hp.pixelfunc.ud_grade(prob, 64)#power = -2
+    # pixel_theta, pixel_phi = hp.pix2ang((hp.npix2nside(len(pprob))), np.arange(len(pprob)))
+
+    # pix_ra1 = np.rad2deg(pixel_phi)
+    # pix_dec1 = np.rad2deg(0.5 * np.pi - pixel_theta)
     ##################
-    
-    #Cuts on azimuth angle  (in the probability region)
-    observatory = co.EarthLocation(lat=-23.271333 * u.deg,lon=16.5 * u.deg, height=1800 * u.m)
-    
-    
+
+    # Cuts on azimuth angle  (in the probability region)
+
     frame = co.AltAz(obstime=test_time, location=observatory)
-    
+
     radecs = co.SkyCoord(pix_ra1, pix_dec1, frame='fk5', unit=(u.deg, u.deg))
     thisaltaz = radecs.transform_to(frame)
-    
-    #pix_alt1 = thisaltaz.alt.value
-    
+
+    # pix_alt1 = thisaltaz.alt.value
+
     pix_ra = radecs.ra.value[thisaltaz.alt.value > 90 - (minz)]
     pix_dec = radecs.dec.value[thisaltaz.alt.value > 90 - (minz)]
-    #pix_alt = pix_alt1[thisaltaz.alt.value > 90 - (minz)]
-    
-    dp_Pix_Fov = np.empty(len(pix_ra), dtype=object)
-    
-    cat_pix = Table([pix_ra, pix_dec, dp_Pix_Fov ], names=('PIXRA', 'PIXDEC', 'PIXFOVPROB'))
+    # pix_alt = pix_alt1[thisaltaz.alt.value > 90 - (minz)]
 
-    
+    dp_Pix_Fov = np.empty(len(pix_ra), dtype=object)
+
+    cat_pix = Table([pix_ra, pix_dec, dp_Pix_Fov], names=('PIXRA', 'PIXDEC', 'PIXFOVPROB'))
+
     ##############################################################
-    #Possible:  select the pixels that only have a prob > certain value
+    # Possible:  select the pixels that only have a prob > certain value
     #       To do so attribute for each pix its prob: start with nside initial, put in table prob, reduce resolution, make cut...
-    #Note : maybe highest PROBFOV pix is not visible ? ? ? check fullfills requirements
+    # Note : maybe highest PROBFOV pix is not visible ? ? ? check fullfills requirements
     ###############################################################
-    
+
     dp_dV_FOV = []
 
-    #iteration on chosen pixel to calculate the probability on their field of view using galaxies
+    # iteration on chosen pixel to calculate the probability on their field of view using galaxies
     for l in range(0, len(cat_pix)):
-        dp_dV_FOV.append(PGalinFOV(prob,cat,cat_pix[l], FOV, totaldPdV, nside,UsePix=True))
-
+        dp_dV_FOV.append(PGalinFOV(prob, cat, cat_pix[l], FOV, totaldPdV, nside, UsePix=True))
 
     cat_pix['PIXFOVPROB'] = dp_dV_FOV
 
     ttcat = cat_pix[np.flipud(np.argsort(cat_pix['PIXFOVPROB']))]
     return ttcat
-
 
 
 def Get90RegionPixReduced(hpxx, percentage, Nnside):
