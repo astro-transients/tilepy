@@ -305,7 +305,6 @@ def BestCandidateonPGal(filename,ObservationTime0,galFile):
     SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,P_GALarray,Round], names=['Observation Time UTC','RA(deg)','Dec(deg)','PGW','Pgal','Round'])
     return SuggestedPointings,cat
 
-
 def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName):
     
     # Main Parameters
