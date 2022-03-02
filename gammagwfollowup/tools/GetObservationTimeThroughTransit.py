@@ -75,7 +75,7 @@ def GetObservationPeriod(msource,inputtime,AltitudeCut,nights,plotnumber):
     Times=Altitudes['Time UTC']
     mask=[(Altitudes['Alt Sun'] < -18.) & (Altitudes['Alt Source']> AltitudeCut) & (Altitudes['AltMoon'] < -0.5)]
     ScheduledTimes=Times[mask]
-    print(ScheduledTimes[0],ScheduledTimes[-1])
+    #print(ScheduledTimes[0],ScheduledTimes[-1])
     #outfilename='ObservationTable_Check_%g.txt'%plotnumber
     #ascii.write(Altitudes[mask], outfilename,overwrite=True)
     Nights=Altitudes[mask]['NightsCounter']
