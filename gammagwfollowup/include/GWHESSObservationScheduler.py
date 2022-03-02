@@ -32,7 +32,7 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName):
     print(obspar)
 
     # link to the GW map
-    name = filename.split('.')[0].split('/')[-1]
+    name = filename.split('.')[0].split('/')[-1]gi
     #if('G' in filename):
     #    names = filename.split("_")
     #    name= names[0]

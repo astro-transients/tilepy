@@ -89,7 +89,6 @@ class CTASouthObservatory:
         self.Location = EarthLocation(lat=self.Lat, lon=self.Lon,
                                       height=self.Height)
 
-
 class CTANorthObservatory:
 
     def __init__(self):

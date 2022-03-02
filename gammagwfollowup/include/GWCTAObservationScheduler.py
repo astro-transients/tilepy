@@ -39,7 +39,7 @@ else:
 iers_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), '../dataset/finals2000A.all')
 iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
-def PGWonFoV(filename,InputChar,TC,parameters,dirName):
+def PGWonFoV_WindowsfromIRFs(filename,InputChar,TC,parameters,dirName):
     UseObs =InputChar['Observatory']
     run=InputChar['run']
     mergerID=InputChar['MergerID']
@@ -460,7 +460,7 @@ def PGWonFoV_WindowOptimisation(filename,InputChar,TC,parameters,datasetDir,outD
     SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray, Obsarray, P_GWarray,ObsBoolarray,ZenIniarray, ZenEndarray, Exposure, Delay], names=['Observation Time UTC','RA(deg)','DEC(deg)','Observatory','PGW','ObsInfo','ZenIni','ZenEnd','Duration', 'Delay'])
     return (SuggestedPointings, ObservationTime0, FOV, nside, counter)
 
-def PGalonFoV(filename,galFile,InputObservationList,UseObs,distance,Edistance_max,Edistance_min,ObservationTime0,parameters,dirName):
+def PGalonFoV_WindowsFromList(filename,galFile,InputObservationList,UseObs,distance,Edistance_max,Edistance_min,ObservationTime0,parameters,dirName):
 
 
     # Main Parameters
