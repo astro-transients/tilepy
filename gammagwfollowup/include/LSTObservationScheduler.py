@@ -29,7 +29,6 @@ def getdate(x):
 
 
 def GetSchedule_GW(URL, date,datasetDir,outDir):
-    FOLLOWUP = True
     targetType = 'GW_Pointing'
 
     filename = URL.split("/")[-1]
@@ -65,10 +64,8 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
     MaxTheta, MaxPhi = hp.pix2ang(NSide, MaxPix)
     raMax = np.rad2deg(MaxPhi)
     decMax = np.rad2deg(0.5 * np.pi - MaxTheta)
-
     c_icrs = SkyCoord(raMax, decMax, frame='fk5', unit=(u.deg, u.deg))
 
-    InsidePlane = False
     InsidePlane = Tools.GalacticPlaneBorder(c_icrs)
     if InsidePlane:
         has3D = False
@@ -87,10 +84,6 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
 
         ObservationTime = date
         outputDir = "%s/%s" % (outDir, name)
-
-        if not os.path.exists(outputDir):
-            os.makedirs(outputDir)
-
         dirName = '%s/PGallinFoV' % outputDir
 
         if not os.path.exists(dirName):
@@ -129,10 +122,6 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
 
         ObservationTime = date
         outputDir = "%s/%s" % (outDir, name)
-
-        if not os.path.exists(outputDir):
-            os.makedirs(outputDir)
-
         dirName = '%s/PGWinFoV' % outputDir
 
         if not os.path.exists(dirName):
@@ -167,11 +156,7 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
             FOLLOWUP = False
             print('No observations are scheduled')
 
-    return SuggestedPointings, FOLLOWUP
-
-
 def GetSchedule_GBM(URL, date,datasetDir,outDir):
-    FOLLOWUP = True
     targetType = 'GBM_Pointing'
 
 
@@ -257,10 +242,6 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
 
         ObservationTime = date
         outputDir = "%s/%s" % (outDir, name)
-
-        if not os.path.exists(outputDir):
-            os.makedirs(outputDir)
-
         dirName = '%s/PGallinFoV' % outputDir
 
         if not os.path.exists(dirName):
@@ -293,10 +274,6 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
     else:
         ObservationTime = date
         outputDir = "%s/%s" % (outDir, name)
-
-        if not os.path.exists(outputDir):
-            os.makedirs(outputDir)
-
         dirName = '%s/PGWinFoV' % outputDir
 
         if not os.path.exists(dirName):
@@ -328,7 +305,4 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
-
-    return SuggestedPointings, FOLLOWUP
-
 
