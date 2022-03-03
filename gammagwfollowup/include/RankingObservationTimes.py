@@ -35,7 +35,7 @@ iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 #   Global parameters about darkness criteria   #
 #################################################
 # max sun and moon altitude in degrees.
-cfg = "./configs/Visibility.ini"
+cfg = "./configs/FollowupParameters.ini"
 parser = ConfigParser()
 parser.read(cfg)
 parser.sections()
@@ -123,16 +123,14 @@ def load_pointingFile(tpointingFile):
                                              unpack=True)  # ra, dec in degrees
     time1 = np.atleast_1d(time1)
     time2 = np.atleast_1d(time2)
-    #print(ra)
+
     ra = np.atleast_1d(ra)
     dec = np.atleast_1d(dec)
 
     time=[]
-    raclean=[]
-    decclean=[]
+
     for i in range(len(time1)):
         time.append((time1[i] + ' ' + time2[i].split(':')[0]+ ':'+time2[i].split(':')[1]).split('"')[1])
-
 
     ra = ra.astype(np.float)
     dec = dec.astype(np.float)
@@ -140,39 +138,37 @@ def load_pointingFile(tpointingFile):
     l = list(range(len(ra)))
     Pointings = Table([l,time,ra,dec],names=('Pointing','Time','RAJ2000', 'DEJ2000'))
 
-    #print(Pointings)
     return Pointings
 
-def VisibilityWindow(ObservationTime,galPointing,AltitudeCut,nights,UseGreytime,dirName,max_zenith,observatory):
-    source = SkyCoord(galPointing['RAJ2000'],galPointing['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
+def VisibilityWindow(ObservationTime,Pointing,AltitudeCut,nights,UseGreytime,dirName,max_zenith,observatory):
+    source = SkyCoord(Pointing['RAJ2000'],Pointing['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
     WINDOW=[]
     ZENITH=[]
     SZENITH=[]
 
     try:
-        auxtime = datetime.datetime.strptime(galPointing['Time'][0], '%Y-%m-%d %H:%M:%S.%f')
+        auxtime = datetime.datetime.strptime(Pointing['Time'][0], '%Y-%m-%d %H:%M:%S.%f')
     except ValueError:
         try:
-            auxtime = datetime.datetime.strptime(galPointing['Time'][0], '%Y-%m-%d %H:%M:%S')
+            auxtime = datetime.datetime.strptime(Pointing['Time'][0], '%Y-%m-%d %H:%M:%S')
         except ValueError:
-            auxtime = datetime.datetime.strptime(galPointing['Time'][0], '%Y-%m-%d %H:%M')
+            auxtime = datetime.datetime.strptime(Pointing['Time'][0], '%Y-%m-%d %H:%M')
 
     #frame = co.AltAz(obstime=auxtime, location=observatory)
     timeInitial=auxtime-datetime.timedelta(minutes=30)
     for i in range(0,len(source)):
-        NonValidwindow,Stepzenith = GetVisibility(galPointing['Time'],source[i],max_zenith, observatory)
+        NonValidwindow,Stepzenith = GetVisibility(Pointing['Time'],source[i],max_zenith, observatory)
         window, zenith = GetObservationPeriod(timeInitial, source[i],AltitudeCut,observatory,nights,i,dirName,UseGreytime,False)
-        #print(window)
         WINDOW.append(window)
         ZENITH.append(zenith)
         SZENITH.append(Stepzenith)
         window, zenith = GetObservationPeriod(ObservationTime, source[i],AltitudeCut,observatory,nights,i,dirName,UseGreytime,True)
 
-    galPointing['Observation window'] = WINDOW
-    galPointing['Array of zenith angles']=ZENITH
-    galPointing['Zenith angles in steps'] = SZENITH
+    Pointing['Observation window'] = WINDOW
+    Pointing['Array of zenith angles']=ZENITH
+    Pointing['Zenith angles in steps'] = SZENITH
 
-    return galPointing
+    return Pointing
 
 
 def GetObservationPeriod(inputtime0,msource,AltitudeCut,observatory,nights,plotnumber,dirName,UseGreytime,doplot):
@@ -311,8 +307,7 @@ def GetVisibility(time,radecs,max_zenith, observatory):
     window = visibility[0].strftime('%H:%M:%S') +'-'+ visibility[-1].strftime('%H:%M:%S')
     return window,altitude
 
-def ProbabilitiesinPointings(cat,galPointing,FOV, totaldPdV,prob,nside):
-    #targetCoord2 = co.SkyCoord(cat['RAJ2000'], cat['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
+def ProbabilitiesinPointings3D(cat,galPointing,FOV, totaldPdV,prob,nside):
 
     ra= galPointing['RAJ2000']
     dec=galPointing['DEJ2000']
@@ -334,31 +329,57 @@ def ProbabilitiesinPointings(cat,galPointing,FOV, totaldPdV,prob,nside):
 def PGGPGalinFOV(cat,ra,dec,prob,totaldPdV,FOV,nside):
 
     targetCoordcat = co.SkyCoord(cat['RAJ2000'], cat['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
-
     targetCoordpointing = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
-
     dp_dV = cat['dp_dV']
 
-    # Array of indices of pixels inside circle of HESS-I FoV
+    # Array of indices of pixels inside circle of FoV
 
     radius = FOV
-
     t = 0.5 * np.pi - targetCoordpointing.dec.rad
-
     p = targetCoordpointing.ra.rad
 
     #print('t, p, targetCoord[0].ra.deg, targetCoord[0].dec.deg', t, p, targetCoord.ra.deg, targetCoord.dec.deg)
-
     xyz = hp.ang2vec(t, p)
 
 
     ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
-
     P_GW = prob[ipix_disc].sum()
-
     Pgal_inFoV = dp_dV[targetCoordcat.separation(targetCoordpointing).deg <= radius].sum() / totaldPdV
 
     return P_GW,Pgal_inFoV
+
+def ProbabilitiesinPointings2D(Pointing,FOV,prob,nside):
+
+    ra = Pointing['RAJ2000']
+    dec = Pointing['DEJ2000']
+    PGW= []
+    PGAL=[]
+    for i in range(0,len(ra)):
+        pgwcircle = PGinFOV(ra[i], dec[i],prob,FOV,nside)
+        PGW.append(np.float('{:1.4f}'.format(pgwcircle)))
+        PGAL.append(np.float('{:1.4f}'.format(0)))
+
+    Pointing['Pgw'] = PGW
+    Pointing['Pgal'] = PGAL
+
+    return Pointing
+def PGinFOV(ra,dec,prob,radius,nside):
+
+    targetCoordpointing = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
+
+    # Array of indices of pixels inside circle of FoV
+
+    t = 0.5 * np.pi - targetCoordpointing.dec.rad
+    p = targetCoordpointing.ra.rad
+
+    #print('t, p, targetCoord[0].ra.deg, targetCoord[0].dec.deg', t, p, targetCoord.ra.deg, targetCoord.dec.deg)
+    xyz = hp.ang2vec(t, p)
+
+    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+    P_GW = prob[ipix_disc].sum()
+
+    return P_GW
+
 
 
 def Sortingby(galPointing,targetType, name, exposure):
@@ -461,22 +482,15 @@ def EvolutionPlot(galPointing,tname):
 
 
 def RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName, PointingFile):
-    # Main parameters
 
     # Main parameters
     obspar = ObservationParameters.from_configfile(parameters)
-    print(obspar)
 
     #########################
 
     point = load_pointingFile(PointingFile)
 
     ################################################################
-
-    # if ('G' in filename):
-    #    names = filename.split("_")
-    #    name = names[0]
-    name = filename.split('.')[0].split('/')[-1]
 
     print()
     print('---------  RANKING THE OBSERVATIONS AND PRODUCING THE OUTPUT FILES   ----------')
@@ -489,21 +503,41 @@ def RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName
 
     has3D = True
     if (len(distnorm) == 0):
-        print("Found a generic map without 3D information")
-        # flag the event for special treatment
         has3D = False
-    else:
-        print("Found a 3D reconstruction")
-    # hp.mollview(prob, title="GW prob map (Ecliptic)")
-    # plt.show
 
     # correlate GW map with galaxy catalog, retrieve ordered list
     tGals, sum_dP_dV = CorrelateGalaxies_LVC(prob, distmu, distsigma, distnorm, cat, has3D, obspar.MinimumProbCutForCatalogue)
-    point = ProbabilitiesinPointings(tGals, point, obspar.FOV, sum_dP_dV, prob, nside)
+    point = ProbabilitiesinPointings3D(tGals, point, obspar.FOV, sum_dP_dV, prob, nside)
     point = VisibilityWindow(ObservationTime, point, 90 - obspar.max_zenith, obspar.MaxNights, obspar.UseGreytime, dirName, obspar.max_zenith,
                              obspar)
 
     EvolutionPlot(point, dirName)
     Sortingby(point, targetType, dirName, obspar.Duration)
+
+def RankingTimes_SkyMapInput_2D(ObservationTime, prob, parameters, targetType, dirName, PointingFile):
+
+    # Main parameters
+    obspar = ObservationParameters.from_configfile(parameters)
+
+    ################################################################
+
+    point = load_pointingFile(PointingFile)
+
+    ################################################################
+
+    print()
+    print('---------  RANKING THE OBSERVATIONS AND PRODUCING THE OUTPUT FILES   ----------')
+    print()
+
+    npix = len(prob)
+    nside = hp.npix2nside(npix)
+
+    point = ProbabilitiesinPointings2D(point, obspar.FOV, prob, nside)
+    point = VisibilityWindow(ObservationTime, point, 90 - obspar.max_zenith, obspar.MaxNights, obspar.UseGreytime, dirName, obspar.max_zenith,
+                             obspar)
+
+    EvolutionPlot(point, dirName)
+    Sortingby(point, targetType, dirName, obspar.Duration)
+
 
 

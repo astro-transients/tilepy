@@ -413,7 +413,7 @@ class ObservationParameters(object):
     def __init__(self, name=None, Lat=None, Lon=None, Height=None,
                  gSunDown=None, HorizonSun = None, gMoonDown = None, HorizonMoon = None, gMoonGrey = None, gMoonPhase = None, MoonSourceSeparation = None, MaxMoonSourceSeparation = None, max_zenith = None, FOV = None, MaxRuns = None,
                  MaxNights = None, Duration = None, MinDuration = None, UseGreytime= None,
-                 MinimumProbCutForCatalogue = None, MinProbCut = None, doplot=None, SecondRound = None, FulFillReq_Percentage = None, PercentCoverage = None, ReducedNside = None, HRnside = None, Mangrove = None):
+                 online = False, MinimumProbCutForCatalogue = None, MinProbCut = None, doplot=None, SecondRound = None, FulFillReq_Percentage = None, PercentCoverage = None, ReducedNside = None, HRnside = None, Mangrove = None):
         self.name = name
         self.Lat = Lat * u.deg
         self.Lon = Lon * u.deg
@@ -441,6 +441,7 @@ class ObservationParameters(object):
         self.UseGreytime = UseGreytime
 
         # Tiling
+        self.online = online
         self.MinimumProbCutForCatalogue = MinimumProbCutForCatalogue
         self.MinProbCut = MinProbCut
         self.doplot = doplot
@@ -457,7 +458,11 @@ class ObservationParameters(object):
         txt += 'Name: {}\n'.format(self.name)
         txt += 'Max zenith: {}\n'.format(self.max_zenith)
         txt += 'FOV: {}\n'.format(self.FOV)
-        txt += '----------------------------------------------------------------------\n'.format()
+        txt += 'Max runs: {}\n'.format(self.MaxRuns)
+        txt += 'Duration: {}\n'.format(self.Duration)
+        txt += 'HR NSIDE: {}\n'.format(self.HRnside)
+        txt += 'LR NSIDE: {}\n'.format(self.ReducedNside)
+        #txt += '----------------------------------------------------------------------\n'.format()
         return txt
 
     @classmethod
@@ -504,6 +509,7 @@ class ObservationParameters(object):
 
         section = 'tiling'
         try:
+            online = (parser.getboolean(section,'Online'))
             MinimumProbCutForCatalogue = float(parser.get(section, 'MinimumProbCutForCatalogue'))
             MinProbCut = float(parser.get(section, 'MinProbCut'))
             doplot = (parser.getboolean(section, 'doplot'))
@@ -520,7 +526,7 @@ class ObservationParameters(object):
 
         return cls(name = name,Lat = Lat,Lon = Lon, Height = Height,gSunDown = gSunDown, HorizonSun = HorizonSun, gMoonDown = gMoonDown,
         HorizonMoon = HorizonMoon, gMoonGrey = gMoonGrey, gMoonPhase = gMoonPhase, MoonSourceSeparation = MoonSourceSeparation, MaxMoonSourceSeparation = MaxMoonSourceSeparation, max_zenith = max_zenith,
-        FOV = FOV, MaxRuns = MaxRuns, MaxNights = MaxNights, Duration = Duration, MinDuration = MinDuration, UseGreytime = UseGreytime, MinimumProbCutForCatalogue = MinimumProbCutForCatalogue,
+        FOV = FOV, MaxRuns = MaxRuns, MaxNights = MaxNights, Duration = Duration, MinDuration = MinDuration, UseGreytime = UseGreytime, online = online, MinimumProbCutForCatalogue = MinimumProbCutForCatalogue,
         MinProbCut = MinProbCut, doplot = doplot, SecondRound = SecondRound, FulFillReq_Percentage = FulFillReq_Percentage, PercentCoverage = PercentCoverage,
         ReducedNside = ReducedNside, HRnside = HRnside, Mangrove = Mangrove)
 

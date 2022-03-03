@@ -107,22 +107,17 @@ def PlotPointingsTogether(prob,time,targetCoord1,n1,targetCoord2,n2,nside, FOV,d
         #plt.savefig("Pointing_Plotting/PointingFOV_Comparison.png")
 
 
-def PlotPointings(prob, cat, time, targetCoord, Totalprob, nside, FOV, maxzenith, observatory, name, dirName,
+def PlotPointings(prob, time, targetCoord, Totalprob, nside, FOV, maxzenith, observatory, name, dirName,
                   doplot=True):
     radius = FOV
 
     t = 0.5 * np.pi - targetCoord[0].dec.rad
-
     p = targetCoord[0].ra.rad
-
-    # print('t, p, targetCoord1[0].ra.deg, targetCoord1[0].dec.deg',t, p, targetCoord1[0].ra.deg, targetCoord1[0].dec.deg)
 
     xyz = hp.ang2vec(t, p)
 
-    # print(xyz)
 
     # translate pixel indices to coordinates
-
     ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
 
     if (doplot):
@@ -139,9 +134,7 @@ def PlotPointings(prob, cat, time, targetCoord, Totalprob, nside, FOV, maxzenith
         dirName = '%s/Pointing_Plotting' % dirName
         if not os.path.exists(dirName):
             os.makedirs(dirName)
-        # path = os.path.dirname(os.path.realpath(__file__)) + '/Pointing_Plotting'
-        # if not os.path.exists(path):
-        #    os.mkdir(path, 493)
+
 
         hp.mollview(prob, rot=[180, 0], coord='C', title="GW prob map (Ecliptic) + %s %g  %s/%s/%s %s:%s:%s UTC" %
                                                          (name, Totalprob * 100, time[0].day, time[0].month,
@@ -175,9 +168,9 @@ def PlotPointings(prob, cat, time, targetCoord, Totalprob, nside, FOV, maxzenith
             # plt.show()
             plt.savefig('%s/Pointings%s.png' % (dirName, j))
 
-        dist = cat['Dist']
-        hp.visufunc.projscatter(cat['RAJ2000'][dist < 200], cat['DEJ2000'][dist < 200], lonlat=True, marker='.',
-                                color='g', linewidth=0.1, coord='C')
+        #dist = cat['Dist']
+        #hp.visufunc.projscatter(cat['RAJ2000'][dist < 200], cat['DEJ2000'][dist < 200], lonlat=True, marker='.',
+        #                        color='g', linewidth=0.1, coord='C')
         # draw all galaxies within zenith-angle cut
 
         # draw observation position, which is equivalent to galaxy with highest
@@ -366,58 +359,21 @@ def LoadPointingsGAL(tpointingFile):
     return time, coordinates ,Pgw, Pgal
 
 
-def PointingPlotting(filename,cat, parameters, name,dirName,PointingsFile1):
-
-    # link to the GW map => will come from the alert message
-    #GWurl = ('https://dcc.ligo.org/P1500071/public/783865_bayestar.fits.gz')
-    #filename = download_file(GWurl, cache=True)
-
-    #filename = '/Users/mseglar/Documents/CurrentPhD/HESS/GW/going-the-distance-o2-skymaps/bayestar/1022203_bayestar.fits.gz'
-
-    if ('G' in filename):
-        names = filename.split("_")
-        name = names[0]
-    ##################
+def PointingPlotting(prob, parameters, name,dirName,PointingsFile1):
 
     # Main parameters
     obspar = ObservationParameters.from_configfile(parameters)
-    print(obspar)
 
-    #print()
-    #print('-------------------   NEW LVC EVENT   --------------------')
-    #print()
-
-    print('Loading map from ', filename)
-    prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
+    #prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     npix = len(prob)
     nside = hp.npix2nside(npix)
 
-    has3D=True
-    if(len(distnorm)==0):
-        print("Found a generic map without 3D information")
-    # flag the event for special treatment
-        has3D=False
-    else:
-        print("Found a 3D reconstruction")
-
-    # plt.show
-    #PointingsFile1 =  './'+ name+ '_SuggestedPointings_GWOptimisation.txt'
-    #name1 = name+'PGW'
-    #PointingsFile1='/Users/mseglar/Documents/CurrentPhD/CTA/GWCosmos/Test_SuggestedPointings_GWOptimisation.txt'
-    #PointingsFile1='./1022203_bayestar_SuggestedPointings_BestCandidateonPgal.txt'
     ObservationTimearray1, Coordinates1, Probarray1 = LoadPointingsGW(PointingsFile1)
 
-    #PointingsFile2 = './'+name+'_SuggestedPointings_GALOptimisation.txt'
-    #name2 = name+'PGal'
-    #PointingsFile2='./983950_bayestar_SuggestedPointings_GWOptimisation.txt'
-
-    name1 = filename.split('.')[0].split('/')[-1]
-
-    Probarray1 = np.atleast_1d(Probarray1) #making sure to have an array on which we can call the sum() function
+    Probarray1 = np.atleast_1d(Probarray1)
 
     print('----------   PLOTTING THE SCHEDULING   ----------')
     print('Total probability of map 1 that maximises PGW= {0:.5f}'.format(sum(Probarray1)))
-    #print('Total probability of map 2 that maximases PGal= ', sum(Probarray2))
     converted_time1=[]
     for i in range(0,len(ObservationTimearray1)):
         time1 = ObservationTimearray1[i]
@@ -432,8 +388,7 @@ def PointingPlotting(filename,cat, parameters, name,dirName,PointingsFile1):
 
 
     #PlotPointingsTogether(prob,converted_time1[0],Coordinates1,sum(Probarray1),name1,Coordinates2,sum(Probarray2),name2, nside, obspar.FOV, doplot=True)
-    PlotPointings(prob,cat,converted_time1,Coordinates1,sum(Probarray1), nside, obspar.FOV, obspar.max_zenith, obspar, name, dirName, doplot=True)
-    #PlotPointings(converted_time2[0],Coordinates2, sum(Probarray2), nside, obspar.FOV,name2,doplot=True)
+    PlotPointings(prob,converted_time1,Coordinates1,sum(Probarray1), nside, obspar.FOV, obspar.max_zenith, obspar, name, dirName, obspar.doplot)
 
 
 def PointingPlottingGWCTA(filename,name,dirName,PointingsFile,FOV,UseObs):

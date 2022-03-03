@@ -25,17 +25,14 @@ else:
 
 ############################################
 
-def PGWinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName):
+def PGWinFoV(filename,ObservationTime0,PointingFile,parameters,dirName):
 
     # Main parameters
     obspar = ObservationParameters.from_configfile(parameters)
     print(obspar)
 
     # link to the GW map
-    name = filename.split('.')[0].split('/')[-1]gi
-    #if('G' in filename):
-    #    names = filename.split("_")
-    #    name= names[0]
+    name = filename.split('.')[0].split('/')[-1]
 
     random.seed()
 
@@ -59,25 +56,19 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName):
     nside = obspar.ReducedNside
 
     highres=hp.pixelfunc.ud_grade(prob, obspar.HRnside, power=-2)
+
     # Create table for 2D probability at 90% containment
     rapix, decpix,areapix=Get90RegionPixReduced(prob,obspar.PercentCoverage,obspar.ReducedNside)
     radecs= co.SkyCoord(rapix,decpix, frame='fk5', unit=(u.deg, u.deg))
-    has3D = True
-    if (len(distnorm) == 0):
-        print("Found a generic map without 3D information")
-        # flag the event for special treatment
-        has3D = False
-    else:
-        print("Found a 3D reconstruction")
-    ##########################
-    #Add observed pixels to pixlist
 
+    #Add observed pixels to pixlist
     if (PointingFile=='False'):
        print('No pointings were given to be substracted')
     else:
         pixlist,P_GW=SubstractPointings2D(PointingFile,prob,obspar.ReducedNside,obspar.FOV,pixlist)
         print('Already observed probability =',P_GW)
-    ##########################
+
+    #######################################################
 
     print('----------   NEW FOLLOW-UP ATTEMPT   ----------')
     if(obspar.UseGreytime):

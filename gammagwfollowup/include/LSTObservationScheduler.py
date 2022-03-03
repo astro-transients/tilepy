@@ -5,7 +5,7 @@
 
 
 from .GWHESSObservationScheduler import PGWinFoV, PGalinFoV
-from .RankingObservationTimes import RankingTimes
+from .RankingObservationTimes import RankingTimes, RankingTimes_SkyMapInput_2D
 from .PointingPlotting import PointingPlotting
 from astropy.coordinates import SkyCoord
 from .GWHESSPointingTools import Tools, LoadGalaxies
@@ -45,9 +45,6 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
         print(warn)
         pass
 
-    prob = []
-    distmu = []
-    distsigma = []
     distnorm = []
     tdistmean = 0
     fitsfile = fits.open(filename)
@@ -62,7 +59,6 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
     if len(distnorm) == 0:
         has3D = False
 
-    # Halim: Check if max pix is in the Galactic Plane
     npix = len(prob)
     NSide = hp.npix2nside(npix)
     MaxPix = np.argmax(prob)
@@ -77,29 +73,19 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
     if InsidePlane:
         has3D = False
 
-    #print("the distance of the event is:", tdistmean)
     if tdistmean > 150:
         has3D = False
 
     name = URL.split('/')[-3]
 
     print("===========================================================================================")
+    PointingsFile = "False"
+    galaxies = datasetDir + "/GLADE.txt"
+    parameters = "./configs/FollowupParameters.ini"
 
     if has3D:
-        # date = datetime.datetime.now()
-        # date = datetime.datetime.now(timezone.utc)
-        # date = datetime.datetime.utcnow()
-        # date = datetime.datetime(2019,7,28,20,20,20)
-        done = "False"
-        galaxies = datasetDir + "/GLADE.txt"
-        params = "./configs/FollowupParameters.ini"
 
-
-        #ObservationTime = getdate(date)
         ObservationTime = date
-        PointingsFile = done
-        galFile = galaxies
-        parameters = params
         outputDir = "%s/%s" % (outDir, name)
 
         if not os.path.exists(outputDir):
@@ -111,27 +97,37 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
             os.makedirs(dirName)
 
         print("===========================================================================================")
-        print("Starting the LST PGalinFoV pointing calculation with the following parameters\n")
+        print("Starting the LST GW - 3D pointing calculation with the following parameters\n")
         print("Filename: ", name)
         print("Date: ", ObservationTime)
         print("Previous pointings: ", PointingsFile)
-        print("Catalog: ", galFile)
+        print("Catalog: ", galaxies)
         print("Parameters: ", parameters)
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
-        SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName)
+        SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galaxies, parameters, dirName)
+
+        print(SuggestedPointings)
+        print("===========================================================================================")
+        print()
+
+        if (len(SuggestedPointings) != 0):
+            FOLLOWUP = True
+            outfilename = '%s/SuggestedPointings_GWOptimisation.txt' % dirName
+            ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
+            print()
+            RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName,
+                         '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+            PointingPlotting(prob, parameters, name, dirName,
+                             '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+        else:
+            FOLLOWUP = False
+            print('No observations are scheduled')
 
     else:
 
-        done = "False"
-        galaxies = datasetDir + "/GLADE.txt"
-        params = "./configs/FollowupParameters.ini"
-
         ObservationTime = date
-        PointingsFile = done
-        galFile = galaxies
-        parameters = params
         outputDir = "%s/%s" % (outDir, name)
 
         if not os.path.exists(outputDir):
@@ -143,33 +139,33 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
             os.makedirs(dirName)
 
         print("===========================================================================================")
-        print("Starting the LST PGwinFoV pointing calculation with the following parameters\n")
+        print("Starting the LST GW - 2D pointing calculation with the following parameters\n")
         print("Filename: ", name)
         print("Date: ", ObservationTime)
         print("Previous pointings: ", PointingsFile)
-        print("Catalog: ", galFile)
+        print("Catalog: ", galaxies)
         print("Parameters: ", parameters)
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
-        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName)
+        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, galaxies, parameters, dirName)
 
-    print(SuggestedPointings)
-    print("===========================================================================================")
-    print()
-
-    if (len(SuggestedPointings) != 0):
-        FOLLOWUP = True
-        outfilename = '%s/SuggestedPointings_GWOptimisation.txt' % dirName
-        ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
+        print(SuggestedPointings)
+        print("===========================================================================================")
         print()
-        cat = LoadGalaxies(galFile)
-        RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName,
-                     '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
-        PointingPlotting(filename, cat,parameters, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
-    else:
-        FOLLOWUP = False
-        print('No observations are scheduled')
+
+        if (len(SuggestedPointings) != 0):
+            FOLLOWUP = True
+            outfilename = '%s/SuggestedPointings_GWOptimisation.txt' % dirName
+            ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
+            print()
+            cat = LoadGalaxies(galaxies)
+            RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName,
+                         '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+            PointingPlotting(prob, parameters, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+        else:
+            FOLLOWUP = False
+            print('No observations are scheduled')
 
     return SuggestedPointings, FOLLOWUP
 
@@ -205,9 +201,6 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
         print(warn)
         pass
 
-    prob = []
-    distmu = []
-    distsigma = []
     distnorm = []
     tdistmean = 0
     print('Filename is ', filename)
@@ -228,8 +221,7 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
                 break
 
     if (fitsfile[1].header['TFIELDS'] == 4):
-        prob, distmu, distsigma, distnorm = hp.read_map(filename,
-                                                        field=range(4))
+        prob, distmu, distsigma, distnorm = hp.read_map(filename,field=range(4))
         tdistmean = fitsfile[1].header['DISTMEAN']
     else:
         prob = hp.read_map(filename, field=range(1))
@@ -247,31 +239,23 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
     decMax = np.rad2deg(0.5 * np.pi - MaxTheta)
     c_icrs = SkyCoord(raMax, decMax, frame='fk5', unit=(u.deg, u.deg))
 
-    InsidePlane = False
     InsidePlane = Tools.GalacticPlaneBorder(c_icrs)
     if InsidePlane:
         has3D = False
 
-    #print(" The distance of the event is:", tdistmean)
     if tdistmean > 150:
         has3D = False
 
     # filename=args.name
     name = URL.split('/')[-3]
 
+    PointingsFile = "False"
+    galaxies = datasetDir + "/GLADE.txt"
+    parameters = "./configs/FollowupParameters.ini"
+
     if has3D:
-        # date = datetime.datetime.now()
-        # date = datetime.datetime.now(timezone.utc)
-        # date = datetime.datetime.utcnow()
-        # date = datetime.datetime(2021,3,3,14,20,20)
-        done = "False"
-        galaxies = datasetDir + "/GLADE.txt"
-        params = "./configs/FollowupParameters.ini"
 
         ObservationTime = date
-        PointingsFile = done
-        galFile = galaxies
-        parameters = params
         outputDir = "%s/%s" % (outDir, name)
 
         if not os.path.exists(outputDir):
@@ -283,30 +267,31 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
             os.makedirs(dirName)
 
         print("===========================================================================================")
-        print("Starting the LST PGalinFoV pointing calculation with the following parameters\n")
+        print("Starting the LST GBM - 3D pointing calculation with the following parameters\n")
         print("Filename: ", name)
         print("Date: ", ObservationTime)
         print("Previous pointings: ", PointingsFile)
-        print("Catalog: ", galFile)
+        print("Catalog: ", galaxies)
         print("Parameters: ", parameters)
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
-        SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName)
+        SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galaxies, parameters, dirName)
+
+        if (len(SuggestedPointings) != 0):
+            FOLLOWUP = True
+            outfilename = '%s/SuggestedPointings_GWOptimisation.txt' % dirName
+            ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
+            RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName,
+                         '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+            PointingPlotting(prob, parameters, name, dirName,
+                             '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+        else:
+            FOLLOWUP = False
+            print('No observations are scheduled')
 
     else:
-        # date = datetime.datetime.now()
-        # date = datetime.datetime.now(timezone.utc)
-        # date = datetime.datetime.utcnow()
-        # date = datetime.datetime(2021, 11, 30, 15, 15, 15)
-        done = "False"
-        galaxies = datasetDir + "/GLADE.txt"
-        params = "./configs/FollowupParameters.ini"
-
         ObservationTime = date
-        PointingsFile = done
-        galFile = galaxies
-        parameters = params
         outputDir = "%s/%s" % (outDir, name)
 
         if not os.path.exists(outputDir):
@@ -318,32 +303,31 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
             os.makedirs(dirName)
 
         print("===========================================================================================")
-        print("Starting the LST PGwinFoV pointing calculation with the following parameters\n")
+        print("Starting the LST GBM - 2D pointing calculation with the following parameters\n")
         print("Filename: ", name)
         print("Date: ", ObservationTime)
         print("Previous pointings: ", PointingsFile)
-        print("Catalog: ", galFile)
+        print("Catalog: ", galaxies)
         print("Parameters: ", parameters)
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
-        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, galFile, parameters, dirName)
+        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, parameters, dirName)
 
         print(SuggestedPointings)
         print("===========================================================================================")
         print()
 
-    if (len(SuggestedPointings) != 0):
-        FOLLOWUP = True
-        outfilename = '%s/SuggestedPointings_GWOptimisation.txt' % dirName
-        ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
-        print()
-        cat = LoadGalaxies(galFile)
-        RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName,'%s/SuggestedPointings_GWOptimisation.txt' % dirName)
-        PointingPlotting(filename, cat, parameters, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
-    else:
-        FOLLOWUP = False
-        print('No observations are scheduled')
+        if (len(SuggestedPointings) != 0):
+            FOLLOWUP = True
+            outfilename = '%s/SuggestedPointings_GWOptimisation.txt' % dirName
+            ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
+            print()
+            RankingTimes_SkyMapInput_2D(ObservationTime, prob, parameters, targetType, dirName,'%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+            PointingPlotting(prob, parameters, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+        else:
+            FOLLOWUP = False
+            print('No observations are scheduled')
 
     return SuggestedPointings, FOLLOWUP
 
