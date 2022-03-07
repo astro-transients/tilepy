@@ -412,7 +412,7 @@ class ObservationParameters(object):
     # Observatory
     def __init__(self, name=None, Lat=None, Lon=None, Height=None,
                  gSunDown=None, HorizonSun = None, gMoonDown = None, HorizonMoon = None, gMoonGrey = None, gMoonPhase = None, MoonSourceSeparation = None, MaxMoonSourceSeparation = None, max_zenith = None, FOV = None, MaxRuns = None,
-                 MaxNights = None, Duration = None, MinDuration = None, UseGreytime= None,
+                 MaxNights = None, Duration = None, MinDuration = None, UseGreytime= None, MinSlewing=None,
                  online = False, MinimumProbCutForCatalogue = None, MinProbCut = None, doplot=None, SecondRound = None, FulFillReq_Percentage = None, PercentCoverage = None, ReducedNside = None, HRnside = None, Mangrove = None):
         self.name = name
         self.Lat = Lat * u.deg
@@ -439,6 +439,7 @@ class ObservationParameters(object):
         self.Duration = Duration
         self.MinDuration = MinDuration
         self.UseGreytime = UseGreytime
+        self.MinSlewing = MinSlewing
 
         # Tiling
         self.online = online
@@ -504,6 +505,7 @@ class ObservationParameters(object):
             Duration = int(parser.get(section, 'Duration'))
             MinDuration = int(parser.get(section, 'MinDuration'))
             UseGreytime = (parser.getboolean(section, 'UseGreytime'))
+            MinSlewing = float(parser.get(section, 'MinSlewing'))
         except Exception as x:
             print(x)
 
@@ -526,7 +528,7 @@ class ObservationParameters(object):
 
         return cls(name = name,Lat = Lat,Lon = Lon, Height = Height,gSunDown = gSunDown, HorizonSun = HorizonSun, gMoonDown = gMoonDown,
         HorizonMoon = HorizonMoon, gMoonGrey = gMoonGrey, gMoonPhase = gMoonPhase, MoonSourceSeparation = MoonSourceSeparation, MaxMoonSourceSeparation = MaxMoonSourceSeparation, max_zenith = max_zenith,
-        FOV = FOV, MaxRuns = MaxRuns, MaxNights = MaxNights, Duration = Duration, MinDuration = MinDuration, UseGreytime = UseGreytime, online = online, MinimumProbCutForCatalogue = MinimumProbCutForCatalogue,
+        FOV = FOV, MaxRuns = MaxRuns, MaxNights = MaxNights, Duration = Duration, MinDuration = MinDuration, UseGreytime = UseGreytime, MinSlewing = MinSlewing, online = online, MinimumProbCutForCatalogue = MinimumProbCutForCatalogue,
         MinProbCut = MinProbCut, doplot = doplot, SecondRound = SecondRound, FulFillReq_Percentage = FulFillReq_Percentage, PercentCoverage = PercentCoverage,
         ReducedNside = ReducedNside, HRnside = HRnside, Mangrove = Mangrove)
 
@@ -829,6 +831,7 @@ def ComputeProbability2D(prob,highres,radecs,ReducedNside,HRnside,MinProbCut, ti
     cat_pix = Table([ipix,pix_ra, pix_dec,dp_Pix_Fov], names=('PIX','PIXRA', 'PIXDEC', 'PIXFOVPROB'))
 
     dp_dV_FOV = []
+    #dp_dV_FOV = np.zero(len(dp_Pix_Fov))
 
     xyzpix = hp.ang2vec(thetapix, phipix)
 

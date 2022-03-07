@@ -111,10 +111,8 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,parameters,dirName):
 
 
     print()
-    print("===========================================================================================")
-    print()
-    print("===========================================================================================")
-    print()
+    #print("===========================================================================================")
+    #print()
     print("Total GW probability covered: ", sum(P_GWarray), "Number of runs that fulfill darkness condition  :",
                   len(NightDarkRuns), "Number of effective pointings: ", len(ObservationTimearray))
 
