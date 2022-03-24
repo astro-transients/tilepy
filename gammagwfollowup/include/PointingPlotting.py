@@ -148,12 +148,18 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, FOV, maxzenith, obs
         Fov_array = np.empty(400)
         Fov_array.fill(FOV)
 
+        # Position of the GRB: Add here your coordinates if you want to add them to the plot
+        #RA_GRB = 0.526
+        #DEC_GRB = -2.917
+        #skycoordGRB = co.SkyCoord(RA_GRB, DEC_GRB, frame='fk5', unit=(u.deg, u.deg))
+
         for j in range(0, len(targetCoord.ra)):
             tarcoordra.fill(targetCoord[j].ra.deg)
             tarcoorddec.fill(targetCoord[j].dec.deg)
             racoord = tarcoordra + Fov_array * np.cos(theta)
             deccoord = tarcoorddec + Fov_array * np.sin(theta)
             hp.visufunc.projscatter(racoord, deccoord, lonlat=True, marker='.', color=colors[j], coord='C')
+            #hp.visufunc.projscatter(RA_GRB, DEC_GRB, lonlat=True, marker='+', color=colors[1], coord='C')
 
             # Plotting the visibility of the instrument as specified in the config
 
@@ -165,7 +171,7 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, FOV, maxzenith, obs
                                    location=observatory)
             RandomCoord_radec = RandomCoord.transform_to('fk5')
             hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True)
-            # plt.show()
+            #plt.show()
             plt.savefig('%s/Pointings%s.png' % (dirName, j))
 
         #dist = cat['Dist']
@@ -494,6 +500,7 @@ def PointingPlottingGWCTA(filename,name,dirName,PointingsFile,FOV,UseObs):
     tarcoorddec = np.empty(400)
     Fov_array = np.empty(400)
     Fov_array.fill(FOV)
+
 
     for j in range(0, len(Coordinates.ra)):
         tarcoordra.fill(Coordinates[j].ra.deg)
