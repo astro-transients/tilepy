@@ -4,8 +4,7 @@ plt.style.use(astropy_mpl_style)
 
 import healpy as hp
 import random
-from gammagwfollowup.include.GWHESSPointingTools import randomDate
-from gammagwfollowup.include.GWCTAPointingTools import TableImportCTA
+from gammagwfollowup.include.PointingTools import randomDate, TableImportCTA
 from astropy.time import Time
 from astropy.table import Table
 import astropy.coordinates as co

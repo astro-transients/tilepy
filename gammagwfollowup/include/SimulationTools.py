@@ -10,7 +10,7 @@ from astropy.coordinates import SkyCoord, Angle
 from gammapy.cube import make_map_exposure_true_energy, make_map_background_irf
 from gammapy.spectrum.models import Absorption, PowerLaw
 import matplotlib.pyplot as plt
-from .GWCTAPointingTools import GRB
+from .PointingTools import GRB
 
 
 

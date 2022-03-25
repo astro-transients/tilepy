@@ -15,9 +15,8 @@ import sys
 sys.path.append('/Users/mseglar/Documents/CurrentPhD/CTA/GWCosmos/')
 from gwUtilities import *
 #sys.path.append('/Users/mseglar/Documents/GitHub/GWfollowup')
-from GWHESSPointingTools import *
+from PointingTools import *
 from GWHESSObservationScheduler import *
-
 
 
 

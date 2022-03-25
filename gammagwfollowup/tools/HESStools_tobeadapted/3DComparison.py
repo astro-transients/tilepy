@@ -1,8 +1,7 @@
 import numpy as np
 import sys
 sys.path.append('/Users/mseglar/Documents/GitHub/GWfollowup/include')
-from GWHESSPointingTools import *
-from GWCTAPointingTools import *
+from PointingTools import *
 
 
 #InputFileName = 'BNS-GW-new.txt'

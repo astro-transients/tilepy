@@ -2,7 +2,7 @@ import sys
 import argparse
 import os
 from gammagwfollowup.include.PointingPlotting import PointingPlottingGW_ZenithSteps
-from gammagwfollowup.include.GWCTAPointingTools import TableImportCTA, TableImportCTA_Time
+from gammagwfollowup.include.PointingTools import TableImportCTA, TableImportCTA_Time
 
 
 parser = argparse.ArgumentParser(description='Start the CTA GW pointing simulation and analysis (PgwinFov)')

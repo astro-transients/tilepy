@@ -8,7 +8,7 @@ from .GWHESSObservationScheduler import PGWinFoV, PGalinFoV
 from .RankingObservationTimes import RankingTimes, RankingTimes_SkyMapInput_2D
 from .PointingPlotting import PointingPlotting
 from astropy.coordinates import SkyCoord
-from .GWHESSPointingTools import Tools, LoadGalaxies
+from .PointingTools import Tools, LoadGalaxies
 from astropy.io import fits, ascii
 import time
 import healpy as hp

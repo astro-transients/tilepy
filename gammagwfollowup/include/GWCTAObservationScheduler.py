@@ -3,13 +3,13 @@ from astropy import units as u
 from astropy.utils import iers
 import astropy.coordinates as co
 import random
-from .GWHESSPointingTools import (LoadHealpixMap, Get90RegionPixReduced,
+from .PointingTools import (LoadHealpixMap, Get90RegionPixReduced,
                                   ZenithAngleCut,ComputeProbability2D,
                                   FulfillsRequirement,ModifyCataloguePIX, ComputeProbPGALIntegrateFoV,
                                   CTASouthObservatory,CTANorthObservatory,
                                   VisibleAtTime,LoadGalaxies,CorrelateGalaxies_LVC,ModifyCatalogue
                                   )
-from .GWCTAPointingTools import (NextWindowTools,
+from .PointingTools import (NextWindowTools,
                                  ComputeProbability2D_SelectClusters,GiveProbToGalaxy, LoadGalaxiesSimulation
                                  )
 from .ObservingTimes import ObtainObservingTimes

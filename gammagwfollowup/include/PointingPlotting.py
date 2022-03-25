@@ -1,4 +1,4 @@
-from .GWHESSPointingTools import (LoadHealpixMap, TransformRADec,
+from .PointingTools import (LoadHealpixMap, TransformRADec,
                                   CTANorthObservatory,CTASouthObservatory,ObservationParameters)
 import os
 import healpy as hp

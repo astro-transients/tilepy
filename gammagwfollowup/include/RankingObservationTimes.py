@@ -13,7 +13,7 @@ from astropy.time import Time
 from astropy.utils import iers
 from astropy.utils.data import download_file
 import copy
-from .GWHESSPointingTools import (LoadHealpixMap, Tools, CorrelateGalaxies_LVC,
+from .PointingTools import (LoadHealpixMap, Tools, CorrelateGalaxies_LVC,
                                   CorrelateGalaxies_LVC_SteMass, ObservationParameters)
 
 from six.moves import configparser

@@ -1,4 +1,4 @@
-from .GWHESSPointingTools import (NightDarkObservation,
+from .PointingTools import (NightDarkObservation,
                                   NightDarkObservationwithGreyTime,
                                   LoadHealpixMap,LoadGalaxies,CorrelateGalaxies_LVC,
                                   Get90RegionPixReduced,
