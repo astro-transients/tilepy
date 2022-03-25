@@ -137,7 +137,7 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
-        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, galaxies, parameters, dirName)
+        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, parameters, dirName)
 
         print(SuggestedPointings)
         print("===========================================================================================")

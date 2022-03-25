@@ -885,46 +885,45 @@ def ComputeProbability2D(prob,highres,radecs,ReducedNside,HRnside,MinProbCut, ti
         ipix_disc = hp.query_disc(ReducedNside, xyz, np.deg2rad(radius))
         ipixlist.extend(ipix_disc)
 
-    ######################################
+        ##################################
+        # PLOT THE RESULTS
+        if plot:
+            path = dirName + '/EvolutionPlot'
+            if not os.path.exists(path):
+                os.mkdir(path, 493)
+            #nside = 1024
 
-    # PLOT THE RESULTS
-    if plot:
-        path = dirName + '/EvolutionPlot'
-        if not os.path.exists(path):
-            os.mkdir(path, 493)
-        #nside = 1024
+            #hp.mollview(highres,title="With FoV circle")
 
-        #hp.mollview(highres,title="With FoV circle")
+            hp.gnomview(prob, xsize=500, ysize=500, rot=[targetCoord.ra.deg, targetCoord.dec.deg], reso=8.0)
+            hp.graticule()
+            plt.savefig('%s/Pointing-prob_%g.png' % (path,counter))
 
-        hp.gnomview(prob, xsize=500, ysize=500, rot=[targetCoord.ra.deg, targetCoord.dec.deg], reso=8.0)
-        hp.graticule()
-        plt.savefig('%s/Pointing-prob_%g.png' % (path,counter))
+            ipix_discplot = hp.query_disc(HRnside, xyz, np.deg2rad(radius))
+            tt, pp = hp.pix2ang(HRnside, ipix_discplot)
+            ra2 = np.rad2deg(pp)
+            dec2 = np.rad2deg(0.5 * np.pi - tt)
+            skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
+            #hp.visufunc.projplot(skycoord.ra, skycoord.dec, 'y.', lonlat=True, coord="C")
+            #plt.show()
+            #observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
 
-        ipix_discplot = hp.query_disc(HRnside, xyz, np.deg2rad(radius))
-        tt, pp = hp.pix2ang(HRnside, ipix_discplot)
-        ra2 = np.rad2deg(pp)
-        dec2 = np.rad2deg(0.5 * np.pi - tt)
-        skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
-        #hp.visufunc.projplot(skycoord.ra, skycoord.dec, 'y.', lonlat=True, coord="C")
-        #plt.show()
-        #observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
-        
-        hp.visufunc.projplot(sortcat['PIXRA'][:1],sortcat['PIXDEC'][:1], 'r.', lonlat=True, coord="C")
-        MaxCoord = SkyCoord(sortcat['PIXRA'][:1],sortcat['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
-        separations = skycoord.separation(MaxCoord)
-        tempmask = separations < (radius + 0.1 * radius) * u.deg
-        tempmask2 = separations > (radius - 0.1  * radius) * u.deg
-        hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'g.', lonlat=True, coord="C",linewidth=0.1)
-        altcoord = np.empty(100)
-        azcoord = np.random.rand(100) * 360
-        #for i in range(0,1):
-        #    altcoord.fill(90-(max_zenith-5*i))
-        #    RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,location=observatory)
-        #    RandomCoord_radec = RandomCoord.transform_to('fk5')
-        #    hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
-        #plt.show()
-        #plt.savefig('%s/Pointing-zencut_%g.png' % (path,counter))
-        
+            hp.visufunc.projplot(sortcat['PIXRA'][:1],sortcat['PIXDEC'][:1], 'r.', lonlat=True, coord="C")
+            MaxCoord = SkyCoord(sortcat['PIXRA'][:1],sortcat['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
+            separations = skycoord.separation(MaxCoord)
+            tempmask = separations < (radius + 0.1 * radius) * u.deg
+            tempmask2 = separations > (radius - 0.1  * radius) * u.deg
+            hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'g.', lonlat=True, coord="C",linewidth=0.1)
+            altcoord = np.empty(100)
+            azcoord = np.random.rand(100) * 360
+            #for i in range(0,1):
+            #    altcoord.fill(90-(max_zenith-5*i))
+            #    RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,location=observatory)
+            #    RandomCoord_radec = RandomCoord.transform_to('fk5')
+            #    hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
+            #plt.show()
+            #plt.savefig('%s/Pointing-zencut_%g.png' % (path,counter))
+
     return P_GW, targetCoord, ipixlist,ipixlistHR
 
 def SubstractPointings2D(tpointingFile,prob,nside,FOV,pixlist):
