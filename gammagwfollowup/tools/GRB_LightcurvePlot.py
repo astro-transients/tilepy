@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 import astropy.units as u
 from gammapy.spectrum.models import Absorption
-from gammagwfollowup.include.GWCTAPointingTools import GRB
-from gammagwfollowup.include.GWHESSPointingTools import *
+from gammagwfollowup.include.PointingTools import *
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from scipy import interpolate
