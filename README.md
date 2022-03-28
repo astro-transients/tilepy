@@ -32,4 +32,4 @@ Package including functions to perform GW follow-up scheduling and simulations i
 ## Help
 If any problem is found, please open an Issue in the project main page so it is documented. 
 
-Otherwise you can also contact me at seglararro@lapp.in2p3.fr, or you can create a Pull Request with the new features implemented 
+Otherwise you can also contact me at seglararro@lapp.in2p3.fr, or you can create a Pull Request with the new features implemented.
