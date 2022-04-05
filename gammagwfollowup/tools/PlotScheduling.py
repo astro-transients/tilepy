@@ -1,12 +1,5 @@
-import sys
 import argparse
-import os
-ABS_PATH = os.path.abspath(".").rsplit("/",1)[0]
-sys.path.append(ABS_PATH+'/GW-Followup/include')
-from PointingPlotting import *
-from RankingObservationTimes import *
-sys.path.append('./../include')
-from GWCTAObservationScheduler import *
+from ..include/TilingDetermination import *
 import os
 
 parser = argparse.ArgumentParser(description='Start the CTA GW pointing simulation and analysis (PgwinFov)')

@@ -9,7 +9,7 @@ sys.path.append('/Users/mseglar/Documents/CurrentPhD/CTA/GWCosmos/')
 from gwUtilities import *
 sys.path.append('../GW-Followup/include')
 from PointingTools import *
-from GWHESSObservationScheduler import *
+from TilingDetermination import *
 
 
 
