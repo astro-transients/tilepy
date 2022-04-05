@@ -6,6 +6,7 @@ We clone the repo, create an environment to work, activate the enviroment and in
 
 ```python
 git clone  git@drf-gitlab.cea.fr:multimessenger-IRFU/cta/gw-follow-up-simulations.git 
+cd gw-follow-up-simulations
 conda env create -n gammagwfollowup -f environment.yml
 conda activate gammagwfollowup
 pip install .      
