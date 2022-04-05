@@ -29,86 +29,96 @@ colors = ['b', 'm', 'y', 'c', 'g', 'w', 'k', 'c', 'b', 'c', 'm', 'b', 'g', 'y', 
           'b', 'c', 'm', 'b']
 
 
-def PlotPointingsTogether(prob,time,targetCoord1,n1,targetCoord2,n2,nside, FOV,doplot=True):
+
+def LoadPointingsGW(tpointingFile):
+
+    print("Loading pointings from " + tpointingFile)
+
+    time1,time2, ra, dec = np.genfromtxt(tpointingFile, usecols=(0, 1, 2,3), dtype="str", skip_header=1,
+                                             delimiter=' ',
+                                             unpack=True)  # ra, dec in degrees
+    time1 = np.atleast_1d(time1)
+    time2 = np.atleast_1d(time2)
+    ra = np.atleast_1d(ra)
+    dec = np.atleast_1d(dec)
+
+    time = []
+    for i in range(len(time1)):
+        try:
+            time.append((time1[i] + ' ' + time2[i]).split('"')[1])
+        except IndexError:
+            time.append((time1 + ' ' + time2).split('"')[1])
+            break
+
+    ra = ra.astype(np.float)
+    dec = dec.astype(np.float)
+    coordinates = co.SkyCoord(ra,dec, frame='fk5', unit=(u.deg, u.deg))
+    #pgw = Pgw.astype(np.float)
+    pgw = np.genfromtxt(tpointingFile, usecols=4, skip_header=1,delimiter=' ',unpack=True)
+
+    return time, coordinates , pgw
 
 
-    radius = FOV
-
-    t = 0.5 * np.pi - targetCoord1[0].dec.rad
-    p = targetCoord1[0].ra.rad
-
-    #print('t, p, targetCoord1[0].ra.deg, targetCoord1[0].dec.deg',t, p, targetCoord1[0].ra.deg, targetCoord1[0].dec.deg)
-                                                    
-    xyz = hp.ang2vec(t, p)
-
-    #print(xyz)
-
-    # translate pixel indices to coordinates
-
-    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+def LoadPointingsGAL(tpointingFile):
 
 
-    if (doplot):
-
-        tt, pp = hp.pix2ang(nside, ipix_disc)
-        ra2 = np.rad2deg(pp)
-        dec2 = np.rad2deg(0.5 * np.pi - tt)
-
-        #skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
-        #observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
-
-        #frame = co.AltAz(obstime=time, location=observatory)
-        #altaz_all = skycoord.transform_to(frame)
-
-
-        #path = os.path.dirname(os.path.realpath(__file__)) + '/Pointing_Plotting'
-        #if not os.path.exists(path):
-        #    os.mkdir(path, 493)
-        hp.gnomview(prob, xsize=500, ysize=500, rot=[targetCoord1[0].ra.deg, targetCoord1[0].dec.deg], reso=5.0)
-        #hp.mollview(prob,title="GW prob map (Ecliptic)",coord='C')
-        hp.graticule()
-
-        hp.visufunc.projscatter(targetCoord1.ra.deg, targetCoord1.dec.deg, lonlat=True, marker='.', color=colors[4])
-        hp.visufunc.projscatter(targetCoord2.ra.deg, targetCoord2.dec.deg, lonlat=True, marker='.', color=colors[5])
-
-        #plt.savefig("Pointing_Plotting/G274296Pointing_Comparison_%g_%g:%g.png" % (time.day, time.hour, time.minute))
-        # draw circle of HESS-I FoV around best fit position
-
-        #hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'r.', lonlat=True, coord="E")
-
-        # Draw H.E.S.S. FOV
-        Fov_array = np.empty(400)
-        Fov_array.fill(FOV)
-
-        theta = np.random.rand(400) * 360
-        tarcoordra1= np.empty(400)
-
-        tarcoorddec1 = np.empty(400)
-        for j in range(0,len(targetCoord1.ra)):
-            tarcoordra1.fill(targetCoord1[j].ra.deg)
-            tarcoorddec1.fill(targetCoord1[j].dec.deg)
-            racoord1 = tarcoordra1+ Fov_array* np.cos(theta)
-            deccoord1 = tarcoorddec1+ Fov_array* np.sin(theta)
-            hp.visufunc.projscatter(racoord1, deccoord1, lonlat=True, marker='.',color=colors[2])
-            hp.projtext(targetCoord1[j].ra, targetCoord1[j].dec, str(j), lonlat=True, color=colors[2])
-        #plt.savefig("Pointing_Plotting/G274296Pointing_GW_%g_%g:%g.png" % (time.day, time.hour,time.minute))
-
-        tarcoordra2 = np.empty(400)
-
-        tarcoorddec2 = np.empty(400)
-        for j in range(0, len(targetCoord2.ra)):
-            tarcoordra2.fill(targetCoord2[j].ra.deg)
-            tarcoorddec2.fill(targetCoord2[j].dec.deg)
-            racoord2 = tarcoordra2 + Fov_array * np.cos(theta)
-            deccoord2 = tarcoorddec2 + Fov_array * np.sin(theta)
-            hp.visufunc.projscatter(racoord2, deccoord2, lonlat=True, marker='.', color=colors[1])
-            hp.projtext(targetCoord1[j].ra, targetCoord1[j].dec, str(j), lonlat=True, color=colors[1])
-        #plt.show()
-        #plt.savefig("Pointing_Plotting/PointingFOV_Comparison.png")
+    print("Loading pointings from " + tpointingFile)
+    time1, time2, ra ,dec,Pgw, Pgal = np.genfromtxt(tpointingFile, usecols=(0, 1, 2,3,4,5),dtype= "str" , skip_header=1,delimiter = ' ',
+                                        unpack=True)  # ra, dec in degrees
+    time1 = np.atleast_1d(time1)
+    time2 = np.atleast_1d(time2)
+    ra = np.atleast_1d(ra)
+    dec = np.atleast_1d(dec)
+    time = []
+    for i in range(len(time1)):
+        try:
+            time.append((time1[i] + ' ' + time2[i]).split('"')[1])
+        except IndexError:
+            time.append((time1 + ' ' + time2).split('"')[1])
+            break
+    coordinates=TransformRADec(ra, dec)
+    print(Pgw)
+    Pgw = Pgw.astype(np.float)
+    Pgal = Pgal.astype(np.float)
+    return time, coordinates ,Pgw, Pgal
 
 
-def PlotPointings(prob, time, targetCoord, Totalprob, nside, FOV, maxzenith, observatory, name, dirName,
-                  doplot=True):
+def PointingPlotting(prob, parameters, name,dirName,PointingsFile1):
+
+    # Main parameters
+    obspar = ObservationParameters.from_configfile(parameters)
+
+    npix = len(prob)
+    nside = hp.npix2nside(npix)
+
+    ObservationTimearray1, Coordinates1, Probarray1 = LoadPointingsGW(PointingsFile1)
+
+    Probarray1 = np.atleast_1d(Probarray1)
+
+    print('----------   PLOTTING THE SCHEDULING   ----------')
+    print('Total probability of map 1 that maximises PGW= {0:.5f}'.format(sum(Probarray1)))
+    converted_time1=[]
+    for i in range(0,len(ObservationTimearray1)):
+        time1 = ObservationTimearray1[i]
+        try:
+            converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S.%f'))
+        except ValueError:
+            try:
+                converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S.%f '))
+            except ValueError:
+                converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S'))
+
+
+
+    #PlotPointingsTogether(prob,converted_time1[0],Coordinates1,sum(Probarray1),name1,Coordinates2,sum(Probarray2),name2, nside, obspar.FOV, doplot=True)
+    PlotPointings(prob,converted_time1,Coordinates1,sum(Probarray1), nside, obspar, name, dirName)
+
+
+def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirName):
+
+    FOV = obspar.FOV
+    maxzenith= obspar.max_zenith
+    doplot = obspar.doplot
     radius = FOV
 
     t = 0.5 * np.pi - targetCoord[0].dec.rad
@@ -127,7 +137,7 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, FOV, maxzenith, obs
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
         skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
-        observatory = observatory.Location
+        observatory = obspar.Location
         frame = co.AltAz(obstime=time[0], location=observatory)
         altaz_all = skycoord.transform_to(frame)
 
@@ -312,92 +322,81 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, FOV, maxzenith, obs
         '''
 
 
-def LoadPointingsGW(tpointingFile):
+def PlotPointingsTogether(prob, time, targetCoord1, n1, targetCoord2, n2, nside, FOV, doplot=True):
+    radius = FOV
 
-    print("Loading pointings from " + tpointingFile)
+    t = 0.5 * np.pi - targetCoord1[0].dec.rad
+    p = targetCoord1[0].ra.rad
 
-    time1,time2, ra, dec = np.genfromtxt(tpointingFile, usecols=(0, 1, 2,3), dtype="str", skip_header=1,
-                                             delimiter=' ',
-                                             unpack=True)  # ra, dec in degrees
-    time1 = np.atleast_1d(time1)
-    time2 = np.atleast_1d(time2)
-    ra = np.atleast_1d(ra)
-    dec = np.atleast_1d(dec)
+    # print('t, p, targetCoord1[0].ra.deg, targetCoord1[0].dec.deg',t, p, targetCoord1[0].ra.deg, targetCoord1[0].dec.deg)
 
-    time = []
-    for i in range(len(time1)):
-        try:
-            time.append((time1[i] + ' ' + time2[i]).split('"')[1])
-        except IndexError:
-            time.append((time1 + ' ' + time2).split('"')[1])
-            break
+    xyz = hp.ang2vec(t, p)
 
-    ra = ra.astype(np.float)
-    dec = dec.astype(np.float)
-    coordinates = co.SkyCoord(ra,dec, frame='fk5', unit=(u.deg, u.deg))
-    #pgw = Pgw.astype(np.float)
-    pgw = np.genfromtxt(tpointingFile, usecols=4, skip_header=1,delimiter=' ',unpack=True)
+    # print(xyz)
 
-    return time, coordinates , pgw
+    # translate pixel indices to coordinates
 
+    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
 
-def LoadPointingsGAL(tpointingFile):
+    if (doplot):
 
+        tt, pp = hp.pix2ang(nside, ipix_disc)
+        ra2 = np.rad2deg(pp)
+        dec2 = np.rad2deg(0.5 * np.pi - tt)
 
-    print("Loading pointings from " + tpointingFile)
-    time1, time2, ra ,dec,Pgw, Pgal = np.genfromtxt(tpointingFile, usecols=(0, 1, 2,3,4,5),dtype= "str" , skip_header=1,delimiter = ' ',
-                                        unpack=True)  # ra, dec in degrees
-    time1 = np.atleast_1d(time1)
-    time2 = np.atleast_1d(time2)
-    ra = np.atleast_1d(ra)
-    dec = np.atleast_1d(dec)
-    time = []
-    for i in range(len(time1)):
-        try:
-            time.append((time1[i] + ' ' + time2[i]).split('"')[1])
-        except IndexError:
-            time.append((time1 + ' ' + time2).split('"')[1])
-            break
-    coordinates=TransformRADec(ra, dec)
-    print(Pgw)
-    Pgw = Pgw.astype(np.float)
-    Pgal = Pgal.astype(np.float)
-    return time, coordinates ,Pgw, Pgal
+        # skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
+        # observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
 
+        # frame = co.AltAz(obstime=time, location=observatory)
+        # altaz_all = skycoord.transform_to(frame)
 
-def PointingPlotting(prob, parameters, name,dirName,PointingsFile1):
+        # path = os.path.dirname(os.path.realpath(__file__)) + '/Pointing_Plotting'
+        # if not os.path.exists(path):
+        #    os.mkdir(path, 493)
+        hp.gnomview(prob, xsize=500, ysize=500, rot=[targetCoord1[0].ra.deg, targetCoord1[0].dec.deg], reso=5.0)
+        # hp.mollview(prob,title="GW prob map (Ecliptic)",coord='C')
+        hp.graticule()
 
-    # Main parameters
-    obspar = ObservationParameters.from_configfile(parameters)
+        hp.visufunc.projscatter(targetCoord1.ra.deg, targetCoord1.dec.deg, lonlat=True, marker='.', color=colors[4])
+        hp.visufunc.projscatter(targetCoord2.ra.deg, targetCoord2.dec.deg, lonlat=True, marker='.', color=colors[5])
 
-    #prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
-    npix = len(prob)
-    nside = hp.npix2nside(npix)
+        # plt.savefig("Pointing_Plotting/G274296Pointing_Comparison_%g_%g:%g.png" % (time.day, time.hour, time.minute))
+        # draw circle of HESS-I FoV around best fit position
 
-    ObservationTimearray1, Coordinates1, Probarray1 = LoadPointingsGW(PointingsFile1)
+        # hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'r.', lonlat=True, coord="E")
 
-    Probarray1 = np.atleast_1d(Probarray1)
+        # Draw H.E.S.S. FOV
+        Fov_array = np.empty(400)
+        Fov_array.fill(FOV)
 
-    print('----------   PLOTTING THE SCHEDULING   ----------')
-    print('Total probability of map 1 that maximises PGW= {0:.5f}'.format(sum(Probarray1)))
-    converted_time1=[]
-    for i in range(0,len(ObservationTimearray1)):
-        time1 = ObservationTimearray1[i]
-        try:
-            converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S.%f'))
-        except ValueError:
-            try:
-                converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S.%f '))
-            except ValueError:
-                converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S'))
+        theta = np.random.rand(400) * 360
+        tarcoordra1 = np.empty(400)
+
+        tarcoorddec1 = np.empty(400)
+        for j in range(0, len(targetCoord1.ra)):
+            tarcoordra1.fill(targetCoord1[j].ra.deg)
+            tarcoorddec1.fill(targetCoord1[j].dec.deg)
+            racoord1 = tarcoordra1 + Fov_array * np.cos(theta)
+            deccoord1 = tarcoorddec1 + Fov_array * np.sin(theta)
+            hp.visufunc.projscatter(racoord1, deccoord1, lonlat=True, marker='.', color=colors[2])
+            hp.projtext(targetCoord1[j].ra, targetCoord1[j].dec, str(j), lonlat=True, color=colors[2])
+        # plt.savefig("Pointing_Plotting/G274296Pointing_GW_%g_%g:%g.png" % (time.day, time.hour,time.minute))
+
+        tarcoordra2 = np.empty(400)
+
+        tarcoorddec2 = np.empty(400)
+        for j in range(0, len(targetCoord2.ra)):
+            tarcoordra2.fill(targetCoord2[j].ra.deg)
+            tarcoorddec2.fill(targetCoord2[j].dec.deg)
+            racoord2 = tarcoordra2 + Fov_array * np.cos(theta)
+            deccoord2 = tarcoorddec2 + Fov_array * np.sin(theta)
+            hp.visufunc.projscatter(racoord2, deccoord2, lonlat=True, marker='.', color=colors[1])
+            hp.projtext(targetCoord1[j].ra, targetCoord1[j].dec, str(j), lonlat=True, color=colors[1])
+        # plt.show()
+        # plt.savefig("Pointing_Plotting/PointingFOV_Comparison.png")
 
 
-
-    #PlotPointingsTogether(prob,converted_time1[0],Coordinates1,sum(Probarray1),name1,Coordinates2,sum(Probarray2),name2, nside, obspar.FOV, doplot=True)
-    PlotPointings(prob,converted_time1,Coordinates1,sum(Probarray1), nside, obspar.FOV, obspar.max_zenith, obspar, name, dirName, obspar.doplot)
-
-
-def PointingPlottingGWCTA(filename,name,dirName,PointingsFile,FOV,UseObs):
+def PointingPlottingGWCTA(filename,name, dirName, PointingsFile,FOV,UseObs):
 
     print()
     print('-------------------   PLOTTING SCHEDULE   --------------------')
@@ -410,12 +409,6 @@ def PointingPlottingGWCTA(filename,name,dirName,PointingsFile,FOV,UseObs):
     else:
         print('Observed from the', UseObs)
         observatory = CTANorthObservatory()
-
-    # link to the GW map => will come from the alert message
-    #GWurl = ('https://dcc.ligo.org/P1500071/public/783865_bayestar.fits.gz')
-    #filename = download_file(GWurl, cache=True)
-
-    #filename = '/Users/mseglar/Documents/CurrentPhD/HESS/GW/going-the-distance-o2-skymaps/bayestar/1022203_bayestar.fits.gz'
 
     if ('G' in filename):
         names = filename.split("_")

@@ -78,7 +78,7 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,parameters,dirName):
         NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0,obspar,obspar.MaxNights,obspar.Duration,obspar.MinDuration)
 
     else:
-        NightDarkRuns = NightDarkObservation(ObservationTime0,obspar,obspar.MaxNights,obspar.Duration,obspar.MinDuration)
+        NightDarkRuns = NightDarkObservation(ObservationTime0,obspar)
 
     counter=0
     for j in range(0, len(NightDarkRuns)):
@@ -382,7 +382,7 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName)
     if(obspar.UseGreytime):
         NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0,obspar,obspar.MaxNights,obspar.Duration,obspar.MinDuration)
     else:
-        NightDarkRuns = NightDarkObservation(ObservationTime0,obspar,obspar.MaxNights,obspar.Duration,obspar.MinDuration)
+        NightDarkRuns = NightDarkObservation(ObservationTime0,obspar)
     
     # print('EffectiveRunsTime',len(NightDarkRuns),'being',NightDarkRuns)
     
@@ -551,7 +551,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
     if(obspar.UseGreytime):
         NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0, obspar,obspar.MaxNights,obspar.Duration,obspar.MinDuration)
     else:
-        NightDarkRuns = NightDarkObservation(ObservationTime0,obspar, obspar.MaxNights,obspar.Duration,obspar.MinDuration)
+        NightDarkRuns = NightDarkObservation(ObservationTime0,obspar)
 
     totalProb = 0.
     n = 0
@@ -638,44 +638,17 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
 
 
 def PGWonFoV_WindowsfromIRFs(filename, InputChar, TC, parameters, dirName):
+
     UseObs = InputChar['Observatory']
     run = InputChar['run']
     mergerID = InputChar['MergerID']
     zenith = InputChar['Zenith']
     ObservationTime0 = datetime.datetime.strptime(InputChar['Time'], '%Y-%m-%d %H:%M:%S.%f')
-    # Main parameters
 
-    ##################
-    cfg = parameters
-    parser = ConfigParser()
-    # print("parameters",parameters)
-    print(parser.read(cfg))
-    print(parser.sections())
-    section = 'GWProbDensityIntegration-Parameters'
+    # Main parameters from config
+    obspar = ObservationParameters.from_configfile(parameters)
+    print(obspar)
 
-    try:
-        max_zenith = int(parser.get(section, 'max_zenith'))
-        MaxNights = int(parser.get(section, 'MaxNights'))
-        FOV = float(parser.get(section, 'FOV'))
-        MaxRuns = int(parser.get(section, 'MaxRuns'))
-        MinProbCut = float(parser.get(section, 'MinProbCut'))
-        doplot = (parser.getboolean(section, 'doplot'))
-        Duration = int(parser.get(section, 'Duration'))
-        MinDuration = int(parser.get(section, 'MinDuration'))
-        MinSlewing = int(parser.get(section, 'MinSlewing'))
-        SecondRound = (parser.getboolean(section, 'SecondRound'))
-        PercentCoverage = float(parser.get(section, 'PercentCoverage'))
-        ReducedNside = int(parser.get(section, 'ReducedNside'))
-        HRnside = int(parser.get(section, 'HRnside'))
-        UseGreytime = (parser.getboolean(section, 'UseGreytime'))
-
-    except Exception as x:
-        print(x)
-
-    print('GWProbDensityIntegration-Parameters:', max_zenith, MaxNights, FOV, MaxRuns, MinProbCut, doplot, Duration,
-          MinDuration, SecondRound, PercentCoverage, ReducedNside, HRnside, UseGreytime)
-
-    ##################
 
     # Observatory
     if UseObs == 'South':
@@ -711,13 +684,13 @@ def PGWonFoV_WindowsfromIRFs(filename, InputChar, TC, parameters, dirName):
 
     print('Loading map from ', filename)
     tprob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
-    prob = hp.pixelfunc.ud_grade(tprob, ReducedNside, power=-2)
+    prob = hp.pixelfunc.ud_grade(tprob, obspar.ReducedNside, power=-2)
 
-    nside = ReducedNside
+    nside = obspar.ReducedNside
 
-    highres = hp.pixelfunc.ud_grade(prob, HRnside, power=-2)
+    highres = hp.pixelfunc.ud_grade(prob, obspar.HRnside, power=-2)
     # Create table for 2D probability at 90% containment
-    rapix, decpix, areapix = Get90RegionPixReduced(prob, PercentCoverage, ReducedNside)
+    rapix, decpix, areapix = Get90RegionPixReduced(prob, obspar.PercentCoverage, obspar.ReducedNside)
     radecs = co.SkyCoord(rapix, decpix, frame='fk5', unit=(u.deg, u.deg))
     has3D = True
     if (len(distnorm) == 0):
@@ -743,35 +716,34 @@ def PGWonFoV_WindowsfromIRFs(filename, InputChar, TC, parameters, dirName):
 
     # Else, continue
     # total_followupDelay=0
-    print(totalTime, total_followupDelay, run, mergerID, TC, observatory, zenith)
     # Obtain the times from the comparison to a given spectrum and sensitivities computed by cssens
     # Minimum set to 10 seconds!
     # Starting of observation and duration of observation
-    tstar, tobs = ObtainObservingTimes(totalTime, total_followupDelay, run, mergerID, observatory, zenith)
+    tstar, tobs = ObtainObservingTimes(totalTime, total_followupDelay, run, mergerID, observatory, obspar.zenith)
 
     counter = 0
     # Loop where probabilities are computed comes here
 
     for j in range(0, len(tobs), 1):
-        if (j > MaxRuns):
+        if (j > obspar.MaxRuns):
             break
         else:
             ObservationTime = ObservationTime0 + datetime.timedelta(seconds=tstar[j])
             # print(ObservationTime)
 
-            ObsBool, yprob = ZenithAngleCut(prob, nside, ObservationTime, MinProbCut, max_zenith, observatory.Location,
+            ObsBool, yprob = ZenithAngleCut(prob, nside, ObservationTime, obspar.MinProbCut, obspar.max_zenith, observatory.Location,
                                             False)
             # print(ObsBool)
             if ObsBool:
                 # Round 1
                 # print('Round ',j,'counter',counter)
-                P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(prob, highres, radecs, ReducedNside, HRnside,
-                                                                     MinProbCut, ObservationTime, observatory.Location,
-                                                                     max_zenith, FOV, name, pixlist, ipixlistHR,
+                P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(prob, highres, radecs, obspar.ReducedNside, obspar.HRnside,
+                                                                     obspar.MinProbCut, ObservationTime, observatory.Location,
+                                                                     obspar.max_zenith, obspar.FOV, name, pixlist, ipixlistHR,
                                                                      counter,
-                                                                     dirName, False, doplot)
+                                                                     dirName, False, obspar.doplot)
                 print('P_GW', P_GW)
-                if ((P_GW >= MinProbCut)):
+                if ((P_GW >= obspar.MinProbCut)):
                     P_GWarray.append(np.float('{:1.4f}'.format(np.float(P_GW))))
                     RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
                     DECarray.append(np.float('{:3.4f}'.format(np.float(TC.dec.deg))))
@@ -793,46 +765,20 @@ def PGWonFoV_WindowsfromIRFs(filename, InputChar, TC, parameters, dirName):
     SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, Duration],
                                names=['Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'PGW', 'Duration'])
 
-    return (SuggestedPointings, ObservationTime0, FOV, nside, len(tobs))
+    return (SuggestedPointings, ObservationTime0, obspar.FOV, nside, len(tobs))
 
 
 def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir, outDir):
+
     UseObs = InputChar['Observatory']
     run = InputChar['run']
     mergerID = InputChar['MergerID']
     # zenith=InputChar['Zenith']
     ObservationTime0 = datetime.datetime.strptime(InputChar['Time'], '%Y-%m-%d %H:%M:%S')
-    # Main parameters
 
-    ##################
-
-    cfg = parameters
-    parser = ConfigParser()
-    print(parser.read(cfg))
-    print(parser.sections())
-    section = 'GWProbDensityIntegration-Parameters'
-
-    try:
-        max_zenith = int(parser.get(section, 'max_zenith'))
-        MaxNights = int(parser.get(section, 'MaxNights'))
-        FOV = float(parser.get(section, 'FOV'))
-        MaxRuns = int(parser.get(section, 'MaxRuns'))
-        MinProbCut = float(parser.get(section, 'MinProbCut'))
-        doplot = (parser.getboolean(section, 'doplot'))
-        Duration = int(parser.get(section, 'Duration'))
-        MinDuration = int(parser.get(section, 'MinDuration'))
-        MinSlewing = int(parser.get(section, 'MinSlewing'))
-        SecondRound = (parser.getboolean(section, 'SecondRound'))
-        PercentCoverage = float(parser.get(section, 'PercentCoverage'))
-        ReducedNside = int(parser.get(section, 'ReducedNside'))
-        HRnside = int(parser.get(section, 'HRnside'))
-        UseGreytime = (parser.getboolean(section, 'UseGreytime'))
-
-    except Exception as x:
-        print(x)
-
-    print('GWProbDensityIntegration-Parameters:', max_zenith, MaxNights, FOV, MaxRuns, MinProbCut, doplot, Duration,
-          MinDuration, SecondRound, PercentCoverage, ReducedNside, HRnside, UseGreytime)
+    # Main parameters from config
+    obspar = ObservationParameters.from_configfile(parameters)
+    print(obspar)
 
     ##################
     path = outDir + '/PointingPlotting/' + run + '_' + mergerID + '/EvolutionPlot/'
@@ -873,15 +819,16 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
 
     print('Loading map from ', filename)
     tprob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
-    prob = hp.pixelfunc.ud_grade(tprob, ReducedNside, power=-2)
+    prob = hp.pixelfunc.ud_grade(tprob, obspar.ReducedNside, power=-2)
 
-    nside = ReducedNside
+    nside = obspar.ReducedNside
 
-    highres = hp.pixelfunc.ud_grade(prob, HRnside, power=-2)
+    highres = hp.pixelfunc.ud_grade(prob, obspar.HRnside, power=-2)
     # Create table for 2D probability at 90% containment
-    rapix, decpix, areapix = Get90RegionPixReduced(prob, PercentCoverage, ReducedNside)
+    rapix, decpix, areapix = Get90RegionPixReduced(prob, obspar.PercentCoverage, obspar.ReducedNside)
     radecs = co.SkyCoord(rapix, decpix, frame='fk5', unit=(u.deg, u.deg))
     has3D = True
+
     if (len(distnorm) == 0):
         print("Found a generic map without 3D information")
         # flag the event for special treatment
@@ -944,13 +891,13 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
                     ObsBool = False
                     print("The source is not on the temporal FoV of the instrument")
                     break
-                ObsBool, yprob = ZenithAngleCut(prob, nside, checkTime, MinProbCut, max_zenith, observatory.Location,
+                ObsBool, yprob = ZenithAngleCut(prob, nside, checkTime, obspar.MinProbCut, obspar.max_zenith, observatory.Location,
                                                 usegreytime=False)
                 print(checkTime, ObsBool)
                 if (ObsBool == True):
                     StartObsTime = checkTime
-                    print("The first time the GW is observed is", StartObsTime, "MinProbCut", MinProbCut, "max_zenith",
-                          max_zenith)
+                    print("The first time the GW is observed is", StartObsTime, "MinProbCut", obspar.MinProbCut, "max_zenith",
+                          obspar.max_zenith)
                     break
             if (ObsBool):
                 # Get the first 100 clusters of probability for the masked map
@@ -976,9 +923,9 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
                     print("----------------------------")
                     # TO-DO: Need to have a class to set all this parameters for an observation, so there are less arguments passed.
                     P_GW, TC, ObsExp, ZenIni, ZenEnd, ObsCase, pixlist, ipixlistHR = ComputeProbability2D_SelectClusters(
-                        prob, highres, radecs, ReducedNside, HRnside,
-                        MinProbCut, TotalExposure, StartObsTime, DelayObs, interObsSlew, observatory,
-                        max_zenith, FOV, run, mergerID, pixlist, ipixlistHR, counter, datasetDir, outDir, False, False)
+                        prob, highres, radecs, obspar.ReducedNside, obspar.HRnside,
+                        obspar.MinProbCut, TotalExposure, StartObsTime, DelayObs, interObsSlew, observatory,
+                        obspar.max_zenith, obspar.FOV, run, mergerID, pixlist, ipixlistHR, counter, datasetDir, outDir, False, False)
                     print("=============")
                     print("P_GW, ObsExp, ZenIni, ZenEnd, ObsCase")
                     print(P_GW, ObsExp, ZenIni, ZenEnd, ObsCase)
@@ -996,7 +943,7 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
 
                     # PreDefWindow.append(predefWind[j])
                     # ObservationTime = ObservationTime0 + datetime.timedelta(seconds=tstar)
-                    if ((P_GW >= MinProbCut)):
+                    if ((P_GW >= obspar.MinProbCut)):
                         print("===== RESULTS ========")
                         print('++++ SCHEDULING OBS +++++')
                         P_GWarray.append(np.float('{:1.4f}'.format(np.float(P_GW))))
@@ -1009,7 +956,7 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
                         Exposure.append(ObsExp)
                         Delay.append(DelayObs)
                         counter = counter + 1
-                    elif ((P_GW <= MinProbCut) and (P_GW > 0)):  # Although OBS AND NIGHT WAS TRUE
+                    elif ((P_GW <= obspar.MinProbCut) and (P_GW > 0)):  # Although OBS AND NIGHT WAS TRUE
                         print("===== RESULTS ========")
                         print('++++ Probability too low +++++')
                         P_GWarray.append(
