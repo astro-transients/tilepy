@@ -75,7 +75,7 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,parameters,dirName):
 
     print('----------   NEW FOLLOW-UP ATTEMPT   ----------')
     if(obspar.UseGreytime):
-        NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0,obspar,obspar.MaxNights,obspar.Duration,obspar.MinDuration)
+        NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0,obspar)
 
     else:
         NightDarkRuns = NightDarkObservation(ObservationTime0,obspar)
@@ -380,7 +380,7 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName)
     print('MaxRuns: ',MaxRuns,'MinimumProbCutForCatalogue: ', obspar.MinimumProbCutForCatalogue)
 
     if(obspar.UseGreytime):
-        NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0,obspar,obspar.MaxNights,obspar.Duration,obspar.MinDuration)
+        NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0,obspar)
     else:
         NightDarkRuns = NightDarkObservation(ObservationTime0,obspar)
     
@@ -549,7 +549,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
     print('MaxRuns: ', MaxRuns, 'MinimumProbCutForCatalogue: ', obspar.MinimumProbCutForCatalogue)
 
     if(obspar.UseGreytime):
-        NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0, obspar,obspar.MaxNights,obspar.Duration,obspar.MinDuration)
+        NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0, obspar)
     else:
         NightDarkRuns = NightDarkObservation(ObservationTime0,obspar)
 
