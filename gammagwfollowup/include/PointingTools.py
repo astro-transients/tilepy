@@ -537,6 +537,18 @@ class ObservationParameters(object):
 
 ######################################################
 
+def getdate(x):
+    if isinstance(x, datetime.datetime):
+        return x
+    elif isinstance(x, str):
+        return datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+    else:
+        print("ERROR: something is wrong with the format of the date: ", x)
+        return None
+
+
+
+
 def LoadHealpixMap(thisfilename):
     '''Download aLIGO HEALpix map and keep in cache
         RETURNS:

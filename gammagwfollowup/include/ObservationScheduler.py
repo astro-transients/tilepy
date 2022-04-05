@@ -8,7 +8,7 @@ from .TilingDetermination import PGWinFoV, PGalinFoV
 from .RankingObservationTimes import RankingTimes, RankingTimes_SkyMapInput_2D
 from .PointingPlotting import PointingPlotting
 from astropy.coordinates import SkyCoord
-from .PointingTools import Tools, LoadGalaxies
+from .PointingTools import Tools, LoadGalaxies, getdate
 from astropy.io import fits, ascii
 import time
 import healpy as hp
@@ -18,17 +18,10 @@ import datetime
 import os
 
 
-def getdate(x):
-    if isinstance(x, datetime.datetime):
-        return x
-    elif isinstance(x, str):
-        return datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-    else:
-        print("ERROR: something is wrong with the format of the date: ", x)
-        return None
 
 
 def GetSchedule_GW(URL, date,datasetDir,outDir):
+
     targetType = 'GW_Pointing'
 
     filename = URL.split("/")[-1]

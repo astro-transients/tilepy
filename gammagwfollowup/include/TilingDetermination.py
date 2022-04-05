@@ -649,7 +649,6 @@ def PGWonFoV_WindowsfromIRFs(filename, InputChar, TC, parameters, dirName):
     obspar = ObservationParameters.from_configfile(parameters)
     print(obspar)
 
-
     # Observatory
     if UseObs == 'South':
         print('Observed form the', UseObs)
