@@ -8,7 +8,7 @@ from .TilingDetermination import PGWinFoV, PGalinFoV
 from .RankingObservationTimes import RankingTimes, RankingTimes_SkyMapInput_2D
 from .PointingPlotting import PointingPlotting
 from astropy.coordinates import SkyCoord
-from .PointingTools import Tools, LoadGalaxies, getdate
+from .PointingTools import Tools, LoadGalaxies, getdate, GetGBMMap, GetGWMap, Check2Dor3D
 from astropy.io import fits, ascii
 import time
 import healpy as hp
@@ -23,48 +23,8 @@ import os
 def GetSchedule_GW(URL, date,datasetDir,outDir):
 
     targetType = 'GW_Pointing'
-
-    filename = URL.split("/")[-1]
-    print("The filename is ", filename)
-    try:
-        fits_map_url = URL
-        ##fits_map_url = self.What["GW_SKYMAP"]['skymap_fits']['value']
-        command = 'curl %s -o %s' % (fits_map_url, filename)
-        print(command)
-        os.system(command)
-    except x:
-        warn = "Caught exeption: %s" % x
-        print(warn)
-        pass
-
-    distnorm = []
-    tdistmean = 0
-    fitsfile = fits.open(filename)
-    if (fitsfile[1].header['TFIELDS'] == 4):
-        prob, distmu, distsigma, distnorm = hp.read_map(filename,
-                                                        field=range(4))
-        tdistmean = fitsfile[1].header['DISTMEAN']
-    else:
-        prob = hp.read_map(filename, field=range(1))
-
-    has3D = True
-    if len(distnorm) == 0:
-        has3D = False
-
-    npix = len(prob)
-    NSide = hp.npix2nside(npix)
-    MaxPix = np.argmax(prob)
-    MaxTheta, MaxPhi = hp.pix2ang(NSide, MaxPix)
-    raMax = np.rad2deg(MaxPhi)
-    decMax = np.rad2deg(0.5 * np.pi - MaxTheta)
-    c_icrs = SkyCoord(raMax, decMax, frame='fk5', unit=(u.deg, u.deg))
-
-    InsidePlane = Tools.GalacticPlaneBorder(c_icrs)
-    if InsidePlane:
-        has3D = False
-
-    if tdistmean > 150:
-        has3D = False
+    fitsMap, filename = GetGWMap(URL)
+    prob, has3D = Check2Dor3D(fitsMap,filename)
 
     name = URL.split('/')[-3]
 
@@ -151,78 +111,8 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
 
 def GetSchedule_GBM(URL, date,datasetDir,outDir):
     targetType = 'GBM_Pointing'
-
-
-    filename = URL.split("/")[-1]
-    filename = filename.split(".")[0]
-    filename = "./" + filename + ".fits"
-    # filename = "glg_healpix_all_bn211130636_2.fits"
-    print("The filename is ", filename)
-    try:
-        fits_map_url_intial = URL
-        fits_map_url1 = fits_map_url_intial.split("/")
-        fits_map_url2 = fits_map_url_intial.split("_")[-1]
-        # fits_map_url1[-1] = ""
-        i = 0
-        fits_map_url = ""
-        for i in range(len(fits_map_url1) - 1):
-            fits_map_url += fits_map_url1[i] + "/"
-        fits_map_url += "glg_healpix_all" + "_" + fits_map_url2.split(".")[0] + ".fit"
-
-        # command = 'curl %s -o %s' % (fits_map_url, filename)
-        # print(command)
-        # os.system(command)
-        # should fix this issue to save the fits file ... then comment the following line.
-        filename = fits_map_url
-    except:
-        warn = "Caught exception: "
-        print(warn)
-        pass
-
-    distnorm = []
-    tdistmean = 0
-    print('Filename is ', filename)
-
-    delay = 0
-    d = 0
-    while delay == 0:
-        delay = 1
-        d = d + 1
-        try:
-            fitsfile = fits.open(filename)
-        except:
-            print('map is not uploaded yet... Waiting for minute:', d)
-            time.sleep(60)
-            delay = 0
-            if d > 20:
-                print("Waited for 20 minutes... can't wait anymore... I'm leaving")
-                break
-
-    if (fitsfile[1].header['TFIELDS'] == 4):
-        prob, distmu, distsigma, distnorm = hp.read_map(filename,field=range(4))
-        tdistmean = fitsfile[1].header['DISTMEAN']
-    else:
-        prob = hp.read_map(filename, field=range(1))
-
-    has3D = True
-    if len(distnorm) == 0:
-        has3D = False
-
-    # Check if max pix is in the Galactic Plane
-    npix = len(prob)
-    NSide = hp.npix2nside(npix)
-    MaxPix = np.argmax(prob)
-    MaxTheta, MaxPhi = hp.pix2ang(NSide, MaxPix)
-    raMax = np.rad2deg(MaxPhi)
-    decMax = np.rad2deg(0.5 * np.pi - MaxTheta)
-    c_icrs = SkyCoord(raMax, decMax, frame='fk5', unit=(u.deg, u.deg))
-
-    InsidePlane = Tools.GalacticPlaneBorder(c_icrs)
-    if InsidePlane:
-        has3D = False
-
-    if tdistmean > 150:
-        has3D = False
+    fitsMap, filename = GetGBMMap(URL)
+    prob, has3D = Check2Dor3D(fitsMap,filename)
 
     # filename=args.name
     name = URL.split('/')[-3]
@@ -298,4 +188,37 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
+
+def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
+    targetType = 'Tiling'
+
+    if Type == 'gbm':
+        fitsfile = GetGBMMap(URL)
+
+    else:
+        fitsfile = GetGWMAP(URL)
+
+    has3D = Check2Dor3D(fitsfile)
+
+
+    name = URL.split('/')[-3]
+    print("===========================================================================================")
+    PointingsFile = "False"
+    galaxies = datasetDir + "/GLADE.txt"
+    parameters = []
+
+    j = 0
+    for i in ObsArray:
+        parameters.append("./configs/FollowupParameters_%s.ini" %i)
+    print(parameters)
+
+    if has3D:
+        print("Will do that later")
+    else:
+        print("Will do that now")
+        #PGWinFoV_NObs(parameters,parameters,parameters,parameters,ObsArray)
+
+
+
+    #SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, parameters, dirName)
 

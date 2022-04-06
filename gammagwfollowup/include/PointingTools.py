@@ -547,6 +547,104 @@ def getdate(x):
         return None
 
 
+def GetGBMMap(URL):
+    
+    filename = URL.split("/")[-1]
+    filename = filename.split(".")[0]
+    filename = "./" + filename + ".fits"
+    # filename = "glg_healpix_all_bn211130636_2.fits"
+    print("The filename is ", filename)
+    try:
+        fits_map_url_intial = URL
+        fits_map_url1 = fits_map_url_intial.split("/")
+        fits_map_url2 = fits_map_url_intial.split("_")[-1]
+        # fits_map_url1[-1] = ""
+        i = 0
+        fits_map_url = ""
+        for i in range(len(fits_map_url1) - 1):
+            fits_map_url += fits_map_url1[i] + "/"
+        fits_map_url += "glg_healpix_all" + "_" + fits_map_url2.split(".")[0] + ".fit"
+
+        # command = 'curl %s -o %s' % (fits_map_url, filename)
+        # print(command)
+        # os.system(command)
+        # should fix this issue to save the fits file ... then comment the following line.
+        filename = fits_map_url
+    except:
+        warn = "Caught exception: "
+        print(warn)
+        pass
+
+    delay = 0
+    d = 0
+    while delay == 0:
+        delay = 1
+        d = d + 1
+        try:
+          fitsfile = fits.open(filename)
+        except:
+            print('map is not uploaded yet... Waiting for minute:', d)
+            time.sleep(60)
+            delay = 0
+            if d > 20:
+                print("Waited for 20 minutes... can't wait anymore... I'm leaving")
+                break
+
+    return fitsfile, filename
+
+
+def GetGWMap(URL):
+
+    filename = URL.split("/")[-1]
+    print("The filename is ", filename)
+    try:
+        fits_map_url = URL
+        ##fits_map_url = self.What["GW_SKYMAP"]['skymap_fits']['value']
+        command = 'curl %s -o %s' % (fits_map_url, filename)
+        print(command)
+        os.system(command)
+    except x:
+        warn = "Caught exeption: %s" % x
+        print(warn)
+        pass
+
+    fitsfile = fits.open(filename)
+
+    return fitsfile, filename
+
+
+def Check2Dor3D(fitsfile,filename):
+
+    distnorm = []
+    tdistmean = 0
+    fitsfile = fits.open(filename)
+    if (fitsfile[1].header['TFIELDS'] == 4):
+        prob, distmu, distsigma, distnorm = hp.read_map(filename,
+                                                        field=range(4))
+        tdistmean = fitsfile[1].header['DISTMEAN']
+    else:
+        prob = hp.read_map(fitsfile, field=range(1))
+
+    has3D = True
+    if len(distnorm) == 0:
+        has3D = False
+
+    npix = len(prob)
+    NSide = hp.npix2nside(npix)
+    MaxPix = np.argmax(prob)
+    MaxTheta, MaxPhi = hp.pix2ang(NSide, MaxPix)
+    raMax = np.rad2deg(MaxPhi)
+    decMax = np.rad2deg(0.5 * np.pi - MaxTheta)
+    c_icrs = SkyCoord(raMax, decMax, frame='fk5', unit=(u.deg, u.deg))
+
+    InsidePlane = Tools.GalacticPlaneBorder(c_icrs)
+    if InsidePlane:
+        has3D = False
+
+    if tdistmean > 150:
+        has3D = False
+
+    return prob, has3D
 
 
 def LoadHealpixMap(thisfilename):
