@@ -25,3 +25,11 @@ else:
 
 ############################################
 
+def PGWinFoV_NObs(filename,PointingFile,parameters,dirName, ObsArray):
+    j = 0
+    for i in range(len(ObsArray)):
+        globals()[ObsArray[j]] = ObservationParameters.from_configfile(parameters[i])
+        print(LST)
+        j+=1
+
+    return None
