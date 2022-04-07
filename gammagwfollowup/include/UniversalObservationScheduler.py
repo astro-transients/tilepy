@@ -25,11 +25,24 @@ else:
 
 ############################################
 
-def PGWinFoV_NObs(filename,PointingFile,parameters,dirName, ObsArray):
+def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName, ObsArray):
+    
+    FirstDark = np.full(len(ObsArray), False, dtype=bool)
+    FirstDark_Flag = np.full(len(ObsArray), False, dtype=bool)
+    obs_time = ObservationTime0
+    obs = np.zeros(len(ObsArray))
+
     j = 0
-    for i in range(len(ObsArray)):
-        globals()[ObsArray[j]] = ObservationParameters.from_configfile(parameters[i])
-        print(LST)
+    for obspar in ObsArray:
+        globals()[obspar] = ObservationParameters.from_configfile(parameters[j])
+
+        dark_at_start =False
+        if globals()[obspar].UseGreytime:
+          dark_at_start = Tools.IsDarkness(obs_time, globals()[obspar])
+        if not globals()[obspar].UseGreytime:
+          dark_at_start = Tools.IsGreyness(obs_time, globals()[obspar])
+        FirstDark[j] = dark_at_start
+
         j+=1
 
     return None

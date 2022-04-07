@@ -30,23 +30,35 @@ def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
 
     prob, has3D = Check2Dor3D(fitsMap,filename)
 
-
-    name = URL.split('/')[-3]
+    
     print("===========================================================================================")
+    name = URL.split('/')[-3]
     PointingsFile = "False"
-    galaxies = datasetDir + "/GLADE.txt"
     parameters = []
+    ObservationTime = date
+    outputDir = "%s/%s" % (outDir, name)
+    dirName = '%s/PGWinFoV_NObs' % outputDir
 
-    j = 0
+    if not os.path.exists(dirName):
+        os.makedirs(dirName)
+
     for i in ObsArray:
         parameters.append("./configs/FollowupParameters_%s.ini" %i)
-    print(parameters)
+    print("===========================================================================================")
+    print("Starting the IACTs GW - 2D pointing calculation with the following parameters\n")
+    print("Filename: ", name)
+    print("Date: ", ObservationTime)
+    print("Previous pointings: ", PointingsFile)
+    print("Parameters: ", parameters)
+    print("Dataset: ", datasetDir)
+    print("Output: ", outputDir)
+
 
     if has3D:
         print("Will do that later")
     else: 
         print("Will do that now")
-        #PGWinFoV_NObs(parameters,parameters,parameters,parameters,ObsArray)
+        PGWinFoV_NObs(filename, ObservationTime, PointingsFile, parameters, dirName, ObsArray)
 
 
 
