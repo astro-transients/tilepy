@@ -37,10 +37,10 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
     ObsParameters = []
 
     j = 0
-    for obspar in ObsArray:
+    for obspar1 in ObsArray:
 
-        globals()[obspar] = ObservationParameters.from_configfile(parameters[j])
-        ObsParameters.append(globals()[obspar])
+        globals()[obspar1] = ObservationParameters.from_configfile(parameters[j])
+        ObsParameters.append(globals()[obspar1])
 
         dark_at_start =False
         if ObsParameters[j].UseGreytime:
@@ -83,6 +83,101 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
     for i in range(len(ActiveObs)): #THIS IS NOT OPTIMAL AND NEEDS CHANGING
       NewActiveObs[i] = ActiveObs[ind[i]]
 
+    #START
+#################################################################################################################################################
+    name = filename.split('.')[0].split('/')[-1]
+    random.seed()
+    RAarray = []
+    DECarray = []
+    pixlist = []
+    ipixlistHR = []
+    pixlist1 = []
+    ipixlistHR1=[]
+    P_GWarray = []
+    ObservationTimearray= []
+    Round = []
+#################################################################################################################################################
+    obspar = ObsParameters[0]
+    tprob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
+    prob = hp.pixelfunc.ud_grade(tprob,obspar.ReducedNside,power=-2)
+    nside = obspar.ReducedNside
+    highres=hp.pixelfunc.ud_grade(prob, obspar.HRnside, power=-2)
+    # Create table for 2D probability at 90% containment
+    rapix, decpix,areapix=Get90RegionPixReduced(prob,obspar.PercentCoverage,obspar.ReducedNside)
+    radecs= co.SkyCoord(rapix,decpix, frame='fk5', unit=(u.deg, u.deg))
+    #Add observed pixels to pixlist
+    if (PointingsFile=='False'):
+       print('No pointings were given to be substracted')
+    else:
+        pixlist,P_GW=SubstractPointings2D(PointingsFile,prob,obspar.ReducedNside,obspar.FOV,pixlist)
+        print('Already observed probability =',P_GW)
+#################################################################################################################################################
+    ITERATION_OBS = 0
+    TIME_MIN_ALL = []
+    TIME_MIN = obs_time + datetime.timedelta(hours=12)
+    NewActiveObsTime = NewActiveObsStart
+    NUMBER_OBS = np.zeros(len(NewActiveObs))
+#################################################################################################################################################
+    counter=0
+    while (i < 50) & any(SameNight):
+      for j in range(len(NewActiveObs)):
+        obspar = NewActiveObs[j]
+        ObservationTime = NewActiveObsTime[j]
+        if ITERATION_OBS == len(ObsArray):
+          TIME_MIN_ALL = []
+          ITERATION_OBS = 0
+
+        ITERATION_OBS += 1
+
+        if (TIME_MIN >= NewActiveObsTime[j]) & SameNight[j]:
+          ObsBool,yprob=ZenithAngleCut(prob,nside,ObservationTime,obspar.MinProbCut,obspar.max_zenith,obspar.Location,obspar.UseGreytime)
+          if ObsBool:
+            # Round 1
+            P_GW,TC,pixlist,ipixlistHR = ComputeProbability2D(prob,highres,radecs,obspar.ReducedNside,obspar.HRnside,obspar.MinProbCut,ObservationTime,obspar.Location,obspar.max_zenith,obspar.FOV,name,pixlist,ipixlistHR,counter,dirName,obspar.UseGreytime,obspar.doplot)
+            if ((P_GW <= obspar.MinProbCut)and obspar.SecondRound):
+                #Try Round 2
+                #print('The minimum probability cut being', MinProbCut * 100, '% is, unfortunately, not reached.')
+                yprob1=highres
+                P_GW, TC, pixlist1,ipixlistHR1 = ComputeProbability2D(prob,yprob1,radecs, nside,obspar.ReducedNside,obspar.HRnside,obspar.PercentCoverage, ObservationTime,obspar.Location, obspar.max_zenith,obspar.FOV, name, pixlist1,ipixlistHR1, counter,dirName,obspar.UseGreytime,obspar.doplot)
+                if ((P_GW <= obspar.MinProbCut)):
+                  print('Fail')
+                else:
+                  Round.append(2)
+                  P_GWarray.append(P_GW)
+                  RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
+                  DECarray.append(np.float('{:3.4f}'.format(np.float(TC.dec.deg))))
+                  ObservationTimearray.append(ObservationTime)
+                  counter = counter + 1
+
+            elif(P_GW >= obspar.MinProbCut):
+              Round.append(1)
+              P_GWarray.append(np.float('{:1.4f}'.format(np.float(P_GW))))
+              RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
+              DECarray.append(np.float('{:3.4f}'.format(np.float(TC.dec.deg))))
+              ObservationTimearray.append(ObservationTime)
+              counter=counter+1
+
+
+          #HERE WE DETERMINE THE OBSERVATION DURATION ... FOR NOW WE USE 30 MINS FOR ALL
+          NewActiveObsTime[j] = NewActiveObsTime[j] + datetime.timedelta(minutes=30)
+
+
+          #HERE WE DETERMINE IF WE ARE STILL IN THE SAME NIGHT FOR THIS OBSERVATORY
+          if (NewActiveObsTime[j] > Tools.NextSunrise(NewActiveObsStart[j], NewActiveObs[j])) | (NewActiveObsStart[j] > Tools.NextMoonrise(obs_time, NewActiveObs[j])):
+            SameNight[j] = False
+
+          NUMBER_OBS[j] += 1
+
+          if SameNight[j]:
+            TIME_MIN = NewActiveObsTime[j]
+            TIME_MIN_ALL.append(TIME_MIN)
+            TIME_MIN = np.min(TIME_MIN_ALL)
+          else: 
+            TIME_MIN = TIME_MIN + datetime.timedelta(hours=12)
+      
+      i+=1
+    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,Round], names=['Observation Time UTC','RA(deg)','DEC(deg)','PGW','Round'])
+    print(SuggestedPointings)
 
 
 
