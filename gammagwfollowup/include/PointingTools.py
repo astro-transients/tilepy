@@ -44,7 +44,7 @@ iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 #   Global parameters about darkness criteria   #
 #################################################
 # max sun and moon altitude in degrees.
-cfg = "./configs/FollowupParameters.ini"
+cfg = "./configs/FollowupParameters_LST.ini"
 parser = ConfigParser()
 parser.read(cfg)
 parser.sections()
