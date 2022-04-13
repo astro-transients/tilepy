@@ -40,30 +40,6 @@ iers_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), '../dataset
 iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 #iers.IERS.iers_table = iers.IERS_A.open(download_file(iers_url_mirror, cache=True))
 
-#################################################
-#   Global parameters about darkness criteria   #
-#################################################
-# max sun and moon altitude in degrees.
-cfg = "./configs/FollowupParameters.ini"
-parser = ConfigParser()
-parser.read(cfg)
-parser.sections()
-section = 'visibility'
-
-try:
-    gSunDown = int(parser.get(section, 'gSunDown'))
-    HorizonSun = parser.get(section, 'HorizonSun')
-    gMoonDown = float(parser.get(section, 'gMoonDown'))
-    HorizonMoon = (parser.get(section, 'HorizonMoon'))
-    gMoonGrey = int(parser.get(section, 'gMoonGrey')) # Altitude in degrees
-    gMoonPhase = int(parser.get(section, 'gMoonPhase'))  # Phase in %
-    MoonSourceSeparation = int(parser.get(section, 'MoonSourceSeparation')) # Separation in degrees
-    MaxMoonSourceSeparation = int(parser.get(section, 'MaxMoonSourceSeparation'))  # Max separation in degrees
-
-except Exception as x:
-    print(x)
-
-######################################################
 
 ##                      Classes                     ##
 
@@ -104,9 +80,11 @@ class Tools:
         '''
 
     @classmethod
-    def IsDarkness(cls, obsTime,obsSite):
-        sunAlt = Tools.SunAlt(obsTime,obsSite)
-        moonAlt = Tools.MoonAlt(obsTime,obsSite)
+    def IsDarkness(cls, obsTime, obsPar):
+        sunAlt = Tools.SunAlt(obsTime,obsPar)
+        moonAlt = Tools.MoonAlt(obsTime,obsPar)
+        gSunDown = obsPar.gSunDown
+        gMoonDown = obsPar.gMoonDown
         #print(obsTime,sunAlt,moonAlt)
         if sunAlt > gSunDown:
             return False
@@ -116,15 +94,19 @@ class Tools:
         return True
 
     @classmethod
-    def IsGreyness(cls, obsTime,obsSite):
+    def IsGreyness(cls, obsTime,obsPar):
         # SUN altitude
-        sunAlt = Tools.SunAlt(obsTime,obsSite)
+        sunAlt = Tools.SunAlt(obsTime,obsPar)
         # MOON altitude
-        moonAlt = Tools.MoonAlt(obsTime,obsSite)
+        moonAlt = Tools.MoonAlt(obsTime,obsPar)
         # MOON azimuth
         #moonAz = Tools.MoonAz(obsTime,obsSite)
         # MOON phase
-        moonPhase = Tools.MoonPhase(obsTime,obsSite)
+        moonPhase = Tools.MoonPhase(obsTime,obsPar)
+        gSunDown = obsPar.gSunDown
+        gMoonDown = obsPar.gMoonDown
+        gMoonGrey = obsPar.gMoonGrey
+        gMoonPhase = obsPar.gMoonPhase
 
         if sunAlt > gSunDown:
             return False
@@ -135,12 +117,12 @@ class Tools:
         return True
 
     @classmethod
-    def MoonPhase(cls, obsTime, obsSite):
+    def MoonPhase(cls, obsTime, obsPar):
         moon = ephem.Moon()
         obs = ephem.Observer()
-        obs.lon = str(obsSite.Lon / u.deg)
-        obs.lat = str(obsSite.Lat / u.deg)
-        obs.elev = obsSite.Height / u.m
+        obs.lon = str(obsPar.Lon / u.deg)
+        obs.lat = str(obsPar.Lat / u.deg)
+        obs.elev = obsPar.Height / u.m
         obs.date = obsTime
         moon.compute(obs)
 
@@ -151,21 +133,21 @@ class Tools:
 
 
     @classmethod
-    def SunAlt(cls, obsTime,obsSite):
+    def SunAlt(cls, obsTime,obsPar):
         sun = get_sun(Time(obsTime)).transform_to(AltAz(obstime=Time(obsTime),
-                                                        location=obsSite.Location))
+                                                        location=obsPar.Location))
         #print(Time(obsTime),obsSite.Location)
         #print(get_sun(Time(obsTime)))
         #print(sun.alt/u.deg)
         return sun.alt / u.deg
 
     @classmethod
-    def MoonAlt(cls, obsTime,obsSite):  # THE ERROR IS IN THIS FUNCTION!!!!
+    def MoonAlt(cls, obsTime,obsPar):  # THE ERROR IS IN THIS FUNCTION!!!!
         moon = ephem.Moon()
         obs = ephem.Observer()
-        obs.lon = str(obsSite.Lon / u.deg)
-        obs.lat = str(obsSite.Lat / u.deg)
-        obs.elev = obsSite.Height / u.m
+        obs.lon = str(obsPar.Lon / u.deg)
+        obs.lat = str(obsPar.Lat / u.deg)
+        obs.elev = obsPar.Height / u.m
         obs.date = obsTime
         #print(obs)
         moon.compute(obs)
@@ -186,106 +168,106 @@ class Tools:
         return moon.az * 180 / np.pi
 
     @classmethod
-    def NextSunrise(cls, obsTime,obsSite):
+    def NextSunrise(cls, obsTime,obsPar):
         sun = ephem.Sun()
         obs = ephem.Observer()
-        obs.lon = str(obsSite.Lon / u.deg)
-        obs.lat = str(obsSite.Lat / u.deg)
-        obs.elev = obsSite.Height / u.m
+        obs.lon = str(obsPar.Lon / u.deg)
+        obs.lat = str(obsPar.Lat / u.deg)
+        obs.elev = obsPar.Height / u.m
         obs.date = obsTime
-        obs.horizon = HorizonSun
+        obs.horizon = obsPar.HorizonSun
         sun.compute(obs)
         nextSunrise = obs.next_rising(sun,use_center=True).datetime()
         return nextSunrise
 
     @classmethod
-    def PreviousSunrise(cls, obsTime,obsSite):
+    def PreviousSunrise(cls, obsTime,obsPar):
         sun = ephem.Sun()
         obs = ephem.Observer()
-        obs.lon = str(obsSite.Lon / u.deg)
-        obs.lat = str(obsSite.Lat / u.deg)
-        obs.elev = obsSite.Height / u.m
+        obs.lon = str(obsPar.Lon / u.deg)
+        obs.lat = str(obsPar.Lat / u.deg)
+        obs.elev = obsPar.Height / u.m
         obs.date = obsTime
-        obs.horizon = HorizonSun
+        obs.horizon = obsPar.HorizonSun
         sun.compute(obs)
         previousSunrise = obs.previous_rising(sun,use_center=True).datetime()
         return previousSunrise
 
     @classmethod
-    def NextSunset(cls, obsTime,obsSite):
+    def NextSunset(cls, obsTime,obsPar):
         sun = ephem.Sun()
         obs = ephem.Observer()
-        obs.lon = str(obsSite.Lon / u.deg)
-        obs.lat = str(obsSite.Lat / u.deg)
-        obs.elev = obsSite.Height / u.m
+        obs.lon = str(obsPar.Lon / u.deg)
+        obs.lat = str(obsPar.Lat / u.deg)
+        obs.elev = obsPar.Height / u.m
         obs.date = obsTime
-        obs.horizon = HorizonSun
+        obs.horizon = obsPar.HorizonSun
         sun.compute(obs)
         nextSunset = obs.next_setting(sun,use_center=True).datetime()
         return nextSunset
 
     @classmethod
-    def PreviousMoonrise(cls, obsTime,obsSite):
+    def PreviousMoonrise(cls, obsTime,obsPar):
         moon = ephem.Moon()
         obs = ephem.Observer()
-        obs.lon = str(obsSite.Lon / u.deg)
-        obs.lat = str(obsSite.Lat / u.deg)
-        obs.elev = obsSite.Height / u.m
+        obs.lon = str(obsPar.Lon / u.deg)
+        obs.lat = str(obsPar.Lat / u.deg)
+        obs.elev = obsPar.Height / u.m
         obs.date = obsTime
-        obs.horizon = HorizonMoon
+        obs.horizon = obsPar.HorizonMoon
         # print('NewHorizon=',obs.horizon)
         moon.compute()
         previousMoonrise = obs.previous_rising(moon,use_center=True).datetime()
         return previousMoonrise
 
     @classmethod
-    def NextMoonrise(cls, obsTime,obsSite):
+    def NextMoonrise(cls, obsTime,obsPar):
         moon = ephem.Moon()
         obs = ephem.Observer()
-        obs.lon = str(obsSite.Lon / u.deg)
-        obs.lat = str(obsSite.Lat / u.deg)
-        obs.elev = obsSite.Height / u.m
+        obs.lon = str(obsPar.Lon / u.deg)
+        obs.lat = str(obsPar.Lat / u.deg)
+        obs.elev = obsPar.Height / u.m
         obs.date = obsTime
-        obs.horizon = HorizonMoon
+        obs.horizon = obsPar.HorizonMoon
         moon.compute()
         nextMoonrise = obs.next_rising(moon,use_center=True).datetime()
         return nextMoonrise
 
     @classmethod
-    def PreviousSunset(cls, obsTime,obsSite):
+    def PreviousSunset(cls, obsTime,obsPar):
         sun = ephem.Sun()
         obs = ephem.Observer()
-        obs.lon = str(obsSite.Lon / u.deg)
-        obs.lat = str(obsSite.Lat / u.deg)
-        obs.elev = obsSite.Height / u.m
+        obs.lon = str(obsPar.Lon / u.deg)
+        obs.lat = str(obsPar.Lat / u.deg)
+        obs.elev = obsPar.Height / u.m
         obs.date = obsTime
-        obs.horizon = HorizonSun
+        obs.horizon = obsPar.HorizonSun
         sun.compute()
         previousSunset = obs.previous_setting(sun,use_center=True).datetime()
         return previousSunset
 
     @classmethod
-    def PreviousMoonset(cls, obsTime,obsSite):
+    def PreviousMoonset(cls, obsTime,obsPar):
         moon = ephem.Moon()
         obs = ephem.Observer()
-        obs.lon = str(obsSite.Lon / u.deg)
-        obs.lat = str(obsSite.Lat / u.deg)
-        obs.elev = obsSite.Height / u.m
+        obs.lon = str(obsPar.Lon / u.deg)
+        obs.lat = str(obsPar.Lat / u.deg)
+        obs.elev = obsPar.Height / u.m
         obs.date = obsTime
-        obs.horizon = HorizonMoon
+        obs.horizon = obsPar.HorizonMoon
         moon.compute()
         previousMoonset = obs.previous_setting(moon,use_center=True).datetime()
         return previousMoonset
 
     @classmethod
-    def NextMoonset(cls, obsTime,obsSite):
+    def NextMoonset(cls, obsTime,obsPar):
         moon = ephem.Moon()
         obs = ephem.Observer()
-        obs.lon = str(obsSite.Lon / u.deg)
-        obs.lat = str(obsSite.Lat / u.deg)
-        obs.elev = obsSite.Height / u.m
+        obs.lon = str(obsPar.Lon / u.deg)
+        obs.lat = str(obsPar.Lat / u.deg)
+        obs.elev = obsPar.Height / u.m
         obs.date = obsTime
-        obs.horizon = HorizonMoon
+        obs.horizon = obsPar.HorizonMoon
         moon.compute()
         nextMoonset = obs.next_setting(moon).datetime()
         #print('NextMoonset',nextMoonset)
@@ -294,48 +276,48 @@ class Tools:
         return nextMoonset
 
     @classmethod
-    def TrustingDarknessSun(cls, obsTime,obsSite):
+    def TrustingDarknessSun(cls, obsTime,obsPar):
         DarkObsTime = obsTime
-        referencetime=obsTime
-        while (Tools.IsDarkness(DarkObsTime,obsSite) == False and ((DarkObsTime.hour >= referencetime.hour and DarkObsTime.day == referencetime.day) or (
-                DarkObsTime.hour <= Tools.NextSunrise(referencetime,obsSite).hour and DarkObsTime.day == Tools.NextSunrise(
-                referencetime,obsSite).day))):
+        referencetime = obsTime
+        while (Tools.IsDarkness(DarkObsTime,obsPar) == False and ((DarkObsTime.hour >= referencetime.hour and DarkObsTime.day == referencetime.day) or (
+                DarkObsTime.hour <= Tools.NextSunrise(referencetime,obsPar).hour and DarkObsTime.day == Tools.NextSunrise(
+                referencetime,obsPar).day))):
             DarkObsTime = DarkObsTime + datetime.timedelta(minutes=1)
             #print(Tools.IsDarkness(DarkObsTime,obsSite))
         return DarkObsTime
 
     @classmethod
-    def TrustingGreynessSun(cls, obsTime,obsSite):
+    def TrustingGreynessSun(cls, obsTime,obsPar):
         GreyObsTime = obsTime
-        referencetime=obsTime
-        while (Tools.IsGreyness(GreyObsTime,obsSite) == False and ((GreyObsTime.hour >= referencetime.hour and GreyObsTime.day == referencetime.day) or (
-                GreyObsTime.hour <= Tools.NextSunrise(referencetime,obsSite).hour and GreyObsTime.day == Tools.NextSunrise(
-                referencetime,obsSite).day))):
+        referencetime = obsTime
+        while (Tools.IsGreyness(GreyObsTime,obsPar) == False and ((GreyObsTime.hour >= referencetime.hour and GreyObsTime.day == referencetime.day) or (
+                GreyObsTime.hour <= Tools.NextSunrise(referencetime,obsPar).hour and GreyObsTime.day == Tools.NextSunrise(
+                referencetime,obsPar).day))):
             GreyObsTime = GreyObsTime + datetime.timedelta(minutes=1)
             #print(Tools.IsDarkness(DarkObsTime,obsSite))
         return GreyObsTime
 
     @classmethod
-    def TrustingDarknessMoon(cls, obsTime, referencetime,obsSite):
+    def TrustingDarknessMoon(cls, obsTime, referencetime,obsPar):
         DarkObsTime = obsTime
         # Make sure that its night
         if ((DarkObsTime.hour >= referencetime.hour and DarkObsTime.day == referencetime.day) or (
-                DarkObsTime.hour <= Tools.NextSunrise(referencetime,obsSite).hour and DarkObsTime.day == Tools.NextSunrise(
-                referencetime,obsSite).day)):
-            while (Tools.IsDarkness(DarkObsTime,obsSite) == False):
+                DarkObsTime.hour <= Tools.NextSunrise(referencetime,obsPar).hour and DarkObsTime.day == Tools.NextSunrise(
+                referencetime,obsPar).day)):
+            while (Tools.IsDarkness(DarkObsTime,obsPar) == False):
                 DarkObsTime = DarkObsTime + datetime.timedelta(minutes=1)
         return DarkObsTime
 
     @classmethod
-    def TrustingGreynessMoon(cls, obsTime, referencetime,obsSite):
+    def TrustingGreynessMoon(cls, obsTime, referencetime,obsPar):
         GreyObsTime = obsTime
         # Make sure that its night
         if ((GreyObsTime.hour >= referencetime.hour and GreyObsTime.day == referencetime.day) or (
-                GreyObsTime.hour <= Tools.NextSunrise(referencetime,obsSite).hour and GreyObsTime.day == Tools.NextSunrise(
-                referencetime,obsSite).day)):
-            while (Tools.IsGreyness(GreyObsTime,obsSite) == True):
+                GreyObsTime.hour <= Tools.NextSunrise(referencetime,obsPar).hour and GreyObsTime.day == Tools.NextSunrise(
+                referencetime,obsPar).day)):
+            while (Tools.IsGreyness(GreyObsTime,obsPar) == True):
                 GreyObsTime = GreyObsTime + datetime.timedelta(minutes=1)
-        if (Tools.IsGreyness(GreyObsTime,obsSite) == False):
+        if (Tools.IsGreyness(GreyObsTime,obsPar) == False):
             if ((GreyObsTime - obsTime)>=datetime.timedelta(minutes=10)):
                 return True, GreyObsTime
             if ((GreyObsTime - obsTime)<datetime.timedelta(minutes=10)):
@@ -349,16 +331,16 @@ class Tools:
         return NamibianTime
 
     @classmethod
-    def NextObservationWindow(cls,time, obsSite):
-        if(Tools.NextSunset(time, obsSite).hour >= time.hour >= Tools.PreviousSunrise(time,obsSite).hour and time.day == Tools.NextSunset(time, obsSite).day):
-            time = Tools.NextSunset(time, obsSite)
+    def NextObservationWindow(cls,time, obsPar):
+        if(Tools.NextSunset(time, obsPar).hour >= time.hour >= Tools.PreviousSunrise(time,obsPar).hour and time.day == Tools.NextSunset(time, obsPar).day):
+            time = Tools.NextSunset(time, obsPar)
             # print('Sunset', time)
-            time = Tools.TrustingGreynessSun(time, obsSite)
+            time = Tools.TrustingGreynessSun(time, obsPar)
             # print('Trusted', time)
-        if(Tools.IsGreyness(time, obsSite) is True):
+        if(Tools.IsGreyness(time, obsPar) is True):
             return time
-        elif ((Tools.IsGreyness(time, obsSite) is False)):
-            time = Tools.TrustingGreynessSun(time, obsSite)
+        elif ((Tools.IsGreyness(time, obsPar) is False)):
+            time = Tools.TrustingGreynessSun(time, obsPar)
             #time=Tools.NextMoonset(time, obsSite)
             return time
         else:
@@ -366,10 +348,9 @@ class Tools:
             return False
 
     @classmethod
-    def CheckWindow(cls,time, obsSite):
-        WindowDuration = datetime.timedelta(minutes=28)
+    def CheckWindow(cls,time, obsPar):
         MinimalWindowDuration = datetime.timedelta(minutes=10)
-        if (Tools.IsDarkness(time, obsSite) is True) and (Tools.IsDarkness(time + MinimalWindowDuration, obsSite) is True):
+        if (Tools.IsDarkness(time, obsPar) is True) and (Tools.IsDarkness(time + MinimalWindowDuration, obsPar) is True):
             Observe = True
         else:
             print('No window found')
@@ -716,9 +697,7 @@ def NightDarkObservation(time, obspar):
         if (Tools.NextSunset(time,obspar).hour >= time.hour >= Tools.PreviousSunrise(
                 time,obspar).hour and time.day == Tools.NextSunset(time,obspar).day):
             time = Tools.NextSunset(time,obspar)
-            #print('POSTTIME',time,'isdarks', Tools.IsDarkness(time,obspar))
             time = Tools.TrustingDarknessSun(time,obspar)
-            #print('POSTPOSTTIME', time, 'isdarks', Tools.IsDarkness(time,obspar))
             isFirstNight = False
         # in case the alert arrives during the night, the last observation night will be the fourth so MaxNights=4
         else:
