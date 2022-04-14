@@ -68,20 +68,22 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
 
     j = 0
     for obspar in ObsArray:
-      print(FirstDark_Flag[j])
       if FirstDark_Flag[j]:
         ActiveObsStart.append(ObsFirstTime[j])
         ActiveObs.append(ObsParameters[j])
         SameNight[j] = True
-
       j+=1
+    print(ActiveObs[0].name, ActiveObs[1].name, ActiveObs[2].name)
+
 
     #Sorting observatories according to their first obsevation time available
     NewActiveObsStart = np.sort(ActiveObsStart)
     NewActiveObs = ActiveObs
     ind = np.argsort(ActiveObsStart)
-    for i in range(len(ActiveObs)): #THIS IS NOT OPTIMAL AND NEEDS CHANGING
-      NewActiveObs[i] = ActiveObs[ind[i]]
+    ind = np.array(ind)
+    NewActiveObs = np.take(ActiveObs, ind)
+    print(NewActiveObs[0].name, NewActiveObs[1].name, NewActiveObs[2].name)
+    print(NewActiveObsStart)
 
     #START
 #################################################################################################################################################
@@ -96,6 +98,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
     P_GWarray = []
     ObservationTimearray= []
     Round = []
+    ObsName = []
 #################################################################################################################################################
     obspar = ObsParameters[0]
     tprob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
@@ -119,9 +122,16 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
     NUMBER_OBS = np.zeros(len(NewActiveObs))
 #################################################################################################################################################
     counter=0
-    while (i < 50) & any(SameNight):
+    #print(SameNight)
+    #print(NewActiveObs[0].name, NewActiveObs[1].name, NewActiveObs[2].name)
+    #print(NewActiveObsTime)
+    i = 0
+    while (i < 500) & any(SameNight):
       for j in range(len(NewActiveObs)):
         obspar = NewActiveObs[j]
+        #print(j)
+        #print(NewActiveObs[0].name)
+        #print(obspar.name)
         ObservationTime = NewActiveObsTime[j]
         if ITERATION_OBS == len(ObsArray):
           TIME_MIN_ALL = []
@@ -134,7 +144,8 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
           if ObsBool:
             # Round 1
             P_GW,TC,pixlist,ipixlistHR = ComputeProbability2D(prob,highres,radecs,obspar.ReducedNside,obspar.HRnside,obspar.MinProbCut,ObservationTime,obspar.Location,obspar.max_zenith,obspar.FOV,name,pixlist,ipixlistHR,counter,dirName,obspar.UseGreytime,obspar.doplot)
-            if ((P_GW <= obspar.MinProbCut)and obspar.SecondRound):
+            #print(P_GW, obspar.name)
+            if ((P_GW <= obspar.MinProbCut) and obspar.SecondRound):
                 #Try Round 2
                 #print('The minimum probability cut being', MinProbCut * 100, '% is, unfortunately, not reached.')
                 yprob1=highres
@@ -147,7 +158,9 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
                   RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
                   DECarray.append(np.float('{:3.4f}'.format(np.float(TC.dec.deg))))
                   ObservationTimearray.append(ObservationTime)
+                  ObsName.append(obspar.name)
                   counter = counter + 1
+                  
 
             elif(P_GW >= obspar.MinProbCut):
               Round.append(1)
@@ -155,7 +168,9 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
               RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
               DECarray.append(np.float('{:3.4f}'.format(np.float(TC.dec.deg))))
               ObservationTimearray.append(ObservationTime)
+              ObsName.append(obspar.name)
               counter=counter+1
+              
 
 
           #HERE WE DETERMINE THE OBSERVATION DURATION ... FOR NOW WE USE 30 MINS FOR ALL
@@ -176,9 +191,8 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
             TIME_MIN = TIME_MIN + datetime.timedelta(hours=12)
       
       i+=1
-    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,Round], names=['Observation Time UTC','RA(deg)','DEC(deg)','PGW','Round'])
-    print(SuggestedPointings)
+
+    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,Round, ObsName], names=['Observation Time UTC','RA(deg)','DEC(deg)','PGW','Round', 'ObsName'])
 
 
-
-    return None
+    return SuggestedPointings
