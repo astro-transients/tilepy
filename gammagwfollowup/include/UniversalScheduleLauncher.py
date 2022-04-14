@@ -58,8 +58,17 @@ def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
         print("Will do that later")
     else: 
         print("Will do that now")
-        PGWinFoV_NObs(filename, ObservationTime, PointingsFile, parameters, dirName, ObsArray)
+        SuggestedPointings = PGWinFoV_NObs(filename, ObservationTime, PointingsFile, parameters, dirName, ObsArray)
 
-
-
-    #SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, parameters, dirName)
+    if (len(SuggestedPointings) != 0):
+        print(SuggestedPointings)
+        FOLLOWUP = True
+        outfilename = '%s/SuggestedPointings_GWOptimisation.txt' % dirName
+        ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
+        print()
+        #for obspar in parameters:
+            #RankingTimes_SkyMapInput_2D(ObservationTime, prob, obspar, targetType, dirName,'%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+            #PointingPlotting(prob, obspar, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+    else:
+        FOLLOWUP = False
+        print('No observations are scheduled')
