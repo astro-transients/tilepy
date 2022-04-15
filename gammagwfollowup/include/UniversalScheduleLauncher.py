@@ -8,7 +8,7 @@ from .UniversalObservationScheduler import PGWinFoV_NObs
 from .RankingObservationTimes import RankingTimes, RankingTimes_SkyMapInput_2D
 from .PointingPlotting import PointingPlotting
 from astropy.coordinates import SkyCoord
-from .PointingTools import Tools, LoadGalaxies, getdate, GetGBMMap, GetGWMap, Check2Dor3D, ObservationParameters
+from .PointingTools import Tools, LoadGalaxies, getdate, GetGBMMap, GetGWMap, Check2Dor3D
 from astropy.io import fits, ascii
 import time
 import healpy as hp
@@ -58,7 +58,7 @@ def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
         print("Will do that later")
     else: 
         print("Will do that now")
-        SuggestedPointings, ObsParameters = PGWinFoV_NObs(filename, ObservationTime, PointingsFile, parameters, dirName, ObsArray)
+        SuggestedPointings = PGWinFoV_NObs(filename, ObservationTime, PointingsFile, parameters, dirName, ObsArray)
 
     if (len(SuggestedPointings) != 0):
         print(SuggestedPointings)
@@ -66,16 +66,9 @@ def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
         outfilename = '%s/SuggestedPointings_GWOptimisation.txt' % dirName
         ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
         print()
-        
         #for obspar in parameters:
-        for j in range(len(parameters)):
-            obspar1 = ObsParameters[j]
-            SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.name]
-            print(SuggestedPointings_1)
-            ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]) , overwrite=True, fast_writer=False)
-            RankingTimes_SkyMapInput_2D(ObservationTime, prob, parameters[j], targetType, dirName,'%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]))
-            PointingPlotting(prob, parameters[j], name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]))
-       
+            #RankingTimes_SkyMapInput_2D(ObservationTime, prob, obspar, targetType, dirName,'%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+            #PointingPlotting(prob, obspar, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
     else:
         FOLLOWUP = False
         print('No observations are scheduled')
