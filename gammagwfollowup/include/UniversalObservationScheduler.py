@@ -82,8 +82,6 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
     ind = np.argsort(ActiveObsStart)
     ind = np.array(ind)
     NewActiveObs = np.take(ActiveObs, ind)
-    print(NewActiveObs[0].name, NewActiveObs[1].name, NewActiveObs[2].name)
-    print(NewActiveObsStart)
 
     #START
 #################################################################################################################################################
@@ -192,7 +190,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
       
       i+=1
 
-    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,Round, ObsName], names=['Observation Time UTC','RA(deg)','DEC(deg)','PGW','Round', 'ObsName'])
+    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,Round, ObsName], names=['Observation Time UTC','RA(deg)','DEC(deg)','PGW','Round','ObsName'])
 
 
-    return SuggestedPointings
+    return SuggestedPointings, ObsParameters

@@ -58,7 +58,7 @@ def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
         print("Will do that later")
     else: 
         print("Will do that now")
-        SuggestedPointings = PGWinFoV_NObs(filename, ObservationTime, PointingsFile, parameters, dirName, ObsArray)
+        SuggestedPointings, ObsParameters = PGWinFoV_NObs(filename, ObservationTime, PointingsFile, parameters, dirName, ObsArray)
 
     if (len(SuggestedPointings) != 0):
         print(SuggestedPointings)
@@ -66,9 +66,15 @@ def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
         outfilename = '%s/SuggestedPointings_GWOptimisation.txt' % dirName
         ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
         print()
+        
         #for obspar in parameters:
-            #RankingTimes_SkyMapInput_2D(ObservationTime, prob, obspar, targetType, dirName,'%s/SuggestedPointings_GWOptimisation.txt' % dirName)
-            #PointingPlotting(prob, obspar, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+        for j in range(len(parameters)):
+            obspar1 = ObsParameters[j]
+            SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.name]
+            print(SuggestedPointings_1)
+            ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]) , overwrite=True, fast_writer=False)
+            RankingTimes_SkyMapInput_2D(ObservationTime, prob, parameters[j], targetType, dirName,'%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]))
+            PointingPlotting(prob, parameters[j], name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]))
     else:
         FOLLOWUP = False
         print('No observations are scheduled')
