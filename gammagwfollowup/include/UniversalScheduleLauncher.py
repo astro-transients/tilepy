@@ -4,7 +4,7 @@
 ############################################################################
 
 
-from .UniversalObservationScheduler import PGWinFoV_NObs
+from .UniversalObservationScheduler import PGWinFoV_NObs, PGalinFoV_NObs
 from .RankingObservationTimes import RankingTimes, RankingTimes_SkyMapInput_2D
 from .PointingPlotting import PointingPlotting
 from astropy.coordinates import SkyCoord
@@ -37,10 +37,7 @@ def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
     parameters = []
     ObservationTime = date
     outputDir = "%s/%s" % (outDir, name)
-    dirName = '%s/PGWinFoV_NObs' % outputDir
-
-    if not os.path.exists(dirName):
-        os.makedirs(dirName)
+    galaxies = datasetDir + "/GLADE.txt"
 
     for i in ObsArray:
         parameters.append("./configs/FollowupParameters_%s.ini" %i)
@@ -55,11 +52,15 @@ def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
 
 
     if has3D:
-        print("Will do that later")
+        dirName = '%s/PGallinFoV' % outputDir
+        if not os.path.exists(dirName):
+            os.makedirs(dirName)
+        SuggestedPointings, cat, ObsParameters = PGalinFoV_NObs(filename, ObservationTime, PointingsFile, galaxies, parameters, dirName, ObsArray)
     else: 
-        print("Will do that now")
+        dirName = '%s/PGWinFoV_NObs' % outputDir
+        if not os.path.exists(dirName):
+            os.makedirs(dirName)
         SuggestedPointings, ObsParameters = PGWinFoV_NObs(filename, ObservationTime, PointingsFile, parameters, dirName, ObsArray)
-
     if (len(SuggestedPointings) != 0):
         print(SuggestedPointings)
         FOLLOWUP = True
