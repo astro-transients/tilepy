@@ -73,7 +73,7 @@ def ObtainObservingTimes(totaltime,delayAlert,run,id,observatory,dirName,zenith)
   ########################################################################
   #site=site[j].strip()
 
-  if observatory.Name=="North":
+  if observatory.name=="North":
         
     if int(zenith)==20:
         # sensitivity CTA North, zenit=20 deg
@@ -309,7 +309,7 @@ def ObtainSingleObservingTimes(TotalExposure, tstart, interObsSlew , run, id, ob
     ########################################################################
     # site=site[j].strip()
 
-    if observatory.Name == "North":
+    if observatory.name == "North":
 
         if int(zenith) == 20:
             # sensitivity CTA North, zenit=20 deg
@@ -500,7 +500,7 @@ def ObtainSingleObservingTimes(TotalExposure, tstart, interObsSlew , run, id, ob
     for j in range(1, maxcounter):
         #t = tstart + m + interObsSlew
         t = tstart + j*steps + interObsSlew
-        print("INCREASE from tstart = ", tstart," to t = ",t, "Total time = ",totaltime)
+        #print("INCREASE from tstart = ", tstart," to t = ",t, "Total time = ",totaltime)
 
         fluencen, errorn = integrate.quad(lambda x: flux(x), tstart, t)  # ph/cm2/GeV
         obst = t - (tstart+interObsSlew)

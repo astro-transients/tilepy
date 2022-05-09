@@ -196,7 +196,7 @@ def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
         fitsfile = GetGBMMap(URL)
 
     else:
-        fitsfile = GetGWMAP(URL)
+        fitsfile = GetGWMap(URL)
 
     has3D = Check2Dor3D(fitsfile)
 

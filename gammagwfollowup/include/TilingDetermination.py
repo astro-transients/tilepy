@@ -14,7 +14,7 @@ import datetime
 import healpy as hp
 import astropy.coordinates as co
 import random
-
+import pytz
 from .ObservingTimes import ObtainObservingTimes
 from six.moves import configparser
 import six
@@ -459,8 +459,6 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName)
 def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, parameters,dirName):
 
     # Main Parameters
-
-    # Main Parameters
     obspar = ObservationParameters.from_configfile(parameters)
     print(obspar)
     ###############################
@@ -773,21 +771,33 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
     run = InputChar['run']
     mergerID = InputChar['MergerID']
     # zenith=InputChar['Zenith']
+    
     ObservationTime0 = datetime.datetime.strptime(InputChar['Time'], '%Y-%m-%d %H:%M:%S')
+    ObservationTime0 = pytz.utc.localize(ObservationTime0)
 
     # Main parameters from config
-    obspar = ObservationParameters.from_configfile(parameters)
-    print(obspar)
+    
+    obspar = ObservationParameters()
+    obspar.from_configfile(parameters)
+
 
     ##################
     path = outDir + '/PointingPlotting/' + run + '_' + mergerID + '/EvolutionPlot/'
     # Observatory
     if UseObs == 'South':
         print('Observed form the', UseObs)
-        observatory = CTASouthObservatory()
+        obspar.name = UseObs
+        obspar.Lon = CTASouthObservatory().Lon
+        obspar.Lat = CTASouthObservatory().Lat
+        obspar.Height = CTASouthObservatory().Height
+        obspar.Location = CTASouthObservatory().Location
     else:
         print('Observed from the', UseObs)
-        observatory = CTANorthObservatory()
+        obspar.name = UseObs
+        obspar.Lon = CTANorthObservatory().Lon
+        obspar.Lat = CTANorthObservatory().Lat
+        obspar.Height = CTANorthObservatory().Height
+        obspar.Location = CTANorthObservatory().Location
 
     # link to the GW map
     name = filename.split('.')[0].split('/')[-1]
@@ -847,7 +857,9 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
     # From the injection time, look for the next window. Time is the time of the first observation
     ObservationTime = ObservationTime0 + datetime.timedelta(seconds=total_followupDelay)
 
-    print("Main info of this scheduling:", totalTime, total_followupDelay, run, mergerID, TC, observatory)
+
+
+    print("Main info of this scheduling:", totalTime, total_followupDelay, run, mergerID, TC, obspar.Location)
 
     TotalNights = 2
     counter = 0
@@ -860,7 +872,9 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
     # case 1 = TstartNight == False
     # case 2 = "The source is not on the temporal FoV of the instrument"
     for nights in range(0, TotalNights):
-        TstartNight = NextWindowTools.NextObservationWindow(time=ObservationTime, obsSite=observatory)
+        TstartNight = NextWindowTools.NextObservationWindow(ObservationTime, obspar)
+        print(ObservationTime.tzinfo)
+        print(ObservationTime0.tzinfo.utcoffset)
         print("TstartNight", TstartNight)
         if (TstartNight == False):
             TendNight = False
@@ -879,7 +893,7 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
             break
         else:
             print("Observations can be allocated")
-            TendNight = NextWindowTools.EndObservationWindow(TstartNight, observatory)
+            TendNight = NextWindowTools.EndObservationWindow(TstartNight, obspar)
             print("Night number", nights, " window starts at", TstartNight, "finishes at", TendNight)
 
             # Look for the first time that the C.R. observable is > 5%
@@ -890,7 +904,7 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
                     ObsBool = False
                     print("The source is not on the temporal FoV of the instrument")
                     break
-                ObsBool, yprob = ZenithAngleCut(prob, nside, checkTime, obspar.MinProbCut, obspar.max_zenith, observatory.Location,
+                ObsBool, yprob = ZenithAngleCut(prob, nside, checkTime, obspar.MinProbCut, obspar.max_zenith, obspar.Location,
                                                 usegreytime=False)
                 print(checkTime, ObsBool)
                 if (ObsBool == True):
@@ -922,9 +936,7 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
                     print("----------------------------")
                     # TO-DO: Need to have a class to set all this parameters for an observation, so there are less arguments passed.
                     P_GW, TC, ObsExp, ZenIni, ZenEnd, ObsCase, pixlist, ipixlistHR = ComputeProbability2D_SelectClusters(
-                        prob, highres, radecs, obspar.ReducedNside, obspar.HRnside,
-                        obspar.MinProbCut, TotalExposure, StartObsTime, DelayObs, interObsSlew, observatory,
-                        obspar.max_zenith, obspar.FOV, run, mergerID, pixlist, ipixlistHR, counter, datasetDir, outDir, False, False)
+                        prob, highres, radecs,  TotalExposure, StartObsTime, DelayObs, interObsSlew, obspar, run, mergerID, pixlist, ipixlistHR, counter, datasetDir, outDir, False, False)
                     print("=============")
                     print("P_GW, ObsExp, ZenIni, ZenEnd, ObsCase")
                     print(P_GW, ObsExp, ZenIni, ZenEnd, ObsCase)
@@ -933,7 +945,7 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
                     # print("PGW", P_GW,'COORDINATES:', TC,'ZENITH CHANGE', ZenIni,'->', ZenEnd)
                     # print("TotalExposure: ",TotalExposure,"DelayObs:",DelayObs, "Observation Number:",counter, "Exposure:", ObsExp)
 
-                    ObservationTimearray.append(StartObsTime)
+                    ObservationTimearray.append(str(StartObsTime).split('.')[0])
 
                     if (ObsCase == 'TimeNotEnoughIte' or ObsCase == 'TimeNotEnough'):
                         StartObsTime = StartObsTime + datetime.timedelta(seconds=ObsExp + interObsSlew + AuxTimeNextTry)
@@ -948,7 +960,7 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
                         P_GWarray.append(np.float('{:1.4f}'.format(np.float(P_GW))))
                         RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
                         DECarray.append(np.float('{:3.4f}'.format(np.float(TC.dec.deg))))
-                        Obsarray.append(observatory.Name)
+                        Obsarray.append(obspar.name)
                         ZenIniarray.append(np.float('{:1.4f}'.format(np.float(ZenIni))))
                         ZenEndarray.append(np.float('{:1.4f}'.format(np.float(ZenEnd))))
                         ObsBoolarray.append('True')
@@ -1001,13 +1013,13 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
     print("===========================================================================================")
     print()
     # List of suggested pointings
-    print("TOTAL POSSIBLE: ", counterTotalPossible, "DONE: ", counter)
+    print("TOTAL POSSIBLE: ", counterTotalPossible, "DONE: ", counter, "Probability: ",np.sum(P_GWarray))
     SuggestedPointings = Table(
         [ObservationTimearray, RAarray, DECarray, Obsarray, P_GWarray, ObsBoolarray, ZenIniarray, ZenEndarray, Exposure,
          Delay],
         names=['Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'Observatory', 'PGW', 'ObsInfo', 'ZenIni', 'ZenEnd',
                'Duration', 'Delay'])
-    return (SuggestedPointings, ObservationTime0, FOV, nside, counter)
+    return (SuggestedPointings, ObservationTime0, obspar, counter)
 
 
 def PGalonFoV_WindowsFromList(filename, galFile, InputObservationList, UseObs, distance, Edistance_max, Edistance_min,
