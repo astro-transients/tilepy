@@ -86,8 +86,10 @@ def LoadPointingsGAL(tpointingFile):
 def PointingPlotting(prob, parameters, name,dirName,PointingsFile1):
 
     # Main parameters
-    obspar = ObservationParameters.from_configfile(parameters)
+    obspar = ObservationParameters()
+    obspar.from_configfile(parameters)
 
+    
     npix = len(prob)
     nside = hp.npix2nside(npix)
 

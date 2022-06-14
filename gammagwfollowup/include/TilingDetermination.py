@@ -31,7 +31,10 @@ else:
 def PGWinFoV(filename,ObservationTime0,PointingFile,parameters,dirName):
 
     # Main parameters
-    obspar = ObservationParameters.from_configfile(parameters)
+
+    obspar = ObservationParameters()
+    obspar.from_configfile(parameters)
+    
     print(obspar)
 
     # link to the GW map
@@ -100,14 +103,14 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,parameters,dirName):
                         P_GWarray.append(P_GW)
                         RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
                         DECarray.append(np.float('{:3.4f}'.format(np.float(TC.dec.deg))))
-                        ObservationTimearray.append(ObservationTime)
+                        ObservationTimearray.append(str(ObservationTime).split('.')[0])
                         counter = counter + 1
                 elif(P_GW >= obspar.MinProbCut):
                     Round.append(1)
                     P_GWarray.append(np.float('{:1.4f}'.format(np.float(P_GW))))
                     RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
                     DECarray.append(np.float('{:3.4f}'.format(np.float(TC.dec.deg))))
-                    ObservationTimearray.append(ObservationTime)
+                    ObservationTimearray.append(str(ObservationTime).split('.')[0])
                     counter=counter+1
         else:
             break
@@ -123,7 +126,7 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,parameters,dirName):
     print("===========================================================================================")
     print()
     # List of suggested pointings
-    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,Round], names=['Observation Time UTC','RA(deg)','DEC(deg)','PGW','Round'])
+    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,Round], names=['Observation Time UTC','RA[deg]','DEC[deg]','PGW','Round'])
     return(SuggestedPointings,ObservationTime0)
 
 def BestCandidateonPGal(filename,ObservationTime0,galFile):
@@ -294,13 +297,15 @@ def BestCandidateonPGal(filename,ObservationTime0,galFile):
     print("===========================================================================================")
     print()
     # List of suggested pointings
-    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,P_GALarray,Round], names=['Observation Time UTC','RA(deg)','Dec(deg)','PGW','Pgal','Round'])
+    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,P_GALarray,Round], names=['Observation Time UTC','RA[deg]','Dec[deg]','PGW','Pgal','Round'])
     return SuggestedPointings,cat
 
 def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName):
     
     # Main Parameters
-    obspar = ObservationParameters.from_configfile(parameters)
+
+    obspar = ObservationParameters()
+    obspar.from_configfile(parameters)
     print(obspar)
 
     
@@ -453,14 +458,15 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName)
     print("===========================================================================================")
     print()
     # List of suggested pointings
-    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,P_GALarray,Round], names=['Observation Time UTC','RA(deg)','DEC(deg)','PGW','Pgal','Round'])
+    SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,P_GALarray,Round], names=['Observation Time UTC','RA[deg]','DEC[deg]','PGW','Pgal','Round'])
     return SuggestedPointings,cat
 
 def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, parameters,dirName):
 
-    # Main Parameters
-    obspar = ObservationParameters.from_configfile(parameters)
-    print(obspar)
+    # Main parameters from config
+
+    obspar = ObservationParameters()
+    obspar.from_configfile(parameters)
     ###############################
 
     # load galaxy catalog from local file
@@ -622,7 +628,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
     print()
     # List of suggested pointings
     SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round],
-                               names=['Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'PGW',
+                               names=['Observation Time UTC', 'RA[deg]', 'DEC[deg]', 'PGW',
                                       'Pgal', 'Round'], )
     print(SuggestedPointings)
     print("Name", name, "Total GW probability covered: ", sum(P_GWarray), "Total Gal probability covered: ", sum(P_GALarray),
@@ -644,7 +650,10 @@ def PGWonFoV_WindowsfromIRFs(filename, InputChar, TC, parameters, dirName):
     ObservationTime0 = datetime.datetime.strptime(InputChar['Time'], '%Y-%m-%d %H:%M:%S.%f')
 
     # Main parameters from config
-    obspar = ObservationParameters.from_configfile(parameters)
+    # Main parameters from config
+
+    obspar = ObservationParameters()
+    obspar.from_configfile(parameters)
     print(obspar)
 
     # Observatory
@@ -760,7 +769,7 @@ def PGWonFoV_WindowsfromIRFs(filename, InputChar, TC, parameters, dirName):
     print()
     # List of suggested pointings
     SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, Duration],
-                               names=['Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'PGW', 'Duration'])
+                               names=['Observation Time UTC', 'RA[deg]', 'DEC[deg]', 'PGW', 'Duration[s]'])
 
     return (SuggestedPointings, ObservationTime0, obspar.FOV, nside, len(tobs))
 
@@ -799,6 +808,7 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
         obspar.Height = CTANorthObservatory().Height
         obspar.Location = CTANorthObservatory().Location
 
+    print(obspar)
     # link to the GW map
     name = filename.split('.')[0].split('/')[-1]
     # if('G' in filename):
@@ -847,7 +857,7 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
 
     # print('----------   NEW FOLLOW-UP ATTEMPT   ----------')
 
-    # Set of delays and slewing times
+    # Set of delays and slewing times in seconds
     totalTime = 172800  # 48h
     followupDelay = 30  # Minimum delay to start observaiton
     SlewingTime = 210  # Slewing to first position
@@ -880,15 +890,17 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
             TendNight = False
             print("Night number", nights, " window starts at", TstartNight, "finishes at", TendNight)
             ObsCase = 'NoDarknessFound'
-            print("===== RESULTS ========")
+            #print("===== RESULTS ========")
             print('++++ No Darkness Time Found +++++')
             ObservationTimearray.append(ObservationTime)
             P_GWarray.append(0)
             RAarray.append(0)
             DECarray.append(0)
+            Obsarray.append(0)
             ZenIniarray.append(0)
             ZenEndarray.append(0)
             Exposure.append(0)
+            Delay.append(0)
             ObsBoolarray.append(ObsCase)
             break
         else:
@@ -900,6 +912,8 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
             TemporalBin = datetime.timedelta(seconds=600)  # Every 10 minutes
             for i in range(0, 24):
                 checkTime = TstartNight + i * TemporalBin
+                print(TendNight, TstartNight)
+                print(TendNight.tzinfo, TstartNight.tzinfo)
                 if ((TendNight - checkTime).total_seconds() < 0):
                     ObsBool = False
                     print("The source is not on the temporal FoV of the instrument")
@@ -955,7 +969,7 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
                     # PreDefWindow.append(predefWind[j])
                     # ObservationTime = ObservationTime0 + datetime.timedelta(seconds=tstar)
                     if ((P_GW >= obspar.MinProbCut)):
-                        print("===== RESULTS ========")
+                        #print("===== RESULTS ========")
                         print('++++ SCHEDULING OBS +++++')
                         P_GWarray.append(np.float('{:1.4f}'.format(np.float(P_GW))))
                         RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
@@ -968,7 +982,7 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
                         Delay.append(DelayObs)
                         counter = counter + 1
                     elif ((P_GW <= obspar.MinProbCut) and (P_GW > 0)):  # Although OBS AND NIGHT WAS TRUE
-                        print("===== RESULTS ========")
+                        #print("===== RESULTS ========")
                         print('++++ Probability too low +++++')
                         P_GWarray.append(
                             0)  # Careful with including the PGW in this case, afterwards is used to compute total PGW and yields to bad results
@@ -981,7 +995,7 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
                         Delay.append(0)
                         ObsBoolarray.append('ProbTooLow')
                     else:
-                        print("===== RESULTS ========")
+                        #print("===== RESULTS ========")
                         print('++++ Probability is Zero +++++')
                         P_GWarray.append(0)
                         RAarray.append(0)
@@ -994,7 +1008,7 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
                         ObsBoolarray.append('ProbZero')
             else:
                 # The event hasnt been found to be on the temporal FoV of the instrument
-                print("===== RESULTS ========")
+                #print("===== RESULTS ========")
                 print('++++ The event is not in temporal FoV of the instrument +++++')
                 ObservationTimearray.append(ObservationTime)
                 P_GWarray.append(0)
@@ -1017,8 +1031,8 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
     SuggestedPointings = Table(
         [ObservationTimearray, RAarray, DECarray, Obsarray, P_GWarray, ObsBoolarray, ZenIniarray, ZenEndarray, Exposure,
          Delay],
-        names=['Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'Observatory', 'PGW', 'ObsInfo', 'ZenIni', 'ZenEnd',
-               'Duration', 'Delay'])
+        names=['Observation Time UTC', 'RA[deg]', 'DEC[deg]', 'Observatory', 'PGW', 'ObsInfo', 'ZenIni[deg]', 'ZenEnd[deg]',
+               'Duration[s]', 'Delay[s]'])
     return (SuggestedPointings, ObservationTime0, obspar, counter)
 
 
@@ -1212,6 +1226,6 @@ def PGalonFoV_WindowsFromList(filename, galFile, InputObservationList, UseObs, d
     print()
     # List of suggested pointings
     SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, PreDefWindow, Round],
-                               names=['Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'PGW', 'Pgal', 'preDefWind',
+                               names=['Observation Time UTC', 'RA[deg]', 'DEC[deg]', 'PGW', 'Pgal', 'preDefWind[s]',
                                       'Round'])
     return SuggestedPointings, cat, FOV, nside

@@ -28,8 +28,6 @@ else:
 
 def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName, ObsArray):
 
-
-
     #Finding the start time for each observatory and checking if it's now    
     FirstDark = np.full(len(ObsArray), False, dtype=bool)
     FirstDark_Flag = np.full(len(ObsArray), False, dtype=bool)
@@ -199,7 +197,8 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
 
 
 def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,dirName, ObsArray):
-    #Finding the start time for each observatory and checking if it's now    
+    
+    #Finding the start time for each observatory and checking if it's now
     FirstDark = np.full(len(ObsArray), False, dtype=bool)
     FirstDark_Flag = np.full(len(ObsArray), False, dtype=bool)
     obs_time = ObservationTime0

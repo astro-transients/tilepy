@@ -31,7 +31,7 @@ iers.IERS.iers_table = iers.IERS_A.open(iers_file)
     gloably defined darkenss criteria:
     max sun and moon altitude in degrees.
     '''
-#################################################
+'''#################################################
 #   Global parameters about darkness criteria   #
 #################################################
 # max sun and moon altitude in degrees.
@@ -53,6 +53,7 @@ try:
 
 except Exception as x:
     print(x)
+'''
 
 
 def load_healpix_map(filename):
@@ -484,7 +485,8 @@ def EvolutionPlot(galPointing,tname):
 def RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName, PointingFile):
 
     # Main parameters
-    obspar = ObservationParameters.from_configfile(parameters)
+    obspar = ObservationParameters()
+    obspar.from_configfile(parameters)
 
     #########################
 
@@ -517,7 +519,9 @@ def RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName
 def RankingTimes_SkyMapInput_2D(ObservationTime, prob, parameters, targetType, dirName, PointingFile):
 
     # Main parameters
-    obspar = ObservationParameters.from_configfile(parameters)
+    obspar = ObservationParameters()
+    obspar.from_configfile(parameters)
+    print(obspar)
 
     ################################################################
 

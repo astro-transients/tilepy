@@ -271,7 +271,7 @@ class Tools:
         obs.date = obsTime   #Requires time in UTC
         obs.horizon = obsPar.HorizonMoon
         moon.compute()
-        nextMoonset = obs.next_setting(moon).datetime()
+        nextMoonset = obs.next_setting(moon,use_center=True).datetime().replace(tzinfo=pytz.utc)
         #print('NextMoonset',nextMoonset)
         previousMoonset = obs.previous_setting(moon,use_center=True).datetime().replace(tzinfo=pytz.utc)
         #print(previousMoonset)
@@ -442,6 +442,9 @@ class ObservationParameters(object):
     def __str__(self):
         txt = ''
         txt += '----------------- Main parsed observation parameters ----------------- \n'.format()
+        txt += 'Observatory: {}\n'.format(self.Lat)
+        txt += 'Observatory: {}\n'.format(self.Lon)
+        txt += 'Observatory: {}\n'.format(self.Height)
         txt += 'Name: {}\n'.format(self.name)
         txt += 'Max zenith: {}\n'.format(self.max_zenith)
         txt += 'FOV: {}\n'.format(self.FOV)
@@ -461,43 +464,43 @@ class ObservationParameters(object):
         parser.sections()
         section = 'observatory'
         self.name = str(parser.get(section, 'name', fallback=None))
-        self.Lat = float(parser.get(section, 'Lat', fallback=0))
-        self.Lon = float(parser.get(section, 'Lon', fallback=0))
-        self.Height = float(parser.get(section, 'Height', fallback=0))
+        self.Lat = float(parser.get(section, 'lat', fallback=0))*u.deg
+        self.Lon = float(parser.get(section, 'lon', fallback=0))*u.deg
+        self.Height = float(parser.get(section, 'height', fallback=0))*u.m
         self.Location = EarthLocation(lat=self.Lat, lon=self.Lon,
                                       height=self.Height)
 
         section = 'visibility'
-        self.gSunDown = int(parser.get(section, 'gSunDown', fallback=0))
-        self.HorizonSun = parser.get(section, 'HorizonSun', fallback=0)
-        self.gMoonDown = float(parser.get(section, 'gMoonDown', fallback=0))
-        self.HorizonMoon = (parser.get(section, 'HorizonMoon', fallback=0))
-        self.gMoonGrey = int(parser.get(section, 'gMoonGrey', fallback=0))  # Altitude in degrees
-        self.gMoonPhase = int(parser.get(section, 'gMoonPhase', fallback=0))  # Phase in %
-        self.MoonSourceSeparation = int(parser.get(section, 'MoonSourceSeparation', fallback=0))  # Separation in degrees
-        self.MaxMoonSourceSeparation = int(parser.get(section, 'MaxMoonSourceSeparation', fallback=0))  # Max separation in degrees
+        self.gSunDown = int(parser.get(section, 'gsundown', fallback=0))
+        self.HorizonSun = parser.get(section, 'horizonsun', fallback=0)
+        self.gMoonDown = float(parser.get(section, 'gmoondown', fallback=0))
+        self.HorizonMoon = (parser.get(section, 'horizonmoon', fallback=0))
+        self.gMoonGrey = int(parser.get(section, 'gmoongrey', fallback=0))  # Altitude in degrees
+        self.gMoonPhase = int(parser.get(section, 'gmoonphase', fallback=0))  # Phase in %
+        self.MoonSourceSeparation = int(parser.get(section, 'moonsourceseparation', fallback=0))  # Separation in degrees
+        self.MaxMoonSourceSeparation = int(parser.get(section, 'maxmoonsourceseparation', fallback=0))  # Max separation in degrees
 
         section = 'operations'
         self.max_zenith = int(parser.get(section, 'max_zenith', fallback=0))
-        self.FOV = float(parser.get(section, 'FOV', fallback=0))
-        self.MaxRuns = int(parser.get(section, 'MaxRuns', fallback=0))
-        self.MaxNights = int(parser.get(section, 'MaxNights', fallback=0))
-        self.Duration = int(parser.get(section, 'Duration', fallback=0))
-        self.MinDuration = int(parser.get(section, 'MinDuration', fallback=0))
-        self.UseGreytime = (parser.getboolean(section, 'UseGreytime', fallback=0))
-        self.MinSlewing = float(parser.get(section, 'MinSlewing', fallback=0))
+        self.FOV = float(parser.get(section, 'fov', fallback=0))
+        self.MaxRuns = int(parser.get(section, 'maxruns', fallback=0))
+        self.MaxNights = int(parser.get(section, 'maxnights', fallback=0))
+        self.Duration = int(parser.get(section, 'duration', fallback=0))
+        self.MinDuration = int(parser.get(section, 'minduration', fallback=0))
+        self.UseGreytime = (parser.getboolean(section, 'usegreytime', fallback=0))
+        self.MinSlewing = float(parser.get(section, 'minslewing', fallback=0))
 
         section = 'tiling'
-        self.online = (parser.getboolean(section,'Online', fallback=None))
-        self.MinimumProbCutForCatalogue = float(parser.get(section, 'MinimumProbCutForCatalogue', fallback=0))
-        self.MinProbCut = float(parser.get(section, 'MinProbCut', fallback=0))
+        self.online = (parser.getboolean(section,'online', fallback=None))
+        self.MinimumProbCutForCatalogue = float(parser.get(section, 'minimumprobcutforcatalogue', fallback=0))
+        self.MinProbCut = float(parser.get(section, 'minprobcut', fallback=0))
         self.doplot = (parser.getboolean(section, 'doplot', fallback=None))
-        self.SecondRound = (parser.getboolean(section, 'SecondRound', fallback=None))
-        self.FulFillReq_Percentage = float(parser.get(section, 'FulFillReq_Percentage', fallback=0))
+        self.SecondRound = (parser.getboolean(section, 'secondround', fallback=None))
+        self.FulFillReq_Percentage = float(parser.get(section, 'fulfillreq_percentage', fallback=0))
         self.PercentCoverage = float(parser.get(section, 'PercentCoverage', fallback=0))
-        self.ReducedNside = int(parser.get(section, 'ReducedNside', fallback=0))
-        self.HRnside = int(parser.get(section, 'HRnside', fallback=0))
-        self.Mangrove = (parser.getboolean(section, 'Mangrove', fallback=None))
+        self.ReducedNside = int(parser.get(section, 'reducednside', fallback=0))
+        self.HRnside = int(parser.get(section, 'hrnside', fallback=0))
+        self.Mangrove = (parser.getboolean(section, 'mangrove', fallback=None))
 
 
 
@@ -522,9 +525,9 @@ def GetGBMMap(URL):
     
     filename = URL.split("/")[-1]
     filename = filename.split(".")[0]
-    filename = "./" + filename + ".fits"
+    filename = "./maps/" + filename + ".fit"
     # filename = "glg_healpix_all_bn211130636_2.fits"
-    print("The filename is ", filename)
+    print("The GBM filename is ", filename)
     try:
         fits_map_url_intial = URL
         fits_map_url1 = fits_map_url_intial.split("/")
@@ -681,6 +684,9 @@ def NightDarkObservation(time, obspar):
     AuxMax = 100
     NightDarkRuns = []
     isFirstNight = True
+    
+    #ObservationTime0 = datetime.datetime.strptime(InputChar['Time'], '%Y-%m-%d %H:%M:%S')
+    time = pytz.utc.localize(time)
     # Loop for the nights of observation
     for i in range(0, MaxNights):
         # In case the alert arrives during the day, time is set to sunset
@@ -2351,8 +2357,8 @@ def PointingFileReadCTA(pointingFile):
     for i in range(len(time1)):
         time.append((time1[i] + ' ' + time2[i]).split('"')[1])
     OutputTable = Table([time, RA, Dec, Observatory, ZenIni, ZenEnd, Duration],
-                        names=['Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'Observatory', 'ZenIni', 'ZenEnd',
-                               'Duration'])
+                        names=['Observation Time UTC', 'RA[deg]', 'DEC[deg]', 'Observatory', 'ZenIni[deg]', 'ZenEnd[deg]',
+                               'Duration[s]'])
     return OutputTable
 
 
@@ -2529,7 +2535,7 @@ def ProduceSummaryFile(InputList, InputObservationList, allPossiblePoint, foundI
             foundFirst = foundIn
             foundTimes = 1
 
-        duration = InputObservationList['Duration']
+        duration = InputObservationList['Duration[s]']
 
         outfilename = outDir + '/SummaryFile/' + name + '_SimuSF' + typeSimu + str("{:03d}".format(j)) + '.txt'
         # print(outfilename)
@@ -2579,11 +2585,14 @@ class NextWindowTools:
             # print('Sunset', time)
             time = Tools.TrustingDarknessSun(time, obsSite)
             # print('Trusted', time)
+            print('1')
         if (Tools.IsDarkness(time, obsSite) is True):
+            print('2')
             return time
         elif ((Tools.IsDarkness(time, obsSite) is False) and (
                 Tools.IsDarkness(Tools.NextMoonset(time, obsSite), obsSite) is True)):
             time = Tools.NextMoonset(time, obsSite)
+            print('3')
             return time
         else:
             print('No window is found')
