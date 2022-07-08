@@ -1,5 +1,5 @@
-from .PointingTools import (LoadHealpixMap, TransformRADec,
-                                  CTANorthObservatory,CTASouthObservatory,ObservationParameters)
+from .PointingTools import (LoadHealpixMap, TransformRADec,ObservationParameters)
+from .Observatories import CTANorthObservatory,CTASouthObservatory
 import os
 import healpy as hp
 import matplotlib.pyplot as plt
