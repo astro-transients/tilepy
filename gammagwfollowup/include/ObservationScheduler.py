@@ -272,37 +272,3 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
-
-def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
-    targetType = 'Tiling'
-
-    if Type == 'gbm':
-        fitsfile = GetGBMMap(URL)
-
-    else:
-        fitsfile = GetGWMap(URL)
-
-    has3D = Check2Dor3D(fitsfile)
-
-
-    name = URL.split('/')[-3]
-    print("===========================================================================================")
-    PointingsFile = "False"
-    galaxies = datasetDir + "/GLADE.txt"
-    parameters = []
-
-    j = 0
-    for i in ObsArray:
-        parameters.append("./configs/FollowupParameters_%s.ini" %i)
-    print(parameters)
-
-    if has3D:
-        print("Will do that later")
-    else:
-        print("Will do that now")
-        #PGWinFoV_NObs(parameters,parameters,parameters,parameters,ObsArray)
-
-
-
-    #SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, parameters, dirName)
-

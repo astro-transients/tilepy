@@ -810,7 +810,7 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
 
     print(obspar)
     # link to the GW map
-    name = filename.split('.')[0].split('/')[-1]
+    # name = filename.split('.')[0].split('/')[-1]
     # if('G' in filename):
     #    names = filename.split("_")
     #    name= names[0]

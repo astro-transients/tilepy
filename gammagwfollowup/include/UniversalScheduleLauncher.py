@@ -18,7 +18,6 @@ import datetime
 import os
 
 
-
 def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
     targetType = 'Tiling'
     
@@ -79,3 +78,4 @@ def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
     else:
         FOLLOWUP = False
         print('No observations are scheduled')
+
