@@ -1,4 +1,5 @@
-from .PointingTools import (LoadHealpixMap, TransformRADec,ObservationParameters)
+from .PointingTools import (LoadHealpixMap, TransformRADec,ObservationParameters,
+                            TableImportCTA, TableImportCTA_Time)
 from .Observatories import CTANorthObservatory,CTASouthObservatory
 import os
 import healpy as hp
@@ -11,6 +12,7 @@ from astropy.coordinates import SkyCoord
 import datetime
 from six.moves import configparser
 import six
+
 if six.PY2:
   ConfigParser = configparser.SafeConfigParser
 else:
@@ -590,3 +592,36 @@ def PointingPlottingGW_ZenithSteps(filename,name,dirName,FOV,InputTimeObs):
     #plt.show()
     hp.graticule()
     plt.savefig('%s/Pointings.png'%dirName)
+
+
+def PlotScheduling_fromID(ID, InputFileName, dirName, pointingsFile, FOV):
+    j = ID
+    
+    # GW file
+    # InputFileName = '../../dataset/BNS-GW_onAxis5deg.txt'
+    InputList = TableImportCTA(InputFileName)
+    GWFile = "../../dataset/skymaps/" + InputList['run'][j] + '_' + InputList['MergerID'][j] + "_skymap.fits.gz"
+    name = InputList['run'][j] + '_' + InputList['MergerID'][j]
+    
+    InjectTimeFile = '../../dataset/BNS-GW-Time_onAxis5deg_postRome.txt'
+    InputTimeList = TableImportCTA_Time(InjectTimeFile)
+
+    # pointingsFile= '../../gw-follow-up-simulations-side-results/TestPointings/run0017_MergerID000261_GWOptimisation.txt'
+    # FOV= 2.0
+    
+    PointingPlottingGWCTA(GWFile, name, dirName, pointingsFile, FOV, InputTimeList['Observatory'][j])
+
+
+def PlotZenithAngleLines_fromID(ID, InputFileName, dirName, FOV):
+    j = ID
+    
+    # GW file
+    InputList = TableImportCTA(InputFileName)
+    
+    GWFile = "../../dataset/skymaps/" + InputList['run'][j] + '_' + InputList['MergerID'][j] + "_skymap.fits.gz"
+    name = InputList['run'][j] + '_' + InputList['MergerID'][j]
+    
+    InjectTimeFile = '../../dataset/BNS-GW-Time_onAxis5deg_postRome.txt'
+    InputTimeList = TableImportCTA_Time(InjectTimeFile)
+    
+    PointingPlottingGW_ZenithSteps(GWFile, name, dirName, FOV, InputTimeList[j])

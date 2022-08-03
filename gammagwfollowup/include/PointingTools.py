@@ -2444,9 +2444,9 @@ def TableImportCTA_LS(tgalFile):
     return OutputTable
 
 
-def IsSourceInside(Pointings, HESS_Sources, FOV, nside):
-    tt = 0.5 * np.pi - HESS_Sources.dec.rad
-    tp = HESS_Sources.ra.rad
+def IsSourceInside(Pointings, Sources, FOV, nside):
+    tt = 0.5 * np.pi - Sources.dec.rad
+    tp = Sources.ra.rad
     # print('t, p, targetCoord1[0].ra.deg, targetCoord1[0].dec.deg',t, p, targetCoord1[0].ra.deg, targetCoord1[0].dec.deg)
     txyz = hp.ang2pix(nside, tt, tp)
     # hipix = hp.query_disc(nside, txyz, np.deg2rad(FOV))
