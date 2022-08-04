@@ -1,12 +1,13 @@
 from .PointingTools import (NightDarkObservation,
                                   NightDarkObservationwithGreyTime,LoadHealpixMap, Get90RegionPixReduced,
                                   ZenithAngleCut,ComputeProbability2D,
-                                  FulfillsRequirement,CTASouthObservatory,CTANorthObservatory,
+                                  FulfillsRequirement,
                                   VisibleAtTime,LoadGalaxies,CorrelateGalaxies_LVC, SubstractPointings2D,SimpleGWprob,ComputeProbBCFOV,
                                   Tools,LoadGalaxies_SteMgal, CorrelateGalaxies_LVC_SteMass, SubstractPointings,
                                   ModifyCatalogue,FulfillsRequirementGreyObservations,ComputeProbPGALIntegrateFoV,
                                   ModifyCataloguePIX, ObservationParameters, NextWindowTools,
                                   ComputeProbability2D_SelectClusters,GiveProbToGalaxy, LoadGalaxiesSimulation)
+from .Observatories import CTASouthObservatory,CTANorthObservatory
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
@@ -649,7 +650,6 @@ def PGWonFoV_WindowsfromIRFs(filename, InputChar, TC, parameters, dirName):
     zenith = InputChar['Zenith']
     ObservationTime0 = datetime.datetime.strptime(InputChar['Time'], '%Y-%m-%d %H:%M:%S.%f')
 
-    # Main parameters from config
     # Main parameters from config
 
     obspar = ObservationParameters()

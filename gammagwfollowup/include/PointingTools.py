@@ -958,13 +958,14 @@ def ComputeProbability2D(prob,highres,radecs,ReducedNside,HRnside,MinProbCut, ti
 
             hp.gnomview(prob, xsize=500, ysize=500, rot=[targetCoord.ra.deg, targetCoord.dec.deg], reso=8.0)
             hp.graticule()
-            plt.savefig('%s/Pointing-prob_%g.png' % (path,counter))
+            
 
             ipix_discplot = hp.query_disc(HRnside, xyz, np.deg2rad(radius))
             tt, pp = hp.pix2ang(HRnside, ipix_discplot)
             ra2 = np.rad2deg(pp)
             dec2 = np.rad2deg(0.5 * np.pi - tt)
             skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
+  
             #hp.visufunc.projplot(skycoord.ra, skycoord.dec, 'y.', lonlat=True, coord="C")
             #plt.show()
             #observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
@@ -972,11 +973,14 @@ def ComputeProbability2D(prob,highres,radecs,ReducedNside,HRnside,MinProbCut, ti
             hp.visufunc.projplot(sortcat['PIXRA'][:1],sortcat['PIXDEC'][:1], 'r.', lonlat=True, coord="C")
             MaxCoord = SkyCoord(sortcat['PIXRA'][:1],sortcat['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
             separations = skycoord.separation(MaxCoord)
-            tempmask = separations < (radius + 0.1 * radius) * u.deg
-            tempmask2 = separations > (radius - 0.1  * radius) * u.deg
+            tempmask = separations < (radius + 0.15 * radius) * u.deg
+            tempmask2 = separations > (radius - 0.15  * radius) * u.deg
             hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'g.', lonlat=True, coord="C",linewidth=0.1)
-            altcoord = np.empty(100)
-            azcoord = np.random.rand(100) * 360
+            altcoord = np.empty(1000)
+            azcoord = np.random.rand(1000) * 360
+
+            
+            plt.savefig('%s/Pointing-prob_%g.png' % (path, counter))
             #for i in range(0,1):
             #    altcoord.fill(90-(max_zenith-5*i))
             #    RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,location=observatory)
@@ -2453,26 +2457,44 @@ def IsSourceInside(Pointings, Sources, FOV, nside):
     # Npoiting = -1
     Npoiting = []
     Found = False
-    for i in range(0, len(Pointings)):
-        # t = 0.5 * np.pi - Pointings[i].dec.rad[0]
-        # p = Pointings[i].ra.rad[0]
-        t = 0.5 * np.pi - Pointings[i].dec.rad
-        p = Pointings[i].ra.rad
+    try:
+        for i in range(0, len(Pointings)):
+            # t = 0.5 * np.pi - Pointings[i].dec.rad[0]
+            # p = Pointings[i].ra.rad[0]
+            t = 0.5 * np.pi - Pointings[i].dec.rad
+            p = Pointings[i].ra.rad
+            # print('targetCoord1[0].ra.deg, targetCoord1[0].dec.deg',HESS_Sources.ra.deg, HESS_Sources.dec.deg, Pointings[i].ra.deg, Pointings[i].dec.deg)
+            xyz = hp.ang2vec(t, p)
+            try:
+                # print(xyz)
+                ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV))
+            except:
+                ipix_disc = hp.query_disc(nside, xyz[0], np.deg2rad(FOV))
+                # print('Smething went wrong')
+            # print(txyz)
+            # print(ipix_disc)
+            # print(txyz in ipix_disc)
+            if (txyz in ipix_disc):
+                print('Found in pointing number', i)
+                Npoiting.append(i)
+                Found = True
+        if Found == False:
+            print('Source not covered!')
+    except TypeError:
+        t = 0.5 * np.pi - Pointings.dec.rad
+        p = Pointings.ra.rad
         # print('targetCoord1[0].ra.deg, targetCoord1[0].dec.deg',HESS_Sources.ra.deg, HESS_Sources.dec.deg, Pointings[i].ra.deg, Pointings[i].dec.deg)
         xyz = hp.ang2vec(t, p)
-        try:
-            # print(xyz)
-            ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV))
-        except:
-            ipix_disc = hp.query_disc(nside, xyz[0], np.deg2rad(FOV))
-            # print('Smething went wrong')
+        ipix_disc = hp.query_disc(nside, xyz[0], np.deg2rad(FOV))
         # print(txyz)
         # print(ipix_disc)
         # print(txyz in ipix_disc)
         if (txyz in ipix_disc):
-            print('Found in pointing number', i)
-            Npoiting.append(i)
+            Npoiting=0
             Found = True
+            print('Found in pointing number 0')
+        else:
+            print('Source not covered!')
     return Found, Npoiting
 
 

@@ -90,7 +90,6 @@ def PointingPlotting(prob, parameters, name,dirName,PointingsFile1):
     obspar = ObservationParameters()
     obspar.from_configfile(parameters)
 
-    
     npix = len(prob)
     nside = hp.npix2nside(npix)
 
@@ -109,10 +108,11 @@ def PointingPlotting(prob, parameters, name,dirName,PointingsFile1):
             try:
                 converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S.%f '))
             except ValueError:
-                converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S'))
-
-
-
+                try:
+                    converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S'))
+                except ValueError:
+                    converted_time1 = converted_time1.split('+')[0]
+                    converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S'))
     #PlotPointingsTogether(prob,converted_time1[0],Coordinates1,sum(Probarray1),name1,Coordinates2,sum(Probarray2),name2, nside, obspar.FOV, doplot=True)
     PlotPointings(prob,converted_time1,Coordinates1,sum(Probarray1), nside, obspar, name, dirName)
 
@@ -624,3 +624,55 @@ def PlotZenithAngleLines_fromID(ID, InputFileName, dirName, FOV):
     InputTimeList = TableImportCTA_Time(InjectTimeFile)
     
     PointingPlottingGW_ZenithSteps(GWFile, name, dirName, FOV, InputTimeList[j])
+
+
+from astropy.io import fits
+from astropy_healpix import HEALPix
+from astropy.coordinates import Galactic
+import matplotlib.pyplot as plt
+import numpy as np
+import healpy as hp
+import astropy.coordinates as co
+from astropy import units as u
+from ligo.skymap.io.fits import read_sky_map
+import ligo.skymap.plot
+from matplotlib import pyplot as plt
+from ligo.skymap.coordinates import DetectorFrame
+from astropy.coordinates import EarthLocation
+from matplotlib.patches import Circle
+from ligo.skymap.plot.marker import earth
+
+from astropy.time import Time
+
+from mocpy import MOC, World2ScreenMPL
+
+from astropy.coordinates import Angle, SkyCoord
+
+def FancyPointingPlotting_withSource(gwmap, pointings, source,FOV,dirName):
+    
+    #Fits file of the gwmap
+    m, meta = read_sky_map(gwmap)
+    '''
+    # Plot sky map
+    fig = plt.figure(figsize=(5, 5))
+    ax = fig.add_subplot(projection='astro degrees zoom', center='196.88d -23.17d', radius='8 deg')
+
+    pos = ax.imshow_hpx(m, cmap=plt.cm.binary)
+    ax.grid()
+
+    #The source
+    ax.scatter(source.ra.deg, source.dec.deg, transform=ax.get_transform('fk5'), marker = "*",color='green', s = 60)
+    
+    #Pointings
+    for i in range(0,len(pointings.ra.deg)):
+        c = Circle((pointings[i].ra.deg, pointings[i].ra.deg), FOV, edgecolor='green', facecolor='none', transform=ax.get_transform('fk5'), linewidth = 2)
+        ax.add_patch(c)
+    
+    overlay = ax.get_coords_overlay('fk5')
+    overlay.grid(color='black', ls='dotted')
+    plt.xlabel("Right Ascension (J2000)")
+    plt.ylabel("Declination (J2000)")
+    #plt.show()
+    plt.savefig(dirName+'pointings.png')
+    print('BONITO!')
+    '''
