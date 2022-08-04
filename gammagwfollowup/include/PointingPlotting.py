@@ -56,8 +56,7 @@ def LoadPointingsGW(tpointingFile):
     dec = dec.astype(np.float)
     coordinates = co.SkyCoord(ra,dec, frame='fk5', unit=(u.deg, u.deg))
     #pgw = Pgw.astype(np.float)
-    pgw = np.genfromtxt(tpointingFile, usecols=5, skip_header=1,delimiter=' ',unpack=True)
-
+    pgw = np.genfromtxt(tpointingFile, usecols=4, skip_header=1,delimiter=' ',unpack=True)
     return time, coordinates , pgw
 
 
