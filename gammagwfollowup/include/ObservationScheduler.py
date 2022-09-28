@@ -8,7 +8,7 @@ from .TilingDetermination import PGWinFoV, PGalinFoV
 from .RankingObservationTimes import RankingTimes, RankingTimes_SkyMapInput_2D
 from .PointingPlotting import PointingPlotting
 from astropy.coordinates import SkyCoord
-from .PointingTools import Tools, LoadGalaxies, getdate, GetGBMMap, GetGWMap, Check2Dor3D
+from .PointingTools import Tools, LoadGalaxies, getdate, GetGBMMap, GetGWMap, Check2Dor3D, ObservationParameters
 from astropy.io import fits, ascii
 import time
 import healpy as hp
@@ -228,12 +228,12 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
 
         if (len(SuggestedPointings) != 0):
             FOLLOWUP = True
-            outfilename = '%s/SuggestedPointings_GWOptimisation.txt' % dirName
+            obspar = ObservationParameters()
+            obspar.from_configfile(parameters)
+            outfilename = '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName,obspar.FOV)
             ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
-            RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName,
-                         '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
-            PointingPlotting(prob, parameters, name, dirName,
-                             '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+            RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName,outfilename)
+            PointingPlotting(prob, parameters, name, dirName,outfilename)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
@@ -264,11 +264,13 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
 
         if (len(SuggestedPointings) != 0):
             FOLLOWUP = True
-            outfilename = '%s/SuggestedPointings_GWOptimisation.txt' % dirName
+            obspar = ObservationParameters()
+            obspar.from_configfile(parameters)
+            outfilename = '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName,obspar.FOV)
             ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
             print()
-            RankingTimes_SkyMapInput_2D(ObservationTime, prob, parameters, targetType, dirName,'%s/SuggestedPointings_GWOptimisation.txt' % dirName)
-            PointingPlotting(prob, parameters, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+            RankingTimes_SkyMapInput_2D(ObservationTime, prob, parameters, targetType, dirName,outfilename)
+            PointingPlotting(prob, parameters, name, dirName, outfilename)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')

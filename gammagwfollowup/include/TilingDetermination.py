@@ -867,8 +867,6 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
     # From the injection time, look for the next window. Time is the time of the first observation
     ObservationTime = ObservationTime0 + datetime.timedelta(seconds=total_followupDelay)
 
-
-
     print("Main info of this scheduling:", totalTime, total_followupDelay, run, mergerID, TC, obspar.Location)
 
     TotalNights = 2

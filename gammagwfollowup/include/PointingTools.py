@@ -255,7 +255,6 @@ class Tools:
                 DarkObsTime.hour <= Tools.NextSunrise(referencetime,obsPar).hour and DarkObsTime.day == Tools.NextSunrise(
                 referencetime,obsPar).day))):
             DarkObsTime = DarkObsTime + datetime.timedelta(minutes=1)
-            #print(Tools.IsDarkness(DarkObsTime,obsSite))
         return DarkObsTime
 
     @classmethod
@@ -2451,10 +2450,7 @@ def TableImportCTA_LS(tgalFile):
 def IsSourceInside(Pointings, Sources, FOV, nside):
     tt = 0.5 * np.pi - Sources.dec.rad
     tp = Sources.ra.rad
-    # print('t, p, targetCoord1[0].ra.deg, targetCoord1[0].dec.deg',t, p, targetCoord1[0].ra.deg, targetCoord1[0].dec.deg)
     txyz = hp.ang2pix(nside, tt, tp)
-    # hipix = hp.query_disc(nside, txyz, np.deg2rad(FOV))
-    # Npoiting = -1
     Npoiting = []
     Found = False
     try:
@@ -2485,7 +2481,7 @@ def IsSourceInside(Pointings, Sources, FOV, nside):
         p = Pointings.ra.rad
         # print('targetCoord1[0].ra.deg, targetCoord1[0].dec.deg',HESS_Sources.ra.deg, HESS_Sources.dec.deg, Pointings[i].ra.deg, Pointings[i].dec.deg)
         xyz = hp.ang2vec(t, p)
-        ipix_disc = hp.query_disc(nside, xyz[0], np.deg2rad(FOV))
+        ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV))
         # print(txyz)
         # print(ipix_disc)
         # print(txyz in ipix_disc)
