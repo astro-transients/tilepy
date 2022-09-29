@@ -5,7 +5,6 @@ channels:
   - conda-forge
 dependencies:
   - python=3.6
-  - gammapy=0.9
   - astropy==4.1
   - ipython
   - numpy==1.19.5
