@@ -201,7 +201,8 @@ def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,di
 
     j = 0
     for obspar1 in ObsArray:
-        globals()[obspar1] = ObservationParameters.from_configfile(parameters[j])
+        obspar = ObservationParameters()
+        globals()[obspar1] = obspar.from_configfile(parameters[j])
         ObsParameters.append(globals()[obspar1])
 
         dark_at_start =False
