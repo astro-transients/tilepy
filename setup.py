@@ -12,7 +12,7 @@ setup(name='gammagwfollowup',
       version=0.1,
       description="Gravitational waves follow-up scheduling and simulation for IACTs",
       install_requires=[
-          'gammapy==0.9',
+           #'gammapy==0.9',
           'astropy==4.1',
           'scipy',
           'healpy==1.12.9',
