@@ -30,6 +30,7 @@ import datetime
 import numpy.ma as ma
 from six.moves import configparser
 import six
+from gdpyc import GasMap, DustMap
 if six.PY2:
   ConfigParser = configparser.SafeConfigParser
 else:
@@ -350,6 +351,22 @@ class Tools:
             #print('You got here')
         print(YouAreInside)
         return YouAreInside
+
+    @classmethod
+    def GetAirMass(cls, time, coords, location):
+        frame_obs = AltAz(obstime=time,
+                          location=location)
+        radecs = coords.transform_to(frame_obs)
+        aimrass = radecs.secz
+        return aimrass
+
+
+    @classmethod
+    def GetGalacticExtinction(cls,coords, dustmap='SFD', filters='SDSS_r'):
+        #Extinction = DustMap.ebv(coords)
+        extinction = DustMap.extinction(coords, dustmap='SFD', filters='SDSS_r') 
+        #GasMap.plot_map('HI4PI')
+        return extinction
 
 #####################################################
 
@@ -2793,7 +2810,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, TotalExposure, ti
     if (np.any(sortcat['ZENITH_INI'] > 55)):
         ObsCase, texp60 = ObtainSingleObservingTimes(TotalExposure, DelayObs, interObsSlew, run, mergerID, obspar,
                                                      datasetDir, zenith=60)
-        print("Lets have a look on what was found for Zenith= 60 ", texp60)
+        print("ObsCase60", ObsCase,'time =', texp60)
         # Cat60 = sortcat[sortcat['ZENITH_INI'] >55]
         # print("ObsCase60", ObsCase)
         sortcat['EXPOSURE'][sortcat['ZENITH_INI'] > 55] = texp60
@@ -2810,7 +2827,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, TotalExposure, ti
     if (sortcat['ZENITH_INI'][mask1 & mask2].any()):
         ObsCase, texp40 = ObtainSingleObservingTimes(TotalExposure, DelayObs, interObsSlew, run, mergerID, obspar,
                                                      datasetDir, zenith=40)
-        print("ObsCase40", ObsCase)
+        print("ObsCase40", ObsCase, 'time=', texp40)
         sortcat['EXPOSURE'][(30 <= sortcat['ZENITH_INI']) & (sortcat['ZENITH_INI'] <= 55)] = texp40
         # Cat40 = sortcat[(30 < sortcat['ZENITH_INI']) & (sortcat['ZENITH_INI'] < 55)]
         # print(Cat40)
@@ -2826,7 +2843,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, TotalExposure, ti
     if (np.any(sortcat['ZENITH_INI'] < 30)):
         ObsCase, texp20 = ObtainSingleObservingTimes(TotalExposure, DelayObs, interObsSlew, run, mergerID, obspar,
                                                      datasetDir, zenith=20)
-        print("ObsCase20", ObsCase)
+        print("ObsCase20", ObsCase, 'time=',texp20)
         sortcat['EXPOSURE'][sortcat['ZENITH_INI'] < 30] = texp20
         # Cat20 = sortcat[sortcat['ZENITH_INI'] < 30]
         # print(Cat30)
