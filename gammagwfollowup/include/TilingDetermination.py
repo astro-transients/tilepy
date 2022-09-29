@@ -29,12 +29,9 @@ else:
 
 ############################################
 
-def PGWinFoV(filename,ObservationTime0,PointingFile,parameters,dirName):
+def PGWinFoV(filename,ObservationTime0,PointingFile,obspar,dirName):
 
     # Main parameters
-
-    obspar = ObservationParameters()
-    obspar.from_configfile(parameters)
     
     print(obspar)
 
@@ -301,12 +298,10 @@ def BestCandidateonPGal(filename,ObservationTime0,galFile):
     SuggestedPointings = Table([ObservationTimearray,RAarray,DECarray,P_GWarray,P_GALarray,Round], names=['Observation Time UTC','RA[deg]','Dec[deg]','PGW','Pgal','Round'])
     return SuggestedPointings,cat
 
-def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,parameters,dirName):
+def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,obspar,dirName):
     
     # Main Parameters
 
-    obspar = ObservationParameters()
-    obspar.from_configfile(parameters)
     print(obspar)
 
     
@@ -466,8 +461,6 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
 
     # Main parameters from config
 
-    obspar = ObservationParameters()
-    obspar.from_configfile(parameters)
     ###############################
 
     # load galaxy catalog from local file

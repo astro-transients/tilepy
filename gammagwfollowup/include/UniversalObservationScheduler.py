@@ -26,7 +26,7 @@ else:
 
 ############################################
 
-def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName, ObsArray):
+def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, ObsParameters, dirName, ObsArray):
 
     #Finding the start time for each observatory and checking if it's now    
     FirstDark = np.full(len(ObsArray), False, dtype=bool)
@@ -35,12 +35,8 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
     ObsFirstTime = []
     ObsParameters = []
 
-    j = 0
-    for obspar1 in ObsArray:
 
-        globals()[obspar1] = ObservationParameters.from_configfile(parameters[j])
-        ObsParameters.append(globals()[obspar1])
-
+    for j in range(0,len(ObsArray)):
         dark_at_start =False
         if ObsParameters[j].UseGreytime:
           dark_at_start = Tools.IsDarkness(obs_time, ObsParameters[j])
@@ -57,7 +53,6 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
           if ObsFirstTime1 < (obs_time + datetime.timedelta(hours=24)):
             FirstDark_Flag[j] = True
 
-        j+=1
 
 
     #Checking which observatories are availabe for observations and saving their start time

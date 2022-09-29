@@ -84,11 +84,8 @@ def LoadPointingsGAL(tpointingFile):
     return time, coordinates ,Pgw, Pgal
 
 
-def PointingPlotting(prob, parameters, name,dirName,PointingsFile1):
+def PointingPlotting(prob, obspar, name,dirName,PointingsFile1):
 
-    # Main parameters
-    obspar = ObservationParameters()
-    obspar.from_configfile(parameters)
 
     npix = len(prob)
     nside = hp.npix2nside(npix)
