@@ -30,6 +30,7 @@ import datetime
 import numpy.ma as ma
 from six.moves import configparser
 import six
+from gdpyc import GasMap, DustMap
 if six.PY2:
   ConfigParser = configparser.SafeConfigParser
 else:
@@ -350,6 +351,22 @@ class Tools:
             #print('You got here')
         print(YouAreInside)
         return YouAreInside
+
+    @classmethod
+    def GetAirMass(cls, time, coords, location):
+        frame_obs = AltAz(obstime=time,
+                          location=location)
+        radecs = coords.transform_to(frame_obs)
+        aimrass = radecs.secz
+        return aimrass
+
+
+    @classmethod
+    def GetGalacticExtinction(cls,coords, dustmap='SFD', filters='SDSS_r'):
+        #Extinction = DustMap.ebv(coords)
+        extinction = DustMap.extinction(coords, dustmap='SFD', filters='SDSS_r') 
+        #GasMap.plot_map('HI4PI')
+        return extinction
 
 #####################################################
 
