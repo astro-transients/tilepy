@@ -56,7 +56,7 @@ def LoadPointingsGW(tpointingFile):
     dec = dec.astype(np.float)
     coordinates = co.SkyCoord(ra,dec, frame='fk5', unit=(u.deg, u.deg))
     #pgw = Pgw.astype(np.float)
-    pgw = np.genfromtxt(tpointingFile, usecols=4, skip_header=1,delimiter=' ',unpack=True)
+    pgw = np.genfromtxt(tpointingFile, usecols=5, skip_header=1,delimiter=' ',unpack=True)
     return time, coordinates , pgw
 
 
@@ -84,11 +84,8 @@ def LoadPointingsGAL(tpointingFile):
     return time, coordinates ,Pgw, Pgal
 
 
-def PointingPlotting(prob, parameters, name,dirName,PointingsFile1):
+def PointingPlotting(prob, obspar, name,dirName,PointingsFile1):
 
-    # Main parameters
-    obspar = ObservationParameters()
-    obspar.from_configfile(parameters)
 
     npix = len(prob)
     nside = hp.npix2nside(npix)

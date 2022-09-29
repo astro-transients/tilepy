@@ -51,8 +51,11 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
         print("Parameters: ", parameters)
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
+        
+        obspar = ObservationParameters()
+        obspar.from_configfile(parameters)
 
-        SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galaxies, parameters, dirName)
+        SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galaxies, obspar, dirName)
 
         print(SuggestedPointings)
         print("===========================================================================================")
@@ -65,7 +68,7 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
             print()
             RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName,
                          '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
-            PointingPlotting(prob, parameters, name, dirName,
+            PointingPlotting(prob, obspar, name, dirName,
                              '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
         else:
             FOLLOWUP = False
@@ -89,8 +92,11 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
         print("Parameters: ", parameters)
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
+        
+        obspar = ObservationParameters()
+        obspar.from_configfile(parameters)
 
-        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, parameters, dirName)
+        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, obspar, dirName)
 
         print(SuggestedPointings)
         print("===========================================================================================")
@@ -102,9 +108,9 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
             ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
             print()
             cat = LoadGalaxies(galaxies)
-            RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName,
+            RankingTimes(ObservationTime, filename, cat, obspar, targetType, dirName,
                          '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
-            PointingPlotting(prob, parameters, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+            PointingPlotting(prob, obspar, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
@@ -140,15 +146,18 @@ def GetSchedule_GBMfromPNG(URL, date,datasetDir,outDir):
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
-        SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galaxies, parameters, dirName)
+        obspar = ObservationParameters()
+        obspar.from_configfile(parameters)
+        
+        SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galaxies, obspar, dirName)
 
         if (len(SuggestedPointings) != 0):
             FOLLOWUP = True
             outfilename = '%s/SuggestedPointings_GWOptimisation.txt' % dirName
             ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
-            RankingTimes(ObservationTime, filename, cat, parameters, targetType, dirName,
+            RankingTimes(ObservationTime, filename, cat, obspar, targetType, dirName,
                          '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
-            PointingPlotting(prob, parameters, name, dirName,
+            PointingPlotting(prob, obspar, name, dirName,
                              '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
         else:
             FOLLOWUP = False
@@ -172,7 +181,10 @@ def GetSchedule_GBMfromPNG(URL, date,datasetDir,outDir):
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
-        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, parameters, dirName)
+        obspar = ObservationParameters()
+        obspar.from_configfile(parameters)
+
+        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, obspar, dirName)
 
         print(SuggestedPointings)
         print("===========================================================================================")
@@ -183,8 +195,8 @@ def GetSchedule_GBMfromPNG(URL, date,datasetDir,outDir):
             outfilename = '%s/SuggestedPointings_GWOptimisation.txt' % dirName
             ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
             print()
-            RankingTimes_SkyMapInput_2D(ObservationTime, prob, parameters, targetType, dirName,'%s/SuggestedPointings_GWOptimisation.txt' % dirName)
-            PointingPlotting(prob, parameters, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+            RankingTimes_SkyMapInput_2D(ObservationTime, prob, obspar, targetType, dirName,'%s/SuggestedPointings_GWOptimisation.txt' % dirName)
+            PointingPlotting(prob, obspar, name, dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
@@ -224,7 +236,10 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
-        SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galaxies, parameters, dirName)
+        obspar = ObservationParameters()
+        obspar.from_configfile(parameters)
+
+        SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galaxies, obspar, dirName)
 
         if (len(SuggestedPointings) != 0):
             FOLLOWUP = True
@@ -256,7 +271,10 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
-        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, parameters, dirName)
+        obspar = ObservationParameters()
+        obspar.from_configfile(parameters)
+        
+        SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, obspar, dirName)
 
         print(SuggestedPointings)
         print("===========================================================================================")
@@ -269,7 +287,7 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
             outfilename = '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName,obspar.FOV)
             ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
             print()
-            RankingTimes_SkyMapInput_2D(ObservationTime, prob, parameters, targetType, dirName,outfilename)
+            RankingTimes_SkyMapInput_2D(ObservationTime, prob, obspar, targetType, dirName,outfilename)
             PointingPlotting(prob, parameters, name, dirName, outfilename)
         else:
             FOLLOWUP = False
