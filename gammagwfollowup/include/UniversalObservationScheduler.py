@@ -23,7 +23,6 @@ else:
 
 
 import pytz
-
 utc=pytz.UTC
 ############################################
 
@@ -43,7 +42,6 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
     j = 0
     for obspar1 in ObsArray:
 
-
         dark_at_start =False
 
         if ObsParameters[j].UseGreytime:
@@ -58,8 +56,10 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
         else:
           ObsFirstTime1 = NextWindowTools.NextObservationWindow(time = obs_time,obsSite=ObsParameters[j])
           ObsFirstTime.append(ObsFirstTime1)
-          if ObsFirstTime1 < utc.localize(obs_time + datetime.timedelta(hours=24)):
-            FirstDark_Flag[j] = True
+          print(ObsFirstTime1)
+          if ObsFirstTime1 != False:
+            if ObsFirstTime1 < utc.localize(obs_time + datetime.timedelta(hours=24)):
+              FirstDark_Flag[j] = True
 
         j+=1
 
@@ -75,7 +75,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
         ActiveObs.append(ObsParameters[j])
         SameNight[j] = True
       j+=1
-    print(ActiveObs[0].name, ActiveObs[1].name, ActiveObs[2].name)
+    #print(ActiveObs[0].name, ActiveObs[1].name, ActiveObs[2].name)
 
 
     #Sorting observatories according to their first obsevation time available
@@ -224,8 +224,9 @@ def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,di
         else:
           ObsFirstTime1 = NextWindowTools.NextObservationWindow(time = obs_time,obsSite=ObsParameters[j])
           ObsFirstTime.append(ObsFirstTime1) 
-          if ObsFirstTime1 < utc.localize(obs_time + datetime.timedelta(hours=24)):
-            FirstDark_Flag[j] = True
+          if ObsFirstTime1 != False:
+            if ObsFirstTime1 < utc.localize(obs_time + datetime.timedelta(hours=24)):
+              FirstDark_Flag[j] = True
         j+=1
 
 
@@ -241,7 +242,7 @@ def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,di
         ActiveObs.append(ObsParameters[j])
         SameNight[j] = True
       j+=1
-    print(ActiveObs[0].name, ActiveObs[1].name, ActiveObs[2].name)
+    #print(ActiveObs[0].name, ActiveObs[1].name, ActiveObs[2].name)
 
 
     #Sorting observatories according to their first obsevation time available
