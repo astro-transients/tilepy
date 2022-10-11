@@ -20,13 +20,18 @@ if six.PY2:
   ConfigParser = configparser.SafeConfigParser
 else:
   ConfigParser = configparser.ConfigParser
+
+
+import pytz
+
+utc=pytz.UTC
 ############################################
 
 #              General definitions              #
 
 ############################################
 
-def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, ObsParameters, dirName, ObsArray):
+def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName, ObsArray):
 
     #Finding the start time for each observatory and checking if it's now    
     FirstDark = np.full(len(ObsArray), False, dtype=bool)
@@ -36,8 +41,16 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, ObsParameters, dirN
     ObsParameters = []
 
 
-    for j in range(0,len(ObsArray)):
+    j = 0
+    for obspar1 in ObsArray:
+
+        obspar = ObservationParameters()
+        obspar.from_configfile(parameters[j])
+        ObsParameters.append(obspar)
+
+
         dark_at_start =False
+
         if ObsParameters[j].UseGreytime:
           dark_at_start = Tools.IsDarkness(obs_time, ObsParameters[j])
         if not ObsParameters[j].UseGreytime:
@@ -50,10 +63,10 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, ObsParameters, dirN
         else:
           ObsFirstTime1 = NextWindowTools.NextObservationWindow(time = obs_time,obsSite=ObsParameters[j])
           ObsFirstTime.append(ObsFirstTime1)
-          if ObsFirstTime1 < (obs_time + datetime.timedelta(hours=24)):
+          if ObsFirstTime1 < utc.localize(obs_time + datetime.timedelta(hours=24)):
             FirstDark_Flag[j] = True
 
-
+        j+=1
 
     #Checking which observatories are availabe for observations and saving their start time
     ActiveObsStart = []
@@ -110,6 +123,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, ObsParameters, dirN
     ITERATION_OBS = 0
     TIME_MIN_ALL = []
     TIME_MIN = obs_time + datetime.timedelta(hours=12)
+    TIME_MIN = utc.localize(TIME_MIN)
     NewActiveObsTime = NewActiveObsStart
     NUMBER_OBS = np.zeros(len(NewActiveObs))
 #################################################################################################################################################
@@ -201,9 +215,11 @@ def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,di
 
     j = 0
     for obspar1 in ObsArray:
+
         obspar = ObservationParameters()
-        globals()[obspar1] = obspar.from_configfile(parameters[j])
-        ObsParameters.append(globals()[obspar1])
+        obspar.from_configfile(parameters[j])
+        ObsParameters.append(obspar)
+
 
         dark_at_start =False
         if ObsParameters[j].UseGreytime:
@@ -216,8 +232,8 @@ def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,di
           ObsFirstTime[j] = FirstDark[j]
         else:
           ObsFirstTime1 = NextWindowTools.NextObservationWindow(time = obs_time,obsSite=ObsParameters[j])
-          ObsFirstTime.append(ObsFirstTime1)
-          if ObsFirstTime1 < (obs_time + datetime.timedelta(hours=24)):
+          ObsFirstTime.append(ObsFirstTime1) 
+          if ObsFirstTime1 < utc.localize(obs_time + datetime.timedelta(hours=24)):
             FirstDark_Flag[j] = True
         j+=1
 
@@ -297,6 +313,7 @@ def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,di
     ITERATION_OBS = 0
     TIME_MIN_ALL = []
     TIME_MIN = obs_time + datetime.timedelta(hours=12)
+    TIME_MIN = utc.localize(TIME_MIN)
     NewActiveObsTime = NewActiveObsStart
     NUMBER_OBS = np.zeros(len(NewActiveObs))
 #################################################################################################################################################
