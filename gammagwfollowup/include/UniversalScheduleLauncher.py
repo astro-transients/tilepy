@@ -8,7 +8,7 @@ from .UniversalObservationScheduler import PGWinFoV_NObs, PGalinFoV_NObs
 from .RankingObservationTimes import RankingTimes, RankingTimes_SkyMapInput_2D
 from .PointingPlotting import PointingPlotting
 from astropy.coordinates import SkyCoord
-from .PointingTools import Tools, LoadGalaxies, getdate, GetGBMMap, GetGWMap, Check2Dor3D
+from .PointingTools import Tools, LoadGalaxies, getdate, GetGBMMap, GetGWMap, Check2Dor3D, ObservationParameters
 from astropy.io import fits, ascii
 import time
 import healpy as hp
@@ -49,17 +49,26 @@ def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
     print("Dataset: ", datasetDir)
     print("Output: ", outputDir)
 
+    print('parameters', parameters)
+    ObsParameters = []
+    j = 0
+    for obspar in ObsArray:
+        print(obspar)
+        obspar = ObservationParameters()
+        obspar.from_configfile(parameters[j])
+        ObsParameters.append(obspar)
+        j+=1
 
     if has3D:
         dirName = '%s/PGallinFoV' % outputDir
         if not os.path.exists(dirName):
             os.makedirs(dirName)
-        SuggestedPointings, cat, ObsParameters = PGalinFoV_NObs(filename, ObservationTime, PointingsFile, galaxies, parameters, dirName, ObsArray)
+        SuggestedPointings, cat, ObsParameters = PGalinFoV_NObs(filename, ObservationTime, PointingsFile, galaxies, parameters, dirName, ObsArray, ObsParameters)
     else: 
         dirName = '%s/PGWinFoV_NObs' % outputDir
         if not os.path.exists(dirName):
             os.makedirs(dirName)
-        SuggestedPointings, ObsParameters = PGWinFoV_NObs(filename, ObservationTime, PointingsFile, parameters, dirName, ObsArray)
+        SuggestedPointings, ObsParameters = PGWinFoV_NObs(filename, ObservationTime, PointingsFile, parameters, dirName, ObsArray, ObsParameters)
     if (len(SuggestedPointings) != 0):
         print(SuggestedPointings)
         FOLLOWUP = True

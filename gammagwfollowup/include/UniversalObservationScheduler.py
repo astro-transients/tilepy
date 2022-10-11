@@ -31,22 +31,17 @@ utc=pytz.UTC
 
 ############################################
 
-def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName, ObsArray):
+def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName, ObsArray, ObsParameters):
 
     #Finding the start time for each observatory and checking if it's now    
     FirstDark = np.full(len(ObsArray), False, dtype=bool)
     FirstDark_Flag = np.full(len(ObsArray), False, dtype=bool)
     obs_time = ObservationTime0
     ObsFirstTime = []
-    ObsParameters = []
 
 
     j = 0
     for obspar1 in ObsArray:
-
-        obspar = ObservationParameters()
-        obspar.from_configfile(parameters[j])
-        ObsParameters.append(obspar)
 
 
         dark_at_start =False
@@ -204,21 +199,17 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
     return SuggestedPointings, ObsParameters
 
 
-def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,dirName, ObsArray):
+def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,dirName, ObsArray, ObsParameters):
     
     #Finding the start time for each observatory and checking if it's now
     FirstDark = np.full(len(ObsArray), False, dtype=bool)
     FirstDark_Flag = np.full(len(ObsArray), False, dtype=bool)
     obs_time = ObservationTime0
     ObsFirstTime = []
-    ObsParameters = []
 
     j = 0
     for obspar1 in ObsArray:
 
-        obspar = ObservationParameters()
-        obspar.from_configfile(parameters[j])
-        ObsParameters.append(obspar)
 
 
         dark_at_start =False
