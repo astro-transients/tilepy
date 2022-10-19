@@ -108,8 +108,9 @@ def PointingPlotting(prob, obspar, name,dirName,PointingsFile1):
                 try:
                     converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S'))
                 except ValueError:
-                    converted_time1 = str(converted_time1).split('+')[0]
-                    converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S'))
+                    #converted_time1 = str(converted_time1).split('+')[0]
+                    converted_time1.append(time1)
+                    #converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S.%f-%z'))
     #PlotPointingsTogether(prob,converted_time1[0],Coordinates1,sum(Probarray1),name1,Coordinates2,sum(Probarray2),name2, nside, obspar.FOV, doplot=True)
     PlotPointings(prob,converted_time1,Coordinates1,sum(Probarray1), nside, obspar, name, dirName)
 

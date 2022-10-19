@@ -75,7 +75,6 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
         ActiveObs.append(ObsParameters[j])
         SameNight[j] = True
       j+=1
-    #print(ActiveObs[0].name, ActiveObs[1].name, ActiveObs[2].name)
 
 
     #Sorting observatories according to their first obsevation time available
@@ -123,13 +122,11 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
     NUMBER_OBS = np.zeros(len(NewActiveObs))
 #################################################################################################################################################
     counter=0
-    #print(SameNight)
-    #print(NewActiveObs[0].name, NewActiveObs[1].name, NewActiveObs[2].name)
-    #print(NewActiveObsTime)
     i = 0
     while (i < 500) & any(SameNight):
       for j in range(len(NewActiveObs)):
         obspar = NewActiveObs[j]
+        obsstart = NewActiveObsStart[j]
         #print(j)
         #print(NewActiveObs[0].name)
         #print(obspar.name)
@@ -179,17 +176,17 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
 
 
           #HERE WE DETERMINE IF WE ARE STILL IN THE SAME NIGHT FOR THIS OBSERVATORY
-          if (NewActiveObsTime[j] > Tools.NextSunrise(NewActiveObsStart[j], NewActiveObs[j])) | (NewActiveObsStart[j] > Tools.NextMoonrise(obs_time, NewActiveObs[j])):
+          if (NewActiveObsTime[j] > Tools.NextSunrise(obsstart, obspar)) | (obsstart > Tools.NextMoonrise(obsstart, obspar)):
             SameNight[j] = False
 
-          NUMBER_OBS[j] += 1
+        NUMBER_OBS[j] += 1
 
-          if SameNight[j]:
-            TIME_MIN = NewActiveObsTime[j]
-            TIME_MIN_ALL.append(TIME_MIN)
-            TIME_MIN = np.min(TIME_MIN_ALL)
-          else: 
-            TIME_MIN = TIME_MIN + datetime.timedelta(hours=12)
+        if SameNight[j]:
+          TIME_MIN = NewActiveObsTime[j]
+          TIME_MIN_ALL.append(TIME_MIN)
+          TIME_MIN = np.min(TIME_MIN_ALL)
+        else: 
+          TIME_MIN = TIME_MIN + datetime.timedelta(hours=12)
       
       i+=1
 
@@ -273,7 +270,7 @@ def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,di
     npix = len(prob)
     nside = hp.npix2nside(npix)
 
-    #load galaxu catalogue
+    #load galaxy catalogue
     if not obspar.Mangrove:
         cat = LoadGalaxies(galFile)
     else:
