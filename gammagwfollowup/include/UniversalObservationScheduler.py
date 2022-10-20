@@ -30,14 +30,13 @@ utc=pytz.UTC
 
 ############################################
 
-def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName, ObsArray, ObsParameters):
 
+def ObservationStartperObs(ObsArray, ObsParameters, ObservationTime0):
     #Finding the start time for each observatory and checking if it's now    
     FirstDark = np.full(len(ObsArray), False, dtype=bool)
     FirstDark_Flag = np.full(len(ObsArray), False, dtype=bool)
     obs_time = ObservationTime0
     ObsFirstTime = []
-
 
     j = 0
     for obspar1 in ObsArray:
@@ -83,6 +82,12 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
     ind = np.argsort(ActiveObsStart)
     ind = np.array(ind)
     NewActiveObs = np.take(ActiveObs, ind)
+
+    return obs_time, SameNight, NewActiveObs, NewActiveObsStart
+
+def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName, ObsArray, ObsParameters):
+
+    obs_time, SameNight, NewActiveObs, NewActiveObsStart = ObservationStartperObs(ObsArray, ObsParameters, ObservationTime0)
 
     #START
 #################################################################################################################################################
@@ -179,7 +184,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
           if (NewActiveObsTime[j] > Tools.NextSunrise(obsstart, obspar)) | (obsstart > Tools.NextMoonrise(obsstart, obspar)):
             SameNight[j] = False
 
-        NUMBER_OBS[j] += 1
+          NUMBER_OBS[j] += 1
 
         if SameNight[j]:
           TIME_MIN = NewActiveObsTime[j]
@@ -198,56 +203,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
 
 def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,dirName, ObsArray, ObsParameters):
     
-    #Finding the start time for each observatory and checking if it's now
-    FirstDark = np.full(len(ObsArray), False, dtype=bool)
-    FirstDark_Flag = np.full(len(ObsArray), False, dtype=bool)
-    obs_time = ObservationTime0
-    ObsFirstTime = []
-
-    j = 0
-    for obspar1 in ObsArray:
-
-
-
-        dark_at_start =False
-        if ObsParameters[j].UseGreytime:
-          dark_at_start = Tools.IsDarkness(obs_time, ObsParameters[j])
-        if not ObsParameters[j].UseGreytime:
-          dark_at_start = Tools.IsGreyness(obs_time, ObsParameters[j])
-        FirstDark[j] = dark_at_start
-        if FirstDark[j] == True:
-          FirstDark_Flag[j] = True
-          ObsFirstTime[j] = FirstDark[j]
-        else:
-          ObsFirstTime1 = NextWindowTools.NextObservationWindow(time = obs_time,obsSite=ObsParameters[j])
-          ObsFirstTime.append(ObsFirstTime1) 
-          if ObsFirstTime1 != False:
-            if ObsFirstTime1 < utc.localize(obs_time + datetime.timedelta(hours=24)):
-              FirstDark_Flag[j] = True
-        j+=1
-
-
-    #Checking which observatories are availabe for observations and saving their start time
-    ActiveObsStart = []
-    ActiveObs = []
-    SameNight = np.full(len(ObsArray), False, dtype=bool)
-
-    j = 0
-    for obspar in ObsArray:
-      if FirstDark_Flag[j]:
-        ActiveObsStart.append(ObsFirstTime[j])
-        ActiveObs.append(ObsParameters[j])
-        SameNight[j] = True
-      j+=1
-    #print(ActiveObs[0].name, ActiveObs[1].name, ActiveObs[2].name)
-
-
-    #Sorting observatories according to their first obsevation time available
-    NewActiveObsStart = np.sort(ActiveObsStart)
-    NewActiveObs = ActiveObs
-    ind = np.argsort(ActiveObsStart)
-    ind = np.array(ind)
-    NewActiveObs = np.take(ActiveObs, ind)
+    obs_time, SameNight, NewActiveObs, NewActiveObsStart = ObservationStartperObs(ObsArray, ObsParameters, ObservationTime0)
 
     #START
 #################################################################################################################################################
@@ -392,12 +348,12 @@ def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,di
 
           NUMBER_OBS[j] += 1
 
-          if SameNight[j]:
-            TIME_MIN = NewActiveObsTime[j]
-            TIME_MIN_ALL.append(TIME_MIN)
-            TIME_MIN = np.min(TIME_MIN_ALL)
-          else: 
-            TIME_MIN = TIME_MIN + datetime.timedelta(hours=12)
+        if SameNight[j]:
+          TIME_MIN = NewActiveObsTime[j]
+          TIME_MIN_ALL.append(TIME_MIN)
+          TIME_MIN = np.min(TIME_MIN_ALL)
+        else: 
+          TIME_MIN = TIME_MIN + datetime.timedelta(hours=12)
       
       i+=1
 
@@ -408,57 +364,7 @@ def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,di
 def PGWinFoV_NObs_Simulation(filename, ObservationTime0, PointingsFile, parameters, dirName, ObsArray):
     
     #TODO: Modify this.. NOT WORKING
-    # Finding the start time for each observatory and checking if it's now
-    FirstDark = np.full(len(ObsArray), False, dtype=bool)
-    FirstDark_Flag = np.full(len(ObsArray), False, dtype=bool)
-    obs_time = ObservationTime0
-    ObsFirstTime = []
-    ObsParameters = []
-    
-    j = 0
-    for obspar1 in ObsArray:
-        
-        globals()[obspar1] = ObservationParameters.from_configfile(parameters[j])
-        ObsParameters.append(globals()[obspar1])
-        
-        dark_at_start = False
-        if ObsParameters[j].UseGreytime:
-            dark_at_start = Tools.IsDarkness(obs_time, ObsParameters[j])
-        if not ObsParameters[j].UseGreytime:
-            dark_at_start = Tools.IsGreyness(obs_time, ObsParameters[j])
-        FirstDark[j] = dark_at_start
-        
-        if FirstDark[j] == True:
-            FirstDark_Flag[j] = True
-            ObsFirstTime[j] = FirstDark[j]
-        else:
-            ObsFirstTime1 = NextWindowTools.NextObservationWindow(time=obs_time, obsSite=ObsParameters[j])
-            ObsFirstTime.append(ObsFirstTime1)
-            if ObsFirstTime1 < (obs_time + datetime.timedelta(hours=24)):
-                FirstDark_Flag[j] = True
-        
-        j += 1
-    
-    # Checking which observatories are availabe for observations and saving their start time
-    ActiveObsStart = []
-    ActiveObs = []
-    SameNight = np.full(len(ObsArray), False, dtype=bool)
-    
-    j = 0
-    for obspar in ObsArray:
-        if FirstDark_Flag[j]:
-            ActiveObsStart.append(ObsFirstTime[j])
-            ActiveObs.append(ObsParameters[j])
-            SameNight[j] = True
-        j += 1
-    print(ActiveObs[0].name, ActiveObs[1].name, ActiveObs[2].name)
-    
-    # Sorting observatories according to their first obsevation time available
-    NewActiveObsStart = np.sort(ActiveObsStart)
-    NewActiveObs = ActiveObs
-    ind = np.argsort(ActiveObsStart)
-    ind = np.array(ind)
-    NewActiveObs = np.take(ActiveObs, ind)
+    obs_time, SameNight, NewActiveObs, NewActiveObsStart = ObservationStartperObs(ObsArray, ObsParameters, ObservationTime0)
 
     # START
     #################################################################################################################################################
@@ -568,12 +474,12 @@ def PGWinFoV_NObs_Simulation(filename, ObservationTime0, PointingsFile, paramete
                 
                 NUMBER_OBS[j] += 1
                 
-                if SameNight[j]:
-                    TIME_MIN = NewActiveObsTime[j]
-                    TIME_MIN_ALL.append(TIME_MIN)
-                    TIME_MIN = np.min(TIME_MIN_ALL)
-                else:
-                    TIME_MIN = TIME_MIN + datetime.timedelta(hours=12)
+            if SameNight[j]:
+                TIME_MIN = NewActiveObsTime[j]
+                TIME_MIN_ALL.append(TIME_MIN)
+                TIME_MIN = np.min(TIME_MIN_ALL)
+            else:
+                TIME_MIN = TIME_MIN + datetime.timedelta(hours=12)
         
         i += 1
     
