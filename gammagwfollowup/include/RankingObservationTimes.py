@@ -501,7 +501,6 @@ def RankingTimes(ObservationTime, filename, cat, obspar, targetType, dirName, Po
     has3D = True
     if (len(distnorm) == 0):
         has3D = False
-
     # correlate GW map with galaxy catalog, retrieve ordered list
     tGals, sum_dP_dV = CorrelateGalaxies_LVC(prob, distmu, distsigma, distnorm, cat, has3D, obspar.MinimumProbCutForCatalogue)
     point = ProbabilitiesinPointings3D(tGals, point, obspar.FOV, sum_dP_dV, prob, nside)

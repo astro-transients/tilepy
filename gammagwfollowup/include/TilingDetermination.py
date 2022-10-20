@@ -378,7 +378,7 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,obspar,dirName):
 
     Round = []
     print('----------   NEW FOLLOW-UP ATTEMPT   ----------')
-    print('MaxRuns: ',MaxRuns,'MinimumProbCutForCatalogue: ', obspar.MinimumProbCutForCatalogue)
+    print('MaxRuns: ',obspar.MaxRuns,'MinimumProbCutForCatalogue: ', obspar.MinimumProbCutForCatalogue)
 
     if(obspar.UseGreytime):
         NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0,obspar)
@@ -391,7 +391,7 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,obspar,dirName):
     totalProb=0.
     counter=0
     for j in range(0, len(NightDarkRuns)):
-        if (len(ObservationTimearray) < MaxRuns):
+        if (len(ObservationTimearray) < obspar.MaxRuns):
             ObservationTime = NightDarkRuns[j]
             visible, altaz, tGals_aux = VisibleAtTime(ObservationTime, tGals_aux, obspar.max_zenith, obspar.Location)
             
@@ -409,9 +409,9 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,obspar,dirName):
                 if not obspar.UseGreytime:
                     finalGals = visiGals[mask]
                 
-                if(finalGals['dp_dV_FOV'][:1] > obspar.probCut):
+                if(finalGals['dp_dV_FOV'][:1] > obspar.MinProbCut):
                     # final galaxies within the FoV
-                    if ((finalGals['dp_dV_FOV'][:1] < (2 * probCut)) and (sum(P_GWarray) > 0.40) and obspar.SecondRound):  # This notes LIGOVirgo type of signal
+                    if ((finalGals['dp_dV_FOV'][:1] < (2 * obspar.MinProbCut)) and (sum(P_GWarray) > 0.40) and obspar.SecondRound):  # This notes LIGOVirgo type of signal
                         print('probability', finalGals['dp_dV_FOV'][:1])
                         visible, altaz, tGals_aux2 = VisibleAtTime(ObservationTime, tGals_aux2, obspar.max_zenith,obspar.Location)
                         if (visible):
@@ -439,14 +439,14 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,obspar,dirName):
                         Round.append(1)
                     P_GALarray.append(np.float('{:1.4f}'.format(p_gal)))
                     P_GWarray.append(np.float('{:1.4f}'.format(p_gw)))
-                    ObservationTimearray.append(ObservationTime)
+                    ObservationTimearray.append(str(ObservationTime).split('.')[0])
                     counter = counter + 1
                     #ObservationTimearrayNamibia.append(Tools.UTCtoNamibia(ObservationTime))
             
                 else:
                     #print("Optimal pointing position is: ")
                     #print(finalGals['RAJ2000', 'DEJ2000', 'Bmag', 'Dist', 'Alt', 'dp_dV','dp_dV_FOV'][:1])
-                    print("NOT passing the cut on dp_dV_FOV > ",obspar.probCut)
+                    print("NOT passing the cut on dp_dV_FOV > ",obspar.MinProbCut)
         else:
             break
 
@@ -544,7 +544,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
     nextround = False
     Round = []
     print('----------   NEW FOLLOW-UP ATTEMPT   ----------')
-    print('MaxRuns: ', MaxRuns, 'MinimumProbCutForCatalogue: ', obspar.MinimumProbCutForCatalogue)
+    print('MaxRuns: ', obspar.MaxRuns, 'MinimumProbCutForCatalogue: ', obspar.MinimumProbCutForCatalogue)
 
     if(obspar.UseGreytime):
         NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0, obspar)
@@ -567,7 +567,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
     ##############################
     counter=0
     for j in range(0, len(NightDarkRuns)):
-        if (len(ObservationTimearray) < MaxRuns):
+        if (len(ObservationTimearray) < obspar.MaxRuns):
             ObservationTime = NightDarkRuns[j]
             if (nextround):
                 ObservationTime = NightDarkRuns[j - 1]
@@ -587,7 +587,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
                 visiPix = ModifyCataloguePIX(pix_ra1, pix_dec1, ObservationTime, obspar.max_zenith, prob, finalGals, obspar.FOV,
                                              sum_dP_dV, nside, obspar.NewNside, minz,obspar.Location)
 
-                if (visiPix['PIXFOVPROB'][:1] > obspar.probCut):
+                if (visiPix['PIXFOVPROB'][:1] > obspar.MinProbCut):
                     n = n + 1
                     # final galaxies within the FoV
 
@@ -606,13 +606,13 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
                     Round.append(1)
                     P_GALarray.append(np.float('{:1.4f}'.format(p_gal)))
                     P_GWarray.append(np.float('{:1.4f}'.format(p_gw)))
-                    ObservationTimearray.append(ObservationTime)
+                    ObservationTimearray.append(str(ObservationTime).split('.')[0])
                     counter=counter+1
 
                 else:
                     print("\nOptimal pointing position is: ")
                     print(visiPix['PIXRA', 'PIXDEC', 'PIXFOVPROB'][:1])
-                    print("NOT passing the cut on dp_dV_FOV > ", obspar.probCut)
+                    print("NOT passing the cut on dp_dV_FOV > ", obspar.MinProbCut)
 
         else:
             break
