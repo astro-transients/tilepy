@@ -440,7 +440,7 @@ def Sortingby(galPointing,targetType, name, exposure):
 
 
 
-def EvolutionPlot(galPointing,tname):
+def EvolutionPlot(galPointing,tname, ObsArray):
     cm = plt.get_cmap('gist_rainbow')
 
     fig = plt.figure(figsize=(18, 10))
@@ -479,10 +479,10 @@ def EvolutionPlot(galPointing,tname):
     ax.set_xlabel('Time',fontsize=14)
     ax.grid()
     ax.legend(bbox_to_anchor=(1.02, 1), loc=2, borderaxespad=0.)
-    plt.savefig("%s/AltitudevsTime.png"%tname)
+    plt.savefig("%s/AltitudevsTime_%s.png" %(tname, ObsArray))
 
 
-def RankingTimes(ObservationTime, filename, cat, obspar, targetType, dirName, PointingFile):
+def RankingTimes(ObservationTime, filename, cat, obspar, targetType, dirName, PointingFile, ObsArray):
 
 
     point = load_pointingFile(PointingFile)
@@ -508,10 +508,10 @@ def RankingTimes(ObservationTime, filename, cat, obspar, targetType, dirName, Po
     point = VisibilityWindow(ObservationTime, point, 90 - obspar.max_zenith, obspar.MaxNights, obspar.UseGreytime, dirName, obspar.max_zenith,
                              obspar)
 
-    EvolutionPlot(point, dirName)
+    EvolutionPlot(point, dirName, ObsArray)
     Sortingby(point, targetType, dirName, obspar.Duration)
 
-def RankingTimes_SkyMapInput_2D(ObservationTime, prob, obspar, targetType, dirName, PointingFile):
+def RankingTimes_SkyMapInput_2D(ObservationTime, prob, obspar, targetType, dirName, PointingFile, ObsArray):
 
     point = load_pointingFile(PointingFile)
 
@@ -528,7 +528,7 @@ def RankingTimes_SkyMapInput_2D(ObservationTime, prob, obspar, targetType, dirNa
     point = VisibilityWindow(ObservationTime, point, 90 - obspar.max_zenith, obspar.MaxNights, obspar.UseGreytime, dirName, obspar.max_zenith,
                              obspar)
 
-    EvolutionPlot(point, dirName)
+    EvolutionPlot(point, dirName, ObsArray)
     Sortingby(point, targetType, dirName, obspar.Duration)
 
 

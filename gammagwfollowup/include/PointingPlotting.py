@@ -12,6 +12,7 @@ from astropy.coordinates import SkyCoord
 import datetime
 from six.moves import configparser
 import six
+from datetime import date
 
 if six.PY2:
   ConfigParser = configparser.SafeConfigParser
@@ -84,7 +85,7 @@ def LoadPointingsGAL(tpointingFile):
     return time, coordinates ,Pgw, Pgal
 
 
-def PointingPlotting(prob, obspar, name,dirName,PointingsFile1):
+def PointingPlotting(prob, obspar, name,dirName,PointingsFile1, ObsArray):
 
 
     npix = len(prob)
@@ -108,15 +109,14 @@ def PointingPlotting(prob, obspar, name,dirName,PointingsFile1):
                 try:
                     converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S'))
                 except ValueError:
-                    #converted_time1 = str(converted_time1).split('+')[0]
                     converted_time1.append(time1)
-                    #converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S.%f-%z'))
+                    #converted_time1 = str(converted_time1).split('+')[0]
+                    #converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S'))
     #PlotPointingsTogether(prob,converted_time1[0],Coordinates1,sum(Probarray1),name1,Coordinates2,sum(Probarray2),name2, nside, obspar.FOV, doplot=True)
-    PlotPointings(prob,converted_time1,Coordinates1,sum(Probarray1), nside, obspar, name, dirName)
+    PlotPointings(prob,converted_time1,Coordinates1,sum(Probarray1), nside, obspar, name, dirName, ObsArray)
 
 
-def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirName):
-
+def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirName, ObsArray):
     FOV = obspar.FOV
     maxzenith= obspar.max_zenith
     doplot = obspar.doplot
@@ -142,7 +142,7 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
         frame = co.AltAz(obstime=time[0], location=observatory)
         altaz_all = skycoord.transform_to(frame)
 
-        dirName = '%s/Pointing_Plotting' % dirName
+        dirName = '%s/Pointing_Plotting_%s' % (dirName, ObsArray)
         if not os.path.exists(dirName):
             os.makedirs(dirName)
 
@@ -381,7 +381,7 @@ def PlotPointingsTogether(prob, time, targetCoord1, n1, targetCoord2, n2, nside,
             deccoord1 = tarcoorddec1 + Fov_array * np.sin(theta)
             hp.visufunc.projscatter(racoord1, deccoord1, lonlat=True, marker='.', color=colors[2])
             hp.projtext(targetCoord1[j].ra, targetCoord1[j].dec, str(j), lonlat=True, color=colors[2])
-        # plt.savefig("Pointing_Plotting/G274296Pointing_GW_%g_%g:%g.png" % (time.day, time.hour,time.minute))
+        #plt.savefig("Pointing_Plotting_%s/G274296Pointing_GW_%g_%g:%g.png" % (ObsArray, time.day, time.hour,time.minute))
 
         tarcoordra2 = np.empty(400)
 
@@ -394,10 +394,10 @@ def PlotPointingsTogether(prob, time, targetCoord1, n1, targetCoord2, n2, nside,
             hp.visufunc.projscatter(racoord2, deccoord2, lonlat=True, marker='.', color=colors[1])
             hp.projtext(targetCoord1[j].ra, targetCoord1[j].dec, str(j), lonlat=True, color=colors[1])
         # plt.show()
-        # plt.savefig("Pointing_Plotting/PointingFOV_Comparison.png")
+        # plt.savefig("Pointing_Plotting_%s/PointingFOV_Comparison.png" %ObsArray)
 
 
-def PointingPlottingGWCTA(filename,name, dirName, PointingsFile,FOV,UseObs):
+def PointingPlottingGWCTA(filename,name, dirName, PointingsFile,FOV,UseObs, ObsArray):
 
     print()
     print('-------------------   PLOTTING SCHEDULE   --------------------')
@@ -477,7 +477,7 @@ def PointingPlottingGWCTA(filename,name, dirName, PointingsFile,FOV,UseObs):
     frame = co.AltAz(obstime=converted_time[0], location=observatory.Location)
     altaz_all = skycoord.transform_to(frame)
 
-    dirName = '%s/Pointing_Plotting/%s' % (dirName,name)
+    dirName = '%s/Pointing_Plotting_%s/%s' % (dirName,ObsArray,name)
     if not os.path.exists(dirName):
         os.makedirs(dirName)
     #path = os.path.dirname(os.path.realpath(__file__)) + '/Pointing_Plotting'
@@ -509,7 +509,7 @@ def PointingPlottingGWCTA(filename,name, dirName, PointingsFile,FOV,UseObs):
     #hp.visufunc.projscatter(cat['RAJ2000'][dist < 200], cat['DEJ2000'][dist < 200], lonlat=True, marker='.',color='g', linewidth=0.1, coord='C')
 
 
-def PointingPlottingGW_ZenithSteps(filename,name,dirName,FOV,InputTimeObs):
+def PointingPlottingGW_ZenithSteps(filename,name,dirName,FOV,InputTimeObs, ObsArray):
 
     print()
     print('-------------------   PLOTTING SCHEDULE   --------------------')
@@ -572,7 +572,7 @@ def PointingPlottingGW_ZenithSteps(filename,name,dirName,FOV,InputTimeObs):
     #frame = co.AltAz(obstime=converted_time, location=observatory.Location)
     #altaz_all = skycoord.transform_to(frame)
 
-    dirName = '%s/Pointing_Plotting/%s' % (dirName,name)
+    dirName = '%s/Pointing_Plotting_%s/%s' % (dirName,ObsArray, name)
     if not os.path.exists(dirName):
         os.makedirs(dirName)
 
@@ -606,10 +606,10 @@ def PlotScheduling_fromID(ID, InputFileName, dirName, pointingsFile, FOV):
     # pointingsFile= '../../gw-follow-up-simulations-side-results/TestPointings/run0017_MergerID000261_GWOptimisation.txt'
     # FOV= 2.0
     
-    PointingPlottingGWCTA(GWFile, name, dirName, pointingsFile, FOV, InputTimeList['Observatory'][j])
+    PointingPlottingGWCTA(GWFile, name, dirName, pointingsFile, FOV, InputTimeList['Observatory'][j], ObsArray)
 
 
-def PlotZenithAngleLines_fromID(ID, InputFileName, dirName, FOV):
+def PlotZenithAngleLines_fromID(ID, InputFileName, dirName, FOV, ObsArray):
     j = ID
     
     # GW file
@@ -621,5 +621,5 @@ def PlotZenithAngleLines_fromID(ID, InputFileName, dirName, FOV):
     InjectTimeFile = '../../dataset/BNS-GW-Time_onAxis5deg_postRome.txt'
     InputTimeList = TableImportCTA_Time(InjectTimeFile)
     
-    PointingPlottingGW_ZenithSteps(GWFile, name, dirName, FOV, InputTimeList[j])
+    PointingPlottingGW_ZenithSteps(GWFile, name, dirName, FOV, InputTimeList[j], ObsArray)
 

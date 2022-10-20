@@ -55,11 +55,9 @@ def ObservationStartperObs(ObsArray, ObsParameters, ObservationTime0):
         else:
           ObsFirstTime1 = NextWindowTools.NextObservationWindow(time = obs_time,obsSite=ObsParameters[j])
           ObsFirstTime.append(ObsFirstTime1)
-          print(ObsFirstTime1)
           if ObsFirstTime1 != False:
             if ObsFirstTime1 < utc.localize(obs_time + datetime.timedelta(hours=24)):
               FirstDark_Flag[j] = True
-
         j+=1
 
     #Checking which observatories are availabe for observations and saving their start time
@@ -75,13 +73,13 @@ def ObservationStartperObs(ObsArray, ObsParameters, ObservationTime0):
         SameNight[j] = True
       j+=1
 
-
     #Sorting observatories according to their first obsevation time available
     NewActiveObsStart = np.sort(ActiveObsStart)
     NewActiveObs = ActiveObs
     ind = np.argsort(ActiveObsStart)
     ind = np.array(ind)
     NewActiveObs = np.take(ActiveObs, ind)
+
 
     return obs_time, SameNight, NewActiveObs, NewActiveObsStart
 
@@ -160,6 +158,8 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
                   P_GWarray.append(P_GW)
                   RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
                   DECarray.append(np.float('{:3.4f}'.format(np.float(TC.dec.deg))))
+                  ObservationTime = str(ObservationTime).split('.')[0]
+                  ObservationTime = datetime.datetime.strptime(ObservationTime, '%Y-%m-%d %H:%M:%S')
                   ObservationTimearray.append(ObservationTime)
                   ObsName.append(obspar.name)
                   counter = counter + 1
@@ -170,6 +170,8 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
               P_GWarray.append(np.float('{:1.4f}'.format(np.float(P_GW))))
               RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
               DECarray.append(np.float('{:3.4f}'.format(np.float(TC.dec.deg))))
+              ObservationTime = str(ObservationTime).split('.')[0]
+              ObservationTime = datetime.datetime.strptime(ObservationTime, '%Y-%m-%d %H:%M:%S')
               ObservationTimearray.append(ObservationTime)
               ObsName.append(obspar.name)
               counter=counter+1
@@ -326,6 +328,8 @@ def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,di
                       Round.append(1)
                   P_GALarray.append(np.float('{:1.4f}'.format(p_gal)))
                   P_GWarray.append(np.float('{:1.4f}'.format(p_gw)))
+                  ObservationTime = str(ObservationTime).split('.')[0]
+                  ObservationTime = datetime.datetime.strptime(ObservationTime, '%Y-%m-%d %H:%M:%S')
                   ObservationTimearray.append(ObservationTime)
                   ObsName.append(obspar.name)
                   counter = counter + 1
@@ -450,6 +454,8 @@ def PGWinFoV_NObs_Simulation(filename, ObservationTime0, PointingsFile, paramete
                             P_GWarray.append(P_GW)
                             RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
                             DECarray.append(np.float('{:3.4f}'.format(np.float(TC.dec.deg))))
+                            ObservationTime = str(ObservationTime).split('.')[0]
+                            ObservationTime = datetime.datetime.strptime(ObservationTime, '%Y-%m-%d %H:%M:%S')
                             ObservationTimearray.append(ObservationTime)
                             ObsName.append(obspar.name)
                             counter = counter + 1
@@ -460,6 +466,8 @@ def PGWinFoV_NObs_Simulation(filename, ObservationTime0, PointingsFile, paramete
                         P_GWarray.append(np.float('{:1.4f}'.format(np.float(P_GW))))
                         RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
                         DECarray.append(np.float('{:3.4f}'.format(np.float(TC.dec.deg))))
+                        ObservationTime = str(ObservationTime).split('.')[0]
+                        ObservationTime = datetime.datetime.strptime(ObservationTime, '%Y-%m-%d %H:%M:%S')
                         ObservationTimearray.append(ObservationTime)
                         ObsName.append(obspar.name)
                         counter = counter + 1
