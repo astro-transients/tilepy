@@ -59,7 +59,7 @@ def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
 
 
     if has3D:
-        dirName = '%s/PGallinFoV' % outputDir
+        dirName = '%s/PGalinFoV_NObs' % outputDir
         if not os.path.exists(dirName):
             os.makedirs(dirName)
         SuggestedPointings, cat, ObsParameters = PGalinFoV_NObs(filename, ObservationTime, PointingsFile, galaxies, parameters, dirName, ObsArray, ObsParameters)
@@ -82,8 +82,8 @@ def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
             print(SuggestedPointings_1)
             if (len(SuggestedPointings_1) != 0):
                 ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]) , overwrite=True, fast_writer=False)
-                RankingTimes_SkyMapInput_2D(ObservationTime, prob, ObsParameters[j], targetType, dirName,'%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]))
-                PointingPlotting(prob, ObsParameters[j], name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]))
+                RankingTimes_SkyMapInput_2D(ObservationTime, prob, ObsParameters[j], targetType, dirName,'%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]), ObsArray[j])
+                PointingPlotting(prob, ObsParameters[j], name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]), ObsArray[j])
     else:
         FOLLOWUP = False
         print('No observations are scheduled')
