@@ -85,7 +85,7 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,obspar,dirName):
     for j in range(0, len(NightDarkRuns)):
         if (len(ObservationTimearray) < obspar.MaxRuns):
             ObservationTime = NightDarkRuns[j]
-            ObsBool,yprob=ZenithAngleCut(prob,nside,ObservationTime,obspar.MinProbCut,obspar.max_zenith,obspar.Location,obspar.UseGreytime)
+            ObsBool,yprob=ZenithAngleCut(prob,nside,ObservationTime,obspar.MinProbCut,obspar.max_zenith,obspar.Location, obspar.MoonSourceSeparation, obspar.UseGreytime)
             if ObsBool:
                 # Round 1
                 P_GW,TC,pixlist,ipixlistHR = ComputeProbability2D(prob,highres,radecs,obspar.ReducedNside,obspar.HRnside,obspar.MinProbCut,ObservationTime,obspar.Location,obspar.max_zenith,obspar.FOV,name,pixlist,ipixlistHR,counter,dirName,obspar.UseGreytime,obspar.doplot)
@@ -404,7 +404,7 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,obspar,dirName):
                 
                 mask, minz = FulfillsRequirement(visiGals, obspar.max_zenith,obspar.FOV,obspar.FulFillReq_Percentage,UsePix=False)
                 if obspar.UseGreytime:
-                    maskgrey=FulfillsRequirementGreyObservations(ObservationTime,visiGals,obspar.Location)
+                    maskgrey=FulfillsRequirementGreyObservations(ObservationTime,visiGals,obspar.Location, obspar.MoonSourceSeparation)
                     finalGals=visiGals[mask&maskgrey]
                 if not obspar.UseGreytime:
                     finalGals = visiGals[mask]
@@ -730,8 +730,7 @@ def PGWonFoV_WindowsfromIRFs(filename, InputChar, TC, parameters, dirName):
             ObservationTime = ObservationTime0 + datetime.timedelta(seconds=tstar[j])
             # print(ObservationTime)
 
-            ObsBool, yprob = ZenithAngleCut(prob, nside, ObservationTime, obspar.MinProbCut, obspar.max_zenith, observatory.Location,
-                                            False)
+            ObsBool, yprob = ZenithAngleCut(prob, nside, ObservationTime, obspar.MinProbCut, obspar.max_zenith, observatory.Location, obspar.MoonSourceSeparation, False)
             # print(ObsBool)
             if ObsBool:
                 # Round 1
@@ -909,8 +908,7 @@ def PGWonFoV_WindowOptimisation(filename, InputChar, TC, parameters, datasetDir,
                     ObsBool = False
                     print("The source is not on the temporal FoV of the instrument")
                     break
-                ObsBool, yprob = ZenithAngleCut(prob, nside, checkTime, obspar.MinProbCut, obspar.max_zenith, obspar.Location,
-                                                usegreytime=False)
+                ObsBool, yprob = ZenithAngleCut(prob, nside, checkTime, obspar.MinProbCut, obspar.max_zenith, obspar.Location, obspar.MoonSourceSeparation, usegreytime=False)
                 print(checkTime, ObsBool)
                 if (ObsBool == True):
                     StartObsTime = checkTime

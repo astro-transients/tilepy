@@ -141,7 +141,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
         ITERATION_OBS += 1
 
         if (TIME_MIN >= NewActiveObsTime[j]) & SameNight[j]:
-          ObsBool,yprob=ZenithAngleCut(prob,nside,ObservationTime,obspar.MinProbCut,obspar.max_zenith,obspar.Location,obspar.UseGreytime)
+          ObsBool,yprob=ZenithAngleCut(prob,nside,ObservationTime,obspar.MinProbCut,obspar.max_zenith,obspar.Location, obspar.MoonSourceSeparation, obspar.UseGreytime)
           if ObsBool:
             # Round 1
             P_GW,TC,pixlist,ipixlistHR = ComputeProbability2D(prob,highres,radecs,obspar.ReducedNside,obspar.HRnside,obspar.MinProbCut,ObservationTime,obspar.Location,obspar.max_zenith,obspar.FOV,name,pixlist,ipixlistHR,counter,dirName,obspar.UseGreytime,obspar.doplot)
@@ -293,7 +293,7 @@ def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,di
               
               mask, minz = FulfillsRequirement(visiGals, obspar.max_zenith,obspar.FOV,obspar.FulFillReq_Percentage,UsePix=False)
               if obspar.UseGreytime:
-                  maskgrey=FulfillsRequirementGreyObservations(ObservationTime,visiGals,obspar.Location)
+                  maskgrey=FulfillsRequirementGreyObservations(ObservationTime,visiGals,obspar.Location, obspar.MoonSourceSeparation)
                   finalGals=visiGals[mask&maskgrey]
               if not obspar.UseGreytime:
                   finalGals = visiGals[mask]
@@ -426,7 +426,7 @@ def PGWinFoV_NObs_Simulation(filename, ObservationTime0, PointingsFile, paramete
             
             if (TIME_MIN >= NewActiveObsTime[j]) & SameNight[j]:
                 ObsBool, yprob = ZenithAngleCut(prob, nside, ObservationTime, obspar.MinProbCut, obspar.max_zenith,
-                                                obspar.Location, obspar.UseGreytime)
+                                                obspar.Location, obspar.MoonSourceSeparation, obspar.UseGreytime)
                 if ObsBool:
                     # Round 1
                     P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(prob, highres, radecs, obspar.ReducedNside,

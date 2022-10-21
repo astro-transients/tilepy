@@ -817,7 +817,7 @@ def NightDarkObservationwithGreyTime(time, obspar):
     return NightDarkRuns
 
 
-def ZenithAngleCut(prob, nside, time, MinProbCut,max_zenith,observatory,usegreytime):
+def ZenithAngleCut(prob, nside, time, MinProbCut,max_zenith,observatory, MoonSourceSeparation, usegreytime):
     '''
     Mask in the pixels with zenith angle larger than 45
     '''
@@ -1327,7 +1327,7 @@ def FulfillsRequirement(theseGals, maxz,FOV,FulFillReq_Percentage,UsePix):
         mask=alt >90-(thisminz+FOV)
     return mask, thisminz
 
-def FulfillsRequirementGreyObservations(Ktime,theseGals,observatory):
+def FulfillsRequirementGreyObservations(Ktime,theseGals,observatory, MoonSourceSeparation):
 
     targetCoord = co.SkyCoord(theseGals['RAJ2000'], theseGals['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
     frame = co.AltAz(obstime=Ktime, location=observatory)

@@ -141,7 +141,7 @@ def load_pointingFile(tpointingFile):
 
     return Pointings
 
-def VisibilityWindow(ObservationTime,Pointing,AltitudeCut,nights,UseGreytime,dirName,max_zenith,observatory):
+def VisibilityWindow(ObservationTime,Pointing,AltitudeCut,nights,UseGreytime,dirName,max_zenith,observatory, gMoonGrey, gMoonDown, gMoonPhase, gSunDown, MoonSourceSeparation, MaxMoonSourceSeparation):
     source = SkyCoord(Pointing['RAJ2000'],Pointing['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
     WINDOW=[]
     ZENITH=[]
@@ -159,11 +159,11 @@ def VisibilityWindow(ObservationTime,Pointing,AltitudeCut,nights,UseGreytime,dir
     timeInitial=auxtime-datetime.timedelta(minutes=30)
     for i in range(0,len(source)):
         NonValidwindow,Stepzenith = GetVisibility(Pointing['Time'],source[i],max_zenith, observatory)
-        window, zenith = GetObservationPeriod(timeInitial, source[i],AltitudeCut,observatory,nights,i,dirName,UseGreytime,False)
+        window, zenith = GetObservationPeriod(timeInitial, source[i],AltitudeCut,observatory,nights,i,dirName,UseGreytime,False, gMoonGrey, gMoonDown, gMoonPhase, gSunDown, MoonSourceSeparation, MaxMoonSourceSeparation)
         WINDOW.append(window)
         ZENITH.append(zenith)
         SZENITH.append(Stepzenith)
-        window, zenith = GetObservationPeriod(ObservationTime, source[i],AltitudeCut,observatory,nights,i,dirName,UseGreytime,True)
+        window, zenith = GetObservationPeriod(ObservationTime, source[i],AltitudeCut,observatory,nights,i,dirName,UseGreytime,True, gMoonGrey, gMoonDown, gMoonPhase, gSunDown, MoonSourceSeparation, MaxMoonSourceSeparation)
 
     Pointing['Observation window'] = WINDOW
     Pointing['Array of zenith angles']=ZENITH
@@ -172,7 +172,7 @@ def VisibilityWindow(ObservationTime,Pointing,AltitudeCut,nights,UseGreytime,dir
     return Pointing
 
 
-def GetObservationPeriod(inputtime0,msource,AltitudeCut,observatory,nights,plotnumber,dirName,UseGreytime,doplot):
+def GetObservationPeriod(inputtime0,msource,AltitudeCut,observatory,nights,plotnumber,dirName,UseGreytime,doplot, gMoonGrey, gMoonDown, gMoonPhase, gSunDown, MoonSourceSeparation, MaxMoonSourceSeparation):
 
 
     inputtime = Time(inputtime0)
@@ -505,7 +505,7 @@ def RankingTimes(ObservationTime, filename, cat, obspar, targetType, dirName, Po
     tGals, sum_dP_dV = CorrelateGalaxies_LVC(prob, distmu, distsigma, distnorm, cat, has3D, obspar.MinimumProbCutForCatalogue)
     point = ProbabilitiesinPointings3D(tGals, point, obspar.FOV, sum_dP_dV, prob, nside)
     point = VisibilityWindow(ObservationTime, point, 90 - obspar.max_zenith, obspar.MaxNights, obspar.UseGreytime, dirName, obspar.max_zenith,
-                             obspar)
+                             obspar, obspar.gMoonGrey, obspar.gMoonDown, obspar.gMoonPhase, obspar.gSunDown, obspar.MoonSourceSeparation, obspar.MaxMoonSourceSeparation)
 
     EvolutionPlot(point, dirName, ObsArray)
     Sortingby(point, targetType, dirName, obspar.Duration)
@@ -525,7 +525,7 @@ def RankingTimes_SkyMapInput_2D(ObservationTime, prob, obspar, targetType, dirNa
 
     point = ProbabilitiesinPointings2D(point, obspar.FOV, prob, nside)
     point = VisibilityWindow(ObservationTime, point, 90 - obspar.max_zenith, obspar.MaxNights, obspar.UseGreytime, dirName, obspar.max_zenith,
-                             obspar)
+                             obspar, obspar.gMoonGrey, obspar.gMoonDown, obspar.gMoonPhase, obspar.gSunDown, obspar.MoonSourceSeparation, obspar.MaxMoonSourceSeparation)
 
     EvolutionPlot(point, dirName, ObsArray)
     Sortingby(point, targetType, dirName, obspar.Duration)
