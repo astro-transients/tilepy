@@ -80,7 +80,7 @@ class Tools:
         gMoonDown = obsPar.gMoonDown
         gMoonGrey = obsPar.gMoonGrey
         gMoonPhase = obsPar.gMoonPhase
-
+        
         if sunAlt > gSunDown:
             return False
         if moonAlt > gMoonGrey:
@@ -88,6 +88,7 @@ class Tools:
         if moonPhase > gMoonPhase and moonAlt > gMoonDown:
             return False
         return True
+
 
     @classmethod
     def MoonPhase(cls, obsTime, obsPar):
@@ -302,22 +303,6 @@ class Tools:
         NamibianTime = UTCtime + TimezonesDifference
         return NamibianTime
 
-    @classmethod
-    def NextObservationWindow(cls,time, obsPar):
-        if(Tools.NextSunset(time, obsPar).hour >= time.hour >= Tools.PreviousSunrise(time,obsPar).hour and time.day == Tools.NextSunset(time, obsPar).day):
-            time = Tools.NextSunset(time, obsPar)
-            # print('Sunset', time)
-            time = Tools.TrustingGreynessSun(time, obsPar)
-            # print('Trusted', time)
-        if(Tools.IsGreyness(time, obsPar) is True):
-            return time
-        elif ((Tools.IsGreyness(time, obsPar) is False)):
-            time = Tools.TrustingGreynessSun(time, obsPar)
-            #time=Tools.NextMoonset(time, obsSite)
-            return time
-        else:
-            print('No window is found')
-            return False
 
     @classmethod
     def CheckWindow(cls,time, obsPar):
@@ -808,7 +793,8 @@ def NightDarkObservationwithGreyTime(time, obspar):
                     #print('IsGreyness is',Tools.IsGreyness(time,obspar))
                     ####time = Tools.NextMoonset(time,obspar)
                     ####time = Tools.TrustingDarknessMoon(time, time0,obspar)
-                    break
+                    time = NextWindowTools.NextObservationWindowGrey(time, obspar)
+                    #break
             else:
                 #print('NIGHT IS OVER/BREAK')
                 # print('time.hour >= time0.hour and time.day == time0.day) or (time.hour <= Tools.NextSunrise(time0).hour and time.day == Tools.NextSunrise(time0).day')
@@ -2598,6 +2584,24 @@ class NextWindowTools:
                 Tools.IsDarkness(Tools.NextMoonset(time, obsSite), obsSite) is True)):
             time = Tools.NextMoonset(time, obsSite)
             print('3')
+            return time
+        else:
+            print('No window is found')
+            return False
+
+
+    @classmethod
+    def NextObservationWindowGrey(cls,time, obsPar):
+        if(Tools.NextSunset(time, obsPar).hour >= time.hour >= Tools.PreviousSunrise(time,obsPar).hour and time.day == Tools.NextSunset(time, obsPar).day):
+            time = Tools.NextSunset(time, obsPar)
+            # print('Sunset', time)
+            time = Tools.TrustingGreynessSun(time, obsPar)
+            # print('Trusted', time)
+        if(Tools.IsGreyness(time, obsPar) is True):
+            return time
+        elif ((Tools.IsGreyness(time, obsPar) is False)):
+            time = Tools.TrustingGreynessSun(time, obsPar)
+            #time=Tools.NextMoonset(time, obsSite)
             return time
         else:
             print('No window is found')
