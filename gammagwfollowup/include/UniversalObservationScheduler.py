@@ -35,7 +35,11 @@ def ObservationStartperObs(ObsArray, ObsParameters, ObservationTime0):
     #Finding the start time for each observatory and checking if it's now    
     FirstDark = np.full(len(ObsArray), False, dtype=bool)
     FirstDark_Flag = np.full(len(ObsArray), False, dtype=bool)
+    print(len(FirstDark))
+    #print(len(ObsFirstTime))
     obs_time = ObservationTime0
+    if obs_time.tzinfo is None:
+      obs_time = utc.localize(obs_time)
     ObsFirstTime = []
 
     j = 0
@@ -44,21 +48,32 @@ def ObservationStartperObs(ObsArray, ObsParameters, ObservationTime0):
         dark_at_start =False
 
         if ObsParameters[j].UseGreytime:
-          dark_at_start = Tools.IsDarkness(obs_time, ObsParameters[j])
+          dark_at_start = Tools.CheckWindowGrey(obs_time, ObsParameters[j])
         if not ObsParameters[j].UseGreytime:
-          dark_at_start = Tools.IsGreyness(obs_time, ObsParameters[j])
+          dark_at_start = Tools.CheckWindow(obs_time, ObsParameters[j])
         FirstDark[j] = dark_at_start
 
-        if FirstDark[j] == True:
+        if FirstDark[j] == True: #THIS WILL CREATE A DATETIME OBJECT WITH IN THE FORM XX+00:00 WITH NO DOTS
           FirstDark_Flag[j] = True
-          ObsFirstTime[j] = FirstDark[j]
-        else:
-          ObsFirstTime1 = NextWindowTools.NextObservationWindow(time = obs_time,obsSite=ObsParameters[j])
-          ObsFirstTime.append(ObsFirstTime1)
+          if obs_time.tzinfo is None:
+            obs_time = utc.localize(obs_time)
+          ObsFirstTime.append(obs_time)  
+        else: #THIS WILL CREATE A DATETIME OBJECT WITH IN THE FORM .XX+00:00 
+          if ObsParameters[j].UseGreytime:
+            ObsFirstTime1 = NextWindowTools.NextObservationWindowGrey(time = obs_time, obsPar=ObsParameters[j])
+            ObsFirstTime.append(ObsFirstTime1)
+          if not ObsParameters[j].UseGreytime:
+            ObsFirstTime1 = NextWindowTools.NextObservationWindow(time = obs_time, obsPar=ObsParameters[j])
+            ObsFirstTime.append(ObsFirstTime1)
           if ObsFirstTime1 != False:
-            if ObsFirstTime1 < utc.localize(obs_time + datetime.timedelta(hours=24)):
+            if ObsFirstTime1.tzinfo is None:
+              ObsFirstTime1 = utc.localize(ObsFirstTime1)
+            if obs_time.tzinfo is None:
+              obs_time =  utc.localize(obs_time)
+            if ObsFirstTime1 < obs_time + datetime.timedelta(hours=24):
               FirstDark_Flag[j] = True
         j+=1
+
 
     #Checking which observatories are availabe for observations and saving their start time
     ActiveObsStart = []
@@ -68,6 +83,8 @@ def ObservationStartperObs(ObsArray, ObsParameters, ObservationTime0):
     j = 0
     for obspar in ObsArray:
       if FirstDark_Flag[j]:
+        if ObsFirstTime[j].tzinfo is None:
+          ObsFirstTime = utc.localize(ObsFirstTime[j])
         ActiveObsStart.append(ObsFirstTime[j])
         ActiveObs.append(ObsParameters[j])
         SameNight[j] = True
@@ -120,7 +137,8 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
     ITERATION_OBS = 0
     TIME_MIN_ALL = []
     TIME_MIN = obs_time + datetime.timedelta(hours=12)
-    TIME_MIN = utc.localize(TIME_MIN)
+    if TIME_MIN.tzinfo is None:
+      TIME_MIN = utc.localize(TIME_MIN)
     NewActiveObsTime = NewActiveObsStart
     NUMBER_OBS = np.zeros(len(NewActiveObs))
 #################################################################################################################################################
@@ -158,8 +176,12 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
                   P_GWarray.append(P_GW)
                   RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
                   DECarray.append(np.float('{:3.4f}'.format(np.float(TC.dec.deg))))
-                  ObservationTime = str(ObservationTime).split('.')[0]
-                  ObservationTime = datetime.datetime.strptime(ObservationTime, '%Y-%m-%d %H:%M:%S')
+                  ObservationTime = str(ObservationTime).split('+')[0]
+                  try:
+                    ObservationTime = datetime.datetime.strptime(ObservationTime, '%Y-%m-%d %H:%M:%S')
+                  except ValueError:
+                    ObservationTime = str(ObservationTime).split('.')[0]
+                    ObservationTime = datetime.datetime.strptime(ObservationTime, '%Y-%m-%d %H:%M:%S')
                   ObservationTimearray.append(ObservationTime)
                   ObsName.append(obspar.name)
                   counter = counter + 1
@@ -170,8 +192,12 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
               P_GWarray.append(np.float('{:1.4f}'.format(np.float(P_GW))))
               RAarray.append(np.float('{:3.4f}'.format(np.float(TC.ra.deg))))
               DECarray.append(np.float('{:3.4f}'.format(np.float(TC.dec.deg))))
-              ObservationTime = str(ObservationTime).split('.')[0]
-              ObservationTime = datetime.datetime.strptime(ObservationTime, '%Y-%m-%d %H:%M:%S')
+              ObservationTime = str(ObservationTime).split('+')[0]
+              try:
+                ObservationTime = datetime.datetime.strptime(ObservationTime, '%Y-%m-%d %H:%M:%S')
+              except ValueError:
+                ObservationTime = str(ObservationTime).split('.')[0]
+                ObservationTime = datetime.datetime.strptime(ObservationTime, '%Y-%m-%d %H:%M:%S')
               ObservationTimearray.append(ObservationTime)
               ObsName.append(obspar.name)
               counter=counter+1
@@ -183,8 +209,17 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
 
 
           #HERE WE DETERMINE IF WE ARE STILL IN THE SAME NIGHT FOR THIS OBSERVATORY
-          if (NewActiveObsTime[j] > Tools.NextSunrise(obsstart, obspar)) | (obsstart > Tools.NextMoonrise(obsstart, obspar)):
-            SameNight[j] = False
+          print(obsstart)
+          print(Tools.NextSunrise(obsstart, obspar))
+          print(Tools.NextMoonrise(obsstart, obspar))
+          #if (NewActiveObsTime[j] > Tools.NextSunrise(obsstart, obspar)) | (obsstart > Tools.NextMoonrise(obsstart, obspar)):
+
+          if not ObsParameters[j].UseGreytime:
+            if not Tools.CheckWindow(NewActiveObsTime[j], obspar):
+              SameNight[j] = False
+          if ObsParameters[j].UseGreytime:
+            if not Tools.CheckWindowGrey(NewActiveObsTime[j], obspar):
+              SameNight[j] = False
 
           NUMBER_OBS[j] += 1
 
@@ -260,7 +295,8 @@ def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,di
     ITERATION_OBS = 0
     TIME_MIN_ALL = []
     TIME_MIN = obs_time + datetime.timedelta(hours=12)
-    TIME_MIN = utc.localize(TIME_MIN)
+    if TIME_MIN.tzinfo is None:
+      TIME_MIN = utc.localize(TIME_MIN)
     NewActiveObsTime = NewActiveObsStart
     NUMBER_OBS = np.zeros(len(NewActiveObs))
 #################################################################################################################################################
@@ -347,8 +383,14 @@ def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,di
 
 
           #HERE WE DETERMINE IF WE ARE STILL IN THE SAME NIGHT FOR THIS OBSERVATORY
-          if (NewActiveObsTime[j] > Tools.NextSunrise(NewActiveObsStart[j], NewActiveObs[j])) | (NewActiveObsStart[j] > Tools.NextMoonrise(obs_time, NewActiveObs[j])):
-            SameNight[j] = False
+          #if (NewActiveObsTime[j] > Tools.NextSunrise(NewActiveObsStart[j], NewActiveObs[j])) | (NewActiveObsStart[j] > Tools.NextMoonrise(obs_time, NewActiveObs[j])):
+          if not ObsParameters[j].UseGreytime:
+            if not Tools.CheckWindow(NewActiveObsTime[j], obspar):
+              SameNight[j] = False
+          if ObsParameters[j].UseGreytime:
+            if not Tools.CheckWindowGrey(NewActiveObsTime[j], obspar):
+              SameNight[j] = False
+
 
           NUMBER_OBS[j] += 1
 
@@ -403,6 +445,8 @@ def PGWinFoV_NObs_Simulation(filename, ObservationTime0, PointingsFile, paramete
     ITERATION_OBS = 0
     TIME_MIN_ALL = []
     TIME_MIN = obs_time + datetime.timedelta(hours=12)
+    if TIME_MIN.tzinfo is None:
+      TIME_MIN = utc.localize(TIME_MIN)
     NewActiveObsTime = NewActiveObsStart
     NUMBER_OBS = np.zeros(len(NewActiveObs))
     #################################################################################################################################################
@@ -476,8 +520,12 @@ def PGWinFoV_NObs_Simulation(filename, ObservationTime0, PointingsFile, paramete
                 NewActiveObsTime[j] = NewActiveObsTime[j] + datetime.timedelta(minutes=30)
                 
                 # HERE WE DETERMINE IF WE ARE STILL IN THE SAME NIGHT FOR THIS OBSERVATORY
-                if (NewActiveObsTime[j] > Tools.NextSunrise(NewActiveObsStart[j], NewActiveObs[j])) | (
-                        NewActiveObsStart[j] > Tools.NextMoonrise(obs_time, NewActiveObs[j])):
+                #if (NewActiveObsTime[j] > Tools.NextSunrise(NewActiveObsStart[j], NewActiveObs[j])) | (NewActiveObsStart[j] > Tools.NextMoonrise(obs_time, NewActiveObs[j])):
+                if not ObsParameters[j].UseGreytime:
+                  if not Tools.CheckWindow(NewActiveObsTime[j], obspar):
+                    SameNight[j] = False
+                if ObsParameters[j].UseGreytime:
+                  if not Tools.CheckWindowGrey(NewActiveObsTime[j], obspar):
                     SameNight[j] = False
                 
                 NUMBER_OBS[j] += 1

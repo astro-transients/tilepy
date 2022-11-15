@@ -80,7 +80,6 @@ class Tools:
         gMoonDown = obsPar.gMoonDown
         gMoonGrey = obsPar.gMoonGrey
         gMoonPhase = obsPar.gMoonPhase
-        
         if sunAlt > gSunDown:
             return False
         if moonAlt > gMoonGrey:
@@ -314,6 +313,18 @@ class Tools:
             Observe = False
 
         return Observe
+
+    @classmethod
+    def CheckWindowGrey(cls,time, obsPar):
+        MinimalWindowDuration = datetime.timedelta(minutes=10)
+        if (Tools.IsGreyness(time, obsPar) is True) and (Tools.IsGreyness(time + MinimalWindowDuration, obsPar) is True):
+            Observe = True
+        else:
+            print('No window found')
+            Observe = False
+
+        return Observe
+
     @classmethod
     def GalacticPlaneBorder(cls,coords):
         lon=coords.galactic.l.value #x-coordinate
@@ -2568,22 +2579,15 @@ class NextWindowTools:
         return arr
 
     @classmethod
-    def NextObservationWindow(cls, time, obsSite):
-        if (Tools.NextSunset(time, obsSite).hour >= time.hour >= Tools.PreviousSunrise(time,
-                                                                                       obsSite).hour and time.day == Tools.NextSunset(
-                time, obsSite).day):
-            time = Tools.NextSunset(time, obsSite)
-            # print('Sunset', time)
-            time = Tools.TrustingDarknessSun(time, obsSite)
-            # print('Trusted', time)
-            print('1')
-        if (Tools.IsDarkness(time, obsSite) is True):
-            print('2')
+    def NextObservationWindow(cls, time, obsPar):
+        if (Tools.NextSunset(time, obsPar).hour >= time.hour >= Tools.PreviousSunrise(time,obsPar).hour and time.day == Tools.NextSunset(time, obsPar).day):
+            time = Tools.NextSunset(time, obsPar)
+            time = Tools.TrustingDarknessSun(time, obsPar)
+        if (Tools.IsDarkness(time, obsPar) is True):
             return time
-        elif ((Tools.IsDarkness(time, obsSite) is False) and (
-                Tools.IsDarkness(Tools.NextMoonset(time, obsSite), obsSite) is True)):
-            time = Tools.NextMoonset(time, obsSite)
-            print('3')
+        elif ((Tools.IsDarkness(time, obsPar) is False) and (
+                Tools.IsDarkness(Tools.NextMoonset(time, obsPar), obsPar) is True)):
+            time = Tools.NextMoonset(time, obsPar)
             return time
         else:
             print('No window is found')
