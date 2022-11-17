@@ -141,7 +141,8 @@ def load_pointingFile(tpointingFile):
 
     return Pointings
 
-def VisibilityWindow(ObservationTime,Pointing,AltitudeCut,nights,UseGreytime,dirName,max_zenith,observatory, gMoonGrey, gMoonDown, gMoonPhase, gSunDown, MoonSourceSeparation, MaxMoonSourceSeparation):
+def VisibilityWindow(ObservationTime,Pointing,obspar,dirName):
+    
     source = SkyCoord(Pointing['RAJ2000'],Pointing['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
     WINDOW=[]
     ZENITH=[]
@@ -158,12 +159,12 @@ def VisibilityWindow(ObservationTime,Pointing,AltitudeCut,nights,UseGreytime,dir
     #frame = co.AltAz(obstime=auxtime, location=observatory)
     timeInitial=auxtime-datetime.timedelta(minutes=30)
     for i in range(0,len(source)):
-        NonValidwindow,Stepzenith = GetVisibility(Pointing['Time'],source[i],max_zenith, observatory)
-        window, zenith = GetObservationPeriod(timeInitial, source[i],AltitudeCut,observatory,nights,i,dirName,UseGreytime,False, gMoonGrey, gMoonDown, gMoonPhase, gSunDown, MoonSourceSeparation, MaxMoonSourceSeparation)
+        NonValidwindow,Stepzenith = GetVisibility(Pointing['Time'],source[i],obspar.max_zenith, obspar.Location)
+        window, zenith = GetObservationPeriod(timeInitial, source[i],obspar, i, dirName, False)
         WINDOW.append(window)
         ZENITH.append(zenith)
         SZENITH.append(Stepzenith)
-        window, zenith = GetObservationPeriod(ObservationTime, source[i],AltitudeCut,observatory,nights,i,dirName,UseGreytime,True, gMoonGrey, gMoonDown, gMoonPhase, gSunDown, MoonSourceSeparation, MaxMoonSourceSeparation)
+        window, zenith = GetObservationPeriod(ObservationTime, source[i],obspar,i,dirName, True)
 
     Pointing['Observation window'] = WINDOW
     Pointing['Array of zenith angles']=ZENITH
@@ -172,11 +173,21 @@ def VisibilityWindow(ObservationTime,Pointing,AltitudeCut,nights,UseGreytime,dir
     return Pointing
 
 
-def GetObservationPeriod(inputtime0,msource,AltitudeCut,observatory,nights,plotnumber,dirName,UseGreytime,doplot, gMoonGrey, gMoonDown, gMoonPhase, gSunDown, MoonSourceSeparation, MaxMoonSourceSeparation):
-
+def GetObservationPeriod(inputtime0,msource, obspar, plotnumber,dirName,doplot):
+    
+    AltitudeCut = 90 - obspar.max_zenith
+    nights = obspar.MaxNights
+    UseGreytime = obspar.UseGreytime
+    max_zenith = obspar.max_zenith
+    gMoonGrey =  obspar.gMoonGrey
+    gMoonDown=obspar.gMoonDown
+    gMoonPhase = obspar.gMoonPhase
+    gSunDown = obspar.gSunDown
+    MoonSourceSeparation = obspar.MoonSourceSeparation
+    MaxMoonSourceSeparation = obspar.MaxMoonSourceSeparation
 
     inputtime = Time(inputtime0)
-    initialframe = AltAz(obstime=inputtime,location=observatory.Location)
+    initialframe = AltAz(obstime=inputtime,location=obspar.Location)
 
     ##############################################################################
     suninitial= get_sun(inputtime).transform_to(initialframe)
@@ -202,7 +213,7 @@ def GetObservationPeriod(inputtime0,msource,AltitudeCut,observatory,nights,plotn
         NightsCounter.extend([nights])
 
     times = inputtime + delta_day
-    frame = AltAz(obstime=times,location=observatory.Location)
+    frame = AltAz(obstime=times,location=obspar.Location)
 
     ##############################################################################
     #SUN
@@ -214,7 +225,7 @@ def GetObservationPeriod(inputtime0,msource,AltitudeCut,observatory,nights,plotn
     msourcealtazs = msource.transform_to(frame)
 
     #Add Moon phase
-    moonPhase = np.full(len(msourcealtazs),Tools.MoonPhase(inputtime0,observatory))
+    moonPhase = np.full(len(msourcealtazs),Tools.MoonPhase(inputtime0,obspar))
 
 
     MoonDistance=msourcealtazs.separation(moonaltazs)
@@ -269,7 +280,7 @@ def GetObservationPeriod(inputtime0,msource,AltitudeCut,observatory,nights,plotn
 
     return (str(ScheduledTimes[0]).split('.')[0]+'-->'+str(ScheduledTimes[-1]).split('.')[0]),msourcealtazs.alt
 
-def GetVisibility(time,radecs,max_zenith, observatory):
+def GetVisibility(time,radecs,max_zenith, obsLoc):
 
 
     visibility = []
@@ -283,7 +294,7 @@ def GetVisibility(time,radecs,max_zenith, observatory):
                 auxtime = datetime.datetime.strptime(time[i], '%Y-%m-%d %H:%M:%S')
             except ValueError:
                 auxtime = datetime.datetime.strptime(time[i], '%Y-%m-%d %H:%M')
-        frame = co.AltAz(obstime=auxtime, location=observatory.Location)
+        frame = co.AltAz(obstime=auxtime, location=obsLoc)
         thisaltaz = radecs.transform_to(frame)
         visible = thisaltaz.alt.value > (90-max_zenith)
 
@@ -294,7 +305,7 @@ def GetVisibility(time,radecs,max_zenith, observatory):
         #    visibility.append(auxtime)
              altitude.append(thisaltaz.alt.value)
     lasttime=auxtime+datetime.timedelta(minutes=30)
-    frame = co.AltAz(obstime=lasttime, location=observatory.Location)
+    frame = co.AltAz(obstime=lasttime, location=obsLoc)
     thisaltaz = radecs.transform_to(frame)
     visible = thisaltaz.alt.value > (90 - max_zenith)
 
@@ -504,9 +515,7 @@ def RankingTimes(ObservationTime, filename, cat, obspar, targetType, dirName, Po
     # correlate GW map with galaxy catalog, retrieve ordered list
     tGals, sum_dP_dV = CorrelateGalaxies_LVC(prob, distmu, distsigma, distnorm, cat, has3D, obspar.MinimumProbCutForCatalogue)
     point = ProbabilitiesinPointings3D(tGals, point, obspar.FOV, sum_dP_dV, prob, nside)
-    point = VisibilityWindow(ObservationTime, point, 90 - obspar.max_zenith, obspar.MaxNights, obspar.UseGreytime, dirName, obspar.max_zenith,
-                             obspar, obspar.gMoonGrey, obspar.gMoonDown, obspar.gMoonPhase, obspar.gSunDown, obspar.MoonSourceSeparation, obspar.MaxMoonSourceSeparation)
-
+    point = VisibilityWindow(ObservationTime, point, obspar, dirName)
     EvolutionPlot(point, dirName, ObsArray)
     Sortingby(point, targetType, dirName, obspar.Duration)
 
@@ -524,9 +533,8 @@ def RankingTimes_SkyMapInput_2D(ObservationTime, prob, obspar, targetType, dirNa
     nside = hp.npix2nside(npix)
 
     point = ProbabilitiesinPointings2D(point, obspar.FOV, prob, nside)
-    point = VisibilityWindow(ObservationTime, point, 90 - obspar.max_zenith, obspar.MaxNights, obspar.UseGreytime, dirName, obspar.max_zenith,
-                             obspar, obspar.gMoonGrey, obspar.gMoonDown, obspar.gMoonPhase, obspar.gSunDown, obspar.MoonSourceSeparation, obspar.MaxMoonSourceSeparation)
-
+    point = VisibilityWindow(ObservationTime, point, obspar, dirName)
+    
     EvolutionPlot(point, dirName, ObsArray)
     Sortingby(point, targetType, dirName, obspar.Duration)
 

@@ -483,6 +483,53 @@ class ObservationParameters(object):
         self.ReducedNside = int(parser.get(section, 'reducednside', fallback=0))
         self.HRnside = int(parser.get(section, 'hrnside', fallback=0))
         self.Mangrove = (parser.getboolean(section, 'mangrove', fallback=None))
+        
+    def from_args(self, name, Lat, Lon, Height, gSunDown, HorizonSun, gMoonDown,
+                 HorizonMoon, gMoonGrey, gMoonPhase, MoonSourceSeparation,
+                 MaxMoonSourceSeparation, max_zenith, FOV, MaxRuns, MaxNights,
+                 Duration, MinDuration, UseGreytime, MinSlewing, online,
+                 MinimumProbCutForCatalogue, MinProbCut, doplot, SecondRound ,
+                 FulFillReq_Percentage, PercentCoverage, ReducedNside, HRnside,
+                 Mangrove):
+        
+        self.name = name
+        self.Lat = Lat
+        self.Lon = Lon
+        self.Height = Height
+        self.Location = EarthLocation(lat=self.Lat, lon=self.Lon,
+                                      height=self.Height)
+
+        # Visibility
+        self.gSunDown = gSunDown
+        self.HorizonSun = HorizonSun
+        self.gMoonDown = gMoonDown
+        self.HorizonMoon = HorizonMoon
+        self.gMoonGrey = gMoonGrey
+        self.gMoonPhase = gMoonPhase
+        self.MoonSourceSeparation = MoonSourceSeparation
+        self.MaxMoonSourceSeparation = MaxMoonSourceSeparation
+
+        # Operations
+        self.max_zenith = max_zenith
+        self.FOV = FOV
+        self.MaxRuns = MaxRuns
+        self.MaxNights = MaxNights
+        self.Duration = Duration
+        self.MinDuration = MinDuration
+        self.UseGreytime = UseGreytime
+        self.MinSlewing = MinSlewing
+
+        # Tiling
+        self.online = online
+        self.MinimumProbCutForCatalogue = MinimumProbCutForCatalogue
+        self.MinProbCut = MinProbCut
+        self.doplot = doplot
+        self.SecondRound = SecondRound
+        self.FulFillReq_Percentage = FulFillReq_Percentage
+        self.PercentCoverage = PercentCoverage
+        self.ReducedNside = ReducedNside
+        self.HRnside = HRnside
+        self.Mangrove = Mangrove
 
 
 
