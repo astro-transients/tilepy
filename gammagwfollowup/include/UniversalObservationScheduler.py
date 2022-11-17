@@ -205,7 +205,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
 
 
           #HERE WE DETERMINE THE OBSERVATION DURATION ... FOR NOW WE USE 30 MINS FOR ALL
-          NewActiveObsTime[j] = NewActiveObsTime[j] + datetime.timedelta(minutes=30)
+          NewActiveObsTime[j] = NewActiveObsTime[j] + datetime.timedelta(minutes=obspar.Duration)
 
 
           #HERE WE DETERMINE IF WE ARE STILL IN THE SAME NIGHT FOR THIS OBSERVATORY
@@ -379,7 +379,7 @@ def PGalinFoV_NObs(filename,ObservationTime0,PointingFile,galFile, parameters,di
             
 
           #HERE WE DETERMINE THE OBSERVATION DURATION ... FOR NOW WE USE 30 MINS FOR ALL
-          NewActiveObsTime[j] = NewActiveObsTime[j] + datetime.timedelta(minutes=30)
+          NewActiveObsTime[j] = NewActiveObsTime[j] + datetime.timedelta(minutes=obspar.Duration)
 
 
           #HERE WE DETERMINE IF WE ARE STILL IN THE SAME NIGHT FOR THIS OBSERVATORY
@@ -517,7 +517,7 @@ def PGWinFoV_NObs_Simulation(filename, ObservationTime0, PointingsFile, paramete
                         counter = counter + 1
                 
                 # HERE WE DETERMINE THE OBSERVATION DURATION ... FOR NOW WE USE 30 MINS FOR ALL
-                NewActiveObsTime[j] = NewActiveObsTime[j] + datetime.timedelta(minutes=30)
+                NewActiveObsTime[j] = NewActiveObsTime[j] + datetime.timedelta(minutes=obspar.Duration)
                 
                 # HERE WE DETERMINE IF WE ARE STILL IN THE SAME NIGHT FOR THIS OBSERVATORY
                 #if (NewActiveObsTime[j] > Tools.NextSunrise(NewActiveObsStart[j], NewActiveObs[j])) | (NewActiveObsStart[j] > Tools.NextMoonrise(obs_time, NewActiveObs[j])):

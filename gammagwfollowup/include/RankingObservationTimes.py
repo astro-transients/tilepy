@@ -232,7 +232,6 @@ def GetObservationPeriod(inputtime0,msource,AltitudeCut,observatory,nights,plotn
         newtimes.extend(GTaltitudes['Time UTC'].mjd)
         newtimes = sorted(newtimes)
         ScheduledTimes = Time(newtimes,format='mjd').iso
-        print(ScheduledTimes)
     else:
         Altitudes = Table([times,msourcealtazs.alt, sunaltazs.alt, moonaltazs.alt,NightsCounter],
                            names=['Time UTC', 'Alt Source', 'Alt Sun', 'AltMoon','NightsCounter'])

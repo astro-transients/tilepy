@@ -553,13 +553,22 @@ def GetGWMap(URL):
 
     filename = URL.split("/")[-1]
     print("The filename is ", filename)
+    fits_map_url = URL
+    ##fits_map_url = self.What["GW_SKYMAP"]['skymap_fits']['value']
+    if 'multiorder.' in filename: 
+        fits_map_url = str(fits_map_url).replace('multiorder.', '')
+        fits_map_url = str(fits_map_url).replace('fits', 'fits.gz')
+        print('The GW map is in the right multiorder format')      
+    else:
+        print('The GW map is not in multiorder format, we will try the .fits.gz format, you are welcome')
+
     try:
-        fits_map_url = URL
-        ##fits_map_url = self.What["GW_SKYMAP"]['skymap_fits']['value']
         command = 'curl %s -o %s' % (fits_map_url, filename)
         print(command)
         os.system(command)
+
     except x:
+        print('Problem with downloading map from url, it was not multiorder or fits.gz')
         warn = "Caught exeption: %s" % x
         print(warn)
         pass
