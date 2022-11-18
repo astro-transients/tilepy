@@ -89,8 +89,9 @@ def PlotValueandError(value, error, string,stringError):
     plt.plot(value, error,'.')
     plt.savefig(string+'_'+stringError+'.png')
     
+dirName = '/Users/mseglar/Documents/CurrentPhD/HESS/GW/ModifyCatalogue/'
     
-catName = 'GLADE+test.txt'
+catName = dirName+'GLADE+.txt'
 
 #Method1 returns a astropy Table
 cat = ascii.read(catName,delimiter=' ')
@@ -129,7 +130,7 @@ print(len(mass),'vs',len(mass_C),'when cleaned')
 tcat = Table([ra_C,dec_C,dist_C,mass_C], names=('RAJ2000', 'DEJ2000', 'Dist','Mass'))
 
 #print('If we make a cut on nans in distance,lenght=',len(tcat['Dist']))
-ascii.write(tcat, 'GLADE+clean.txt',overwrite=True)
+ascii.write(tcat, dirName+'GLADE+clean.txt',overwrite=True)
 
 
 #GLADE = Table.read('GLADE_2.2.txt', format='ascii')
