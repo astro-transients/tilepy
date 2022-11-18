@@ -19,6 +19,11 @@ if six.PY2:
 else:
   ConfigParser = configparser.ConfigParser
 
+from matplotlib import ticker, colors
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.patches import Circle
+from astropy.utils.data import download_file
+import ligo.skymap.plot
 
 # iers_url_mirror='ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
 #iers.IERS.iers_table = iers.IERS_A.open(download_file(iers.IERS_A_URL, cache=True))
@@ -28,7 +33,7 @@ iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
 # iers.IERS.iers_table = iers.IERS_A.open(download_file(iers_url_mirror, cache=True))
 
-colors = ['b', 'm', 'y', 'c', 'g', 'w', 'k', 'c', 'b', 'c', 'm', 'b', 'g', 'y', 'b', 'c', 'm', 'b', 'g', 'y',
+Colors = ['b', 'm', 'y', 'c', 'g', 'w', 'k', 'c', 'b', 'c', 'm', 'b', 'g', 'y', 'b', 'c', 'm', 'b', 'g', 'y',
           'b', 'c', 'm', 'b']
 
 
@@ -85,7 +90,7 @@ def LoadPointingsGAL(tpointingFile):
     return time, coordinates ,Pgw, Pgal
 
 
-def PointingPlotting(prob, obspar, name,dirName,PointingsFile1, ObsArray):
+def PointingPlotting(prob, obspar, name,dirName,PointingsFile1, ObsArray, filename):
 
 
     npix = len(prob)
@@ -114,6 +119,7 @@ def PointingPlotting(prob, obspar, name,dirName,PointingsFile1, ObsArray):
                     #converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S'))
     #PlotPointingsTogether(prob,converted_time1[0],Coordinates1,sum(Probarray1),name1,Coordinates2,sum(Probarray2),name2, nside, obspar.FOV, doplot=True)
     PlotPointings(prob,converted_time1,Coordinates1,sum(Probarray1), nside, obspar, name, dirName, ObsArray)
+    PlotPointings_Pretty(filename, obspar.name, PointingsFile1, dirName)
 
 
 def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirName, ObsArray):
@@ -169,8 +175,8 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
             tarcoorddec.fill(targetCoord[j].dec.deg)
             racoord = tarcoordra + Fov_array * np.cos(theta)
             deccoord = tarcoorddec + Fov_array * np.sin(theta)
-            hp.visufunc.projscatter(racoord, deccoord, lonlat=True, marker='.', color=colors[j], coord='C')
-            #hp.visufunc.projscatter(RA_GRB, DEC_GRB, lonlat=True, marker='+', color=colors[1], coord='C')
+            hp.visufunc.projscatter(racoord, deccoord, lonlat=True, marker='.', color=Colors[j], coord='C')
+            #hp.visufunc.projscatter(RA_GRB, DEC_GRB, lonlat=True, marker='+', color=Colors[1], coord='C')
 
             # Plotting the visibility of the instrument as specified in the config
 
@@ -193,7 +199,7 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
         # draw observation position, which is equivalent to galaxy with highest
         # probability
 
-        # hp.visufunc.projscatter(targetCoord.ra.deg, targetCoord.dec.deg, lonlat=True, marker='.', color=colors[1],coord=['E','G'])
+        # hp.visufunc.projscatter(targetCoord.ra.deg, targetCoord.dec.deg, lonlat=True, marker='.', color=Colors[1],coord=['E','G'])
 
         # plt.savefig("Pointing_Plotting/G274296Pointing_Comparison_%g_%g:%g.png" % (time.day, time.hour, time.minute))
         # draw circle of HESS-I FoV around best fit position
@@ -358,8 +364,8 @@ def PlotPointingsTogether(prob, time, targetCoord1, n1, targetCoord2, n2, nside,
         # hp.mollview(prob,title="GW prob map (Ecliptic)",coord='C')
         hp.graticule()
 
-        hp.visufunc.projscatter(targetCoord1.ra.deg, targetCoord1.dec.deg, lonlat=True, marker='.', color=colors[4])
-        hp.visufunc.projscatter(targetCoord2.ra.deg, targetCoord2.dec.deg, lonlat=True, marker='.', color=colors[5])
+        hp.visufunc.projscatter(targetCoord1.ra.deg, targetCoord1.dec.deg, lonlat=True, marker='.', color=Colors[4])
+        hp.visufunc.projscatter(targetCoord2.ra.deg, targetCoord2.dec.deg, lonlat=True, marker='.', color=Colors[5])
 
         # plt.savefig("Pointing_Plotting/G274296Pointing_Comparison_%g_%g:%g.png" % (time.day, time.hour, time.minute))
         # draw circle of HESS-I FoV around best fit position
@@ -379,8 +385,8 @@ def PlotPointingsTogether(prob, time, targetCoord1, n1, targetCoord2, n2, nside,
             tarcoorddec1.fill(targetCoord1[j].dec.deg)
             racoord1 = tarcoordra1 + Fov_array * np.cos(theta)
             deccoord1 = tarcoorddec1 + Fov_array * np.sin(theta)
-            hp.visufunc.projscatter(racoord1, deccoord1, lonlat=True, marker='.', color=colors[2])
-            hp.projtext(targetCoord1[j].ra, targetCoord1[j].dec, str(j), lonlat=True, color=colors[2])
+            hp.visufunc.projscatter(racoord1, deccoord1, lonlat=True, marker='.', color=Colors[2])
+            hp.projtext(targetCoord1[j].ra, targetCoord1[j].dec, str(j), lonlat=True, color=Colors[2])
         #plt.savefig("Pointing_Plotting_%s/G274296Pointing_GW_%g_%g:%g.png" % (ObsArray, time.day, time.hour,time.minute))
 
         tarcoordra2 = np.empty(400)
@@ -391,8 +397,8 @@ def PlotPointingsTogether(prob, time, targetCoord1, n1, targetCoord2, n2, nside,
             tarcoorddec2.fill(targetCoord2[j].dec.deg)
             racoord2 = tarcoordra2 + Fov_array * np.cos(theta)
             deccoord2 = tarcoorddec2 + Fov_array * np.sin(theta)
-            hp.visufunc.projscatter(racoord2, deccoord2, lonlat=True, marker='.', color=colors[1])
-            hp.projtext(targetCoord1[j].ra, targetCoord1[j].dec, str(j), lonlat=True, color=colors[1])
+            hp.visufunc.projscatter(racoord2, deccoord2, lonlat=True, marker='.', color=Colors[1])
+            hp.projtext(targetCoord1[j].ra, targetCoord1[j].dec, str(j), lonlat=True, color=Colors[1])
         # plt.show()
         # plt.savefig("Pointing_Plotting_%s/PointingFOV_Comparison.png" %ObsArray)
 
@@ -501,7 +507,7 @@ def PointingPlottingGWCTA(filename,name, dirName, PointingsFile,FOV,UseObs, ObsA
         tarcoorddec.fill(Coordinates[j].dec.deg)
         racoord = tarcoordra + Fov_array * np.cos(theta)
         deccoord = tarcoorddec + Fov_array * np.sin(theta)
-        hp.visufunc.projscatter(racoord, deccoord, lonlat=True, marker='.', color=colors[1],coord='C')
+        hp.visufunc.projscatter(racoord, deccoord, lonlat=True, marker='.', color=Colors[1],coord='C')
         #plt.show()
     plt.savefig('%s/Pointings.png'%dirName)
 
@@ -623,3 +629,74 @@ def PlotZenithAngleLines_fromID(ID, InputFileName, dirName, FOV, ObsArray):
     
     PointingPlottingGW_ZenithSteps(GWFile, name, dirName, FOV, InputTimeList[j], ObsArray)
 
+
+def PlotPointings_Pretty(filename, name, PointingsFile1, dirName):
+
+    #Read the pointings file
+    tpointingFile = PointingsFile1
+    #tpointingFile = '/Users/mseglar/Documents/GitLab/lst_gwfollowup/output/bn180720598/PGWinFoV/RankingObservationTimes_Complete.txt'
+    time = []
+    time1, time2,ra, dec, pgw, pgal, Round = np.genfromtxt(tpointingFile, usecols=(0,1,2,3,4,5,6), skip_header=1,delimiter=' ',unpack=True,dtype='str')  # ra, dec in degrees
+    print(time1, time2)
+    for i in range(len(time1)):
+        time.append((time1[i] + ' ' + time2[i]).split('"')[1])
+    ra = np.atleast_1d(ra)
+    dec = np.atleast_1d(dec)
+    ra = ra.astype(np.float)
+    dec = dec.astype(np.float)
+    pgw = pgw.astype(np.float)
+    pgal = pgal.astype(np.float)
+    coordinates = SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
+
+
+    #Prepare the color map
+    cdict_coolheat={
+        'red'  :  ((0., 0., 0.), (0.25,0.,0.), (0.5,1.,1.), (0.75,1.0,1.0),  (1., 1., 1.)),
+        'green':  ((0., 0., 0.), (0.25,0.,0.), (0.5,0.,0.), (0.75,1.0,1.0),  (1., 1., 1.)),
+        'blue' :  ((0., 0., 0.), (0.25,1.,1.), (0.5,0.,0.), (0.75,0.0,0.0),  (1., 1., 1.))
+    }
+    coolheat = colors.LinearSegmentedColormap('coolheat', cdict_coolheat,1024)
+
+    center = SkyCoord(ra[0], dec[0], unit='deg', frame='icrs')
+    center_str =  '%fd %fd'%(center.ra.deg, center.dec.deg)
+
+    #start preparing figure and inset figure
+    fig = plt.figure(figsize=(9, 6))
+
+    ax = plt.axes([0.1, 0.1, 0.4, 0.4],
+              projection='astro globe',
+              center=center_str)
+
+    ax_inset = plt.axes([0.4, 0.2, 0.45, 0.45],
+                projection='astro zoom',
+                center=center_str, radius='10 deg')
+
+    for key in ['ra', 'dec']:
+        ax_inset.coords[key].set_ticklabel_visible(True)
+        ax_inset.coords[key].set_ticks_visible(True)
+
+
+    ax.grid()
+    ax.mark_inset_axes(ax_inset)
+    ax.connect_inset_axes(ax_inset, loc = 'upper left')
+    ax.connect_inset_axes(ax_inset, loc = 'lower left')
+
+    ax.imshow_hpx(filename, cmap='cylon')
+
+
+    for i in range(0,len(ra)):
+
+        c = Circle((ra[i], dec[i]), 2.0, edgecolor='black', facecolor='none', transform=ax_inset.get_transform('fk5'),alpha=15)
+        ax_inset.add_patch(c)
+        ax_inset.text(ra[i]-2.5, dec[i]-1, "%d\n%s \n %d%% %d deg " % (i,time[i], 100*pgw[i],pgal[i]),transform=ax_inset.get_transform('fk5'), color = 'k', rotation = -15, fontsize = 8)
+
+
+    pos=ax_inset.imshow_hpx(filename, cmap='cylon')
+
+
+    cbar = fig.colorbar(pos, ax=ax,location="left",fraction=0.046, pad=0.05)
+    cbar.set_label("Probability" ,  color='black',fontsize = 7)
+    plt.savefig("%s/Plot_PrettyMap_%s.png" %(dirName, name), dpi = 300)
+    #plt.show()
+    
+    
