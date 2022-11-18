@@ -22,7 +22,7 @@ setup(name='gammagwfollowup',
           'numpy==1.19.5',
           'pandas',
           'pytz==2021.1',
-          'ephem==3.7.6.0'
+          'ephem==3.7.6.0',
       ],
       packages=find_packages(),
       # tests_require=['pytest'],
