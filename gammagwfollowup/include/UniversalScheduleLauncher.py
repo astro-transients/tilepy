@@ -83,7 +83,7 @@ def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
             if (len(SuggestedPointings_1) != 0):
                 ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]) , overwrite=True, fast_writer=False)
                 RankingTimes_SkyMapInput_2D(ObservationTime, prob, ObsParameters[j], targetType, dirName,'%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]), ObsArray[j])
-                PointingPlotting(prob, ObsParameters[j], name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]), ObsArray[j])
+                PointingPlotting(prob, ObsParameters[j], name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]), ObsArray[j], filename)
     else:
         FOLLOWUP = False
         print('No observations are scheduled')

@@ -17,7 +17,7 @@ import ligo.skymap.plot
 #from mocpy import MOC, World2ScreenMPL
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.patches import Circle
-
+import matplotlib.pyplot as plt
 
 #Prepare the color map
 cdict_coolheat={
@@ -29,15 +29,16 @@ coolheat = colors.LinearSegmentedColormap('coolheat', cdict_coolheat,1024)
 
 
 #load the GW map
-RA_GRB = 0.526
-DEC_GRB = 2.917
+RA_GRB = 217
+DEC_GRB = 34
 #url = 'https://gracedb.ligo.org/api/superevents/S190728q/files/GW190728_064510_PublicationSamples_flattened.fits.gz,0'
 center = SkyCoord(RA_GRB, DEC_GRB, unit='deg', frame='icrs')
+center_str =  '%fd %fd'%(center.ra.deg, center.dec.deg)
 #center = SkyCoord(232.418, 28.071, unit='deg', frame='icrs')
 #filename = download_file(url, cache=True)
 #filename = '/Users/hashkar/Desktop/GW_HESS_PUBLICATION/GW_O2_O3_MAPS/maps/O3/GW190512_180714_PublicationSamples_flattened.fits.gz,0'
 #filename = '/Users/mseglar/Documents/GitLab/dataset/skymaps/run0378_MergerID000234_skymap.fits.gz'
-filename = '/Users/mseglar/Documents/GitLab/lst_gwfollowup/glg_healpix_all_bn180720598.fit'
+filename = '/Users/hashkar/Desktop/lst_gwfollowup/bayestar.fits-2.gz,1'
 
 
 #start preparing figure and inset figure
@@ -45,11 +46,11 @@ fig = plt.figure(figsize=(9, 6))
 
 ax = plt.axes([0.1, 0.1, 0.4, 0.4],
               projection='astro globe',
-              center=center)
+              center=center_str)
 
 ax_inset = plt.axes([0.4, 0.2, 0.45, 0.45],
                     projection='astro zoom',
-                    center=center, radius='10 deg')
+                    center=center_str, radius='10 deg')
 
 for key in ['ra', 'dec']:
     ax_inset.coords[key].set_ticklabel_visible(True)
@@ -86,10 +87,10 @@ ax_inset.text(312.8027, 7.0304, "1\n26 min\n54 deg",transform=ax_inset.get_trans
 '''
 #read coordinates from file
 
-tpointingFile = '/Users/mseglar/Documents/GitLab/output/PGWonFoV/ScheduledObs/run0001_MergerID000017_NOTcov.txt'
+tpointingFile = '/Users/hashkar/Desktop/lst_gwfollowup/output/MS221117n/PGallinFoV/SuggestedPointings_GWOptimisation.txt'
 #tpointingFile = '/Users/mseglar/Documents/GitLab/lst_gwfollowup/output/bn180720598/PGWinFoV/RankingObservationTimes_Complete.txt'
 time = []
-time1, time2,ra, dec, pgw, zenIni = np.genfromtxt(tpointingFile, usecols=(0,1,2, 3, 5,7), skip_header=1,delimiter=' ',unpack=True,dtype='str')  # ra, dec in degrees
+time1, time2,ra, dec, pgw, pgal, Round = np.genfromtxt(tpointingFile, usecols=(0,1,2,3,4,5,6), skip_header=1,delimiter=' ',unpack=True,dtype='str')  # ra, dec in degrees
 print(time1, time2)
 for i in range(len(time1)):
     time.append((time1[i] + ' ' + time2[i]).split('"')[1])
@@ -98,15 +99,15 @@ dec = np.atleast_1d(dec)
 ra = ra.astype(np.float)
 dec = dec.astype(np.float)
 pgw = pgw.astype(np.float)
-zenIni = zenIni.astype(np.float)
+pgal = pgal.astype(np.float)
 coordinates = SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
-print(ra,dec,pgw,zenIni)
+print(ra,dec,pgw,pgal)
 
-for i in range(0,len(ra)-2):
+for i in range(0,len(ra)):
     print(ra[i])
     c = Circle((ra[i], dec[i]), 2.0, edgecolor='black', facecolor='none', transform=ax_inset.get_transform('fk5'),alpha=15)
     ax_inset.add_patch(c)
-    ax_inset.text(ra[i]-2.5, dec[i]-1, "%d\n%s \n %d%% %d deg " % (i,time[i], 100*pgw[i],zenIni[i]),transform=ax_inset.get_transform('fk5'), color = 'k', rotation = -15, fontsize = 8)
+    ax_inset.text(ra[i]-2.5, dec[i]-1, "%d\n%s \n %d%% %d deg " % (i,time[i], 100*pgw[i],pgal[i]),transform=ax_inset.get_transform('fk5'), color = 'k', rotation = -15, fontsize = 8)
 
 
 pos=ax_inset.imshow_hpx(filename, cmap='cylon')
