@@ -3,7 +3,7 @@ import sys
 from gammagwfollowup.include.PointingTools import NightDarkObservation, NightDarkObservationwithGreyTime, LoadHealpixMap
 from gammagwfollowup.include.Observatories import CTANorthObservatory, CTASouthObservatory, HESSObservatory
 from gammagwfollowup.include.PointingTools import getdate
-from gammagwfollowup.include.PointingPlotting import LoadPointingsGAL, PlotPointingsTogether
+from gammagwfollowup.include.PointingPlotting import LoadPointingsGAL, PlotPointingsTogether, PlotPointings_Pretty
 from gammagwfollowup.include.PointingTools import Get90RegionPixReduced, TransformRADec
 
 import healpy as hp
@@ -203,5 +203,8 @@ def CompareTwoTilings(GWFile, PointingsFile1=False, PointingsFile2=False, FOV=2)
         PlotPointingsTogether(prob, ObservationTimearray1, Coordinates1, name1, Coordinates2, name2, nside, FOV,
                               doplot=True)
     plt.show()
+
+def Pretty_Plot(filename, name, PointingsFile1, dirName):
+    PlotPointings_Pretty(filename, name, PointingsFile1, dirName)
 
 
