@@ -616,7 +616,7 @@ def GetGWMap(URL):
 
     except x:
         print('Problem with downloading map from url, it was not multiorder or fits.gz')
-        warn = "Caught exeption: %s" % x
+        warn = "Caught exception: %s" % x
         print(warn)
         pass
 
@@ -1097,7 +1097,7 @@ def TransformRADec(vra,vdec):
         dec=[]
         for i in range(0,len(vra)):
             coord = SkyCoord(vra[i].split('"')[1],vdec[i].split('"')[0],frame='fk5')
-            print(coord)
+            #print(coord)
             ra.append(coord.ra.deg)
             dec.append(coord.dec.deg)
     else:
@@ -1264,7 +1264,7 @@ def CorrelateGalaxies_LVC_SteMass(prob, distmu, distsigma, distmean, disterr, di
     Gals['dp_dV'] = dp_dV  
 
     total_dP_dV = dp_dV.sum()
-    print(total_dP_dV)
+    #print(total_dP_dV)
 
     tGals = Gals[np.flipud(np.argsort(Gals['dp_dV']))]
     #ascii.write(tGals, '/Users/hashkar/Desktop/GWfollowup/GW-Followup/tGals.txt', names = ['RAJ2000','DEJ2000','Dist','Bmag','SteMgal', 'index' ,'dp_dV'],overwrite=True)
