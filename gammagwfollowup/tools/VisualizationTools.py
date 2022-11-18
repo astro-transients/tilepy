@@ -204,8 +204,7 @@ def CompareTwoTilings(GWFile, PointingsFile1=False, PointingsFile2=False, FOV=2)
                               doplot=True)
     plt.show()
 
-def Pretty_Plot(filename, obspar, times, PointingsFile1, dirName):
-    
-    PlotPointings_Pretty(filename, obspar, times, PointingsFile1, dirName)
+def Pretty_Plot(filename, name, PointingsFile1, dirName):
+    PlotPointings_Pretty(filename, name, PointingsFile1, dirName)
 
 

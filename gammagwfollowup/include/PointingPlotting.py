@@ -119,7 +119,7 @@ def PointingPlotting(prob, obspar, name,dirName,PointingsFile1, ObsArray, filena
                     #converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S'))
     #PlotPointingsTogether(prob,converted_time1[0],Coordinates1,sum(Probarray1),name1,Coordinates2,sum(Probarray2),name2, nside, obspar.FOV, doplot=True)
     PlotPointings(prob,converted_time1,Coordinates1,sum(Probarray1), nside, obspar, name, dirName, ObsArray)
-    PlotPointings_Pretty(filename, obspar, converted_time1, PointingsFile1, dirName)
+    PlotPointings_Pretty(filename, obspar.name, PointingsFile1, dirName)
 
 
 def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirName, ObsArray):
@@ -630,7 +630,7 @@ def PlotZenithAngleLines_fromID(ID, InputFileName, dirName, FOV, ObsArray):
     PointingPlottingGW_ZenithSteps(GWFile, name, dirName, FOV, InputTimeList[j], ObsArray)
 
 
-def PlotPointings_Pretty(filename, obspar, times, PointingsFile1, dirName):
+def PlotPointings_Pretty(filename, name, PointingsFile1, dirName):
 
     #Read the pointings file
     tpointingFile = PointingsFile1
@@ -696,7 +696,7 @@ def PlotPointings_Pretty(filename, obspar, times, PointingsFile1, dirName):
 
     cbar = fig.colorbar(pos, ax=ax,location="left",fraction=0.046, pad=0.05)
     cbar.set_label("Probability" ,  color='black',fontsize = 7)
-    plt.savefig("%s/Plot_PrettyMap_%s.png" %(dirName, obspar.name), dpi = 300)
+    plt.savefig("%s/Plot_PrettyMap_%s.png" %(dirName, name), dpi = 300)
     #plt.show()
     
     
