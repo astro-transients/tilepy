@@ -30,7 +30,7 @@ coolheat = colors.LinearSegmentedColormap('coolheat', cdict_coolheat,1024)
 
 #load the GW map
 RA_GRB = 0.526
-DEC_GRB = -2.917
+DEC_GRB = 2.917
 #url = 'https://gracedb.ligo.org/api/superevents/S190728q/files/GW190728_064510_PublicationSamples_flattened.fits.gz,0'
 center = SkyCoord(RA_GRB, DEC_GRB, unit='deg', frame='icrs')
 #center = SkyCoord(232.418, 28.071, unit='deg', frame='icrs')
@@ -86,10 +86,10 @@ ax_inset.text(312.8027, 7.0304, "1\n26 min\n54 deg",transform=ax_inset.get_trans
 '''
 #read coordinates from file
 
-#tpointingFile = '/Users/mseglar/Documents/GitLab/output/PGWonFoV/ScheduledObs/run0378_MergerID000234.txt'
-tpointingFile = '/Users/mseglar/Documents/GitLab/lst_gwfollowup/output/bn180720598/PGWinFoV/RankingObservationTimes_Complete.txt'
+tpointingFile = '/Users/mseglar/Documents/GitLab/output/PGWonFoV/ScheduledObs/run0001_MergerID000017_NOTcov.txt'
+#tpointingFile = '/Users/mseglar/Documents/GitLab/lst_gwfollowup/output/bn180720598/PGWinFoV/RankingObservationTimes_Complete.txt'
 time = []
-time1, time2,ra, dec, pgw = np.genfromtxt(tpointingFile, usecols=(0,1,2, 3, 5,7), skip_header=1,delimiter=' ',unpack=True,dtype='str')  # ra, dec in degrees
+time1, time2,ra, dec, pgw, zenIni = np.genfromtxt(tpointingFile, usecols=(0,1,2, 3, 5,7), skip_header=1,delimiter=' ',unpack=True,dtype='str')  # ra, dec in degrees
 print(time1, time2)
 for i in range(len(time1)):
     time.append((time1[i] + ' ' + time2[i]).split('"')[1])
@@ -106,7 +106,7 @@ for i in range(0,len(ra)-2):
     print(ra[i])
     c = Circle((ra[i], dec[i]), 2.0, edgecolor='black', facecolor='none', transform=ax_inset.get_transform('fk5'),alpha=15)
     ax_inset.add_patch(c)
-    ax_inset.text(ra[i]-2.5, dec[i]-1, "%d\n%s \n %d%% %d deg " % (i,time[i], 100*pgw[i]),transform=ax_inset.get_transform('fk5'), color = 'k', rotation = -15, fontsize = 8)
+    ax_inset.text(ra[i]-2.5, dec[i]-1, "%d\n%s \n %d%% %d deg " % (i,time[i], 100*pgw[i],zenIni[i]),transform=ax_inset.get_transform('fk5'), color = 'k', rotation = -15, fontsize = 8)
 
 
 pos=ax_inset.imshow_hpx(filename, cmap='cylon')
@@ -125,5 +125,5 @@ ax_inset.plot(
               markersize=30,
               markeredgewidth=3)
 '''
-plt. savefig("S190728q_OBS_PrettyMap.png", bbox_inches = 'tight', pad_inches = 0.1)
+#plt.savefig("S190728q_OBS_PrettyMap.png", bbox_inches = 'tight', pad_inches = 0.1)
 plt.show()
