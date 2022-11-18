@@ -164,7 +164,12 @@ def VisibilityWindow(ObservationTime,Pointing,obspar,dirName):
         WINDOW.append(window)
         ZENITH.append(zenith)
         SZENITH.append(Stepzenith)
-        window, zenith = GetObservationPeriod(ObservationTime, source[i],obspar,i,dirName, True)
+        
+        # At input ObservationTime the night is over, the scheduling has been computed for the next night (with the condition <24h holding)
+        if(Tools.IsGreyness(ObservationTime,obspar)==False):
+            window, zenith = GetObservationPeriod(ObservationTime+datetime.timedelta(hours=12), source[i], obspar, i, dirName, True)
+        else:
+            window, zenith = GetObservationPeriod(ObservationTime, source[i],obspar,i,dirName, True)
 
     Pointing['Observation window'] = WINDOW
     Pointing['Array of zenith angles']=ZENITH
@@ -243,13 +248,14 @@ def GetObservationPeriod(inputtime0,msource, obspar, plotnumber,dirName,doplot):
         newtimes.extend(GTaltitudes['Time UTC'].mjd)
         newtimes = sorted(newtimes)
         ScheduledTimes = Time(newtimes,format='mjd').iso
+
     else:
         Altitudes = Table([times,msourcealtazs.alt, sunaltazs.alt, moonaltazs.alt,NightsCounter],
                            names=['Time UTC', 'Alt Source', 'Alt Sun', 'AltMoon','NightsCounter'])
         #print(Altitudes)
         Times=Altitudes['Time UTC']
         selection=(Altitudes['Alt Sun'] < -18.) & (Altitudes['Alt Source']> AltitudeCut) & (Altitudes['AltMoon'] < -0.5)
-        ScheduledTimes=Times[selection]
+        ScheduledTimes=Time(Times[selection],format='mjd').iso
 
     '''if doplot:
         plotDir = '%s/TransitPlots' % dirName
