@@ -636,7 +636,12 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName):
     tpointingFile = PointingsFile1
     #tpointingFile = '/Users/mseglar/Documents/GitLab/lst_gwfollowup/output/bn180720598/PGWinFoV/RankingObservationTimes_Complete.txt'
     time = []
-    time1, time2,ra, dec, pgw, pgal, Round = np.genfromtxt(tpointingFile, usecols=(0,1,2,3,4,5,6), skip_header=1,delimiter=' ',unpack=True,dtype='str')  # ra, dec in degrees
+    try:
+        time1, time2,ra, dec, pgw, pgal, Round = np.genfromtxt(tpointingFile, usecols=(0,1,2,3,4,5,6), skip_header=1,delimiter=' ',unpack=True,dtype='str')  # ra, dec in degrees
+    except: 
+        time1, time2,ra, dec, pgw, Round = np.genfromtxt(tpointingFile, usecols=(0,1,2,3,4,5), skip_header=1,delimiter=' ',unpack=True,dtype='str')  # ra, dec in degrees
+        pgal = pgw
+        pgal[:] = -1
     print(time1, time2)
     for i in range(len(time1)):
         time.append((time1[i] + ' ' + time2[i]).split('"')[1])
