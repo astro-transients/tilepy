@@ -35,7 +35,6 @@ def ObservationStartperObs(ObsArray, ObsParameters, ObservationTime0):
     #Finding the start time for each observatory and checking if it's now    
     FirstDark = np.full(len(ObsArray), False, dtype=bool)
     FirstDark_Flag = np.full(len(ObsArray), False, dtype=bool)
-    print(len(FirstDark))
     #print(len(ObsFirstTime))
     obs_time = ObservationTime0
     if obs_time.tzinfo is None:
@@ -209,9 +208,6 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingsFile, parameters, dirName
 
 
           #HERE WE DETERMINE IF WE ARE STILL IN THE SAME NIGHT FOR THIS OBSERVATORY
-          print(obsstart)
-          print(Tools.NextSunrise(obsstart, obspar))
-          print(Tools.NextMoonrise(obsstart, obspar))
           #if (NewActiveObsTime[j] > Tools.NextSunrise(obsstart, obspar)) | (obsstart > Tools.NextMoonrise(obsstart, obspar)):
 
           if not ObsParameters[j].UseGreytime:

@@ -283,8 +283,13 @@ def GetObservationPeriod(inputtime0,msource, obspar, plotnumber,dirName,doplot):
         plt.ylabel('Altitude [deg]')
         plt.grid()
         plt.savefig('%s/Source%g.png' % (plotDir, plotnumber))'''
-
-    return (str(ScheduledTimes[0]).split('.')[0]+'-->'+str(ScheduledTimes[-1]).split('.')[0]),msourcealtazs.alt
+    try:   
+        return (str(ScheduledTimes[0]).split('.')[0]+'-->'+str(ScheduledTimes[-1]).split('.')[0]),msourcealtazs.alt
+    except:
+        ScheduledTimesUni = str(ScheduledTimes).split('.')
+        ScheduledTimes1 = ScheduledTimesUni[0]
+        ScheduledTimes2 = ScheduledTimesUni[-1]
+        return (str(ScheduledTimes1)+'-->'+str(ScheduledTimes2)),msourcealtazs.alt
 
 def GetVisibility(time,radecs,max_zenith, obsLoc):
 
