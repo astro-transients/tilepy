@@ -8,7 +8,7 @@ def readfile(filename):
         return f.read()
 
 
-setup(name='gammagwfollowup',
+setup(name='tilepy',
       version=0.1,
       description="Gravitational waves follow-up scheduling and simulation for IACTs",
       install_requires=[

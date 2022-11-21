@@ -1,4 +1,4 @@
-# Gamma GW Followup
+# Tilepy
 
 ## Installation
 
@@ -7,8 +7,8 @@ We clone the repo, create an environment to work, activate the enviroment and in
 ```python
 git clone  git@drf-gitlab.cea.fr:multimessenger-IRFU/cta/gw-follow-up-simulations.git 
 cd gw-follow-up-simulations
-conda env create -n gammagwfollowup -f environment.yml
-conda activate gammagwfollowup
+conda env create -n tilepyenv -f environment.yml
+conda activate tilepyenv
 pip install .      
 ```
 
@@ -23,7 +23,7 @@ In the case you are working in CC-Lyon, the easiest solution is to do```ccenv co
 ## Description
 
 
-Package including functions to perform GW follow-up scheduling and simulations in IACTS. The package can be found in the folder gammagwfollowup, which contains the following folders: 
+Package including functions to perform GW follow-up scheduling and simulations in IACTS. The package can be found in the folder tilepy, which contains the following folders: 
  
 - tools: Includes several scripts that have been used so far for different aims. 
 - include: The main functions used by the two main scripts are in this folder. It includes the Pointing Tools specifically for CTA (the others are in GWHESSPointing tool which is imported by GWCTAPointingTools), the CTA observation scheduler, simulation tools and analysis tools (both using gammapy)
