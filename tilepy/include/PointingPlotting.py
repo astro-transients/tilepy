@@ -101,7 +101,7 @@ def PointingPlotting(prob, obspar, name,dirName,PointingsFile1, ObsArray, filena
     Probarray1 = np.atleast_1d(Probarray1)
 
     print('----------   PLOTTING THE SCHEDULING   ----------')
-    print('Total probability of map 1 that maximises PGW= {0:.5f}'.format(sum(Probarray1)))
+    print('Total covered probability with the scheduled tiles is PGW= {0:.5f}'.format(sum(Probarray1)))
     converted_time1=[]
     for i in range(0,len(ObservationTimearray1)):
         time1 = ObservationTimearray1[i]
@@ -126,7 +126,6 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
     FOV = obspar.FOV
     maxzenith= obspar.max_zenith
     doplot = obspar.doplot
-    radius = FOV
 
     t = 0.5 * np.pi - targetCoord[0].dec.rad
     p = targetCoord[0].ra.rad
@@ -135,7 +134,7 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
 
 
     # translate pixel indices to coordinates
-    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV))
 
     if (doplot):
 
@@ -330,7 +329,6 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
 
 
 def PlotPointingsTogether(prob, time, targetCoord1, n1, targetCoord2, n2, nside, FOV, doplot=True):
-    radius = FOV
 
     t = 0.5 * np.pi - targetCoord1[0].dec.rad
     p = targetCoord1[0].ra.rad
@@ -343,7 +341,7 @@ def PlotPointingsTogether(prob, time, targetCoord1, n1, targetCoord2, n2, nside,
 
     # translate pixel indices to coordinates
 
-    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV))
 
     if (doplot):
 
@@ -465,13 +463,13 @@ def PointingPlottingGWCTA(filename,name, dirName, PointingsFile,FOV,UseObs, ObsA
     '''
 
     #PlotPointings(prob,cat,converted_time,Coordinates,sum(Probarray), nside, FOV, name, dirName, doplot=True)
-    radius = FOV
+    
 
     t = 0.5 * np.pi - Coordinates[0].dec.rad
     p = Coordinates[0].ra.rad
     xyz = hp.ang2vec(t, p)
 
-    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV))
 
     tt, pp = hp.pix2ang(nside, ipix_disc)
     ra2 = np.rad2deg(pp)
@@ -560,7 +558,7 @@ def PointingPlottingGW_ZenithSteps(filename,name,dirName,FOV,InputTimeObs, ObsAr
         except ValueError:
             converted_time = datetime.datetime.strptime(time, '%Y-%m-%d %H:%M:%S')
 
-    radius = FOV
+    
 
     #t = 0.5 * np.pi - Coordinates[0].dec.rad
     #p = Coordinates[0].ra.rad
