@@ -1,7 +1,7 @@
 import numpy as np
 from astropy.io import ascii
 import matplotlib.pyplot as plt
-from astropy.table import Table
+from astropy.table import Table, vstack
 import astropy.coordinates as co
 from astropy import units as u
 import pandas as pd
@@ -90,44 +90,63 @@ def PlotValueandError(value, error, string,stringError):
     plt.savefig(string+'_'+stringError+'.png')
     
 dirName = '/Users/hashkar/Desktop/GWFollowup_lib/gw-follow-up-simulations/tilepy/tools/'
-    
-catName = dirName+'GLADE+.txt'
+
+# Cat file should be .cvs
+catName = dirName+'GLADE+.cvs'
 
 #Method1 returns a astropy Table
-cat = ascii.read(catName,delimiter=' ')
-#print(cat)
-ra = cat['col9']
-dec = cat['col10']
-dist = cat['col33']
-Edist = cat['col34']
-mass = cat['col36']
-Emass = cat['col37']
+cats = ascii.read(catName,delimiter=' ', format='csv', guess=False,
+                 fast_reader={'chunk_size': 100 * 1000000})
 
-#mergerRate = np.array(cat['col39'])
-#EmergerRate = np.array(cat['col40'])
+# Follow https://docs.astropy.org/en/stable/io/ascii/read.html#chunk-reading to read catalog
 
-#PlotValueandError(dist,Edist,'Distance [Mpc]','ErrorDistance[Mpc]')
-#PlotValueandError(mass,Emass,'Solar Mass','Error Solar Mass')
-#PlotValueandError(mergerRate,EmergerRate, 'Merger Rate', 'Error Merger Rate')
-#mass = cat['M*']
-#mergerRate = cat['Merger rate']
 
-#Method 2 uses numpy but one needs to handle NaNs
-#ra,dec, dist,Edist, mass,Emass, mergerRate, EmergerRate = np.loadtxt(catName, usecols = (9,10,33,34,36,37,39,40), dtype=str, unpack = True)
 
-# NSBH RANGE IS 300–330 Mpc FOR O4 (aLIGO), so I used 500 Mpc as a reasonable cut
-ra_C = ra[dist!='null'and dist<500]
-dec_C = dec[dist!='null'and dist<500]
-dist_C = dist[dist!='null'and dist<500]
-mass_C = mass[dist!='null'and dist<500]
+#ra_C = []
+#dec_C = []
+#dist_C = []
+#mass_C = []
 
-print(len(mass),'vs',len(mass_C),'when cleaned')
+outcats = []
+
+for cat in cats:
+    cutCatalog =  cats['col34'] < 500
+    noZero = cats['col34'] != 'null'
+    
+    #mergerRate = np.array(cat['col39'])
+    #EmergerRate = np.array(cat['col40'])
+    
+    #PlotValueandError(dist,Edist,'Distance [Mpc]','ErrorDistance[Mpc]')
+    #PlotValueandError(mass,Emass,'Solar Mass','Error Solar Mass')
+    #PlotValueandError(mergerRate,EmergerRate, 'Merger Rate', 'Error Merger Rate')
+    #mass = cat['M*']
+    #mergerRate = cat['Merger rate']
+    
+    #Method 2 uses numpy but one needs to handle NaNs
+    #ra,dec, dist,Edist, mass,Emass, mergerRate, EmergerRate = np.loadtxt(catName, usecols = (9,10,33,34,36,37,39,40), dtype=str, unpack = True)
+    
+    # NSBH RANGE IS 300–330 Mpc FOR O4 (aLIGO), so I used 500 Mpc as a reasonable cut
+    if np.count_nonzero(cutCatalog and noZero):
+        outcats.append(cat[cutCatalog and noZero])
+        #ra_C.append(ra[cutCatalog and noZero])
+        #dec_C.append(dec[cutCatalog and noZero])
+        #dist_C.append(dist[cutCatalog and noZero])
+        #mass_C.append(mass[cutCatalog and noZero])
+outcat = vstack(outcats)
+
+#ra_out = vstack(ra_C)
+#dec_out = vstack(dec_C)
+#dist_out = vstack(dist_C)
+#mass_out = vstack(mass_C)
+
+print(len(cat),'vs',len(outcat),'when cleaned')
 #print('There are',len(dist[(dist)=='null')]),'NaNs in Distance')
 #print('There are',len(mass[(np.isnan(mass)==True)]),'NaNs in mass')
 #print('There are',len(mergerRate[(np.isnan(mergerRate)==True)]),'NaNs in mergerRate')
+# print(cat)
 
 
-tcat = Table([ra_C,dec_C,dist_C,mass_C], names=('RAJ2000', 'DEJ2000', 'Dist','Mass'))
+tcat = Table([outcat['col9'],outcat['col10'],outcat['col33'],outcat['col36']], names=('RAJ2000', 'DEJ2000', 'Dist','Mass'))
 
 #print('If we make a cut on nans in distance,lenght=',len(tcat['Dist']))
 ascii.write(tcat, dirName+'GLADE+clean.txt',overwrite=True)
