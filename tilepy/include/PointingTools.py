@@ -1042,14 +1042,14 @@ def ComputeProbability2D(prob,highres,radecs,ReducedNside,HRnside,MinProbCut, ti
             hp.visufunc.projplot(sortcat['PIXRA'][:1],sortcat['PIXDEC'][:1], 'r.', lonlat=True, coord="C")
             MaxCoord = SkyCoord(sortcat['PIXRA'][:1],sortcat['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
             separations = skycoord.separation(MaxCoord)
-            tempmask = separations < (radius + 0.15 * radius) * u.deg
-            tempmask2 = separations > (radius - 0.15  * radius) * u.deg
-            hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'g.', lonlat=True, coord="C",linewidth=0.1)
+            tempmask = separations < (radius + 0.05 * radius) * u.deg
+            tempmask2 = separations > (radius - 0.05  * radius) * u.deg
+            hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'r.', lonlat=True, coord="C",linewidth=0.1)
             altcoord = np.empty(1000)
             azcoord = np.random.rand(1000) * 360
 
             
-            plt.savefig('%s/Pointing-prob_%g.png' % (path, counter))
+            plt.savefig('%s/Zoom_Pointing_%g.png' % (path, counter))
             #for i in range(0,1):
             #    altcoord.fill(90-(max_zenith-5*i))
             #    RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,location=observatory)
@@ -1511,10 +1511,15 @@ def ComputeProbBCFOVSimple(prob,time,observatory, visiGals, allGals, tsum_dP_dV,
     noncircleGal = allGals[targetCoord3.separation(targetCoord).deg > radius]
 
     if (doplot):
+        path = dirName+ '/EvolutionPlot'
+        if not os.path.exists(path):
+            os.mkdir(path, 493)
+        hp.mollview(prob, title="GW prob map (Ecliptic)   %s/%s/%s %s:%s UTC" % (
+            time.day, time.month, time.year, time.hour, time.minute))
+        hp.graticule()
         tt, pp = hp.pix2ang(nside, ipix_disc)
         ra2 = np.rad2deg(pp)
         dec2 = np.rad2deg(0.5 * np.pi - tt)
-
         skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
 
         frame = co.AltAz(obstime=time, location=observatory.Location)
@@ -1525,15 +1530,7 @@ def ComputeProbBCFOVSimple(prob,time,observatory, visiGals, allGals, tsum_dP_dV,
         tempmask = separations < (radius + 0.05 * radius) * u.deg
         tempmask2 = separations > (radius - 0.05 * radius) * u.deg
 
-        path = dirName+ '/EvolutionPlot'
-        if not os.path.exists(path):
-            os.mkdir(path, 493)
-
-        hp.mollview(prob, title="GW prob map (Ecliptic)   %s/%s/%s %s:%s UTC" % (
-            time.day, time.month, time.year, time.hour, time.minute))
-
         # hp.gnomview(prob, title="GW prob map (Ecliptic)   %s/%s/%s %s:%s UTC" % (time.day, time.month, time.year, time.hour, time.minute),xsize = 4000,ysize=6000,rot = [90,-50],reso=0.8)
-        hp.graticule()
         # plt.show()
         # plt.savefig("Figures/ExampleGW_%g.png" % (j))
 
@@ -1550,7 +1547,6 @@ def ComputeProbBCFOVSimple(prob,time,observatory, visiGals, allGals, tsum_dP_dV,
                                 linewidth=0.1)
 
         # draw circle of FoV around best fit position
-
         # hp.visufunc.projscatter(allGals['RAJ2000'], allGals['DEJ2000'], lonlat=True, marker='.', color='g',linewidth=0.1)
         # plt.show()
         hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'k.', lonlat=True,
@@ -1563,16 +1559,11 @@ def ComputeProbBCFOVSimple(prob,time,observatory, visiGals, allGals, tsum_dP_dV,
         # altcoord= [np.random.randint(-90,90-thisminz) for _ in range(4000)]
 
         altcoord = np.empty(4000)
-
         altcoord.fill(90 - max_zenith)
-
         azcoord = np.random.rand(4000) * 360
 
-        RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,
-                               location=observatory)
-
+        RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time, location=observatory)
         RandomCoord_radec = RandomCoord.transform_to('fk5')
-
         hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C", linewidth=0.1)
         # plt.show()
         # Draw MinZ area
@@ -1580,19 +1571,15 @@ def ComputeProbBCFOVSimple(prob,time,observatory, visiGals, allGals, tsum_dP_dV,
         print('Min Zenith= ', thisminz)
 
         altcoordmin = np.empty(4000)
-
-        # altcoordmin.fill(90 - thisminz)
         azcoordmin = np.random.rand(4000) * 360
 
-        RandomCoordmin = SkyCoord(azcoordmin, altcoordmin, frame='altaz', unit=(u.deg, u.deg), obstime=time,
-                                  location=observatory)
-
+        RandomCoordmin = SkyCoord(azcoordmin, altcoordmin, frame='altaz', unit=(u.deg, u.deg), obstime=time,location=observatory)
         RandomCoordmin_radec = RandomCoordmin.transform_to('fk5')
 
         # hp.visufunc.projplot(RandomCoordmin_radec.ra, RandomCoordmin_radec.dec, 'y.', lonlat=True, coord="C", marker='.', markersize = 8 )
 
         # plt.show()
-        plt.savefig("%s/ExamplePointing_%g.png" % (path, len(ObservationTimearray)))
+        plt.savefig("%s/Pointing_%g.png" % (path, len(ObservationTimearray)))
 
     return P_Gal, P_GW, talreadysumipixarray2
 
@@ -1749,7 +1736,7 @@ def ComputeProbBCFOV(prob,time, observatory, finalGals, visiGals, allGals, tsum_
 
         # plt.show()
         tsavedcircle = skycoord[tempmask & tempmask2]
-        plt.savefig("%s/ExamplePointing.png" % (path))
+        plt.savefig("%s/Zoom_Pointing.png" % (path))
 
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray, tsavedcircle
 
@@ -2044,7 +2031,7 @@ def ComputeProbPGALIntegrateFoV(prob,time,observatory, centerPoint,UsePix, visiG
         # hp.visufunc.projplot(RandomCoordmin_radec.ra, RandomCoordmin_radec.dec, 'y.', lonlat=True, coord="C")
 
         # plt.show()
-        plt.savefig("%s/ExamplePointing%g.png" % (path,counter))
+        plt.savefig("%s/Zoom_Pointing_%g.png" % (path,counter))
 
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
 

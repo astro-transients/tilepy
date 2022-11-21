@@ -116,8 +116,9 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,obspar,dirName):
 
     print()
     #print("===========================================================================================")
+
     #print()
-    print("Total GW probability covered: ", sum(P_GWarray), "Number of runs that fulfill darkness condition  :",
+    print("Total GW probability covered: ", np.float('{:1.4f}'.format(np.float(sum(P_GWarray)))), "Number of runs that fulfill darkness condition  :",
                   len(NightDarkRuns), "Number of effective pointings: ", len(ObservationTimearray))
 
     print()
@@ -625,7 +626,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, paramete
                                names=['Observation Time UTC', 'RA[deg]', 'DEC[deg]', 'PGW',
                                       'Pgal', 'Round'], )
     print(SuggestedPointings)
-    print("Name", name, "Total GW probability covered: ", sum(P_GWarray), "Total Gal probability covered: ", sum(P_GALarray),
+    print("Name", name, "Total GW probability covered: ", np.float('{:1.4f}'.format(np.float(sum(P_GWarray)))), "Total Gal probability covered: ", sum(P_GALarray),
     "Number of runs that fulfill darkness condition  :", len(NightDarkRuns), "Number of effective pointings: ",
     len(ObservationTimearray))
     return SuggestedPointings,cat,area

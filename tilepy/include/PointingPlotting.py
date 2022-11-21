@@ -691,7 +691,10 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName):
 
         c = Circle((ra[i], dec[i]), 2.0, edgecolor='black', facecolor='none', transform=ax_inset.get_transform('fk5'),alpha=15)
         ax_inset.add_patch(c)
-        ax_inset.text(ra[i]-2.5, dec[i]-1, "%d\n%s \n %d%% %d deg " % (i,time[i], 100*pgw[i],pgal[i]),transform=ax_inset.get_transform('fk5'), color = 'k', rotation = -15, fontsize = 8)
+        # To have more details in the plot
+        #ax_inset.text(ra[i]-2.5, dec[i]-1, "%d\n%s \n %d%% %d deg " % (i,time[i], 100*pgw[i],pgal[i]),transform=ax_inset.get_transform('fk5'), color = 'k', rotation = -15, fontsize = 8)
+        # Only the number of pointing is included
+        ax_inset.text(ra[i]-2.5, dec[i]-1, "%d" % i,transform=ax_inset.get_transform('fk5'), color = 'k', rotation = -15, fontsize = 8)
 
 
     pos=ax_inset.imshow_hpx(filename, cmap='cylon')
