@@ -1,10 +1,10 @@
 import os
 import sys
-from gammagwfollowup.include.PointingTools import NightDarkObservation, NightDarkObservationwithGreyTime, LoadHealpixMap
-from gammagwfollowup.include.Observatories import CTANorthObservatory, CTASouthObservatory, HESSObservatory
-from gammagwfollowup.include.PointingTools import getdate
-from gammagwfollowup.include.PointingPlotting import LoadPointingsGAL, PlotPointingsTogether, PlotPointings_Pretty
-from gammagwfollowup.include.PointingTools import Get90RegionPixReduced, TransformRADec
+from tilepy.include.PointingTools import NightDarkObservation, NightDarkObservationwithGreyTime, LoadHealpixMap
+from tilepy.include.Observatories import CTANorthObservatory, CTASouthObservatory, HESSObservatory
+from tilepy.include.PointingTools import getdate
+from tilepy.include.PointingPlotting import LoadPointingsGAL, PlotPointingsTogether, PlotPointings_Pretty
+from tilepy.include.PointingTools import Get90RegionPixReduced, TransformRADec
 
 import healpy as hp
 import numpy as np

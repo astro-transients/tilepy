@@ -89,7 +89,7 @@ def PlotValueandError(value, error, string,stringError):
     plt.plot(value, error,'.')
     plt.savefig(string+'_'+stringError+'.png')
     
-dirName = '/Users/hashkar/Desktop/GWFollowup_lib/gw-follow-up-simulations/gammagwfollowup/tools/'
+dirName = '/Users/hashkar/Desktop/GWFollowup_lib/gw-follow-up-simulations/tilepy/tools/'
     
 catName = dirName+'GLADE+.txt'
 
