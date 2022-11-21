@@ -1,4 +1,4 @@
-from gammagwfollowup.include.PointingTools import (LoadHealpixMap,CorrelateGalaxies_LVC,SubstractPointings2D,
+from tilepy.include.PointingTools import (LoadHealpixMap,CorrelateGalaxies_LVC,SubstractPointings2D,
                                   SubstractPointings, LoadGalaxies)
 
 import healpy as hp
