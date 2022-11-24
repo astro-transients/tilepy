@@ -89,14 +89,14 @@ def PlotValueandError(value, error, string,stringError):
     plt.plot(value, error,'.')
     plt.savefig(string+'_'+stringError+'.png')
     
-dirName = '/Users/hashkar/Desktop/GWFollowup_lib/gw-follow-up-simulations/tilepy/tools/'
+#dirName = '/Users/hashkar/Desktop/GWFollowup_lib/gw-follow-up-simulations/tilepy/tools/'
+dirName = '/Users/mseglar/Documents/PhD/HESS/GW/ModifyCatalogue/'
 
 # Cat file should be .cvs
-catName = dirName+'GLADE+.cvs'
+catName = dirName+'GLADE+test.cvs'
 
 #Method1 returns a astropy Table
-cats = ascii.read(catName,delimiter=' ', format='csv', guess=False,
-                 fast_reader={'chunk_size': 100 * 1000000})
+cats = ascii.read(catName, delimiter=' ', format='csv', guess=False, fast_reader={'chunk_size': 100 * 1000000})
 
 # Follow https://docs.astropy.org/en/stable/io/ascii/read.html#chunk-reading to read catalog
 
@@ -110,8 +110,8 @@ cats = ascii.read(catName,delimiter=' ', format='csv', guess=False,
 outcats = []
 
 for cat in cats:
-    cutCatalog =  cats['col34'] < 500
-    noZero = cats['col34'] != 'null'
+    cutCatalog =  cat['col33'] < 500
+    noZero = cat['col3'] != 'null'
     
     #mergerRate = np.array(cat['col39'])
     #EmergerRate = np.array(cat['col40'])
@@ -149,7 +149,7 @@ print(len(cat),'vs',len(outcat),'when cleaned')
 tcat = Table([outcat['col9'],outcat['col10'],outcat['col33'],outcat['col36']], names=('RAJ2000', 'DEJ2000', 'Dist','Mass'))
 
 #print('If we make a cut on nans in distance,lenght=',len(tcat['Dist']))
-ascii.write(tcat, dirName+'GLADE+clean.txt',overwrite=True)
+ascii.write(tcat, dirName+'GLADE+testclean.txt',overwrite=True)
 
 
 #GLADE = Table.read('GLADE_2.2.txt', format='ascii')
