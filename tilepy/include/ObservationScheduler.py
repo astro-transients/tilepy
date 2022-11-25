@@ -20,7 +20,7 @@ import os
 
 
 
-def GetSchedule_GW(URL, date,datasetDir,outDir):
+def GetSchedule_GW(URL, date,datasetDir,outDir,cfgFile):
 
     targetType = 'GW_Pointing'
     fitsMap, filename = GetGWMap(URL)
@@ -31,7 +31,7 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
     print("===========================================================================================")
     PointingsFile = "False"
     galaxies = datasetDir + "/GLADE.txt"
-    parameters = "./configs/FollowupParameters.ini"
+    #cfgFile = "./configs/FollowupParameters.ini"
 
     if has3D:
 
@@ -48,12 +48,12 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
         print("Date: ", ObservationTime)
         print("Previous pointings: ", PointingsFile)
         print("Catalog: ", galaxies)
-        print("Parameters: ", parameters)
+        print("Config parameters: ", cfgFile)
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
         
         obspar = ObservationParameters()
-        obspar.from_configfile(parameters)
+        obspar.from_configfile(cfgFile)
 
         SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galaxies, obspar, dirName)
 
@@ -89,12 +89,12 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
         print("Date: ", ObservationTime)
         print("Previous pointings: ", PointingsFile)
         print("Catalog: ", galaxies)
-        print("Parameters: ", parameters)
+        print("Parameters: ", cfgFile)
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
         
         obspar = ObservationParameters()
-        obspar.from_configfile(parameters)
+        obspar.from_configfile(cfgFile)
 
         SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, obspar, dirName)
 
@@ -115,7 +115,7 @@ def GetSchedule_GW(URL, date,datasetDir,outDir):
             FOLLOWUP = False
             print('No observations are scheduled')
 
-def GetSchedule_GBMfromPNG(URL, date,datasetDir,outDir):
+def GetSchedule_GBMfromPNG(URL, date,datasetDir,outDir,cfgFile):
     targetType = 'GBM_Pointing'
     fitsMap, filename = GetGBMMap(URL)
     prob, has3D = Check2Dor3D(fitsMap,filename)
@@ -125,7 +125,7 @@ def GetSchedule_GBMfromPNG(URL, date,datasetDir,outDir):
 
     PointingsFile = "False"
     galaxies = datasetDir + "/GLADE.txt"
-    parameters = "./configs/FollowupParameters.ini"
+    #cfgFile = "./configs/FollowupParameters.ini"
 
     if has3D:
 
@@ -142,12 +142,12 @@ def GetSchedule_GBMfromPNG(URL, date,datasetDir,outDir):
         print("Date: ", ObservationTime)
         print("Previous pointings: ", PointingsFile)
         print("Catalog: ", galaxies)
-        print("Parameters: ", parameters)
+        print("Parameters: ", cfgFile)
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
         obspar = ObservationParameters()
-        obspar.from_configfile(parameters)
+        obspar.from_configfile(cfgFile)
         
         SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galaxies, obspar, dirName)
 
@@ -177,12 +177,12 @@ def GetSchedule_GBMfromPNG(URL, date,datasetDir,outDir):
         print("Date: ", ObservationTime)
         print("Previous pointings: ", PointingsFile)
         print("Catalog: ", galaxies)
-        print("Parameters: ", parameters)
+        print("Parameters: ", cfgFile)
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
         obspar = ObservationParameters()
-        obspar.from_configfile(parameters)
+        obspar.from_configfile(cfgFile)
 
         SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, obspar, dirName)
 
@@ -201,7 +201,7 @@ def GetSchedule_GBMfromPNG(URL, date,datasetDir,outDir):
             FOLLOWUP = False
             print('No observations are scheduled')
 
-def GetSchedule_GBM(URL, date,datasetDir,outDir):
+def GetSchedule_GBM(URL, date,datasetDir,outDir,cfgFile):
     targetType = 'GBM_Pointing'
     fitsMap = fits.open(URL)
 
@@ -214,8 +214,8 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
 
     PointingsFile = "False"
     galaxies = datasetDir + "/GLADE.txt"
-    parameters = '/Users/mseglar/Documents/GitLab/lst_gwfollowup/configs/FollowupParameters.ini'
-    #parameters = "./configs/FollowupParameters.ini"
+    #cfgFile = '/Users/mseglar/Documents/GitLab/lst_gwfollowup/configs/FollowupParameters.ini'
+    #cfgFile = "./configs/FollowupParameters.ini"
 
     if has3D:
 
@@ -232,19 +232,19 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
         print("Date: ", ObservationTime)
         print("Previous pointings: ", PointingsFile)
         print("Catalog: ", galaxies)
-        print("Parameters: ", parameters)
+        print("Parameters: ", cfgFile)
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
         obspar = ObservationParameters()
-        obspar.from_configfile(parameters)
+        obspar.from_configfile(cfgFile)
 
         SuggestedPointings, cat = PGalinFoV(filename, ObservationTime, PointingsFile, galaxies, obspar, dirName)
 
         if (len(SuggestedPointings) != 0):
             FOLLOWUP = True
             obspar = ObservationParameters()
-            obspar.from_configfile(parameters)
+            obspar.from_configfile(cfgFile)
             outfilename = '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName,obspar.FOV)
             ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
             RankingTimes(ObservationTime, filename, cat, obspar, targetType, dirName,outfilename, obspar.name)
@@ -267,12 +267,12 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
         print("Date: ", ObservationTime)
         print("Previous pointings: ", PointingsFile)
         print("Catalog: ", galaxies)
-        print("Parameters: ", parameters)
+        print("Parameters: ", cfgFile)
         print("Dataset: ", datasetDir)
         print("Output: ", outputDir)
 
         obspar = ObservationParameters()
-        obspar.from_configfile(parameters)
+        obspar.from_configfile(cfgFile)
         
         SuggestedPointings, t0 = PGWinFoV(filename, ObservationTime, PointingsFile, obspar, dirName)
 
@@ -283,7 +283,7 @@ def GetSchedule_GBM(URL, date,datasetDir,outDir):
         if (len(SuggestedPointings) != 0):
             FOLLOWUP = True
             obspar = ObservationParameters()
-            obspar.from_configfile(parameters)
+            obspar.from_configfile(cfgFile)
             outfilename = '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName,obspar.FOV)
             ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
             print()
