@@ -1,15 +1,23 @@
-name: tilepy
+name: tilepyenv
 channels:
   - default
   - cta-observatory
   - conda-forge
 dependencies:
   - python=3.6
-  - astropy==4.1
-  - ipython
-  - numpy==1.19.5
   - pip
   - pip:
-      - MOCpy
+      - gammapy==0.9
+      - astropy==4.1
       - pytz
-      - healpy
+      - scipy
+      - healpy==1.12.9
+      - ipython
+      - matplotlib==2.2.2
+      - MOCpy==0.10.0
+      - numpy==1.19.5
+      - pandas
+      - pytz==2021.1
+      - ephem==3.7.6.0
+      - gdpyc
+      - ligo.skymap==0.1.7
