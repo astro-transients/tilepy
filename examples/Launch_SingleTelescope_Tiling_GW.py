@@ -24,7 +24,7 @@ parser.add_argument('-time', metavar='\"YYYY-MM-DD HH:MM:SS\"', default= "2022-1
                     help='optional: date and time of the event (default: NOW, i.e. %(default)s)')
 parser.add_argument('-i',metavar = 'input path', help='Path to the input datasets', default = "./datasets")
 parser.add_argument('-o',metavar = 'output path', help='Path to the output folder',default='./output')
-parser.add_argument('-cfg',metavar = 'config file', help='Config file for the tiling scheduling',default='./config/testConfig.ini')
+parser.add_argument('-cfg',metavar = 'config file', help='Config file for the tiling scheduling',default='./config/ExampleConfig.ini')
 
 args = parser.parse_args()
 url = args.url
