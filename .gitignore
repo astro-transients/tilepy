@@ -1,5 +1,7 @@
+dataset/BNS*
 ggwf*
 log
+build
 output*
 tools/analysisResults
 include/__pycache__

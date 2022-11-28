@@ -5,11 +5,10 @@
 We clone the repo, create an environment to work, activate the enviroment and install the package.
 
 ```python
-git clone  git@drf-gitlab.cea.fr:multimessenger-IRFU/cta/gw-follow-up-simulations.git 
-cd gw-follow-up-simulations
+git clone git@drf-gitlab.cea.fr:multimessenger-IRFU/general-mwl-mm-transients-analyses/tilepy.git
 conda env create -n tilepyenv -f environment.yml
 conda activate tilepyenv
-pip install .      
+python -m pip install -e .
 ```
 
 Requirements of the installation: 
