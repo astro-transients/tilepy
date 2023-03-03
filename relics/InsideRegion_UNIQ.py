@@ -1,10 +1,5 @@
-import sys
-sys.path.append('/Users/mseglar/Documents/GitHub/GWfollowup/include/')
-from PointingTools import *
-from astropy.table import Table
-import matplotlib.pyplot as plt
-import healpy as hp
 import numpy as np
+import healpy as hp
 
 def get_ligo_maps(sky_map, Order, map_names='all'):
     
@@ -56,7 +51,7 @@ def get_ligo_maps(sky_map, Order, map_names='all'):
     return maps
 
 def uniq2order_ind(uniq):
-    orders = (np.log2(uniq/4).astype(np.int)/2).astype(np.int)
+    order = (np.log2(uniq/4).astype(np.int)/2).astype(np.int)
     inds = (uniq - 4*(np.power(4,order))).astype(np.int)
     return order, inds
 
