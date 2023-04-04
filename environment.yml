@@ -4,20 +4,22 @@ channels:
   - cta-observatory
   - conda-forge
 dependencies:
-  - python=3.6
+  - python==3.9
   - pip
+  - astropy #>=4.1
+  - pytz
+  - scipy
+  - ipython
+  - numpy #>=1.19.5
+  - pandas
+  - pytz #==2021.1
+  - healpy==1.16.2
+  #- markupsafe==2.0.1
   - pip:
-      - gammapy==0.9
-      - astropy==4.1
-      - pytz
-      - scipy
-      - healpy==1.12.9
-      - ipython
-      - matplotlib==2.2.2
-      - MOCpy==0.10.0
-      - numpy==1.19.5
-      - pandas
-      - pytz==2021.1
-      - ephem==3.7.6.0
-      - gdpyc
-      - ligo.skymap==0.1.7
+    - gdpyc
+    #- healpy #>=1.12.9
+    - MOCpy #==0.10.0
+    - matplotlib #==2.2.2
+    - gammapy==0.9
+    - ephem==3.7.6.0
+    - ligo.skymap~=1.0.7
