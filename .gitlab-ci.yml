@@ -1,0 +1,10 @@
+stages: 
+  - install 
+
+install_package:
+  stage: install
+  image: python:slim
+  script: 
+    - apt-get -y update && apt-get install git -y
+    - pip install --upgrade pip 
+    - pip install .
