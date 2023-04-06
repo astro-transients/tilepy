@@ -1,10 +1,9 @@
-import pandas as pd
-import numpy as np
-import tqdm
-import tables
-import logging
 import argparse
+import logging
 import time
+import numpy as np
+import pandas as pd
+import tables
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
@@ -167,20 +166,29 @@ else:
         v_err = tables.Float32Col()
         z_err = tables.Float32Col()
 
-
+    # Create filters for data compression
     if args.compression_algorithm is None:
         filter_catalog = tables.Filters()
     else:
         filter_catalog = tables.Filters(complib=args.compression_algorithm, complevel=args.compression_level)
 
+    # Create files and node
     h5file = tables.open_file(args.output, mode='w', filters=filter_catalog)
     table = h5file.create_table(h5file.root, 'catalog', TableCatalog, expectedrows=len(catalog))
-    # table.append(catalog)
-    entry = table.row
-    for i in tqdm.tqdm(catalog.index):
-        for key in catalog.columns:
-            entry[key] = catalog.loc[i, key]
-        entry.append()
+
+    # Determine dtype conversion (pandas to file data model)
+    dtype_data_model_file = h5file.root.catalog.dtype
+    dtype_conversion = {}
+    for k in dtype_data_model_file.names:
+        dtype_conversion[k] = dtype_data_model_file[k]
+
+    # Write data to file
+    table.append(catalog[h5file.root.catalog.colnames].to_records(index=False,
+                                                                  column_dtypes=dtype_conversion))
+
+    # Create index and close file
+    h5file.root.catalog.cols.valid_data.create_index()
+    h5file.root.catalog.cols.no_GLADE.create_index()
     h5file.close()
 
 logging.info('File written in {0}s'.format(time.time() - tstart))
