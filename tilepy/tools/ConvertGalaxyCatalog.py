@@ -87,53 +87,6 @@ converter_columns_catalog = {'no_PGC': lambda x: str(x),
                              'dist_flag': flag_columns_converter,
                              'mass_flag': flag_columns_converter}
 
-
-# Define table structure hdf5
-class TableCatalog(tables.IsDescription):
-    no_GLADE = tables.UInt32Col()
-    valid_data = tables.BoolCol()
-    name = tables.StringCol(30)
-    RA = tables.Float64Col()
-    Dec = tables.Float64Col()
-    d_L = tables.Float64Col()
-    d_L_err = tables.Float64Col()
-    dist_flag = tables.Int8Col()
-    mass = tables.Float64Col()
-    mass_err = tables.Float64Col()
-    mass_flag = tables.Int8Col()
-    merger_rate = tables.Float64Col()
-    merger_rate_err = tables.Float64Col()
-    no_PGC = tables.StringCol(7)
-    name_GWGC = tables.StringCol(28)
-    name_HyperLEDA = tables.StringCol(29)
-    name_2MASS = tables.StringCol(16)
-    name_WISExSCOS = tables.StringCol(19)
-    name_SDSS_DR16Q = tables.StringCol(18)
-    object_type = tables.StringCol(1)
-    B_mag = tables.Float64Col()
-    B_mag_err = tables.Float64Col()
-    B_mag_flag = tables.Int8Col()
-    B_mag_abs = tables.Float64Col()
-    J_mag = tables.Float64Col()
-    J_mag_err = tables.Float64Col()
-    H_mag = tables.Float64Col()
-    H_mag_err = tables.Float64Col()
-    K_mag = tables.Float64Col()
-    K_mag_err = tables.Float64Col()
-    W1_mag = tables.Float64Col()
-    W1_mag_err = tables.Float64Col()
-    W2_mag = tables.Float64Col()
-    W2_mag_err = tables.Float64Col()
-    W1_mag_flag = tables.Int8Col()
-    B_J_mag = tables.Float64Col()
-    B_J_mag_err = tables.Float64Col()
-    z_helio = tables.Float64Col()
-    z_cmb = tables.Float64Col()
-    z_flag = tables.Int8Col()
-    v_err = tables.Float64Col()
-    z_err = tables.Float64Col()
-
-
 # Load argument
 args = parser.parse_args()
 
@@ -159,11 +112,6 @@ if args.store_valid:
     logging.info('Remove non valid data')
     catalog = catalog[catalog['valid_data']]
 
-# Determine galaxies best names
-logging.info('Determine best name for galaxies')
-# catalog['name'] = catalog.apply(best_name_galaxie, axis=1)
-catalog['name'] = catalog['no_GLADE'].apply(lambda x: 'GLADE+ ' + str(x))
-
 logging.info('Catalog filter computed in {0}s'.format(time.time() - tstart))
 
 # Create output files
@@ -174,11 +122,52 @@ if args.text_format:
     catalog = catalog[catalog['valid_data']]
     catalog[['no_GLADE', 'RA', 'Dec', 'd_L', 'mass']].to_csv(args.output, index=False)
 else:
-    # if args.compression_algorithm is None:
-    #    catalog.to_hdf(args.output, 'catalog', mode='w', index=False)
-    # else:
-    #    catalog.to_hdf(args.output, 'catalog', mode='w', index=False,
-    #                   complib=args.compression_algorithm, complevel=args.compression_level)
+
+    # Define table structure hdf5
+    class TableCatalog(tables.IsDescription):
+        no_GLADE = tables.UInt32Col()
+        valid_data = tables.BoolCol()
+        RA = tables.Float64Col()
+        Dec = tables.Float64Col()
+        d_L = tables.Float32Col()
+        d_L_err = tables.Float32Col()
+        dist_flag = tables.Int8Col()
+        mass = tables.Float32Col()
+        mass_err = tables.Float32Col()
+        mass_flag = tables.Int8Col()
+        merger_rate = tables.Float32Col()
+        merger_rate_err = tables.Float32Col()
+        no_PGC = tables.StringCol(np.max(catalog['no_PGC'].apply(lambda x: len(x))))
+        name_GWGC = tables.StringCol(np.max(catalog['name_GWGC'].apply(lambda x: len(x))))
+        name_HyperLEDA = tables.StringCol(np.max(catalog['name_HyperLEDA'].apply(lambda x: len(x))))
+        name_2MASS = tables.StringCol(np.max(catalog['name_2MASS'].apply(lambda x: len(x))))
+        name_WISExSCOS = tables.StringCol(np.max(catalog['name_WISExSCOS'].apply(lambda x: len(x))))
+        name_SDSS_DR16Q = tables.StringCol(np.max(catalog['name_SDSS_DR16Q'].apply(lambda x: len(x))))
+        object_type = tables.StringCol(1)
+        B_mag = tables.Float32Col()
+        B_mag_err = tables.Float32Col()
+        B_mag_flag = tables.Int8Col()
+        B_mag_abs = tables.Float32Col()
+        J_mag = tables.Float32Col()
+        J_mag_err = tables.Float32Col()
+        H_mag = tables.Float32Col()
+        H_mag_err = tables.Float32Col()
+        K_mag = tables.Float32Col()
+        K_mag_err = tables.Float32Col()
+        W1_mag = tables.Float32Col()
+        W1_mag_err = tables.Float32Col()
+        W2_mag = tables.Float32Col()
+        W2_mag_err = tables.Float32Col()
+        W1_mag_flag = tables.Int8Col()
+        B_J_mag = tables.Float32Col()
+        B_J_mag_err = tables.Float32Col()
+        z_helio = tables.Float32Col()
+        z_cmb = tables.Float32Col()
+        z_flag = tables.Int8Col()
+        v_err = tables.Float32Col()
+        z_err = tables.Float32Col()
+
+
     if args.compression_algorithm is None:
         filter_catalog = tables.Filters()
     else:
@@ -186,13 +175,12 @@ else:
 
     h5file = tables.open_file(args.output, mode='w', filters=filter_catalog)
     table = h5file.create_table(h5file.root, 'catalog', TableCatalog, expectedrows=len(catalog))
-    #table.append(catalog)
+    # table.append(catalog)
     entry = table.row
     for i in tqdm.tqdm(catalog.index):
         for key in catalog.columns:
             entry[key] = catalog.loc[i, key]
         entry.append()
     h5file.close()
-
 
 logging.info('File written in {0}s'.format(time.time() - tstart))
