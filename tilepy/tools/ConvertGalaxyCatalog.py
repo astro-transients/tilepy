@@ -15,13 +15,6 @@ parser.add_argument("-i", "--input", nargs='?',
 parser.add_argument("-o", "--output", nargs='?',
                     dest='output', action='store',
                     required=True, help="Output converted file")
-parser.add_argument("-ca", "--compression-algorithm", nargs='?',
-                    dest='compression_algorithm', action='store',
-                    required=False, default=None, help="Algorithm used for compression")
-parser.add_argument("-cl", "--compression-level", nargs='?',
-                    dest='compression_level', action='store',
-                    required=False, default=0, type=int, choices=range(0, 10),
-                    help="Compression level")
 parser.add_argument("-md", "--max-luminosity-distance", nargs='?',
                     dest='max_luminosity_distance', action='store',
                     required=False, default=500, type=float, help="Cuts to apply on the luminosity distance")
@@ -31,7 +24,19 @@ parser.add_argument("-sv", "--store-valid",
 parser.add_argument("-t", "--text-format",
                     dest='text_format', action='store_true',
                     default=False, help="Store as a text format")
-
+parser.add_argument("-ca", "--compression-algorithm", nargs='?',
+                    dest='compression_algorithm', action='store',
+                    required=False, default=None, help="Algorithm used for compression")
+parser.add_argument("-cl", "--compression-level", nargs='?',
+                    dest='compression_level', action='store',
+                    required=False, default=0, type=int, choices=range(0, 10),
+                    help="Compression level")
+parser.add_argument("-sh", "--shuffle",
+                    dest='bit_shuffle', action='store_true',
+                    default=False, help="Allow shuffle for file compression")
+parser.add_argument("-bs", "--bit-shuffle",
+                    dest='bit_shuffle', action='store_true',
+                    default=False, help="Allow bit shuffle for file compression")
 
 # Function to determine the best name for the galaxie
 def best_name_galaxie(x):
@@ -170,7 +175,10 @@ else:
     if args.compression_algorithm is None:
         filter_catalog = tables.Filters()
     else:
-        filter_catalog = tables.Filters(complib=args.compression_algorithm, complevel=args.compression_level)
+        filter_catalog = tables.Filters(complib=args.compression_algorithm,
+                                        complevel=args.compression_level,
+                                        shuffle=args.shuffle,
+                                        bitshuffle=args.bit_shuffle)
 
     # Create files and node
     h5file = tables.open_file(args.output, mode='w', filters=filter_catalog)
