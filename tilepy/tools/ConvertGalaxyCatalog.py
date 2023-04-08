@@ -32,7 +32,7 @@ parser.add_argument("-cl", "--compression-level", nargs='?',
                     required=False, default=0, type=int, choices=range(0, 10),
                     help="Compression level")
 parser.add_argument("-sh", "--shuffle",
-                    dest='bit_shuffle', action='store_true',
+                    dest='shuffle', action='store_true',
                     default=False, help="Allow shuffle for file compression")
 parser.add_argument("-bs", "--bit-shuffle",
                     dest='bit_shuffle', action='store_true',
