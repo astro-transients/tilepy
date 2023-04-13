@@ -21,17 +21,24 @@ import os
 def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
     targetType = 'Tiling'
     
-    if Type == 'gbm':
+    if Type == 'gbmpng':
+        targetType = 'GBM_Pointing'
         fitsMap, filename = GetGBMMap(URL)
-
+        name = URL.split('/')[-3]
+    elif Type == 'gbm':
+        targetType = 'GBM_Pointing'
+        fitsMap = fits.open(URL)
+        filename = URL
+        name = URL.split('all_')[1].split('_v00')[0]
     else: 
+        targetType = 'GW_Pointing'
         fitsMap, filename = GetGWMap(URL)
+        name = URL.split('/')[-3]
 
     prob, has3D = Check2Dor3D(fitsMap,filename)
 
     
     print("===========================================================================================")
-    name = URL.split('/')[-3]
     PointingsFile = "False"
     parameters = []
     ObservationTime = date
