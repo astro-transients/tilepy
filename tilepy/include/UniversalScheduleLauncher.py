@@ -18,7 +18,7 @@ import datetime
 import os
 
 
-def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
+def GetUniversalSchedule(URL, date, datasetDir, galcatname, outDir, Type, ObsArray):
 
     '''
     Description: Top level function that is called by the user with specific arguments and creates a folder with the tiling schedules for several telescopes working together and visibility plots.  
@@ -55,7 +55,7 @@ def GetUniversalSchedule(URL, date, datasetDir, outDir, Type, ObsArray):
     parameters = []
     ObservationTime = date
     outputDir = "%s/%s" % (outDir, name)
-    galaxies = datasetDir + "/GLADE.txt"
+    galaxies = datasetDir + galcatname
 
     for i in ObsArray:
         parameters.append("./configs/FollowupParameters_%s.ini" %i)
