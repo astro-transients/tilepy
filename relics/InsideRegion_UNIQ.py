@@ -5,9 +5,9 @@ def get_ligo_maps(sky_map, Order, map_names='all'):
     
     un_inds = sky_map['UNIQ']
     
-    order = (np.log2(un_inds/4).astype(np.int)/
-             2).astype(np.int)
-    inds = (un_inds - 4*(np.power(4,order))).astype(np.int)
+    order = (np.log2(un_inds/4).astype(int)/
+             2).astype(int)
+    inds = (un_inds - 4*(np.power(4,order))).astype(int)
              
     if Order == 'max':
         Order = np.max(order)
@@ -51,12 +51,12 @@ def get_ligo_maps(sky_map, Order, map_names='all'):
     return maps
 
 def uniq2order_ind(uniq):
-    order = (np.log2(uniq/4).astype(np.int)/2).astype(np.int)
-    inds = (uniq - 4*(np.power(4,order))).astype(np.int)
+    order = (np.log2(uniq/4).astype(int)/2).astype(int)
+    inds = (uniq - 4*(np.power(4,order))).astype(int)
     return order, inds
 
 def order_inds2uniq(order, inds):
-    uniq = 4*(np.power(4,order)).astype(np.int) + inds
+    uniq = 4*(np.power(4,order)).astype(int) + inds
     return uniq
 
 if __name__ == "__main__":

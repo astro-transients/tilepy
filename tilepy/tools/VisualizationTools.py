@@ -70,10 +70,10 @@ def VisibilityOverview_forZenithCut(GWFile, date=datetime.datetime.now(timezone.
     
     prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(GWFile)
     
-    TITLE_HESS = observatory.Name + '(red) &' + observatory2.Name + '(blue) visibility at ' + str(time)
+    titlePlot = observatory.Name + '(red) &' + observatory2.Name + '(blue) visibility at ' + str(time)
 
     # Just do a plotting
-    hp.mollview(prob, coord='C', title=TITLE_HESS)  # Celestial=Equatorial
+    hp.mollview(prob, coord='C', title=titlePlot)  # Celestial=Equatorial
     # frame = co.AltAz(obstime=time, location=observatory.Location)
     
     altcoord = np.empty(4000)
