@@ -18,9 +18,9 @@ parser.add_argument("-o", "--output", nargs='?',
 parser.add_argument("-md", "--max-luminosity-distance", nargs='?',
                     dest='max_luminosity_distance', action='store',
                     required=False, default=500, type=float, help="Cuts to apply on the luminosity distance")
-parser.add_argument("-sv", "--store-valid",
-                    dest='store_valid', action='store_true',
-                    default=False, help="Store only valid galaxies")
+parser.add_argument("-sa", "--store-all",
+                    dest='store_all', action='store_true',
+                    default=False, help="Store all galaxies included invalid ones")
 parser.add_argument("-t", "--text-format",
                     dest='text_format', action='store_true',
                     default=False, help="Store as a text format")
@@ -112,7 +112,7 @@ catalog['valid_data'] &= ~np.isnan(catalog['d_L'])
 catalog['valid_data'] &= catalog['d_L'] < args.max_luminosity_distance
 
 # Remove non valid data if requested
-if args.store_valid:
+if not args.store_all:
     logging.info('Remove non valid data')
     catalog = catalog[catalog['valid_data']]
 
