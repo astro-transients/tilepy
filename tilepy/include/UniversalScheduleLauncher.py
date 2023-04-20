@@ -33,6 +33,7 @@ def GetUniversalSchedule(URL, date, datasetDir, galcatname, outDir, Type, ObsArr
 
     targetType = 'Tiling'
     
+
     if Type == 'gbmpng':
         targetType = 'GBM_Pointing'
         fitsMap, filename = GetGBMMap(URL)
@@ -46,6 +47,7 @@ def GetUniversalSchedule(URL, date, datasetDir, galcatname, outDir, Type, ObsArr
         targetType = 'GW_Pointing'
         fitsMap, filename = GetGWMap(URL)
         name = URL.split('/')[-3]
+
 
     prob, has3D = Check2Dor3D(fitsMap,filename)
 

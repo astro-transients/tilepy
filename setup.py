@@ -9,7 +9,7 @@ def readfile(filename):
 
 
 setup(name='tilepy',
-      version='1.1.0',
+      version='1.2.0',
       description='Gravitational waves follow-up scheduling and simulation for IACTs',
       install_requires=[
           'gammapy', #==0.9',
