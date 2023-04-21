@@ -14,7 +14,6 @@ dependencies:
   - pandas
   - pytz #==2021.1
   - healpy==1.16.2
-  - tables
     #- markupsafe==2.0.1
   - pip:
     - gdpyc
@@ -24,3 +23,5 @@ dependencies:
     - gammapy==0.9
     - ephem==3.7.6.0
     - ligo.skymap~=1.0.7
+    - tables
+

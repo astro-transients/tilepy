@@ -11,6 +11,14 @@ conda activate tilepyenv
 python -m pip install -e .
 ```
 
+If you prefer to avoid conda and use a virtual environment with your favorite python version, use the following sequence:
+```
+python -m venv tilepy_venv
+source tilepy_venv/bin/activate
+pip3 install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
 Requirements of the installation: 
 
 - The current version of the package **only** runs with `python=3.6`. Careful as well with the versions of matplotlib and healpy, they should be the ones explicited in the requirements.yml, otherwise there will be conflicts between them when plotting skymaps.  
