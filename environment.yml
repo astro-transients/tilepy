@@ -21,3 +21,5 @@ dependencies:
     - matplotlib #==2.2.2
     - ephem==3.7.6.0
     - ligo.skymap~=1.0.7
+    - tables
+

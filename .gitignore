@@ -17,3 +17,4 @@ __pycache__
 *.egg
 *.eggs
 .vscode/
+tilepy_venv
