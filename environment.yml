@@ -14,7 +14,8 @@ dependencies:
   - pandas
   - pytz #==2021.1
   - healpy==1.16.2
-  #- markupsafe==2.0.1
+  - tables
+    #- markupsafe==2.0.1
   - pip:
     - gdpyc
     #- healpy #>=1.12.9
