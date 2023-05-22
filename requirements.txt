@@ -1,0 +1,15 @@
+#gammapy
+astropy
+pytz
+scipy
+healpy
+tables
+ipython
+matplotlib
+MOCpy
+numpy
+pandas
+pytz
+ephem
+gdpyc
+ligo.skymap
