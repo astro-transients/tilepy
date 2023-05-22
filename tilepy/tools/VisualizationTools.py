@@ -1,10 +1,8 @@
 import os
 import sys
-from tilepy.include.PointingTools import NightDarkObservation, NightDarkObservationwithGreyTime, LoadHealpixMap
-from tilepy.include.Observatories import CTANorthObservatory, CTASouthObservatory, HESSObservatory
-from tilepy.include.PointingTools import getdate
-from tilepy.include.PointingPlotting import LoadPointingsGAL, PlotPointingsTogether, PlotPointings_Pretty
-from tilepy.include.PointingTools import Get90RegionPixReduced, TransformRADec
+from ..include.PointingTools import NightDarkObservation, NightDarkObservationwithGreyTime, ObservationParameters, getdate, Get90RegionPixReduced, TransformRADec
+from ..include.Observatories import CTANorthObservatory, CTASouthObservatory, HESSObservatory
+from ..include.PointingPlotting import LoadPointingsGAL, PlotPointingsTogether, PlotPointings_Pretty
 
 import healpy as hp
 import numpy as np
@@ -14,8 +12,8 @@ from datetime import timezone
 import matplotlib.pyplot as plt
 from astropy import units as u
 import astropy.coordinates as co
-
 from astropy.utils import iers
+import ligo.skymap.io.fits as lf
 
 # from astropy.utils.iers import conf as iers_conf
 # iers_conf.iers_auto_url = 'ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
@@ -26,7 +24,9 @@ iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
 def LocateSource(filename, ra, dec, PercentCov=90):
     
-    prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
+    #prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
+    skymap_OD = lf.read_sky_map(filename)
+    prob = skymap_OD[0]
     npix = len(prob)
     nside = hp.npix2nside(npix)
     
@@ -52,12 +52,12 @@ def LocateSource(filename, ra, dec, PercentCov=90):
     plt.show()
 
 
-def VisibilityOverview_forZenithCut(GWFile, date=datetime.datetime.now(timezone.utc), zenithcut=60):
+def VisibilityOverview_forZenithCut(filename, date=datetime.datetime.now(timezone.utc), zenithcut=60):
     time = getdate(date)
     
     print("===========================================================================================")
     
-    print('Loading map from ', GWFile)
+    print('Loading map from ', filename)
     print("Input time: ", time)
     print("Zenith angle cut for plots: ", zenithcut)
     
@@ -67,13 +67,17 @@ def VisibilityOverview_forZenithCut(GWFile, date=datetime.datetime.now(timezone.
     
     observatory = HESSObservatory()
     observatory2 = CTANorthObservatory()
+
+    skymap_OD = lf.read_sky_map(filename)
+    prob = skymap_OD[0]
     
-    prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(GWFile)
+    #prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(filename)
     
     titlePlot = observatory.Name + '(red) &' + observatory2.Name + '(blue) visibility at ' + str(time)
-
+    #hp.newvisufunc.projview(prob, unit="Probability", graticule=True, graticule_labels=True, projection_type="mollweide",
+    #    xlabel="RA", ylabel="Dec", phi_convention="clockwise", longitude_grid_spacing=30,title=titlePlot,format="%#.3g")
     # Just do a plotting
-    hp.mollview(prob, coord='C', title=titlePlot)  # Celestial=Equatorial
+    hp.mollview(prob, coord='C', title=titlePlot, unit="Probability")  # Celestial=Equatorial
     # frame = co.AltAz(obstime=time, location=observatory.Location)
     
     altcoord = np.empty(4000)
@@ -97,15 +101,19 @@ def VisibilityOverview_forZenithCut(GWFile, date=datetime.datetime.now(timezone.
     print("\n plot created: Visibility_Overview.png")
 
 
-def Time_DarkTime_GreyTime(GWFile, date=datetime.datetime.now(timezone.utc), zenithcut=60, maxNights=1, maxDuration=28,
+def Time_DarkTime_GreyTime(filename, cfgFile, date=datetime.datetime.now(timezone.utc), zenithcut=60, maxNights=1, maxDuration=28,
                            minDuration=10):
     time = getdate(date)
-    
-    #################################  Other parameters ##############################
+
+    ######################## Read parameters from config ##############################
+    obspar = ObservationParameters()
+    obspar.from_configfile(cfgFile)
+    ######################### Other parameters ##############################
     
     observatory = HESSObservatory()
     
-    prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(GWFile)
+    skymap_OD = lf.read_sky_map(filename)
+    prob = skymap_OD[0]
     npix = len(prob)
     nside = hp.npix2nside(npix)
     
@@ -113,8 +121,8 @@ def Time_DarkTime_GreyTime(GWFile, date=datetime.datetime.now(timezone.utc), zen
     altcoord.fill(90 - zenithcut)
     azcoord = np.random.rand(4000) * 360
     
-    NightDarkRuns = NightDarkObservation(time, observatory, maxNights, maxDuration, minDuration)
-    NightGreyRuns = NightDarkObservationwithGreyTime(time, observatory, maxNights, maxDuration, minDuration)
+    NightDarkRuns = NightDarkObservation(time, obspar)
+    NightGreyRuns = NightDarkObservationwithGreyTime(time, obspar)
     
     print("-----------------------------------------------------------------")
     print('Observatory is: ', observatory.Name)
@@ -166,17 +174,18 @@ def Time_DarkTime_GreyTime(GWFile, date=datetime.datetime.now(timezone.utc), zen
     print("-----------------------------------------------------------------")
 
 
-def CompareTwoTilings(GWFile, PointingsFile1=False, PointingsFile2=False, FOV=2):
+def CompareTwoTilings(filename, PointingsFile1=False, PointingsFile2=False, FOV=2):
     # Format of Pointing Files should be YYYY-MM-DD hh:mm:ss RAarray DECarray P_GWarray P_Galarray Round)
     
     print("===========================================================================================")
     print("Starting the pointing plotting from the following files\n")
     
-    print('Loading map from ', GWFile)
+    print('Loading map from ', filename)
     print("Filename 1: ", PointingsFile1)
     print("Filename 2: ", PointingsFile2)
     
-    prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(GWFile)
+    skymap_OD = lf.read_sky_map(filename)
+    prob = skymap_OD[0]
     npix = len(prob)
     nside = hp.npix2nside(npix)
     
