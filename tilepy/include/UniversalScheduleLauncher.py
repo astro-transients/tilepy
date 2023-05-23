@@ -5,7 +5,7 @@
 
 
 from .UniversalObservationScheduler import PGWinFoV_NObs, PGalinFoV_NObs
-from .RankingObservationTimes import RankingTimes, RankingTimes_SkyMapInput_2D
+from .RankingObservationTimes import RankingTimes, RankingTimes_2D
 from .PointingPlotting import PointingPlotting
 from astropy.coordinates import SkyCoord
 from .PointingTools import Tools, LoadGalaxies, getdate, GetGBMMap, GetGWMap, Check2Dor3D, ObservationParameters
@@ -103,7 +103,7 @@ def GetUniversalSchedule(URL, date, datasetDir, galcatname, outDir, Type, ObsArr
             print(SuggestedPointings_1)
             if (len(SuggestedPointings_1) != 0):
                 ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]) , overwrite=True, fast_writer=False)
-                RankingTimes_SkyMapInput_2D(ObservationTime, prob, ObsParameters[j], targetType, dirName,'%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]), ObsArray[j])
+                RankingTimes_2D(ObservationTime, prob, ObsParameters[j], targetType, dirName,'%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]), ObsArray[j])
                 PointingPlotting(prob, ObsParameters[j], name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]), ObsArray[j], filename)
     else:
         FOLLOWUP = False
