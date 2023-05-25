@@ -1,4 +1,4 @@
-name: tilepyenv
+name: tilepy
 channels:
   - default
   - cta-observatory

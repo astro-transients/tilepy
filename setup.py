@@ -9,7 +9,7 @@ def readfile(filename):
 
 
 setup(name='tilepy',
-      version='1.2.0',
+      version='1.3.0',
       description='Gravitational waves follow-up scheduling and simulation for IACTs',
       install_requires=[
           'astropy', #>=4.1',
