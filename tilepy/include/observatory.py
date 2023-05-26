@@ -1,0 +1,155 @@
+import datetime
+import numpy as np
+from pytz import timezone
+from skyfield import almanac
+from skyfield.api import wgs84, N, E, load
+
+
+class Observatory:
+    """
+        Class to store information and handle operation related to the observatory used of the observations
+    """
+
+    def __init__(self, longitude, latitude, elevation,
+                 run_duration, minimal_run_duration,
+                 max_sun_altitude, max_moon_altitude, max_moon_phase):
+        self.eph = load('de440s.bsp')
+        self.observatory_location = wgs84.latlon(latitude * N, longitude * E, elevation)
+
+        self.max_sun_altitude = max_sun_altitude
+        self.max_moon_altitude = max_moon_altitude
+        self.max_moon_phase = max_moon_phase
+
+        self.run_duration = run_duration
+        self.minimal_run_duration = minimal_run_duration
+
+        # Setup time converter for skyfield
+        self.timescale_converter = load.timescale()
+
+    def get_time_window(self, start_time, nb_observation_night):
+
+        # Compute time interval
+        if start_time.tzinfo is None:
+            zone = timezone('UTC')
+            start_time = zone.localize(start_time)
+        delta_time_obs = datetime.timedelta(days=nb_observation_night + 1)
+        stop_time = start_time + delta_time_obs
+
+        time_interval_sun = self.get_sun_constraint_time_interval(start_time, stop_time, nb_observation_night)
+        time_interval_moon = self.get_moon_constraint_time_interval(start_time, stop_time)
+        valid_time_interval = self.compute_interval_intersection(time_interval_sun, time_interval_moon)
+        return self.compute_run_start_time(valid_time_interval)
+
+    def compute_interval_intersection(self, time_range_1, time_range_2):
+        # Initialisation
+        i = j = 0
+        n = len(time_range_1)
+        m = len(time_range_2)
+        intersection_time_intervals = []
+
+        # Loop through all intervals unless one
+        # of the interval gets exhausted
+        while i < n and j < m:
+            # Determine if the intersection of the two currently selected intervals is valid
+            left = max(time_range_1[i][0], time_range_2[j][0])
+            right = min(time_range_1[i][1], time_range_2[j][1])
+            if left <= right:
+                intersection_time_intervals.append([left, right])
+
+            # Move to the next interval for the youngest one
+            if time_range_1[i][1] < time_range_2[j][1]:
+                i += 1
+            else:
+                j += 1
+
+        return intersection_time_intervals
+
+    def compute_run_start_time(self, valid_time_range):
+        run_start_time = []
+        for i in range(len(valid_time_range)):
+            observation_time_available = valid_time_range[i][1] - valid_time_range[i][0]
+            nb_observation_run = int(np.rint(observation_time_available//self.run_duration))
+            remaning_observation_time = observation_time_available%self.run_duration
+            if remaning_observation_time > self.minimal_run_duration:
+                nb_observation_run += 1
+            run_start_time += list(valid_time_range[i][0]+np.arange(nb_observation_run)*self.run_duration)
+        return run_start_time
+
+    def get_sun_constraint_time_interval(self, start_time, stop_time, nb_observation_night):
+        rise_time, set_time = self.get_risings_and_settings('sun', self.max_sun_altitude, start_time, stop_time)
+
+        time_interval_sun = []
+        for i in range(nb_observation_night):
+            if set_time[i] < rise_time[i]:
+                time_interval_sun.append([set_time[i], rise_time[i]])
+            else:
+                time_interval_sun.append([set_time[i], rise_time[i + 1]])
+
+        return time_interval_sun
+
+    def get_moon_constraint_time_interval(self, start_time, stop_time):
+        rise_time, set_time = self.get_risings_and_settings('moon', self.max_moon_altitude, start_time, stop_time)
+
+        # Initialise data for time intervals
+        time_interval_moon = []
+        tmp_time_interval_moon = []
+        i, j = 0, 0
+        time_cursor_start_window = start_time
+        time_cursor_end_window = start_time
+
+        # Loop over the time to determine valid time window
+        while time_cursor_end_window < stop_time:
+            # Determine interval range
+            time_cursor_start_window = min(rise_time[i], set_time[j])
+            time_cursor_end_window = max(rise_time[i], set_time[j])
+
+            # Determine the interval is valid
+            valid_interval = False
+            if rise_time[i] > set_time[j]:
+                valid_interval = True
+                j += 1
+            else:
+                time_middle_window = rise_time[i] + (set_time[j] - rise_time[i]) / 2.
+                valid_interval = self.get_moon_phase(time_middle_window) < self.max_moon_phase
+                i += 1
+
+            # Apply action on the wider interval based on the validity results
+            if valid_interval and len(tmp_time_interval_moon) == 0:
+                tmp_time_interval_moon.append(time_cursor_start_window)
+            elif not valid_interval and len(tmp_time_interval_moon) == 1:
+                tmp_time_interval_moon.append(time_cursor_start_window)
+                time_interval_moon.append(tmp_time_interval_moon)
+                tmp_time_interval_moon = []
+
+        # If the current time interval is open after iteration, close it
+        if len(tmp_time_interval_moon) == 1:
+            tmp_time_interval_moon.append(time_cursor_end_window)
+            time_interval_moon.append(tmp_time_interval_moon)
+
+        return time_interval_moon
+
+    def get_moon_phase(self, observation_time):
+        sun, moon, earth = self.eph['sun'], self.eph['moon'], self.eph['earth']
+
+        return earth.at(self.timescale_converter.from_datetime(observation_time)).observe(moon).apparent().fraction_illuminated(sun)
+
+    def get_risings_and_settings(self, celestial_body, horizon, start_time, stop_time):
+        f = almanac.risings_and_settings(self.eph, self.eph[celestial_body],
+                                         self.observatory_location, horizon_degrees=horizon)
+        time, rising_indicator = almanac.find_discrete(self.timescale_converter.from_datetime(start_time),
+                                                       self.timescale_converter.from_datetime(stop_time),
+                                                       f)
+        rise_time = list(time[rising_indicator == 1].utc_datetime())
+        set_time = list(time[rising_indicator == 0].utc_datetime())
+
+        # Set the start time and end time as either rise of set time to fully cover the time range
+        if rising_indicator[0] == 0:
+            rise_time = [start_time, ] + rise_time
+        else:
+            set_time = [start_time, ] + set_time
+        if rising_indicator[-1] == 1:
+            set_time = set_time + [stop_time, ]
+        else:
+            rise_time = rise_time + [stop_time, ]
+
+        return rise_time, set_time
