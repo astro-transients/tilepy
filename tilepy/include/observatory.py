@@ -15,14 +15,14 @@ class Observatory:
         Initialize the class with all the needed parameters.
 
         Args:
-        longitude (float): The longitude of the observatory.
-        latitude (float): The latitude of the observatory.
-        elevation (float): The elevation of the observatory.
-        run_duration (float): The duration of each run.
-        minimal_run_duration (float): The minimum duration of each run.
-        max_sun_altitude (float): The maximum altitude of the sun.
-        max_moon_altitude (float): The maximum altitude of the moon.
-        max_moon_phase (float): The maximum phase of the moon.
+        longitude (float): The longitude of the observatory (degree).
+        latitude (float): The latitude of the observatory (degree).
+        elevation (float): The elevation of the observatory (m).
+        run_duration (datetime.timedelta): The duration of each run.
+        minimal_run_duration (datetime.timedelta): The minimum duration of each run.
+        max_sun_altitude (float): The maximum altitude of the sun (degree).
+        max_moon_altitude (float): The maximum altitude of the moon (degree).
+        max_moon_phase (float): The maximum phase of the moon (illumination fraction).
         """
 
         self.eph = load('de440s.bsp')
@@ -43,7 +43,7 @@ class Observatory:
         Calculate the time window for observations.
 
         Args:
-        start_time (datetime): Earliest start time to starts observations
+        start_time (datetime): Earliest start time to start observations, if no timezone, assume UTC
         nb_observation_night (int): The number of observation nights.
 
         Returns:
@@ -211,7 +211,7 @@ class Observatory:
 
         Args:
         celestial_body (str): The celestial body.
-        horizon (float): The horizon.
+        horizon (float): The horizon to consider as rised or set (degree).
         start_time (datetime): The start time.
         stop_time (datetime): The stop time.
 
