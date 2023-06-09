@@ -18,7 +18,7 @@ class LST:
     def __init__(self):
         self.Name = 'LST'
         self.Lat = 28.75 * u.deg
-        self.Lon = 17.5 * u.deg
+        self.Lon = -17.5 * u.deg
         self.Height = 2200 * u.m
         self.Location = EarthLocation(
             lat=self.Lat, lon=self.Lon, height=self.Height)
