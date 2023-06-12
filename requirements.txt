@@ -13,3 +13,5 @@ pytz
 ephem
 gdpyc
 ligo.skymap
+fastparquet
+skyfield

@@ -9,10 +9,9 @@ def readfile(filename):
 
 
 setup(name='tilepy',
-      version='1.2.0',
+      version='1.3.0',
       description='Gravitational waves follow-up scheduling and simulation for IACTs',
       install_requires=[
-          'gammapy', #==0.9',
           'astropy', #>=4.1',
           'scipy', #',
           'healpy', #==1.12.9',
@@ -24,6 +23,9 @@ setup(name='tilepy',
           'pytz', #==2021.1',
           'ephem', #==3.7.6.0',
           'gdpyc',
+          'tables',
+          'fastparquet',
+          'skyfield',
           'ligo.skymap~=1.0.7',
       ],
       packages=find_packages(),
