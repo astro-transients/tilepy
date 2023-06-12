@@ -52,6 +52,6 @@ python ConvertGalaxyCatalog.py --input GLADE+.txt --output converted_GLADE.h5 --
 ```
 
 ## Help
-If any problem is found, please open an Issue in the project main page so it is documented. 
+If any problem is found, please open an Issue in the project main page so it is documented. You can of course also directly create a Pull Request with the new features implemented.
 
-Otherwise you can also contact me at seglararro@lapp.in2p3.fr, or you can create a Pull Request with the new features implemented.
+Otherwise you can also contact us at astro.tilepy@gmail.com. 
