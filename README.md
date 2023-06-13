@@ -38,7 +38,46 @@ Package including functions to perform GW follow-up scheduling and simulations i
 
 - relics: Old scripts that may be useful in the future
 
-- examples: Example on how to use tilepy (work ongoing) 
+- examples: Example on how to use tilepy:
+    - Tiling_Observations.py: example of a python script to run a tiling schedule. Default values works for the alertType = gw
+    - config/ExampleConfig.ini includes the minimal required parameters to run a tile. These are 
+       - [observatory]
+          - name: name of the observatory (it is not critical, you can use any name) 
+          - lat: lat coordinates of the observatory 
+          - lon: lon coordinates of the observatory 
+          - height: height of the observatory 
+
+        -[visibility]
+          - sunDown: altitude coordinate of the Sun in deg to define darkness conditions (for astronomic darkness sunDown= -18)
+          - horizonSun: altitude coordinate of the Sun in hh:mm:ss to define darkness conditions (for astronomic darkness horizonSun= -18:00:00)
+          - moonDown: altitude coordinate of the Moon in deg to define darkness conditions (for astronomic darkness moonDown= -0.5)
+          - horizonMoon: altitude coordinate of the Moon in hh:mm:ss to define darkness conditions (for astronomic darkness moonDown= -00:30:00)
+          - moonGrey: altitude coordinate of the Moon in deg to define greyness conditions
+          - moonPhase: phase of the Moon to define greyness conditions
+          - moonSourceSeparation: minimum separation Source-Moon in deg to define greyness conditions
+          - maxMoonSourceSeparation: max separation Source-Moon in deg to define greyness conditions
+
+        - [operations]
+          - maxZenith: max zenith angle which will be considered as accesible sky
+          - FOV: radious of the circular FoV defining the tiles
+          - maxRuns: maximum number of tiles that could be scheduled
+          - maxNights: total number of nights considered
+          - duration: standard exposure per tile 
+          - minDuration: minimal duration of tile if standard exposure is not allocable
+          - useGreytime: flag to schedule greyness observations in addition to darkness
+
+        - [tiling]
+          - online: ??
+          - minimumProbCutforCatalogue: minimal 3D(GWxgalaxyCat)probability covered per tile to schedule observation
+          - minProbcut:  minimal 2D probability covered per tile to schedule observation
+          - distCut: distance cut to define the mandatory use of 2D strategy (coming from galaxy catalogue completeness)
+          - doPlot: produce detailed various plots of the tile
+          - secondRound: consider two maps for scheduling 
+          - zenithWeighting: weight on probability that would be applied to prioritize coordinates that have lower zenith angle values. Step size is 5 deg in zenith (0.75 is a resonable value)
+          - percentageMOC: percentage of the sky localization region that would be considered to compute the MOC
+          - reducedNside: nside of the low-resolution skymap used as a grid to speed up the computation
+          - HRnside: nside of the high-resolution skymap used to compute the probability covered
+          - mangrove: flag to use the mangrove method of weighting by the mass of the host galaxy
 
 ## Creation of the reduced galaxy file
 

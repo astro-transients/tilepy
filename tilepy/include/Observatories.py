@@ -9,7 +9,7 @@ class HESSObservatory:
         self.Lat = -23.271778 * u.deg
         self.Lon = 16.50022 * u.deg
         self.Height = 1835 * u.m
-        self.Location = EarthLocation(lat=self.Lat, lon=self.Lon,
+        self.location = EarthLocation(lat=self.Lat, lon=self.Lon,
                                       height=self.Height)
 
 
@@ -20,7 +20,7 @@ class LST:
         self.Lat = 28.75 * u.deg
         self.Lon = -17.5 * u.deg
         self.Height = 2200 * u.m
-        self.Location = EarthLocation(
+        self.location = EarthLocation(
             lat=self.Lat, lon=self.Lon, height=self.Height)
 
 
@@ -30,7 +30,7 @@ class CTASouthObservatory:
         self.Lat = -24.5 * u.deg
         self.Lon = -70.17 * u.deg
         self.Height = 2635 * u.m
-        self.Location = EarthLocation(lat=self.Lat, lon=self.Lon,
+        self.location = EarthLocation(lat=self.Lat, lon=self.Lon,
                                       height=self.Height)
 
 
@@ -41,5 +41,5 @@ class CTANorthObservatory:
         self.Lat = 28.75 * u.deg
         self.Lon = 17.5 * u.deg
         self.Height = 2200 * u.m
-        self.Location = EarthLocation(lat=self.Lat, lon=self.Lon,
+        self.location = EarthLocation(lat=self.Lat, lon=self.Lon,
                                       height=self.Height)

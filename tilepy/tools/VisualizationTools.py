@@ -81,20 +81,20 @@ def VisibilityOverview_forZenithCut(filename, date=datetime.datetime.now(timezon
     # Just do a plotting
     hp.mollview(prob, coord='C', title=titlePlot,
                 unit="Probability")  # Celestial=Equatorial
-    # frame = co.AltAz(obstime=time, location=observatory.Location)
+    # frame = co.AltAz(obstime=time, location=observatory.location)
 
     altcoord = np.empty(4000)
     altcoord.fill(90 - zenithcut)
     azcoord = np.random.rand(4000) * 360
 
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,
-                           location=observatory.Location)
+                           location=observatory.location)
     RandomCoord_radec = RandomCoord.transform_to('fk5')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'red', lonlat=True, coord="C", linewidth=0.4)
 
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,
-                           location=observatory2.Location)
+                           location=observatory2.location)
     RandomCoord_radec = RandomCoord.transform_to('fk5')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'blue', lonlat=True, coord="C", linewidth=0.4)
@@ -146,35 +146,35 @@ def Time_DarkTime_GreyTime(filename, cfgFile, date=datetime.datetime.now(timezon
 
     # InputTime
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,
-                           location=observatory.Location)
+                           location=observatory.location)
     RandomCoord_radec = RandomCoord.transform_to('fk5')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'red', lonlat=True, coord="C", linewidth=0.4)
 
     # NightDarkRuns[0]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightDarkRuns[0],
-                           location=observatory.Location)
+                           location=observatory.location)
     RandomCoord_radec = RandomCoord.transform_to('fk5')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'orange', lonlat=True, coord="C", linewidth=0.4)
 
     # NightDarkRuns[-1]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightDarkRuns[-1],
-                           location=observatory.Location)
+                           location=observatory.location)
     RandomCoord_radec = RandomCoord.transform_to('fk5')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'orange', lonlat=True, coord="C", linewidth=0.4)
 
     # NightGreyRuns[0]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightGreyRuns[0],
-                           location=observatory.Location)
+                           location=observatory.location)
     RandomCoord_radec = RandomCoord.transform_to('fk5')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'blue', lonlat=True, coord="C", linewidth=0.4)
 
     # NightGreyRuns[-1]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightGreyRuns[-1],
-                           location=observatory.Location)
+                           location=observatory.location)
     RandomCoord_radec = RandomCoord.transform_to('fk5')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'blue', lonlat=True, coord="C", linewidth=0.4)
@@ -226,7 +226,7 @@ def CompareTwoTilings(filename, PointingsFile1=False, PointingsFile2=False, FOV=
         name2 = 'File2'
 
         PlotPointingsTogether(prob, ObservationTimearray1, Coordinates1, name1, Coordinates2, name2, nside, FOV,
-                              doplot=True)
+                              doPlot=True)
     plt.show()
 
 

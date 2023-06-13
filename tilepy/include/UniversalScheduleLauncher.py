@@ -67,25 +67,25 @@ def GetUniversalSchedule(URL, date, datasetDir, galcatname, outDir, Type, ObsArr
     print("Output: ", outputDir)
 
     print('parameters', parameters)
-    ObsParameters = []
+    obsparameters = []
 
     for j in range(len(parameters)):
         obspar = ObservationParameters()
         obspar.from_configfile(parameters[j])
-        ObsParameters.append(obspar)
+        obsparameters.append(obspar)
 
     if has3D:
         dirName = '%s/PGalinFoV_NObs' % outputDir
         if not os.path.exists(dirName):
             os.makedirs(dirName)
-        SuggestedPointings, cat, ObsParameters = PGalinFoV_NObs(
-            filename, ObservationTime, PointingsFile, galaxies, parameters, dirName, ObsArray, ObsParameters)
+        SuggestedPointings, cat, obsparameters = PGalinFoV_NObs(
+            filename, ObservationTime, PointingsFile, galaxies, parameters, dirName, ObsArray, obsparameters)
     else:
         dirName = '%s/PGWinFoV_NObs' % outputDir
         if not os.path.exists(dirName):
             os.makedirs(dirName)
-        SuggestedPointings, ObsParameters = PGWinFoV_NObs(
-            filename, ObservationTime, PointingsFile, parameters, dirName, ObsArray, ObsParameters)
+        SuggestedPointings, obsparameters = PGWinFoV_NObs(
+            filename, ObservationTime, PointingsFile, parameters, dirName, ObsArray, obsparameters)
     if (len(SuggestedPointings) != 0):
         print(SuggestedPointings)
         FOLLOWUP = True
@@ -96,15 +96,15 @@ def GetUniversalSchedule(URL, date, datasetDir, galcatname, outDir, Type, ObsArr
 
         # for obspar in parameters:
         for j in range(len(parameters)):
-            obspar1 = ObsParameters[j]
+            obspar1 = obsparameters[j]
             SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.name]
             print(SuggestedPointings_1)
             if (len(SuggestedPointings_1) != 0):
                 ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' %
                             (dirName, ObsArray[j]), overwrite=True, fast_writer=False)
-                RankingTimes_2D(ObservationTime, prob, ObsParameters[j], targetType, dirName,
+                RankingTimes_2D(ObservationTime, prob, obsparameters[j], targetType, dirName,
                                 '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]), ObsArray[j])
-                PointingPlotting(prob, ObsParameters[j], name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
+                PointingPlotting(prob, obsparameters[j], name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
                     dirName, ObsArray[j]), ObsArray[j], filename)
     else:
         FOLLOWUP = False
