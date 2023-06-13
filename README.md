@@ -47,7 +47,7 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - lon: lon coordinates of the observatory 
           - height: height of the observatory 
 
-        -[visibility]
+        - [visibility]
           - sunDown: altitude coordinate of the Sun in deg to define darkness conditions (for astronomic darkness sunDown= -18)
           - horizonSun: altitude coordinate of the Sun in hh:mm:ss to define darkness conditions (for astronomic darkness horizonSun= -18:00:00)
           - moonDown: altitude coordinate of the Moon in deg to define darkness conditions (for astronomic darkness moonDown= -0.5)
