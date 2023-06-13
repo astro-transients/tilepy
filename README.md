@@ -49,12 +49,10 @@ Package including functions to perform GW follow-up scheduling and simulations i
 
         - [visibility]
           - sunDown: altitude coordinate of the Sun in deg to define darkness conditions (for astronomic darkness sunDown= -18)
-          - horizonSun: altitude coordinate of the Sun in hh:mm:ss to define darkness conditions (for astronomic darkness horizonSun= -18:00:00)
           - moonDown: altitude coordinate of the Moon in deg to define darkness conditions (for astronomic darkness moonDown= -0.5)
-          - horizonMoon: altitude coordinate of the Moon in hh:mm:ss to define darkness conditions (for astronomic darkness moonDown= -00:30:00)
           - moonGrey: altitude coordinate of the Moon in deg to define greyness conditions
           - moonPhase: phase of the Moon to define greyness conditions
-          - moonSourceSeparation: minimum separation Source-Moon in deg to define greyness conditions
+          - minMoonSourceSeparation: minimum separation Source-Moon in deg to define greyness conditions
           - maxMoonSourceSeparation: max separation Source-Moon in deg to define greyness conditions
 
         - [operations]
