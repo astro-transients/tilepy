@@ -5,7 +5,7 @@
 We clone the repo, create an environment to work, activate the enviroment and install the package.
 
 ```python
-git clone git@drf-gitlab.cea.fr:multimessenger-IRFU/general-mwl-mm-transients-analyses/tilepy.git
+git clone git@github.com:astro-transients/tilepy.git
 conda env create -n tilepyenv -f environment.yml
 conda activate tilepyenv
 python -m pip install -e .
@@ -79,16 +79,16 @@ Package including functions to perform GW follow-up scheduling and simulations i
 
 ## Creation of the reduced galaxy file
 
-For using the 3D algorithm tilepy need to have access to a galaxy catalog. Currently, the only supported catalog is GLADE+. You could found the download link on this webpage : https://glade.elte.hu.
-Then to prepare it for utilisation by tilepy you could use the `ConvertGalaxyCatalog.py` script to convert it to a file format compatible with tilepy. It is located in the `tilepy/tools` repository.
+For using the 3D algorithm tilepy need to have access to a galaxy catalog. Currently, the only supported catalog is GLADE+. You'll find the download link on this webpage : https://glade.elte.hu.
+To prepare it for usage by tilepy we provide a the `ConvertGalaxyCatalog.py` script that converts the original catalog into a hdf5 file compatible with tilepy. The script is located in the `tilepy/tools` repository.
 
-Example of use to keep only galaxies that are below 500 Mpc (recommended). It read the downloaded `GLADE+.txt` file and the output file `converted_GLADE.h5` is the one that should be used with tilepy.
+Example: use the script to keep only galaxies that are within 500 Mpc (recommended). It reads the downloaded `GLADE+.txt` file and creates the output file `converted_GLADE.h5` which is the one that should be used with tilepy.
 
 ```bash
 python ConvertGalaxyCatalog.py --input GLADE+.txt --output converted_GLADE.h5 --max-luminosity-distance 500
 ```
 
 ## Help
-If any problem is found, please open an Issue in the project main page so it is documented. You can of course also directly create a Pull Request with the new features implemented.
+If any problem is found, please open a new issue in the project main page to document it. You can of course also directly create a Pull Request with new features.
 
 Otherwise you can also contact us at astro.tilepy@gmail.com. 
