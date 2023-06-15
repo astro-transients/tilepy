@@ -21,7 +21,7 @@ python -m pip install -r requirements.txt
 
 Requirements of the installation: 
 
-- The current version of the package **only** runs with `python=3.9`. Careful as well with the versions of matplotlib and healpy, they should be the ones explicited in the requirements.yml, otherwise there will be conflicts between them when plotting skymaps.  
+- The current version of the package **only** runs with `python>=3.9`. Python 3.9 is recommended. Careful as well with the versions of matplotlib and healpy, they should be the ones explicited in the requirements.yml, otherwise there will be conflicts between them when plotting skymaps.  
 - Note that by creating the env from the environment.yml, the libraries and versions needed will be installed authomatically.
 - Note that everytime we made changes to the package, you should update the installation of the package doing ```pip install .``` in the folder where the setup.py is. The changes will be only applied to the env where you are working. 
 
