@@ -2,10 +2,11 @@
 
 ## Installation
 
-We clone the repo, create an environment to work, activate the enviroment and install the package.
+We clone the repo, create an environment to work, activate the environment and install the package.
 
 ```python
 git clone git@github.com:astro-transients/tilepy.git
+cd tilepy
 conda env create -n tilepyenv -f environment.yml
 conda activate tilepyenv
 python -m pip install -e .
@@ -24,6 +25,7 @@ Requirements of the installation:
 - The current version of the package **only** runs with `python>=3.9`. Python 3.9 is recommended. Careful as well with the versions of matplotlib and healpy, they should be the ones explicited in the requirements.yml, otherwise there will be conflicts between them when plotting skymaps.  
 - Note that by creating the env from the environment.yml, the libraries and versions needed will be installed authomatically.
 - Note that everytime we made changes to the package, you should update the installation of the package doing ```pip install .``` in the folder where the setup.py is. The changes will be only applied to the env where you are working. 
+- The package relies on 'curl' to download the localisaton map of the multi-messenger events.
 
 In the case you are working in CC-Lyon, the easiest solution is to do```ccenv conda ``` and then follow the instructions given above. 
 
