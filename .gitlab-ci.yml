@@ -8,3 +8,5 @@ install_package:
     - apt-get -y update && apt-get install git -y
     - pip install --upgrade pip 
     - pip install .
+  tags:
+    - svom-specific
