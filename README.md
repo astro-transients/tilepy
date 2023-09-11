@@ -9,7 +9,7 @@ git clone git@github.com:astro-transients/tilepy.git
 cd tilepy
 conda env create -n tilepyenv -f environment.yml
 conda activate tilepyenv
-python -m pip install -e .
+python -m pip install .
 ```
 
 If you prefer to avoid conda and use a virtual environment with your favorite python version, use the following sequence:
@@ -41,7 +41,8 @@ Package including functions to perform GW follow-up scheduling and simulations i
 - relics: Old scripts that may be useful in the future
 
 - examples: Example on how to use tilepy:
-    - Tiling_Observations.py: example of a python script to run a tiling schedule. Default values works for the alertType = gw
+    - Tiling_Observations.ipynb: Jupyter notebook calling the main functions to run tiling schedule. 
+    - Tiling_Observations.py: example of a python script to run a tiling schedule (same content as the jupyter notebook). Default values works for the alertType = gw
     - config/ExampleConfig.ini includes the minimal required parameters to run a tile. These are 
        - [observatory]
           - name: name of the observatory (it is not critical, you can use any name) 
