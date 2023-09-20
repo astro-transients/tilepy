@@ -4,11 +4,13 @@
 #  ------------------------- Version 1.3.0 -------------------------   #
 ########################################################################
 
-from tilepy.include.ObservationScheduler import GetSchedule_ConfigFile, getdate
-from tilepy.include.PointingTools import ObservationParameters
+from tilepy.include.ObservationScheduler import GetSchedule_ConfigFile
+from tilepy.include.PointingTools import ObservationParameters, NextWindowTools, getdate
 import time
 import argparse
 import os
+from pathlib import Path
+
 
 
 start = time.time()
