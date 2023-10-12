@@ -223,17 +223,21 @@ class Observatory:
         time, rising_indicator = almanac.find_discrete(self.timescale_converter.from_datetime(start_time),
                                                        self.timescale_converter.from_datetime(stop_time),
                                                        f)
-        rise_time = list(time[rising_indicator == 1].utc_datetime())
-        set_time = list(time[rising_indicator == 0].utc_datetime())
+        if len(time) == 0:
+            rise_time = [start_time, ]
+            set_time = [stop_time, ]
+        else:
+            rise_time = list(time[rising_indicator == 1].utc_datetime())
+            set_time = list(time[rising_indicator == 0].utc_datetime())
 
-        # Set the start time and end time as either rise of set time to fully cover the time range
-        if rising_indicator[0] == 0:
-            rise_time = [start_time, ] + rise_time
-        else:
-            set_time = [start_time, ] + set_time
-        if rising_indicator[-1] == 1:
-            set_time = set_time + [stop_time, ]
-        else:
-            rise_time = rise_time + [stop_time, ]
+            # Set the start time and end time as either rise of set time to fully cover the time range
+            if rising_indicator[0] == 0:
+                rise_time = [start_time, ] + rise_time
+            else:
+                set_time = [start_time, ] + set_time
+            if rising_indicator[-1] == 1:
+                set_time = set_time + [stop_time, ]
+            else:
+                rise_time = rise_time + [stop_time, ]
 
         return rise_time, set_time
