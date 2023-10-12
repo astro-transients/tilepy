@@ -17,8 +17,8 @@ from astropy import units as u
 import datetime
 import os
 
-
-def GetUniversalSchedule(URL, date, datasetDir, galcatname, outDir, Type, ObsArray):
+def GetUniversalSchedule(obsparameters):
+    #def GetUniversalSchedule(URL, date, datasetDir, galcatname, outDir, Type, ObsArray):
     '''
     Description: Top level function that is called by the user with specific arguments and creates a folder with the tiling schedules for several telescopes working together and visibility plots.  
     Args:
@@ -30,62 +30,48 @@ def GetUniversalSchedule(URL, date, datasetDir, galcatname, outDir, Type, ObsArr
         ObsArray: array of strings containing the name of the configuration files of telescopes. 
     '''
 
-    targetType = 'Tiling'
+    URL = obsparameters[0].url
+    print(URL)
 
-    if Type == 'gbmpng':
-        targetType = 'GBM_Pointing'
+    if obsparameters[0].alertType == 'gbmpng':
         fitsMap, filename = GetGBMMap(URL)
+        if fitsMap is None and filename is None:
+            print('The localization map is not available, returning.')
+            return
         name = URL.split('/')[-3]
-    elif Type == 'gbm':
-        targetType = 'GBM_Pointing'
+    elif obsparameters[0].alertType == 'gbm':
         fitsMap = fits.open(URL)
+        if fitsMap is None:
+            print('The localization map is not available, returning.')
+            return
         filename = URL
         name = URL.split('all_')[1].split('_v00')[0]
     else:
-        targetType = 'GW_Pointing'
         fitsMap, filename = GetGWMap(URL)
         name = URL.split('/')[-3]
 
-    prob, has3D = Check2Dor3D(fitsMap, filename)
+    
+    prob, has3D, origNSIDE = Check2Dor3D(fitsMap, filename, obsparameters[0])
 
     print("===========================================================================================")
-    PointingsFile = "False"
-    parameters = []
-    ObservationTime = date
-    outputDir = "%s/%s" % (outDir, name)
-    galaxies = datasetDir + galcatname
-
-    for i in ObsArray:
-        parameters.append("./configs/FollowupParameters_%s.ini" % i)
-    print("===========================================================================================")
-    print("Starting the IACTs GW - 2D pointing calculation with the following parameters\n")
-    print("Filename: ", name)
-    print("Date: ", ObservationTime)
-    print("Previous pointings: ", PointingsFile)
-    print("Parameters: ", parameters)
-    print("Dataset: ", datasetDir)
-    print("Output: ", outputDir)
-
-    print('parameters', parameters)
-    obsparameters = []
-
-    for j in range(len(parameters)):
-        obspar = ObservationParameters()
-        obspar.from_configfile(parameters[j])
-        obsparameters.append(obspar)
+    ObservationTime = obsparameters[0].obsTime
+    outputDir =  "%s/%s" % (obsparameters[0].outDir, name)
+    print(obsparameters[0].datasetDir)
+    print(obsparameters[0].galcatName)
+    galaxies = obsparameters[0].datasetDir + obsparameters[0].galcatName
 
     if has3D:
         dirName = '%s/PGalinFoV_NObs' % outputDir
         if not os.path.exists(dirName):
             os.makedirs(dirName)
         SuggestedPointings, cat, obsparameters = PGalinFoV_NObs(
-            filename, ObservationTime, PointingsFile, galaxies, parameters, dirName, ObsArray, obsparameters)
+            filename, ObservationTime, obsparameters[0].pointingsFile, galaxies, dirName, obsparameters)
     else:
         dirName = '%s/PGWinFoV_NObs' % outputDir
         if not os.path.exists(dirName):
             os.makedirs(dirName)
         SuggestedPointings, obsparameters = PGWinFoV_NObs(
-            filename, ObservationTime, PointingsFile, parameters, dirName, ObsArray, obsparameters)
+            filename, ObservationTime, obsparameters[0].pointingsFile, dirName, obsparameters)
     if (len(SuggestedPointings) != 0):
         print(SuggestedPointings)
         FOLLOWUP = True
@@ -95,17 +81,17 @@ def GetUniversalSchedule(URL, date, datasetDir, galcatname, outDir, Type, ObsArr
         print()
 
         # for obspar in parameters:
-        for j in range(len(parameters)):
+        for j in range(len(obsparameters)):
             obspar1 = obsparameters[j]
             SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.name]
             print(SuggestedPointings_1)
             if (len(SuggestedPointings_1) != 0):
                 ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' %
-                            (dirName, ObsArray[j]), overwrite=True, fast_writer=False)
-                RankingTimes_2D(ObservationTime, prob, obsparameters[j], targetType, dirName,
-                                '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, ObsArray[j]), ObsArray[j])
+                            (dirName, obsparameters[j].name), overwrite=True, fast_writer=False)
+                RankingTimes_2D(ObservationTime, prob, obsparameters[j], obsparameters[j].alertType, dirName,
+                                '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obsparameters[j].name), obsparameters[j].name)
                 PointingPlotting(prob, obsparameters[j], name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
-                    dirName, ObsArray[j]), ObsArray[j], filename)
+                    dirName, obsparameters[j].name), obsparameters[j].name, filename)
     else:
         FOLLOWUP = False
         print('No observations are scheduled')
