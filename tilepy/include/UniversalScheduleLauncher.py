@@ -65,7 +65,7 @@ def GetUniversalSchedule(obsparameters):
         if not os.path.exists(dirName):
             os.makedirs(dirName)
         SuggestedPointings, cat, obsparameters = PGalinFoV_NObs(
-            filename, ObservationTime, obsparameters[0].pointingsFile, galaxies, dirName, obsparameters)
+            filename, ObservationTime, obsparameters[0].pointingsFile, dirName, obsparameters)
     else:
         dirName = '%s/PGWinFoV_NObs' % outputDir
         if not os.path.exists(dirName):
