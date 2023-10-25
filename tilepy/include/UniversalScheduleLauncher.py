@@ -90,8 +90,8 @@ def GetUniversalSchedule(obsparameters):
                             (dirName, obsparameters[j].name), overwrite=True, fast_writer=False)
                 RankingTimes_2D(ObservationTime, prob, obsparameters[j], obsparameters[j].alertType, dirName,
                                 '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obsparameters[j].name), obsparameters[j].name)
-                #PointingPlotting(prob, obsparameters[j], obsparameters[j].name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
-                    #dirName, obsparameters[j].name), obsparameters[j].name, filename)
+                PointingPlotting(prob, obsparameters[j], obsparameters[j].name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
+                    dirName, obsparameters[j].name), obsparameters[j].name, filename)
         PointingPlotting(prob, obsparameters[0], "all", dirName,
                              '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all", filename)
     else:
