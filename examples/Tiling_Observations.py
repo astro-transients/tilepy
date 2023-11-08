@@ -4,7 +4,7 @@
 #  ------------------------- Version 1.3.0 -------------------------   #
 ########################################################################
 
-from tilepy.include.ObservationScheduler import GetSchedule_ConfigFile
+from tilepy.include.ObservationScheduler import getSchedule
 from tilepy.include.PointingTools import ObservationParameters, NextWindowTools, getdate
 import time
 import argparse
@@ -54,7 +54,7 @@ obspar.add_parsed_args(url,obsTime,datasetDir,galcatName,outDir,pointingsFile,al
 obspar.from_configfile(cfgFile)
 
 #GetSchedule_confile(url,ObsTime,datasetDir,galcatname,outDir,cfgFile,PointingsFile,type)
-GetSchedule_ConfigFile(obspar)
+getSchedule(obspar)
 
 end = time.time()
 print('Execution time: ', end - start)
