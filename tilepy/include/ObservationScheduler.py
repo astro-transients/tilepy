@@ -152,14 +152,11 @@ def getSchedule(obspar):
 def GetUniversalSchedule(obsparameters):
     #def GetUniversalSchedule(URL, date, datasetDir, galcatname, outDir, Type, ObsArray):
     '''
-    Description: Top level function that is called by the user with specific arguments and creates a folder with the tiling schedules for several telescopes working together and visibility plots.  
-    Args:
-        URL: the url of the probability fits or  png map
-        date: the desired time for scheduling to start 
-        datasetDir: Path to the directory containting the datset like the galaxy catalog
-        outDir: Path to the output directory where the schedules and plots will eb saved 
-        Type: The type of the url given. gw if fits GW map, gbm if fits GBM map and gbmpng if PNG GBM map
-        ObsArray: array of strings containing the name of the configuration files of telescopes. 
+    Top level function that is called by the user with specific arguments and creates a folder 
+    with the tiling schedules for a single telescope and visibility plots.  
+
+    :param obsparameters: a list of sets of parameters for each observatory needed to launch the tiling scheduler
+    :type obsparameters: list of class ObservationParameters
     '''
 
     URL = obsparameters[0].url

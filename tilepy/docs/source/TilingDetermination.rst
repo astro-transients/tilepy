@@ -21,3 +21,12 @@ Functions
 
 .. autofunction:: tilepy.include.TilingDetermination.PGalinFoV_PixRegion
    :noindex:
+
+.. autofunction:: tilepy.include.UniversalObservationScheduler.ObservationStartperObs
+   :noindex:
+
+.. autofunction:: tilepy.include.UniversalObservationScheduler.PGWinFoV_NObs
+   :noindex:
+
+.. autofunction:: tilepy.include.UniversalObservationScheduler.PGalinFoV_NObs
+   :noindex:

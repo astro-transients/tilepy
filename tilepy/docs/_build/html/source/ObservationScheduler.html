@@ -48,6 +48,21 @@ with the tiling schedules for a single telescope and visibility plots.</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">tilepy.include.UniversalScheduleLauncher.</span></span><span class="sig-name descname"><span class="pre">GetUniversalSchedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obsparameters</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Description: Top level function that is called by the user with specific arguments and creates a folder with the tiling schedules for several telescopes working together and visibility plots.  
+Args:</p>
+<blockquote>
+<div><p>URL: the url of the probability fits or  png map
+date: the desired time for scheduling to start 
+datasetDir: Path to the directory containting the datset like the galaxy catalog
+outDir: Path to the output directory where the schedules and plots will eb saved 
+Type: The type of the url given. gw if fits GW map, gbm if fits GBM map and gbmpng if PNG GBM map
+ObsArray: array of strings containing the name of the configuration files of telescopes.</p>
+</div></blockquote>
+</dd></dl>
+
 </section>
 </section>
 
@@ -75,8 +90,6 @@ with the tiling schedules for a single telescope and visibility plots.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="TilingDetermination.html">TilingDetermination Module Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="UniversalScheduleLauncher.html">ObservationScheduler Module Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="UniversalObservationScheduler.html">ObservationScheduler Module Overview</a></li>
 </ul>
 
 <div class="relations">

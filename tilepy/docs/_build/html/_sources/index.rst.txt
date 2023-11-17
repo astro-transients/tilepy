@@ -4,8 +4,6 @@
 
    ./source/ObservationScheduler
    ./source/TilingDetermination
-   ./source/UniversalScheduleLauncher
-   ./source/UniversalObservationScheduler
 
 
 

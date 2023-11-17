@@ -12,3 +12,6 @@ Functions
 
 .. autofunction:: tilepy.include.ObservationScheduler.getSchedule
    :noindex:
+
+.. autofunction:: tilepy.include.UniversalScheduleLauncher.GetUniversalSchedule
+   :noindex:
