@@ -9,8 +9,8 @@ def readfile(filename):
 
 
 setup(name='tilepy',
-      version='1.5.4',
-      description='Gravitational waves follow-up scheduling and simulation for IACTs',
+      version='1.6.0',
+      description='Computation of the tiling of large localization uncertainty region event with multi-wavelength pointing telescopes',
       install_requires=[
           'astropy', #>=4.1',
           'scipy', #',
