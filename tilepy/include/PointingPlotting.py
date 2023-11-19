@@ -137,7 +137,7 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
 
     # translate pixel indices to coordinates
     ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV))
-    print(time)
+    #print(time)
     if (doPlot):
 
         tt, pp = hp.pix2ang(nside, ipix_disc)
@@ -582,7 +582,7 @@ def PointingPlottingGW_ZenithSteps(filename, name, dirName, FOV, InputTimeObs, O
         altcoord = np.empty(2500-200*i)
         azcoord = np.random.rand(2500-200*i) * 360
         altcoord.fill(maxZenith+5*i)
-        print(maxZenith+5*i)
+        #print(maxZenith+5*i)
         RandomCoord = co.SkyCoord(azcoord, altcoord, frame='altaz', unit=(
             u.deg, u.deg), obstime=time, location=observatory.location)
         RandomCoord_radec = RandomCoord.transform_to('fk5')
