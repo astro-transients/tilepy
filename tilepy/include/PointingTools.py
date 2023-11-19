@@ -276,11 +276,8 @@ class Tools:
             n = lat + (1.0/13) * lon
         elif (lat >= -10 and lat <= 0 and lon >= 240):
             n = lat + (1.0/12) * lon - 20
-        #print(n)
         if np.absolute(n) <= 10:
             YouAreInside = True
-            # print('You got here')
-        #print(YouAreInside)
         return YouAreInside
 
     @classmethod
@@ -306,9 +303,9 @@ class ObservationParameters(object):
                  moonGrey=None, moonPhase=None, minMoonSourceSeparation=None,
                  maxMoonSourceSeparation=None, maxZenith=None, FOV=None, maxRuns=None, maxNights=None,
                  duration=None, minDuration=None, useGreytime=None, minSlewing=None, online=False,
-                 minimumProbCutForCatalogue=None, minProbcut=None, distCut=None, doPlot=None, secondRound=None,
+                 minimumProbCutForCatalogue=None, minProbcut=None, distCut=None, doPlot=False, secondRound=None,
                  zenithWeighting=None, percentageMOC=None, reducedNside=None, HRnside=None,
-                 mangrove=None, url=None,obsTime=None,datasetDir=None,galcatName=None,outDir=None,pointingsFile=None,alertType=None, locCut=None, MO=False, algorithm=None):
+                 mangrove=None, url=None,obsTime=None,datasetDir=None,galcatName=None,outDir=None,pointingsFile=None,alertType=None, locCut=None, MO=False, algorithm=None, strategy=None, doRank=False):
 
         self.name = name
         self.lat = lat
@@ -347,7 +344,9 @@ class ObservationParameters(object):
         self.reducedNside = reducedNside
         self.HRnside = HRnside
         self.mangrove = mangrove
-        self.algorithm=algorithm
+        self.algorithm = algorithm
+        self.strategy = strategy
+        self.doRank = doRank
 
         # Parsed args
         self.url = url 
@@ -375,6 +374,9 @@ class ObservationParameters(object):
         txt += 'Duration: {}\n'.format(self.duration)
         txt += 'High Resolution NSIDE: {}\n'.format(self.HRnside)
         txt += 'Low Resolution NSIDE: {}\n'.format(self.reducedNside)
+        txt += 'The strategy is ({algorithm},{strategy}, mangrove={mangrove})\n'.format(algorithm = self.algorithm, strategy = self.strategy,mangrove = self.mangrove)
+        txt += 'The level of details is (doPlot={doPlot}, doRank = {doRank})\n'.format(doPlot = self.doPlot, doRank = self.doRank)
+
         # txt += '----------------------------------------------------------------------\n'.format()
         return txt
 
@@ -445,6 +447,8 @@ class ObservationParameters(object):
         self.HRnside = int(parser.get(section, 'hrnside', fallback=0))
         self.mangrove = (parser.getboolean(section, 'mangrove', fallback=None))
         self.algorithm = str(parser.get(section, 'algorithm', fallback=None))
+        self.strategy = str(parser.get(section, 'strategy', fallback=None))
+        self.doRank = (parser.getboolean(section, 'doRank', fallback=None))
 
     def from_args(self, name, lat, lon, height, sunDown, moonDown,
                   moonGrey, moonPhase, minMoonSourceSeparation,
@@ -1078,7 +1082,6 @@ def Check2Dor3D(fitsfile, filename, obspar):
     obspar.MO = IsMultiOrder(fitsfile[1].header['TFIELDS'])
     if (fitsfile[1].header['TFIELDS'] <= 2):
         has3D = False
-        print('aqui0')
     else:
         tdistmean = fitsfile[1].header['DISTMEAN']
         tdiststd= fitsfile[1].header['DISTSTD']
@@ -1099,16 +1102,16 @@ def Check2Dor3D(fitsfile, filename, obspar):
     # Check if the hotspot is in the galactic plane
     npix = len(prob)
     NSide = hp.npix2nside(npix)
-    if obspar.algorithm == None:
-        MaxPix = np.argmax(prob)
-        MaxTheta, MaxPhi = hp.pix2ang(NSide, MaxPix)
-        raMax = np.rad2deg(MaxPhi)
-        decMax = np.rad2deg(0.5 * np.pi - MaxTheta)
-        c_icrs = SkyCoord(raMax, decMax, frame='fk5', unit=(u.deg, u.deg))
+    MaxPix = np.argmax(prob)
+    MaxTheta, MaxPhi = hp.pix2ang(NSide, MaxPix)
+    raMax = np.rad2deg(MaxPhi)
+    decMax = np.rad2deg(0.5 * np.pi - MaxTheta)
+    c_icrs = SkyCoord(raMax, decMax, frame='fk5', unit=(u.deg, u.deg))
 
-        InsidePlane = Tools.GalacticPlaneBorder(c_icrs)
-        if InsidePlane:
-            has3D = False 
+    InsidePlane = Tools.GalacticPlaneBorder(c_icrs)
+    print('Is the hotspot in the galactic plane?',InsidePlane)
+    if InsidePlane:
+        has3D = False 
     fitsfile.close()
     return prob, has3D, NSide
 
@@ -1155,9 +1158,9 @@ def Check2Dor3D_Flat(fitsfile, filename, obspar):
         c_icrs = SkyCoord(raMax, decMax, frame='fk5', unit=(u.deg, u.deg))
 
         InsidePlane = Tools.GalacticPlaneBorder(c_icrs)
+        print('Is the hotspot in the galactic plane?',InsidePlane)
         if InsidePlane:
             has3D = False
-
     return prob, has3D, NSide
 
 ######################################################
@@ -1948,7 +1951,7 @@ def ComputeProbBCFOVSimple(prob, time, observatory, visiGals, allGals, tsum_dP_d
         # plt.show()
         # Draw MinZ area
 
-        print('Min Zenith= ', thisminz)
+        #print('Min Zenith= ', thisminz)
 
         altcoordmin = np.empty(4000)
         azcoordmin = np.random.rand(4000) * 360
@@ -1965,8 +1968,7 @@ def ComputeProbBCFOVSimple(prob, time, observatory, visiGals, allGals, tsum_dP_d
     return P_Gal, P_GW, talreadysumipixarray2
 
 
-def ComputeProbBCFOV(prob, time, observatory, finalGals, visiGals, allGals, tsum_dP_dV, talreadysumipixarray, nside, thisminz, maxZenith, FOV, tname,
-                     tsavedcircle, dirName, doPlot):
+def ComputeProbGalTargetted(prob, time, finalGals, visiGals, allGals, tsum_dP_dV, talreadysumipixarray, nside, thisminz,obspar,counter,dirName):
     '''Computes probability Pgal and Pgw in FoV but it takes into account a list of pixels to avoid recounting already observed zones.
     Returns saved circle too (is it really needed? )
     bool doPlot when  = True is used to plot the maps
@@ -1979,8 +1981,11 @@ def ComputeProbBCFOV(prob, time, observatory, finalGals, visiGals, allGals, tsum
         P_GW: Total probability within  FoV of the Ligo signal.
         noncircleGal: Table of galaxies that are outside the circle(s) and inside the LIGO signal region
 
-
     '''
+    observatory = obspar.location
+    maxZenith = obspar.maxZenith
+    FOV = obspar.FOV
+    doPlot = obspar.doPlot
 
     targetCoord = co.SkyCoord(
         finalGals['RAJ2000'][:1], finalGals['DEJ2000'][:1], frame='fk5', unit=(u.deg, u.deg))
@@ -1992,27 +1997,16 @@ def ComputeProbBCFOV(prob, time, observatory, finalGals, visiGals, allGals, tsum
         allGals['RAJ2000'], allGals['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
 
     dp_dVfinal = visiGals['dp_dV']
-    # dp_dV = tGals['dp_dV']
 
     # Array of indices of pixels inside circle of  FoV
 
     radius = FOV
 
     t = 0.5 * np.pi - targetCoord[0].dec.rad
-
     p = targetCoord[0].ra.rad
-
-    # print('t, p, targetCoord[0].ra.deg, targetCoord[0].dec.deg',t, p, targetCoord[0].ra.deg, targetCoord[0].dec.deg)
-
     xyz = hp.ang2vec(t, p)
 
-    # print(xyz)
-
-    # translate pixel indices to coordinates
-
     ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
-
-    # print('ipix_disc',ipix_disc)
 
     effectiveipix_disc = []
 
@@ -2021,27 +2015,19 @@ def ComputeProbBCFOV(prob, time, observatory, finalGals, visiGals, allGals, tsum
             effectiveipix_disc.append(ipix_disc[j])
         talreadysumipixarray.append(ipix_disc[j])
 
-    # print('talreadysumipixarray', talreadysumipixarray)
-
     P_GW = prob[effectiveipix_disc].sum()
 
     P_Gal = dp_dVfinal[targetCoord2.separation(
         targetCoord).deg < radius].sum() / tsum_dP_dV
-
-    # print("Total probability within H.E.S.S. FoV: {0}".format(P_GW))
-
-    # print("Probability of galaxies within H.E.S.S. FoV in the LIGO signal region:{0}".format(P_Gal))
-
-    # all galaxies inside the current observation circle
-
     circleGal = visiGals[targetCoord2.separation(targetCoord).deg < radius]
-    # print('Galaxies within the FoV: ', len(circleGal['RAJ2000']))
-
-    # all galaxies outside the current observation circle, no visibility selection
-
     noncircleGal = allGals[targetCoord3.separation(targetCoord).deg > radius]
 
     if (doPlot):
+
+        path = dirName + '/EvolutionPlot'
+        if not os.path.exists(path):
+            os.mkdir(path, 493)
+
         tt, pp = hp.pix2ang(nside, ipix_disc)
         ra2 = np.rad2deg(pp)
         dec2 = np.rad2deg(0.5 * np.pi - tt)
@@ -2056,20 +2042,20 @@ def ComputeProbBCFOV(prob, time, observatory, finalGals, visiGals, allGals, tsum
         tempmask = separations < (radius + 0.05 * radius) * u.deg
         tempmask2 = separations > (radius - 0.05 * radius) * u.deg
 
-        path = dirName + '/EvolutionPlot'
-        if not os.path.exists(path):
-            os.mkdir(path, 493)
+        # path = os.path.dirname(os.path.realpath(__file__)) + tname
+        # if not os.path.exists(path):
+        #    os.mkdir(path, 493)
 
-        # hp.mollview(prob, title="GW prob map (Ecliptic)   %s/%s/%s %s:%s UTC" % (time.day, time.month, time.year, time.hour, time.minute))
+        # hp.mollview(prob, title="GW prob map (Ecliptic)   %s/%s/%s %s:%s UTC" % (time.day, time.month, time.year, time.hour, time.minute), xsize=2000)
+        hp.gnomview(prob, xsize=500, ysize=500, rot=[
+                    targetCoord.ra.deg, targetCoord.dec.deg], reso=5.0)
 
-        hp.gnomview(prob, xsize=4000, ysize=6000, rot=[90, -50], reso=0.8)
         hp.graticule()
-        # plt.show()
-        # plt.savefig("Figures/ExampleGW_%g.png" % (j))
+        # plt.savefig("%s/ExampleGW_%g.png" % (tname,j))
 
         # draw all galaxies within zenith-angle cut
-        # hp.visufunc.projscatter(finalGals['RAJ2000'], finalGals['DEJ2000'], lonlat=True, marker='*', color='g')
-        # plt.savefig("Figures/ExampleGW_Galaxies_%g.png" % (j))
+        # hp.visufunc.projscatter(allGalsaftercuts['RAJ2000'], allGalsaftercuts['DEJ2000'], lonlat=True, marker='.',color='g', linewidth=0.1)
+        # plt.savefig("%s/ExampleGW_Galaxies_%g.png" % (tname,j))
 
         # If I want to plot all gals, plot also the ones that are out of the circle
         # hp.visufunc.projscatter(noncircleGal['RAJ2000'], noncircleGal['DEJ2000'], lonlat=True, marker='*', color='g')
@@ -2080,12 +2066,8 @@ def ComputeProbBCFOV(prob, time, observatory, finalGals, visiGals, allGals, tsum
 
         # draw circle of FoV around best fit position
 
-        # hp.visufunc.projscatter(allGals['RAJ2000'], allGals['DEJ2000'], lonlat=True, marker='.', color='g',linewidth=0.1)
-        # plt.show()
         hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'r.', lonlat=True,
-                             coord="C", linewidth=0.1)
-
-        # hp.visufunc.projplot(tsavedcircle.ra, tsavedcircle.dec, 'r.', lonlat=True, coord="C",linewidth=0.1)
+                                coord="C")
 
         # Draw H.E.S.S. visibility
 
@@ -2098,35 +2080,31 @@ def ComputeProbBCFOV(prob, time, observatory, finalGals, visiGals, allGals, tsum
         azcoord = np.random.rand(4000) * 360
 
         RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,
-                               location=observatory)
+                                location=observatory)
 
         RandomCoord_radec = RandomCoord.transform_to('fk5')
 
-        hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
-                             'b.', lonlat=True, coord="C", linewidth=0.1)
-        # plt.show()
+        hp.visufunc.projplot(
+            RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
+        # MOON
+
+        # hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
         # Draw MinZ area
 
-        print('Min Zenith= ', thisminz)
+        #print('Min Zenith= ', thisminz)
 
         altcoordmin = np.empty(4000)
-
         altcoordmin.fill(90 - thisminz)
         azcoordmin = np.random.rand(4000) * 360
 
         RandomCoordmin = SkyCoord(azcoordmin, altcoordmin, frame='altaz', unit=(u.deg, u.deg), obstime=time,
-                                  location=observatory)
+                                    location=observatory)
+        
+        #RandomCoordmin_radec = RandomCoordmin.transform_to('fk5')
+        # hp.visufunc.projplot(RandomCoordmin_radec.ra, RandomCoordmin_radec.dec, 'y.', lonlat=True, coord="C")
+        plt.savefig("%s/Zoom_Pointing_%g.png" % (path, counter))
 
-        RandomCoordmin_radec = RandomCoordmin.transform_to('fk5')
-
-        hp.visufunc.projplot(RandomCoordmin_radec.ra, RandomCoordmin_radec.dec,
-                             'y.', lonlat=True, coord="C", marker='.', markersize=8)
-
-        # plt.show()
-        tsavedcircle = skycoord[tempmask & tempmask2]
-        plt.savefig("%s/Zoom_Pointing.png" % (path))
-
-    return P_Gal, P_GW, noncircleGal, talreadysumipixarray, tsavedcircle
+    return P_Gal, P_GW, noncircleGal, talreadysumipixarray
 
 
 def SimpleGWprob(prob, finalGals, talreadysumipixarray, FOV, nside):
@@ -2145,8 +2123,6 @@ def SimpleGWprob(prob, finalGals, talreadysumipixarray, FOV, nside):
     for j in range(0, len(ipix_disc)):
         if not (ipix_disc[j] in talreadysumipixarray):
             effectiveipix_disc.append(ipix_disc[j])
-
-    # print('talreadysumipixarray', talreadysumipixarray)
 
     probability = prob[effectiveipix_disc].sum()
     return probability
@@ -2295,11 +2271,12 @@ def ModifyCatalogue(prob, cat, FOV, totaldPdV, nside):
 
 
 def ComputeProbPGALIntegrateFoV(prob, time, observatory, centerPoint, UsePix, visiGals, allGalsaftercuts, tsum_dP_dV, talreadysumipixarray, nside,
-                                thisminz, maxZenith, FOV, counter, tname, dirName, doPlot):
+                                thisminz, obspar, counter, tname, dirName, doPlot):
     '''
-        Same as ComputeProbBCFOV but it does not return circle coordinates.
+        Same as ComputeProbGalTargetted but it does not return circle coordinates.
     '''
-
+    maxZenith = obspar.maxZenith 
+    FOV = obspar.FOV
     if UsePix:
         targetCoord = co.SkyCoord(
             centerPoint['PIXRA'][:1], centerPoint['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
@@ -2428,7 +2405,7 @@ def ComputeProbPGALIntegrateFoV(prob, time, observatory, centerPoint, UsePix, vi
         # hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
         # Draw MinZ area
 
-        print('Min Zenith= ', thisminz)
+        #print('Min Zenith= ', thisminz)
 
         altcoordmin = np.empty(4000)
 

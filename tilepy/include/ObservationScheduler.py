@@ -56,7 +56,7 @@ def getSchedule(obspar):
 
     # adapting the resolutions to the one provided in the original map
     if (obspar.HRnside > origNSIDE) :
-        print("reducing HRnside to the value from the original map: NSIDE=",origNSIDE)
+        print("Reducing HRnside to the value from the original map: NSIDE=",origNSIDE)
         obspar.HRnside = origNSIDE
     if (obspar.reducedNside > obspar.HRnside):
         obspar.reducedNside = obspar.HRnside
@@ -75,9 +75,9 @@ def getSchedule(obspar):
     outputDir = "%s/%s" % (obspar.outDir, name)
 
     if has3D:
-        dirName = f"{outputDir}/PGallinFoV"
+        dirName = f"{outputDir}/PGallinFoV{obspar.strategy}"
         galaxies = obspar.datasetDir + obspar.galcatName
-        # cfgFile = "./configs/FollowupParameters.ini"
+
     else:
         dirName = f"{outputDir}/PGinFoV"
 
@@ -94,13 +94,11 @@ def getSchedule(obspar):
         print("Catalog: ", galaxies)
         print("Dataset: ", obspar.datasetDir)
         print("Output: ", outputDir)
+        print("===========================================================================================")
+        print()
 
         SuggestedPointings, cat = PGalinFoV(
             filename, obspar.obsTime, obspar.pointingsFile, galaxies, obspar, dirName)
-
-        print(SuggestedPointings)
-        print("===========================================================================================")
-        print()
 
         if (len(SuggestedPointings) != 0):
             FOLLOWUP = True
@@ -108,10 +106,12 @@ def getSchedule(obspar):
             ascii.write(SuggestedPointings, outfilename,
                         overwrite=True, fast_writer=False)
             print()
-            RankingTimes(obspar.obsTime, filename, cat, obspar, obspar.alertType, dirName,
-                         '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name)
-            PointingPlotting(prob, obspar, name, dirName,
-                             '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name, filename)
+            if(obspar.doRank):
+                RankingTimes(obspar.obsTime, filename, cat, obspar, obspar.alertType, dirName,
+                            '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name)
+            if(obspar.doPlot):
+                PointingPlotting(prob, obspar, name, dirName,
+                                '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name, filename)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
@@ -125,13 +125,11 @@ def getSchedule(obspar):
         print("Previous pointings: ", obspar.pointingsFile)
         print("Dataset: ", obspar.datasetDir)
         print("Output: ", outputDir)
+        print("===========================================================================================")
+        print()
 
         SuggestedPointings, t0 = PGWinFoV(
             filename, obspar.obsTime, obspar.pointingsFile, obspar, dirName)
-
-        print(SuggestedPointings)
-        print("===========================================================================================")
-        print()
 
         if (len(SuggestedPointings) != 0):
             FOLLOWUP = True
@@ -139,10 +137,12 @@ def getSchedule(obspar):
             ascii.write(SuggestedPointings, outfilename,
                         overwrite=True, fast_writer=False)
             print()
-            RankingTimes_2D(obspar.obsTime, prob, obspar, obspar.alertType, dirName,
-                            '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name)
-            PointingPlotting(prob, obspar, name, dirName,
-                             '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name, filename)
+            if(obspar.doRank):
+                RankingTimes_2D(obspar.obsTime, prob, obspar, obspar.alertType, dirName,
+                                '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name)
+            if(obspar.doPlot):
+                PointingPlotting(prob, obspar, name, dirName,
+                                '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name, filename)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')

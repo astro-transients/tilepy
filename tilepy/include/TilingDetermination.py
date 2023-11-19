@@ -1,9 +1,9 @@
 from .PointingTools import (NightDarkObservation, SelectObservatory_fromHotspot,
                             NightDarkObservationwithGreyTime, LoadHealpixMap, LoadHealpixUNIQMap,
                             Get90RegionPixReduced, ZenithAngleCut, ComputeProbability2D,
-                            FulfillsRequirement, VisibleAtTime, LoadGalaxies, CorrelateGalaxies_LVC, SubstractPointings2D, SimpleGWprob, ComputeProbBCFOV,
+                            FulfillsRequirement, VisibleAtTime, LoadGalaxies, CorrelateGalaxies_LVC, SubstractPointings2D, SimpleGWprob, ComputeProbGalTargeted,
                             Tools, LoadGalaxies_SteMgal, CorrelateGalaxies_LVC_SteMass, SubstractPointings,
-                            ModifyCatalogue, FulfillsRequirementGreyObservations, ComputeProbPGALIntegrateFoV,
+                            ModifyCatalogue, FulfillsRequirementGreyObservations, ComputeProbPGALIntegrateFoV,ComputeProbGalTargeted,
                             ModifyCataloguePIX, ObservationParameters, NextWindowTools,
                             ComputeProbability2D_SelectClusters, GiveProbToGalaxy, LoadGalaxiesSimulation)
 from .Observatories import CTASouthObservatory, CTANorthObservatory
@@ -152,190 +152,6 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,obspar,dirName):
     return (SuggestedPointings, ObservationTime0)
 
 
-def BestCandidateonPGal(filename, ObservationTime0, galFile):
-    # THIS SCRIPT IS Outdated!!! AND NOT USED ANYMORE
-    # Main Parameters
-
-    ####################
-    # ToDo: put these parameters into the 'parameters.ini' file and extract them here
-
-    
-    #cfg = './configs/BestCandidateonPGal.ini'
-    #parser = ConfigParser()
-    #print(parser.read(cfg))
-    #print(parser.sections())
-    #section = 'GWBestGalaxyParameters'
-
-    #try:
-    #    maxZenith = int(parser.get(section, 'maxZenith'))
-    #    maxNights = int(parser.get(section, 'maxNights'))
-    #    FOV = float(parser.get(section, 'FOV'))
-    #    maxRuns = int(parser.get(section, 'maxRuns'))
-    #    probCut = float(parser.get(section, 'probCut'))
-    #    MinimumProbCutForCatalogue = float(parser.get(section, 'MinimumProbCutForCatalogue'))
-    #    doPlot = (parser.getboolean(section, 'doPlot'))
-    #    Duration = int(parser.get(section, 'Duration'))
-    #    MinDuration = int(parser.get(section, 'MinDuration'))
-    #    secondRound = (parser.getboolean(section, 'secondRound'))
-    #    FulFillReq_Percentage = float(parser.get(section, 'FulFillReq_Percentage'))
-
-
-    #except Exception, x:
-    #    print x
-
-    #print('GWBestGalaxyParameters:', maxZenith,maxNights,FOV, maxRuns, probCut, MinimumProbCutForCatalogue, doPlot, Duration, MinDuration, secondRound, FulFillReq_Percentage)
-
-    #########################
-    maxZenith = 60
-    FOV = 1.5
-    maxRuns = 20  # Maximum number of pointings/runs
-    maxNights = 3
-    MinimumProbCutForCatalogue = 0.01
-    probCut = 0.05
-    doPlot = False
-    secondRound = False
-    Duration = 28
-    MinDuration = 10
-    zenithWeighting = 0.75
-    ####################
-
-    # load galaxy catalog from local file
-    cat = LoadGalaxies(galFile)
-    print('done loading galaxies')
-
-    name = filename.split('.')[0].split('/')[-1]
-    # if('G' in filename):
-    #    names = filename.split("_")
-    #    name= names[0]
-
-    print()
-    print('-------------------   NEW LVC EVENT   --------------------')
-    print()
-
-    print('Loading map from ', filename)
-    prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(
-        filename)
-    npix = len(prob)
-    nside = hp.npix2nside(npix)
-
-    has3D = True
-    if (len(distnorm) == 0):
-        print("Found a generic map without 3D information")
-        # flag the event for special treatment
-        has3D = False
-    else:
-        print("Found a 3D reconstruction")
-
-    # correlate GW map with galaxy catalog, retrieve ordered list
-    tGals, sum_dP_dV = CorrelateGalaxies_LVC(
-        prob, distmu, distsigma, distnorm, cat, has3D, MinimumProbCutForCatalogue)
-    tGals_aux = tGals
-    tGals_aux2 = tGals
-
-    P_GALarray = []
-    P_GWarray = []
-    ObservationTimearray = []
-    ObservationTimearrayNamibia = []
-    RAarray = []
-    DECarray = []
-    alreadysumipixarray1 = []
-    alreadysumipixarray2 = []
-    Round = []
-    savedcircle = co.SkyCoord([], [], frame='fk5', unit=(u.deg, u.deg))
-    savedcircle2 = co.SkyCoord([], [], frame='fk5', unit=(u.deg, u.deg))
-    print('----------   NEW FOLLOW-UP ATTEMPT   ----------')
-
-    # Time in UTC
-
-    NightDarkRuns = NightDarkObservation(
-        ObservationTime0, Observatory, maxNights, Duration, MinDuration)
-
-    totalProb = 0.
-
-    for j in range(0, len(NightDarkRuns)):
-        if (len(ObservationTimearray) < maxRuns):
-            ObservationTime = NightDarkRuns[j]
-
-            visible, altaz, tGals_aux = VisibleAtTime(
-                ObservationTime, tGals_aux, maxZenith, Observatory.location)
-
-            if (visible):
-
-                visiMask = altaz.alt.value > 90 - (maxZenith + FOV)
-                visiGals = tGals_aux[visiMask]
-                # visiGals = ModifyCatalogue(visiGals, FOV, sum_dP_dV)
-
-                mask, minz = FulfillsRequirement(
-                    visiGals, maxZenith, FOV, zenithWeighting, UsePix=False)
-
-                finalGals = visiGals[mask]
-                probability = SimpleGWprob(
-                    prob, finalGals, alreadysumipixarray1, FOV, nside)
-
-                if (probability > probCut):
-                    # final galaxies within the FoV
-                    # This notes LIGOVirgo type of signal
-                    if ((probability < (2*probCut)) and (sum(P_GWarray) > 0.40) and secondRound):
-                        # print('probability',probability)
-                        visible, altaz, tGals_aux2 = VisibleAtTime(
-                            ObservationTime, tGals_aux2, maxZenith, Observatory.location)
-                        if (visible):
-                            visiMask = altaz.alt.value > 90 - \
-                                (maxZenith + FOV)
-                            visiGals2 = tGals_aux2[visiMask]
-                            # visiGals = ModifyCatalogue(visiGals, FOV, sum_dP_dV)
-
-                            mask, minz = FulfillsRequirement(
-                                visiGals2, maxZenith, FOV, zenithWeighting, UsePix=False)
-
-                            finalGals2 = visiGals2[mask]
-                            probability = SimpleGWprob(
-                                prob, finalGals2, alreadysumipixarray2, FOV, nside)
-                            p_gal, p_gw, tGals_aux2, alreadysumipixarray2, savedcircle2 = ComputeProbBCFOV(prob, ObservationTime,
-                                                                                                           finalGals2, visiGals2,
-                                                                                                           tGals_aux2, sum_dP_dV,
-                                                                                                           alreadysumipixarray2,
-                                                                                                           nside, minz, maxZenith, FOV, name,
-                                                                                                           savedcircle2, dirName, doPlot)
-
-                            RAarray.append(finalGals2['RAJ2000'][:1])
-                            DECarray.append(finalGals2['DEJ2000'][:1])
-                            Round.append(2)
-                    else:
-                        # print("\n=================================")
-                        # print("TARGET COORDINATES AND DETAILS...")
-                        # print("=================================")
-                        # print(finalGals['RAJ2000', 'DEJ2000', 'Bmag', 'Dist', 'Alt', 'dp_dV'][:1])
-
-                        p_gal, p_gw, tGals_aux, alreadysumipixarray1, savedcircle = ComputeProbBCFOV(
-                            prob, ObservationTime, finalGals, visiGals, tGals_aux, sum_dP_dV, alreadysumipixarray1, nside, minz, maxZenith, FOV, name, savedcircle, dirName, doPlot)
-                        RAarray.append(finalGals['RAJ2000'][:1])
-                        DECarray.append(finalGals['DEJ2000'][:1])
-                        Round.append(1)
-                    P_GALarray.append(p_gal)
-                    # print('p_gal/sum_dP_dV=',p_gal/sum_dP_dV)
-                    P_GWarray.append(p_gw)
-                    ObservationTimearray.append(ObservationTime)
-                    ObservationTimearrayNamibia.append(
-                        Tools.UTCtoNamibia(ObservationTime))
-
-                else:
-                    print("Optimal pointing position is: ")
-                    print(finalGals['RAJ2000', 'DEJ2000',
-                          'Bmag', 'Dist', 'Alt', 'dp_dV'][:1])
-                    print("NOT passing the cut on dp_dV > ", probCut)
-        else:
-            break
-
-    print()
-    print("===========================================================================================")
-    print()
-    # List of suggested pointings
-    SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round], names=[
-                               'Observation Time UTC', 'RA[deg]', 'Dec[deg]', 'PGW', 'Pgal', 'Round'])
-    return SuggestedPointings, cat
-
-
 def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,obspar,dirName):
     """
     Mid-level function that is called by GetSchedule to compute a observation schedule based on a 2D method.  
@@ -356,11 +172,9 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,obspar,dirName):
     """
 
     # Main Parameters
-
     print(obspar)
 
     # load galaxy catalog from local file
-    # this could be done at the beginning of the night to save time
     if not obspar.mangrove:
         cat = LoadGalaxies(galFile)
     else:
@@ -368,11 +182,6 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,obspar,dirName):
     print('done loading galaxies')
 
     name = filename.split('.')[0].split('/')[-1]
-
-    # name = "Default"
-    # if ('G' in filename):
-    #    names = filename.split("_")
-    #    name = names[0]
 
     print('Loading map from ', filename)
     prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(
@@ -404,7 +213,7 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,obspar,dirName):
         tGals = tGals0
         print('No pointings were given to be substracted')
     else:
-        # tGals_aux = tGals
+
         ra, dec, tGals, AlreadyObservedPgw, AlreadyObservedPgal, alreadysumipixarray1 = SubstractPointings(
             PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, obspar.FOV, prob, nside)
         # for second round
@@ -413,8 +222,6 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,obspar,dirName):
         sumPGW = sum(AlreadyObservedPgw)
         sumPGAL = sum(AlreadyObservedPgal)
 
-        # ObservedPointings = Table([time, ra, dec, AlreadyObservedPgw, AlreadyObservedPgal],names=['Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'Covered GW probability','Pgal covered'])
-        # print(ObservedPointings)
         print("===========================================================================================")
         print()
         print(
@@ -444,74 +251,86 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,obspar,dirName):
     else:
         NightDarkRuns = NightDarkObservation(ObservationTime0, obspar)
 
-    # print('EffectiveRunsTime',len(NightDarkRuns),'being',NightDarkRuns)
-
     totalProb = 0.
     counter = 0
-    for j, NightDarkRun in enumerate(NightDarkRuns):
-        if (len(ObservationTimearray) < obspar.maxRuns):
-            ObservationTime = NightDarkRun
-            visible, altaz, tGals_aux = VisibleAtTime(
-                ObservationTime, tGals_aux, obspar.maxZenith, obspar.location)
+    if(obspar.strategy == 'integrated'):
+        for j, NightDarkRun in enumerate(NightDarkRuns):
+            if (len(ObservationTimearray) < obspar.maxRuns):
+                ObservationTime = NightDarkRun
+                visible, altaz, tGals_aux = VisibleAtTime(
+                    ObservationTime, tGals_aux, obspar.maxZenith, obspar.location)
 
-            if (visible):
+                if (visible):
+                    # select galaxies within the slightly enlarged visiblity window
+                    visiMask = altaz.alt.value > 90 - \
+                        (obspar.maxZenith+obspar.FOV)
+                    visiGals = tGals_aux[visiMask]
+                    visiGals = ModifyCatalogue(
+                        prob, visiGals, obspar.FOV, sum_dP_dV, nside)
 
-                # select galaxies within the slightly enlarged visiblity window
-                visiMask = altaz.alt.value > 90 - \
-                    (obspar.maxZenith+obspar.FOV)
-                visiGals = tGals_aux[visiMask]
-                visiGals = ModifyCatalogue(
-                    prob, visiGals, obspar.FOV, sum_dP_dV, nside)
+                    mask, minz = FulfillsRequirement(
+                        visiGals, obspar.maxZenith, obspar.FOV, obspar.zenithWeighting, UsePix=False)
+                    if obspar.useGreytime:
+                        maskgrey = FulfillsRequirementGreyObservations(
+                            ObservationTime, visiGals, obspar.location, obspar.minMoonSourceSeparation)
+                        finalGals = visiGals[mask & maskgrey]
+                    if not obspar.useGreytime:
+                        finalGals = visiGals[mask]
 
-                mask, minz = FulfillsRequirement(
-                    visiGals, obspar.maxZenith, obspar.FOV, obspar.zenithWeighting, UsePix=False)
-                if obspar.useGreytime:
-                    maskgrey = FulfillsRequirementGreyObservations(
-                        ObservationTime, visiGals, obspar.location, obspar.minMoonSourceSeparation)
-                    finalGals = visiGals[mask & maskgrey]
-                if not obspar.useGreytime:
-                    finalGals = visiGals[mask]
+                    if (finalGals['dp_dV_FOV'][:1] > obspar.minProbcut):
+                        # final galaxies within the FoV
+                        if ((finalGals['dp_dV_FOV'][:1] < (2 * obspar.minProbcut)) and (sum(P_GWarray) > 0.40) and obspar.secondRound):
+                            visible, altaz, tGals_aux2 = VisibleAtTime(
+                                ObservationTime, tGals_aux2, obspar.maxZenith, obspar.location)
+                            if (visible):
+                                visiMask = altaz.alt.value > 90 - \
+                                    (obspar.maxZenith + obspar.FOV)
+                                visiGals2 = tGals_aux2[visiMask]
+                                visiGals2 = ModifyCatalogue(prob, visiGals2, obspar.FOV, sum_dP_dV, nside)
 
-                if (finalGals['dp_dV_FOV'][:1] > obspar.minProbcut):
-                    # final galaxies within the FoV
-                    # This notes LIGOVirgo type of signal
-                    if ((finalGals['dp_dV_FOV'][:1] < (2 * obspar.minProbcut)) and (sum(P_GWarray) > 0.40) and obspar.secondRound):
-                        print('probability', finalGals['dp_dV_FOV'][:1])
-                        visible, altaz, tGals_aux2 = VisibleAtTime(
-                            ObservationTime, tGals_aux2, obspar.maxZenith, obspar.location)
-                        if (visible):
-                            print("we are in round 2")
-                            visiMask = altaz.alt.value > 90 - \
-                                (obspar.maxZenith + obspar.FOV)
-                            visiGals2 = tGals_aux2[visiMask]
-                            visiGals2 = ModifyCatalogue(
-                                prob, visiGals2, obspar.FOV, sum_dP_dV, nside)
+                                mask, minz = FulfillsRequirement(
+                                    visiGals2, obspar.maxZenith, obspar.FOV, obspar.zenithWeighting, UsePix=False)
 
-                            mask, minz = FulfillsRequirement(
-                                visiGals2, obspar.maxZenith, obspar.FOV, obspar.zenithWeighting, UsePix=False)
+                                if obspar.useGreytime:
+                                    maskgrey = FulfillsRequirementGreyObservations(
+                                        ObservationTime, visiGals2, obspar.location, obspar.minMoonSourceSeparation)
+                                    finalGals2 = visiGals2[mask & maskgrey]
+                                if not obspar.useGreytime:
+                                    finalGals2 = visiGals2[mask]
+                                
+                                p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = ComputeProbPGALIntegrateFoV(
+                                    prob, ObservationTime, obspar.location, finalGals2, False, visiGals2, tGals_aux2, sum_dP_dV, alreadysumipixarray2, nside, minz,obspar, counter, name, dirName, obspar.doPlot)
 
-                            if obspar.useGreytime:
-                                maskgrey = FulfillsRequirementGreyObservations(
-                                    ObservationTime, visiGals2, obspar.location, obspar.minMoonSourceSeparation)
-                                finalGals2 = visiGals2[mask & maskgrey]
-                            if not obspar.useGreytime:
-                                finalGals2 = visiGals2[mask]
-                            p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = ComputeProbPGALIntegrateFoV(
-                                prob, ObservationTime, obspar.location, finalGals2, False, visiGals2, tGals_aux2, sum_dP_dV, alreadysumipixarray2, nside, minz, obspar.maxZenith, obspar.FOV, counter, name, dirName, obspar.doPlot)
+                                RAarray.append(float('{:3.4f}'.format(
+                                    float(finalGals2['RAJ2000'][:1]))))
+                                DECarray.append(float('{:3.4f}'.format(
+                                    float(finalGals2['DEJ2000'][:1]))))
+                                Round.append(2)
+                                P_GALarray.append(float('{:1.4f}'.format(p_gal)))
+                                P_GWarray.append(float('{:1.4f}'.format(p_gw)))
+                                ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
+                                counter = counter + 1
 
-                            RAarray.append(float('{:3.4f}'.format(
-                                float(finalGals2['RAJ2000'][:1]))))
-                            DECarray.append(float('{:3.4f}'.format(
-                                float(finalGals2['DEJ2000'][:1]))))
-                            Round.append(2)
-                            P_GALarray.append(float('{:1.4f}'.format(p_gal)))
-                            P_GWarray.append(float('{:1.4f}'.format(p_gw)))
-                            ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                            counter = counter + 1
-
-                        else:  # NOTE: not sure if this should be added
+                            else: 
+                                p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbPGALIntegrateFoV(
+                                    prob, ObservationTime, obspar.location, finalGals, False, visiGals, tGals_aux, sum_dP_dV, alreadysumipixarray1, nside, minz, obspar, counter, name, dirName, obspar.doPlot)
+                                RAarray.append(float('{:3.4f}'.format(
+                                    float(finalGals['RAJ2000'][:1]))))
+                                DECarray.append(float('{:3.4f}'.format(
+                                    float(finalGals['DEJ2000'][:1]))))
+                                Round.append(1)
+                                P_GALarray.append(float('{:1.4f}'.format(p_gal)))
+                                P_GWarray.append(float('{:1.4f}'.format(p_gw)))
+                                ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
+                                counter = counter + 1
+                        else:
+                            # print("We are in round 1")
+                            # print("\n=================================")
+                            # print("TARGET COORDINATES AND DETAILS...")
+                            # print("=================================")
                             p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbPGALIntegrateFoV(
-                                prob, ObservationTime, obspar.location, finalGals, False, visiGals, tGals_aux, sum_dP_dV, alreadysumipixarray1, nside, minz, obspar.maxZenith, obspar.FOV, counter, name, dirName, obspar.doPlot)
+                                prob, ObservationTime, obspar.location, finalGals, False, visiGals, tGals_aux, sum_dP_dV, alreadysumipixarray1, nside, minz, obspar, counter, name, dirName, obspar.doPlot)
+
                             RAarray.append(float('{:3.4f}'.format(
                                 float(finalGals['RAJ2000'][:1]))))
                             DECarray.append(float('{:3.4f}'.format(
@@ -521,40 +340,100 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,obspar,dirName):
                             P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                             ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
                             counter = counter + 1
+
                     else:
-                        print("We are in round 1")
-                        # print("\n=================================")
-                        # print("TARGET COORDINATES AND DETAILS...")
-                        # print("=================================")
-                        # print(finalGals['RAJ2000', 'DEJ2000', 'Bmag', 'Dist', 'Alt', 'dp_dV','dp_dV_FOV'][:1])
-                        p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbPGALIntegrateFoV(
-                            prob, ObservationTime, obspar.location, finalGals, False, visiGals, tGals_aux, sum_dP_dV, alreadysumipixarray1, nside, minz, obspar.maxZenith, obspar.FOV, counter, name, dirName, obspar.doPlot)
+                        print("NOT passing the cut on dp/dV_FOV > ", obspar.minProbcut)
+            else:
+                break
+    if(obspar.strategy == 'targeted'):
+        for j, NightDarkRun in enumerate(NightDarkRuns):
+            if (len(ObservationTimearray) < obspar.maxRuns):
+                ObservationTime = NightDarkRun
+                visible, altaz, tGals_aux = VisibleAtTime(
+                    ObservationTime, tGals_aux, obspar.maxZenith, obspar.location)
+                if (visible):
+                    # select galaxies within the slightly enlarged visiblity window
+                    visiMask = altaz.alt.value > 90 - \
+                        (obspar.maxZenith+obspar.FOV)
+                    visiGals = tGals_aux[visiMask]
+                    mask, minz = FulfillsRequirement(
+                        visiGals, obspar.maxZenith, obspar.FOV, obspar.zenithWeighting, UsePix=False)
+                    if obspar.useGreytime:
+                        maskgrey = FulfillsRequirementGreyObservations(
+                            ObservationTime, visiGals, obspar.location, obspar.minMoonSourceSeparation)
+                        finalGals = visiGals[mask & maskgrey]
+                    if not obspar.useGreytime:
+                        finalGals = visiGals[mask]
+                    #print('finalGals', finalGals,tGals['dp_dV'][:1]*obspar.minProbcut)
+                    if (finalGals['dp_dV'][:1] > tGals['dp_dV'][:1]*obspar.minProbcut):
+                        if ((finalGals['dp_dV'][:1] < (2 * obspar.minProbcut)) and (sum(P_GWarray) > 0.40) and obspar.secondRound):
+                            visible, altaz, tGals_aux2 = VisibleAtTime(
+                                ObservationTime, tGals_aux2, obspar.maxZenith, obspar.location)
+                            if (visible):
+                                visiMask = altaz.alt.value > 90 - \
+                                    (obspar.maxZenith + obspar.FOV)
+                                visiGals2 = tGals_aux2[visiMask]
+                                mask, minz = FulfillsRequirement(
+                                    visiGals2, obspar.maxZenith, obspar.FOV, obspar.zenithWeighting, UsePix=False)
 
-                        RAarray.append(float('{:3.4f}'.format(
-                            float(finalGals['RAJ2000'][:1]))))
-                        DECarray.append(float('{:3.4f}'.format(
-                            float(finalGals['DEJ2000'][:1]))))
-                        Round.append(1)
+                                if obspar.useGreytime:
+                                    maskgrey = FulfillsRequirementGreyObservations(
+                                        ObservationTime, visiGals2, obspar.location, obspar.minMoonSourceSeparation)
+                                    finalGals2 = visiGals2[mask & maskgrey]
+                                if not obspar.useGreytime:
+                                    finalGals2 = visiGals2[mask]
+                                p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = ComputeProbGalTargeted(
+                                    prob, ObservationTime, finalGals2, visiGals2, tGals_aux2, sum_dP_dV, alreadysumipixarray2, nside, minz, obspar, counter, dirName)
 
-                        P_GALarray.append(float('{:1.4f}'.format(p_gal)))
-                        P_GWarray.append(float('{:1.4f}'.format(p_gw)))
-                        ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                        counter = counter + 1
-                        # ObservationTimearrayNamibia.append(Tools.UTCtoNamibia(ObservationTime))
+                                RAarray.append(float('{:3.4f}'.format(
+                                    float(finalGals2['RAJ2000'][:1]))))
+                                DECarray.append(float('{:3.4f}'.format(
+                                    float(finalGals2['DEJ2000'][:1]))))
+                                Round.append(2)
+                                P_GALarray.append(float('{:1.4f}'.format(p_gal)))
+                                P_GWarray.append(float('{:1.4f}'.format(p_gw)))
+                                ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
+                                counter = counter + 1
 
-                else:
-                    # print("Optimal pointing position is: ")
-                    # print(finalGals['RAJ2000', 'DEJ2000', 'Bmag', 'Dist', 'Alt', 'dp_dV','dp_dV_FOV'][:1])
-                    print("NOT passing the cut on dp_dV_FOV > ", obspar.minProbcut)
-        else:
-            break
+                            else:  
+                                p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbGalTargeted(
+                                    prob, ObservationTime, finalGals, visiGals, tGals_aux, sum_dP_dV, alreadysumipixarray1, nside, minz,obspar,counter, dirName)
+                                RAarray.append(float('{:3.4f}'.format(
+                                    float(finalGals['RAJ2000'][:1]))))
+                                DECarray.append(float('{:3.4f}'.format(
+                                    float(finalGals['DEJ2000'][:1]))))
+                                Round.append(1)
+                                P_GALarray.append(float('{:1.4f}'.format(p_gal)))
+                                P_GWarray.append(float('{:1.4f}'.format(p_gw)))
+                                ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
+                                counter = counter + 1
+                        else:
+                            #print("We are in round 1")
+                            p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbGalTargeted(
+                                    prob, ObservationTime, finalGals, visiGals, tGals_aux, sum_dP_dV, alreadysumipixarray1, nside, minz, obspar, counter, dirName)
+                            RAarray.append(float('{:3.4f}'.format(
+                                float(finalGals['RAJ2000'][:1]))))
+                            DECarray.append(float('{:3.4f}'.format(
+                                float(finalGals['DEJ2000'][:1]))))
+                            Round.append(1)
+                            P_GALarray.append(float('{:1.4f}'.format(p_gal)))
+                            P_GWarray.append(float('{:1.4f}'.format(p_gw)))
+                            ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
+                            counter = counter + 1
 
-    print()
-    print("===========================================================================================")
-    print()
+                    else:
+                        print("NOT passing the cut on dp/dV_FOV > ", obspar.minProbcut)
+            else:
+                break
+        
     # List of suggested pointings
     SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round], names=[
                                'Observation Time UTC', 'RA[deg]', 'DEC[deg]', 'PGW', 'Pgal', 'Round'])
+    print()
+    print("================================= Tiling found =============================================")
+    print(SuggestedPointings)
+    print("===========================================================================================")
+    print()
     return SuggestedPointings, cat
 
 
@@ -720,8 +599,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, obspar,d
                                                                                                visiPix, True, visiGals,
                                                                                                tGals_aux, sum_dP_dV,
                                                                                                alreadysumipixarray1,
-                                                                                               nside, minz, obspar.maxZenith,
-                                                                                               obspar.FOV, counter, name, dirName, obspar.doPlot)
+                                                                                               nside, minz, obspar, counter, name, dirName, obspar.doPlot)
                     RAarray.append(
                         float('{:3.4f}'.format(float(visiPix['PIXRA'][:1]))))
                     DECarray.append(
