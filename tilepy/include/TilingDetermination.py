@@ -1631,8 +1631,7 @@ def PGalinFoV_NObs(filename, ObservationTime0, PointingFile, dirName, obsparamet
                                     finalGals2 = visiGals2[mask]
 
                                 p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = ComputeProbPGALIntegrateFoV(
-                                    prob, ObservationTime, obspar.location, finalGals2, False, visiGals2, tGals_aux2, sum_dP_dV, alreadysumipixarray2, nside, minz, obspar.maxZenith, obspar.FOV, counter, name, dirName, obspar.doPlot)
-
+                                    prob, ObservationTime, obspar.location, finalGals2, False, visiGals2, tGals_aux2, sum_dP_dV, alreadysumipixarray2, nside, minz, obspar, counter, name, dirName, obspar.doPlot)
                                 RAarray.append(float('{:3.4f}'.format(
                                     float(finalGals2['RAJ2000'][:1]))))
                                 DECarray.append(float('{:3.4f}'.format(
@@ -1659,7 +1658,7 @@ def PGalinFoV_NObs(filename, ObservationTime0, PointingFile, dirName, obsparamet
                             # print("=================================")
                             # print(finalGals['RAJ2000', 'DEJ2000', 'Bmag', 'Dist', 'Alt', 'dp_dV','dp_dV_FOV'][:1])
                             p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbPGALIntegrateFoV(
-                                prob, ObservationTime, obspar.location, finalGals, False, visiGals, tGals_aux, sum_dP_dV, alreadysumipixarray1, nside, minz, obspar.maxZenith, obspar.FOV, counter, name, dirName, obspar.doPlot)
+                                prob, ObservationTime, obspar.location, finalGals, False, visiGals, tGals_aux2, sum_dP_dV, alreadysumipixarray2, nside, minz, obspar, counter, name, dirName, obspar.doPlot)
                             RAarray.append(float('{:3.4f}'.format(
                                 float(finalGals['RAJ2000'][:1]))))
                             DECarray.append(float('{:3.4f}'.format(
