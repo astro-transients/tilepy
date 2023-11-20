@@ -143,12 +143,15 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,obspar,dirName):
     print("Total GW probability covered: ", float('{:1.4f}'.format(float(sum(P_GWarray)))), "Number of runs that fulfill darkness condition  :",
           len(NightDarkRuns), "Number of effective pointings: ", len(ObservationTimearray))
 
-    print()
-    print("===========================================================================================")
-    print()
     # List of suggested pointings
     SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, Round], names=[
                                'Observation Time UTC', 'RA[deg]', 'DEC[deg]', 'PGW', 'Round'])
+
+    print()
+    print("================================= Tiling found =============================================")
+    print(SuggestedPointings)
+    print("===========================================================================================")
+    print()
     return (SuggestedPointings, ObservationTime0)
 
 

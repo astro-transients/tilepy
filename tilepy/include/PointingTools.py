@@ -374,7 +374,7 @@ class ObservationParameters(object):
         txt += 'Duration: {}\n'.format(self.duration)
         txt += 'High Resolution NSIDE: {}\n'.format(self.HRnside)
         txt += 'Low Resolution NSIDE: {}\n'.format(self.reducedNside)
-        txt += 'The strategy is ({algorithm},{strategy}, mangrove={mangrove})\n'.format(algorithm = self.algorithm, strategy = self.strategy,mangrove = self.mangrove)
+        txt += 'The strategy is ({algorithm}, {strategy}, mangrove={mangrove})\n'.format(algorithm = self.algorithm, strategy = self.strategy,mangrove = self.mangrove)
         txt += 'The level of details is (doPlot={doPlot}, doRank = {doRank})\n'.format(doPlot = self.doPlot, doRank = self.doRank)
 
         # txt += '----------------------------------------------------------------------\n'.format()
