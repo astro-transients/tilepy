@@ -38,6 +38,8 @@ iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 # iers.IERS.iers_table = iers.IERS_A.open(download_file(iers_url_mirror, cache=True))
 
 Colors = ['b', 'm', 'y', 'c', 'g', 'w', 'k', 'c', 'b', 'c', 'm', 'b', 'g', 'y', 'b', 'c', 'm', 'b', 'g', 'y',
+          'b', 'c', 'm', 'b','b', 'm', 'y', 'c', 'g', 'w', 'k', 'c', 'b', 'c', 'm', 'b', 'g', 'y', 'b', 'c', 'm', 'b', 'g', 'y',
+          'b', 'c', 'm', 'b','b', 'm', 'y', 'c', 'g', 'w', 'k', 'c', 'b', 'c', 'm', 'b', 'g', 'y', 'b', 'c', 'm', 'b', 'g', 'y',
           'b', 'c', 'm', 'b']
 
 
@@ -707,7 +709,10 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar):
                 COLORS = 'k'
                 fov_plot = obspar.FOV
             if nametel[i] == "LST":
-                COLORS = 'r'
+                COLORS = 'g'
+                fov_plot =  obspar.FOV
+            if nametel[i] == "CTAS":
+                COLORS = 'b'
                 fov_plot =  obspar.FOV
         except:
             print("Ploting with one telescope")
@@ -718,8 +723,8 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar):
         # To have more details in the plot
         # ax_inset.text(ra[i]-2.5, dec[i]-1, "%d\n%s \n %d%% %d deg " % (i,time[i], 100*pgw[i],pgal[i]),transform=ax_inset.get_transform('fk5'), color = 'k', rotation = -15, fontsize = 8)
         # Only the number of pointing is included
-        ax_inset.text(ra[i]-2.5, dec[i]-1, "%d" % i, transform=ax_inset.get_transform(
-            'fk5'), color='k', rotation=-15, fontsize=8)
+        #ax_inset.text(ra[i], dec[i], "%d" % i, transform=ax_inset.get_transform(
+        #    'fk5'), color='k', rotation=-15, fontsize=8)
 
     pos = ax_inset.imshow_hpx(filename, cmap='cylon')
 
