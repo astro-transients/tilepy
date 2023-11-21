@@ -2,31 +2,38 @@
    :synopsis: Documentation for the TilingDetermination module.
    :noindex:
 
-TilingDetermination Module Overview
-===================================
+TilingDetermination 
+===================
 
 This is the documentation for the TilingDetermination module.
 
-Functions
----------
 
+PGWinFoV
+---------
 .. autofunction:: tilepy.include.TilingDetermination.PGWinFoV
    :noindex:
 
-.. autofunction:: tilepy.include.TilingDetermination.BestCandidateonPGal
-   :noindex:
-
+PGalinFoV
+----------
 .. autofunction:: tilepy.include.TilingDetermination.PGalinFoV
    :noindex:
 
+PGalinFoV_PixRegion
+--------------------
 .. autofunction:: tilepy.include.TilingDetermination.PGalinFoV_PixRegion
    :noindex:
 
-.. autofunction:: tilepy.include.UniversalObservationScheduler.ObservationStartperObs
+ObservationStartperObs
+----------------------
+.. autofunction:: tilepy.include.TilingDetermination.ObservationStartperObs
    :noindex:
 
-.. autofunction:: tilepy.include.UniversalObservationScheduler.PGWinFoV_NObs
+PGWinFoV_NObs
+--------------
+.. autofunction:: tilepy.include.TilingDetermination.PGWinFoV_NObs
    :noindex:
 
-.. autofunction:: tilepy.include.UniversalObservationScheduler.PGalinFoV_NObs
+PGalinFoV_NObs
+--------------
+.. autofunction:: tilepy.include.TilingDetermination.PGalinFoV_NObs
    :noindex:
