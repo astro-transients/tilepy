@@ -2,16 +2,18 @@
    :synopsis: Documentation for the ObservationScheduler module.
    :noindex:
 
-ObservationScheduler Module Overview
-====================================
+ObservationScheduler 
+====================
 
 This is the documentation for the ObservationScheduler module.
 
-Functions
----------
-
-.. autofunction:: tilepy.include.ObservationScheduler.getSchedule
+GetSchedule
+------------
+.. autofunction:: tilepy.include.ObservationScheduler.GetSchedule
    :noindex:
 
-.. autofunction:: tilepy.include.UniversalScheduleLauncher.GetUniversalSchedule
+
+GetUniversalSchedule
+---------------------
+.. autofunction:: tilepy.include.ObservationScheduler.GetUniversalSchedule
    :noindex:
