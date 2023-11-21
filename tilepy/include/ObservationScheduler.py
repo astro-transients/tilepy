@@ -23,7 +23,7 @@ import time
 import datetime
 
 
-def getSchedule(obspar):
+def GetSchedule(obspar):
     """
     Top level function that is called by the user with specific arguments and creates a folder 
     with the tiling schedules for a single telescope and visibility plots.  
@@ -150,10 +150,9 @@ def getSchedule(obspar):
 
 
 def GetUniversalSchedule(obsparameters):
-    #def GetUniversalSchedule(URL, date, datasetDir, galcatname, outDir, Type, ObsArray):
     '''
     Top level function that is called by the user with specific arguments and creates a folder 
-    with the tiling schedules for a single telescope and visibility plots.  
+    with the tiling schedules for multiple telescopes/observartories and visibility plots.  
 
     :param obsparameters: a list of sets of parameters for each observatory needed to launch the tiling scheduler
     :type obsparameters: list of class ObservationParameters
@@ -191,16 +190,17 @@ def GetUniversalSchedule(obsparameters):
 
     if has3D:
         dirName = '%s/PGalinFoV_NObs' % outputDir
+        galaxies = obspar.datasetDir + obspar.galcatName
         if not os.path.exists(dirName):
             os.makedirs(dirName)
         SuggestedPointings, cat, obsparameters = PGalinFoV_NObs(
-            filename, ObservationTime, obsparameters[0].pointingsFile, dirName, obsparameters)
+            filename, ObservationTime, obsparameters[0].pointingsFile, galaxies, obsparameters, dirName)
     else:
         dirName = '%s/PGWinFoV_NObs' % outputDir
         if not os.path.exists(dirName):
             os.makedirs(dirName)
         SuggestedPointings, obsparameters = PGWinFoV_NObs(
-            filename, ObservationTime, obsparameters[0].pointingsFile, dirName, obsparameters)
+            filename, ObservationTime, obsparameters[0].pointingsFile, obsparameters, dirName)
     if (len(SuggestedPointings) != 0):
         print(SuggestedPointings)
         FOLLOWUP = True
