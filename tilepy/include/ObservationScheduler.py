@@ -190,7 +190,7 @@ def GetUniversalSchedule(obsparameters):
 
     if has3D:
         dirName = '%s/PGalinFoV_NObs' % outputDir
-        galaxies = obspar.datasetDir + obspar.galcatName
+        galaxies = obsparameters[0].datasetDir + obsparameters[0].galcatName
         if not os.path.exists(dirName):
             os.makedirs(dirName)
         SuggestedPointings, cat, obsparameters = PGalinFoV_NObs(
