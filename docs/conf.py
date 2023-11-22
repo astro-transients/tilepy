@@ -2,7 +2,7 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../include'))
+sys.path.insert(0, os.path.abspath('../tilepy/include'))
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('../include'))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'tilepy'
-copyright = '2023, Halim, monica, Fabian'
+copyright = '2023, Halim, Monica, Fabian'
 author = 'Halim, Monica, Fabian'
 release = '1.0'
 
