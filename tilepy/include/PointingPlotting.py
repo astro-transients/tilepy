@@ -15,6 +15,7 @@ import six
 from datetime import date
 import ligo.skymap.io.fits as lf
 from astropy.coordinates import SkyCoord
+import matplotlib.patches as mpatches
 
 
 if six.PY2:
@@ -682,11 +683,11 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar):
     fig = plt.figure(figsize=(9, 6))
 
     ax = plt.axes([0.1, 0.1, 0.4, 0.4],
-                  projection='astro globe',
+                  projection='astro degrees globe',
                   center=center_str)
 
-    ax_inset = plt.axes([0.4, 0.2, 0.45, 0.45],
-                        projection='astro zoom',
+    ax_inset = plt.axes([0.5, 0.1, 0.45, 0.45],
+                        projection='astro degrees zoom',
                         center=center_str, radius='10 deg')
 
     for key in ['ra', 'dec']:
@@ -694,7 +695,11 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar):
         ax_inset.coords[key].set_ticks_visible(True)
 
     ax.grid()
+    ax_inset.grid()
     ax.mark_inset_axes(ax_inset)
+    ax_inset.set_xlabel('RA (J2000)')
+    ax_inset.set_ylabel('Dec (J2000)')
+
     #ax.connect_inset_axes(ax_inset, loc='upper left')
     #ax.connect_inset_axes(ax_inset, loc='lower left')
 
@@ -708,27 +713,45 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar):
             if nametel[i] == "HESS":
                 COLORS = 'k'
                 fov_plot = obspar.FOV
-            if nametel[i] == "LST":
+                LengendPatchHESS = mpatches.Patch(color=COLORS, label=nametel[i]) 
+            if nametel[i] == "LST1":
                 COLORS = 'g'
                 fov_plot =  obspar.FOV
-            if nametel[i] == "CTAS":
+                LengendPatchLST1 = mpatches.Patch(color=COLORS, label=nametel[i]) 
+            if nametel[i] == "MAGIC":
                 COLORS = 'b'
                 fov_plot =  obspar.FOV
+                LengendPatchMAGIC = mpatches.Patch(color=COLORS, label=nametel[i]) 
         except:
             print("Ploting with one telescope")
 
         c = Circle((ra[i], dec[i]), fov_plot, edgecolor=COLORS, facecolor="None",
                    transform=ax_inset.get_transform('fk5'), alpha=1)
+
         ax_inset.add_patch(c)
+        legend_drawn_flag = True
+        
         # To have more details in the plot
         # ax_inset.text(ra[i]-2.5, dec[i]-1, "%d\n%s \n %d%% %d deg " % (i,time[i], 100*pgw[i],pgal[i]),transform=ax_inset.get_transform('fk5'), color = 'k', rotation = -15, fontsize = 8)
         # Only the number of pointing is included
         #ax_inset.text(ra[i], dec[i], "%d" % i, transform=ax_inset.get_transform(
         #    'fk5'), color='k', rotation=-15, fontsize=8)
+    try:
+        ax_inset.legend(handles= [LengendPatchLST1, LengendPatchMAGIC])
+    except:
+        #LengendPatch = mpatches.Patch(color=COLORS, label= name)
+        ax_inset.legend()
 
     pos = ax_inset.imshow_hpx(filename, cmap='cylon')
 
+    ax.mark_inset_axes(ax_inset)
+    ax.connect_inset_axes(ax_inset, loc = 'lower left')
+    ax.connect_inset_axes(ax_inset, loc = 'upper left')
+
     cbar = fig.colorbar(pos, ax=ax, location="left", fraction=0.046, pad=0.05)
-    cbar.set_label("Probability",  color='black', fontsize=7)
-    plt.savefig("%s/Plot_PrettyMap_%s.png" % (dirName, name), dpi=300)
+    cbar.formatter.set_powerlimits((0, 0))
+    # to get 10^3 instead of 1e3
+    cbar.formatter.set_useMathText(True)
+    cbar.set_label("Probability",  color='black', fontsize=9)
+    plt.savefig("%s/Plot_PrettyMap_%s.png" % (dirName, name), dpi=300, bbox_inches='tight')
     #plt.show()

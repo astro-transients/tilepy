@@ -1273,9 +1273,9 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
             AltAz(obstime=Time(time, scale='utc'), location=observatory))
         # Zenith and Moon angular distance mask
         pix_ra = radecs.ra.value[(thisaltaz.alt.value > 90-maxZenith)
-                                 & (thisaltaz.separation(moonaltazs) > 30 * u.deg)]
+                                 & (thisaltaz.separation(moonaltazs) > (90-maxZenith) * u.deg)]
         pix_dec = radecs.dec.value[(thisaltaz.alt.value > 90 - maxZenith)
-                                   & (thisaltaz.separation(moonaltazs) > 30 * u.deg)]
+                                   & (thisaltaz.separation(moonaltazs) > (90-maxZenith) * u.deg)]
 
     else:
         # Zenith angle mask
