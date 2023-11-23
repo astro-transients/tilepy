@@ -498,7 +498,7 @@ class ObservationParameters(object):
         self.mangrove = mangrove
 
 
-class Observatory:
+class Observer:
     """Class to store information and handle operation related to the observatory used for the observations."""
 
     def __init__(self, longitude, latitude, elevation, run_duration,
@@ -1415,7 +1415,7 @@ def NightDarkObservation(time, obspar):
     Function that searches for an array of observation times that fulfilled darkness condition and window
 
     '''
-    obs = Observatory(longitude=obspar.lon.to_value(u.deg),
+    obs = Observer(longitude=obspar.lon.to_value(u.deg),
                       latitude=obspar.lat.to_value(u.deg),
                       elevation=obspar.height.to_value(u.m),
                       run_duration=datetime.timedelta(minutes=obspar.duration),
@@ -1432,7 +1432,7 @@ def NightDarkObservationwithGreyTime(time, obspar):
     Function that searches for an array of observation times that fulfilled darkness condition and window
 
     '''
-    obs = Observatory(longitude=obspar.lon.to_value(u.deg),
+    obs = Observer(longitude=obspar.lon.to_value(u.deg),
                       latitude=obspar.lat.to_value(u.deg),
                       elevation=obspar.height.to_value(u.m),
                       run_duration=datetime.timedelta(minutes=obspar.duration),
