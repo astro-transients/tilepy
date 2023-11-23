@@ -1,8 +1,9 @@
-#####################################################################
-# Author: Monica Seglar-Arroyo
-# Contributors: Halim Ashkar,  Fabian Schussler, Mathieu de Bony
-# All the tools that are needed to follow-up a GW with an IACT (HESS)
-# are described and implemented in the following.
+##################################################################################################
+#        Authors: Monica Seglar-Arroyo, Halim Ashkar,  Fabian Schussler, Mathieu de Bony         #
+#                           All the low-level tools to schedule observations                     #
+##################################################################################################
+
+
 #####################################################################
 # Packages
 import datetime

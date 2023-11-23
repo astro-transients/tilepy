@@ -1,3 +1,8 @@
+##################################################################################################
+#        Authors: Monica Seglar-Arroyo, Halim Ashkar,  Fabian Schussler, Mathieu de Bony         #
+#        Functions needed to obtain the tiling pattern and time of the observation               #
+##################################################################################################
+
 from .PointingTools import (NightDarkObservation, SelectObservatory_fromHotspot,
                             NightDarkObservationwithGreyTime, LoadHealpixMap, LoadHealpixUNIQMap,
                             Get90RegionPixReduced, ZenithAngleCut, ComputeProbability2D,
