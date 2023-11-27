@@ -1376,10 +1376,10 @@ def PGWonFoV_WindowOptimisation(filename, timeStr, TC, parameters, conf, dataset
 
     # Set of delays and slewing times
     # Units: seconds
-    totalTime = 172800  # 48h
-    followupDelay = 30  # Minimum delay to start observaiton
-    SlewingTime = 210  # Slewing to first position
-    interObsSlew = 20  # Slewing time between observations
+    totalTime = obspar.maxNights*24*60 # in minutes, for 48h is 172800 
+    followupDelay = 30  # in seconds, Minimum delay to start observaiton
+    SlewingTime = 210  # in seconds, slewing to first position
+    interObsSlew = obspar.minSlewing  # in seconds,slewing time between observations 20 
     total_followupDelay = followupDelay + SlewingTime
 
     # From the injection time, look for the next window. Time is the time of the first observation
@@ -1387,15 +1387,15 @@ def PGWonFoV_WindowOptimisation(filename, timeStr, TC, parameters, conf, dataset
         datetime.timedelta(seconds=total_followupDelay)
 
     print("Main info of this scheduling:", totalTime,total_followupDelay, ID, TC, obspar.location)
-
-    TotalNights = 2
+    
+    maxRuns = obspar.maxRuns
+    TotalNights = obspar.maxNights
     counter = 0
     counterTotalPossible = 0
-    maxRuns = 20
+
     # GrbsensMax = 16384
     # 15 minutes.  Allows to check if 15 minutes later there is a better opportunity
     AuxTimeNextTry = 900
-    # minProbcut = 0.005
 
     for nights in range(0, TotalNights):
         TstartNight = NextWindowTools.NextObservationWindow(
