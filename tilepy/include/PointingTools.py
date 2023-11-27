@@ -3361,7 +3361,7 @@ def ProducePandasSummaryFile(Source, SuggestedPointings, totalPoswindow, ID, obs
     df = pd.DataFrame(data)
 
     # Display the DataFrame
-    print(df.iloc[0].pointings)
+    #print(df.iloc[0].pointings)
     df.to_parquet(dirNameFile+str(ID)+'_'+configID+'.parquet')
     #import pickle
     #with open(dirNameFile+str(ID)+'_'+configID+'.pkl', "wb") as f:
