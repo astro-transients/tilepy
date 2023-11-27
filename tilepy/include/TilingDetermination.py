@@ -1386,8 +1386,7 @@ def PGWonFoV_WindowOptimisation(filename, timeStr, TC, parameters, conf, dataset
     ObservationTime = ObservationTime0 + \
         datetime.timedelta(seconds=total_followupDelay)
 
-    print("Main info of this scheduling:", totalTime,
-          total_followupDelay, ID, TC, obspar.location)
+    print("Main info of this scheduling:", totalTime,total_followupDelay, ID, TC, obspar.location)
 
     TotalNights = 2
     counter = 0
@@ -1398,8 +1397,6 @@ def PGWonFoV_WindowOptimisation(filename, timeStr, TC, parameters, conf, dataset
     AuxTimeNextTry = 900
     # minProbcut = 0.005
 
-    # case 1 = TstartNight == False
-    # case 2 = "The source is not on the temporal FoV of the instrument"
     for nights in range(0, TotalNights):
         TstartNight = NextWindowTools.NextObservationWindow(
             ObservationTime, obspar)
@@ -1411,6 +1408,7 @@ def PGWonFoV_WindowOptimisation(filename, timeStr, TC, parameters, conf, dataset
             ObsCase = 'NoDarknessFound'
             # print("===== RESULTS ========")
             print('++++ No Darkness Time Found +++++')
+            ObservationTimearray.append(str(StartObsTime).split('.')[0].split('+')[0])
             P_GWarray.append(0)
             RAarray.append(0)
             DECarray.append(0)
@@ -1423,30 +1421,25 @@ def PGWonFoV_WindowOptimisation(filename, timeStr, TC, parameters, conf, dataset
             break
         else:
             print("Observations can be allocated")
-            TendNight = NextWindowTools.EndObservationWindow(
-                TstartNight, obspar)
-            print("Night number", nights, " window starts at",
-                  TstartNight, "finishes at", TendNight)
+            TendNight = NextWindowTools.EndObservationWindow(TstartNight, obspar)
+            print("Night number", nights, " window starts at",TstartNight, "finishes at", TendNight)
 
             # Look for the first time that the C.R. observable is > 5%
             TemporalBin = datetime.timedelta(seconds=600)  # Every 10 minutes
             for i in range(0, 24):
                 checkTime = TstartNight + i * TemporalBin
-                print(TendNight, TstartNight)
-                print(TendNight.tzinfo, TstartNight.tzinfo)
                 if ((TendNight - checkTime).total_seconds() < 0):
                     ObsBool = False
-                    print("The source is not on the temporal FoV of the instrument")
                     break
                 ObsBool, yprob = ZenithAngleCut(prob, nside, checkTime, obspar.minProbcut,
                                                 obspar.maxZenith, obspar.location, obspar.minMoonSourceSeparation, useGreytime=False)
-                print(checkTime, ObsBool)
+
                 if (ObsBool == True):
                     StartObsTime = checkTime
                     print("The first time the GW is observed is", StartObsTime, "minProbcut", obspar.minProbcut, "maxZenith",
                           obspar.maxZenith)
                     break
-            if (ObsBool):
+            if (ObsBool == True):
                 # Get the first 100 clusters of probability for the masked map
                 for tt in range(0, 1000):
                     print("  ")
@@ -1454,22 +1447,17 @@ def PGWonFoV_WindowOptimisation(filename, timeStr, TC, parameters, conf, dataset
                     print("---- NEW OBSERVATION ATTEMPT ----")
                     print('++++++++++++++++++++++++++++++++++')
                     print("  ")
-                    print("Observation number ", counter)
-                    print("Starting time", StartObsTime)
+                    print("Starting time", StartObsTime,"Observation number ", counter)
                     if (tt > maxRuns):
                         break
                     if ((TendNight - datetime.timedelta(seconds=interObsSlew) - StartObsTime).total_seconds() <= 0):
                         print("---- NIGHT IS OVER ----")
                         break
                     # Total Exposure for the night
-                    TotalExposure = int(
-                        (TendNight - StartObsTime).total_seconds())
-                    DelayObs = int(
-                        (StartObsTime - ObservationTime0).total_seconds())
+                    TotalExposure = int((TendNight - StartObsTime).total_seconds())
+                    DelayObs = int((StartObsTime - ObservationTime0).total_seconds())
 
-                    print("ObservationTime0", ObservationTime0)
-                    print("TotalExposure", TotalExposure)
-                    print("DelayObs", DelayObs)
+                    print("ObservationTime0 = ", ObservationTime0,"TotalExposure =", TotalExposure, "DelayObs = ", DelayObs )
                     print("----------------------------")
                     P_GW, TC, ObsExp, ZenIni, ZenEnd, ObsCase, pixlist, ipixlistHR = ComputeProbability2D_SelectClusters(
                         prob, highres, radecs,  conf, StartObsTime, DelayObs, interObsSlew, obspar, ID, pixlist, ipixlistHR, counter, datasetDir, outDir, False, False)
@@ -1478,9 +1466,6 @@ def PGWonFoV_WindowOptimisation(filename, timeStr, TC, parameters, conf, dataset
                     print(P_GW, ObsExp, ZenIni, ZenEnd, ObsCase)
                     print("=============")
                     counterTotalPossible = counterTotalPossible + 1
-                    # print("PGW", P_GW,'COORDINATES:', TC,'ZENITH CHANGE', ZenIni,'->', ZenEnd)
-                    # print("TotalExposure: ",TotalExposure,"DelayObs:",DelayObs, "Observation Number:",counter, "Exposure:", ObsExp)
-
                     ObservationTimearray.append(str(StartObsTime).split('.')[0].split('+')[0])
 
                     if (ObsCase == 'TimeNotEnoughIte' or ObsCase == 'TimeNotEnough'):
@@ -1490,32 +1475,22 @@ def PGWonFoV_WindowOptimisation(filename, timeStr, TC, parameters, conf, dataset
                     else:
                         StartObsTime = StartObsTime + \
                             datetime.timedelta(seconds=ObsExp + interObsSlew)
-
-                    # PreDefWindow.append(predefWind[j])
-                    # ObservationTime = ObservationTime0 + datetime.timedelta(seconds=tstar)
+                    # Possible classification cases
                     if ((P_GW >= obspar.minProbcut)):
-                        # print("===== RESULTS ========")
                         print('++++ SCHEDULING OBS +++++')
                         P_GWarray.append(float('{:1.4f}'.format(float(P_GW))))
-                        RAarray.append(
-                            float('{:3.4f}'.format(float(TC.ra.deg))))
-                        DECarray.append(
-                            float('{:3.4f}'.format(float(TC.dec.deg))))
+                        RAarray.append(float('{:3.4f}'.format(float(TC.ra.deg))))
+                        DECarray.append(float('{:3.4f}'.format(float(TC.dec.deg))))
                         Obsarray.append(obspar.name)
-                        ZenIniarray.append(
-                            float('{:1.4f}'.format(float(ZenIni))))
-                        ZenEndarray.append(
-                            float('{:1.4f}'.format(float(ZenEnd))))
+                        ZenIniarray.append(float('{:1.4f}'.format(float(ZenIni))))
+                        ZenEndarray.append(float('{:1.4f}'.format(float(ZenEnd))))
                         ObsBoolarray.append('True')
                         Exposure.append(ObsExp)
                         Delay.append(DelayObs)
                         counter = counter + 1
-                    # Although OBS AND NIGHT WAS TRUE
-                    elif ((P_GW <= obspar.minProbcut) and (P_GW > 0)):
-                        # print("===== RESULTS ========")
+                    elif ((P_GW < obspar.minProbcut) and (P_GW > 0)):
                         print('++++ Probability too low +++++')
-                        P_GWarray.append(
-                            0)  # Careful with including the PGW in this case, afterwards is used to compute total PGW and yields to bad results
+                        P_GWarray.append(0)  # Careful with including the PGW in this case, afterwards is used to compute total PGW and yields to bad results
                         RAarray.append(0)
                         DECarray.append(0)
                         Obsarray.append(0)
@@ -1525,7 +1500,6 @@ def PGWonFoV_WindowOptimisation(filename, timeStr, TC, parameters, conf, dataset
                         Delay.append(0)
                         ObsBoolarray.append('ProbTooLow')
                     else:
-                        # print("===== RESULTS ========")
                         print('++++ Probability is Zero +++++')
                         P_GWarray.append(0)
                         RAarray.append(0)
@@ -1538,9 +1512,8 @@ def PGWonFoV_WindowOptimisation(filename, timeStr, TC, parameters, conf, dataset
                         ObsBoolarray.append('ProbZero')
             else:
                 # The event hasnt been found to be on the temporal FoV of the instrument
-                # print("===== RESULTS ========")
                 print('++++ The event is not in temporal FoV of the instrument +++++')
-                ObservationTimearray.append(str(StartObsTime).split('.')[0].split('+')[0])
+                ObservationTimearray.append(str(TstartNight).split('.')[0].split('+')[0])
                 P_GWarray.append(0)
                 RAarray.append(0)
                 DECarray.append(0)
@@ -1551,17 +1524,15 @@ def PGWonFoV_WindowOptimisation(filename, timeStr, TC, parameters, conf, dataset
                 Delay.append(0)
                 ObsBoolarray.append('NoTemporalFoV')
 
+
         # Auxiliary jump of 12 hours to the next day
         ObservationTime = TendNight + datetime.timedelta(seconds=43200)
-        # nights = nights + 1
     print()
     print("===========================================================================================")
     print()
     # List of suggested pointings
-    print("TOTAL POSSIBLE: ", counterTotalPossible, "DONE: ",
-          counter, "Probability: ", np.sum(P_GWarray))
-    print(len(ObservationTimearray), len(RAarray), len(Obsarray), len(P_GWarray), len(ObsBoolarray), len(ZenIniarray), len(ZenEndarray), len(Exposure),
-         len(Delay))
+    print("TOTAL POSSIBLE: ", counterTotalPossible, "DONE: ",counter, "Probability: ", np.sum(P_GWarray))
+    #print(len(ObservationTimearray), len(RAarray), len(Obsarray), len(P_GWarray), len(ObsBoolarray), len(ZenIniarray), len(ZenEndarray), len(Exposure),len(Delay))
     SuggestedPointings = Table(
         [ObservationTimearray, RAarray, DECarray, Obsarray, P_GWarray, ObsBoolarray, ZenIniarray, ZenEndarray, Exposure,
          Delay],
