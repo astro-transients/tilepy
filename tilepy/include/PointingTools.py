@@ -3323,17 +3323,17 @@ def ProducePandasSummaryFile(Source, SuggestedPointings, totalPoswindow, ID, obs
         # pointings_as_strings = {key: str(value) for key, value in pointings.items()}
 
         #print(pointings)
-    data = {
-        'obs_run': int(ID),
-        'config_file': str(configID),
-        'total_observations': str(totalObservations),
-        'total_prob': str(totalPGW),
-        'pointings_found': str(nP),
-        'found': str(Found),
-        'n_found': str(len(nP)), 
-        'pointings': list([pointings]), 
-    }
-       
+    #data = {
+    #    'obs_run': int(ID),
+    #    'config_file': str(configID),
+    #    'total_observations': str(totalObservations),
+    #    'total_prob': str(totalPGW),
+    #    'pointings_found': str(nP),
+    #    'found': str(Found),
+    #    'n_found': str(len(nP)), 
+    #    'pointings': list([pointings]), 
+    #} 
+        
     obs_run = configID.split('_')[0]
     layout = configID.split('_')[1] 
     has_ebl = False
@@ -3350,7 +3350,7 @@ def ProducePandasSummaryFile(Source, SuggestedPointings, totalPoswindow, ID, obs
             'total_prob': float(totalPGW),
             'pointings_found': list([nP]),
             'found': bool(Found),
-            'n_found': int(len(nP)), 
+            'n_found': int(len(str(nP).split(','))), # need to remove the commas... int(len(str(nP).split(',')))
             'pointings': list([pointings]), 
         }
 
@@ -3571,7 +3571,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, conf, time, Delay
     # Fill a the column EXPOSURE column. Corresponds to the time that one needs to observe to get 5sigma for the highest of the list
     # Three cases depending on the IRFs that should be used (60,40,20)
     grbSensPath = '/grbsens_output_v3_Sep_2022/'+ conf +'_configuration_EBL/grbsens-5.0sigma_t1s-t16384s_irf-'
-    print(datasetDir + grbSensPath +obspar.name+ "_z60_0.5h.txt")
+    #print(datasetDir + grbSensPath +obspar.name+ "_z60_0.5h.txt")
     if (np.any(sortcat['ZENITH_INI'] > 55)):
         # ObsCase, texp60 = ObtainSingleObservingTimes(TotalExposure, DelayObs, interObsSlew, ID, obspar,datasetDir, zenith=60)
         # if observatory.name == "North":
@@ -3579,13 +3579,13 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, conf, time, Delay
         grbSensFile = datasetDir + grbSensPath +obspar.name+ "_z60_0.5h.txt"
         grb_result = GetExposureForDetection(
             grbSensFile, grbFilename, DelayObs)
-        print(grb_result)
+        #print(grb_result)
         if (grb_result['obs_time'] == -1):
             ObsCase = 'TimeNotEnough'
             sortcat['EXPOSURE'][sortcat['ZENITH_INI'] > 55] = False
         else:
             texp60 = grb_result['obs_time']
-            print("ObsCase60", ObsCase, 'time =', texp60)
+            #print("ObsCase60", ObsCase, 'time =', texp60)
             # Cat60 = sortcat[sortcat['ZENITH_INI'] >55]
             # print("ObsCase60", ObsCase)
             sortcat['EXPOSURE'][sortcat['ZENITH_INI'] > 55] = texp60
@@ -3607,14 +3607,14 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, conf, time, Delay
         grbSensFile = datasetDir + grbSensPath + obspar.name + "_z40_0.5h.txt"
         grb_result = GetExposureForDetection(
             grbSensFile, grbFilename, DelayObs)
-        print(grb_result)
+        #print(grb_result)
         if (grb_result['obs_time'] == -1):
             ObsCase = 'TimeNotEnough'
             sortcat['EXPOSURE'][(30 <= sortcat['ZENITH_INI']) & (
                 sortcat['ZENITH_INI'] <= 55)] = False
         else:
             texp40 = grb_result['obs_time']
-            print("ObsCase40", ObsCase, 'time=', texp40)
+            #print("ObsCase40", ObsCase, 'time=', texp40)
             sortcat['EXPOSURE'][(30 <= sortcat['ZENITH_INI']) & (
                 sortcat['ZENITH_INI'] <= 55)] = texp40
             # Cat40 = sortcat[(30 < sortcat['ZENITH_INI']) & (sortcat['ZENITH_INI'] < 55)]
@@ -3643,7 +3643,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, conf, time, Delay
             sortcat['EXPOSURE'][sortcat['ZENITH_INI'] < 30] = False
         else:
             texp20 = grb_result['obs_time']
-            print("ObsCase20", ObsCase, 'time=', texp20)
+            #print("ObsCase20", ObsCase, 'time=', texp20)
             sortcat['EXPOSURE'][sortcat['ZENITH_INI'] < 30] = texp20
             # Cat20 = sortcat[sortcat['ZENITH_INI'] < 30]
             # print(Cat30)
@@ -3664,7 +3664,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, conf, time, Delay
     # Mask the catalog from the entries that are actually not feaseable from exposure value
     if False in sortcat['EXPOSURE']:
         maskExposure = (sortcat['EXPOSURE'] != False)
-        print(maskExposure)
+        #print(maskExposure)
         sortcat = sortcat[maskExposure]
 
     # Mask if it is not visible at the end of the window
@@ -3676,7 +3676,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, conf, time, Delay
         ObsExp = False
         ZenIni = False
         ZenEnd = False
-        print('Obscase', ObsCase)
+        #print('Obscase', ObsCase)
     else:
         sortcat = maskcat_zen[np.flipud(np.argsort(maskcat_zen['PIXFOVPROB']))]
         targetCoord = co.SkyCoord(
