@@ -1403,12 +1403,11 @@ def PGWonFoV_WindowOptimisation(filename, timeStr, TC, parameters, conf, dataset
         print("TstartNight", TstartNight)
         if (TstartNight == False):
             TendNight = False
-            print("Night number", nights, " window starts at",
-                  TstartNight, "finishes at", TendNight)
+            print("Night number", nights, " window starts at",TstartNight, "finishes at", TendNight)
             ObsCase = 'NoDarknessFound'
             # print("===== RESULTS ========")
             print('++++ No Darkness Time Found +++++')
-            ObservationTimearray.append(str(StartObsTime).split('.')[0].split('+')[0])
+            ObservationTimearray.append(str(TstartNight).split('.')[0].split('+')[0])
             P_GWarray.append(0)
             RAarray.append(0)
             DECarray.append(0)
