@@ -3339,6 +3339,10 @@ def ProducePandasSummaryFile(Source, SuggestedPointings, totalPoswindow, ID, obs
     has_ebl = False
     if 'EBL' in configID:
         has_ebl = True
+    
+    n_found=0
+    if(totalObservations!=0):
+        n_found=int(len(str(nP).split(',')))
 
     data = {
             'event_id': int(ID),
@@ -3350,7 +3354,7 @@ def ProducePandasSummaryFile(Source, SuggestedPointings, totalPoswindow, ID, obs
             'total_prob': float(totalPGW),
             'pointings_found': list([nP]),
             'found': bool(Found),
-            'n_found': int(len(str(nP).split(','))), # need to remove the commas... int(len(str(nP).split(',')))
+            'n_found': n_found, # need to remove the commas... int(len(str(nP).split(',')))
             'pointings': list([pointings]), 
         }
 
