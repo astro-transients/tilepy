@@ -1,3 +1,8 @@
+##################################################################################################
+#        Authors: Monica Seglar-Arroyo, Halim Ashkar,  Fabian Schussler, Mathieu de Bony         #
+#        Functions needed to obtain the tiling pattern and time of the observation               #
+##################################################################################################
+
 from .PointingTools import (NightDarkObservation, SelectObservatory_fromHotspot,
                             NightDarkObservationwithGreyTime, LoadHealpixMap, LoadHealpixUNIQMap,
                             Get90RegionPixReduced, ZenithAngleCut, ComputeProbability2D,
@@ -119,7 +124,7 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,obspar,dirName):
                     P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(prob, yprob1, radecs, obspar.reducedNside, obspar.HRnside, obspar.minProbcut, ObservationTime,
                                                                            obspar.location, obspar.maxZenith, obspar.FOV, name, pixlist1, ipixlistHR1, counter, dirName, obspar.useGreytime, obspar.doPlot)
                     if ((P_GW <= obspar.minProbcut)):
-                        print('Fail')
+                        print('Tile Pgw= ',P_GW,' is smaller than the minProbCut (',obspar.minProbCut,') => skip this tile')
                     else:
                         Round.append(2)
                         P_GWarray.append(float('{:1.4f}'.format(float(P_GW))))
@@ -829,7 +834,8 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
                         P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(prob, yprob1, radecs, obspar.reducedNside, obspar.HRnside, obspar.minProbcut, ObservationTime,
                                                                                obspar.location, obspar.maxZenith, obspar.FOV, name, pixlist1, ipixlistHR1, counter, dirName, obspar.useGreytime, obspar.doPlot)
                         if ((P_GW <= obspar.minProbcut)):
-                            print('Fail')
+                            print('Tile Pgw= ', P_GW, ' is smaller than the minProbCut (',
+                                  obspar.minProbCut, ') => skip this tile')
                         else:
                             Round.append(2)
                             P_GWarray.append(
