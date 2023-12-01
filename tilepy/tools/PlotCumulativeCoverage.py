@@ -3,49 +3,70 @@ import glob
 import numpy as np
 from matplotlib.ticker import MaxNLocator
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
-def ObtainCumulativeProbabilityPlot(folder_path)
+def ObtainCumulativeProbabilityPlot(folder_path, event_name, WhatToPlot):
 
     # Get a list of all .txt files in the specified folder
-    file_list = glob.glob(folder_path)
+    
+    #file_list = glob.glob(folder_path)
+    #print(folder_path)
 
     # Initialize an empty DataFrame to store the cumulative 5th columns
+    file_path =  folder_path 
     cumulative_column = None
 
     # Initialize a list to store individual 5th columns for plotting
     individual_columns = []
 
     # Loop through each file and add the 5th column to the cumulative DataFrame
-    for file_path in file_list:
-        # Read the .txt file into a Pandas DataFrame
-        df = pd.read_csv(file_path, sep=' ', skiprows=1)  # Adjust the separator if needed
+    # Loop through each file and add the 5th column to the cumulative DataFrame
+    # Read the .txt file into a Pandas DataFrame
+    df = pd.read_csv(file_path, sep=' ')  # Adjust the separator if needed
 
-        # Extract the 5th column
-        fifth_column = df.iloc[:, 3]*100  # Assumes the 5th column is at index 4 (0-based)
-        cum_fifth_column = np.cumsum(fifth_column)
-        # Add the 5th column to the cumulative DataFrame
-        if cumulative_column is None:
-            cumulative_column = cum_fifth_column
-        else:
-            cumulative_column = cumulative_column+cum_fifth_column
+    observatory_column = df.columns[-1]
+    grouped_data = df.groupby(observatory_column)
 
-        # Store individual 5th columns for plotting
-        individual_columns.append(cum_fifth_column)
+    x_values2 = pd.to_datetime(df["Observation Time UTC"])
+    y_values2 = df[WhatToPlot].cumsum()  # Cumulative sum of PGal values
 
-    # Plot individual 5th columns
-    plt.figure(figsize=(7, 6))
-    for i, column in enumerate(individual_columns, start=1):
-        plt.plot(column, label=f'LST-{i}')
+    # Plot the cumulative values for all observatories
+    plt.plot(x_values2, y_values2, label='All Observatories (Cumulative)', color='black')
 
-    # Plot the cumulative 5th column
-    plt.plot(cumulative_column, label='Total LST1-4', linestyle='--', linewidth=2)
+    for observatory, observatory_data in grouped_data:
+        print(f"Observatory: {observatory}")
+        print(observatory_data)
+        print("\n")
+        # Extract relevant columns for the plot
+        x_values = pd.to_datetime(observatory_data["Observation Time UTC"])
+        print(x_values)
+        y_values = observatory_data[WhatToPlot].cumsum()
+
+        # Plot the values for each observatory
+        plt.plot(x_values, y_values, label=observatory)
+
+
 
     # Add labels and legend
-    plt.xlabel('Observation number [#]')
-    plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
+    # Format the x-axis to display date and time
+    # Set the locator and formatter for the x-axis to show dates
+    # Manually set date ticks on the x-axis
+    # Format the x-axis to display date and time
+    plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
+    plt.gcf().autofmt_xdate()  # Auto-format the date labels for better readability
+
+    #plt.tight_layout()  # Adjust layout for better spacing
+    plt.title("%s trigger coverage on 2023-10-12" %(event_name))
+    plt.xlabel('Date')
     plt.ylabel('Total Covered Probability [%]')
+    #plt.xscale('log')  # Set X-axis to log scale
+    #plt.yscale('log')  # Set Y-axis to log scale
+    plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
+
+
     plt.legend()
     plt.grid()
-    # Show the plot
-    #plt.show()
-    plt.savefig(folder_path+'/cumulativeDistribution.png')
+
+    plt.savefig('%s_cumulativeDistribution.png' %(event_name), dpi=300, bbox_inches='tight')
+    plt.show()
