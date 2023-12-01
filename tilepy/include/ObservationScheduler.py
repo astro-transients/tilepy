@@ -1,7 +1,7 @@
-############################################################################
-#       Authors: Monica Seglar-Arroyo, Halim Ashkar,  Fabian Schussler     #
-#           LST observation scheduler of GBM alerts and GW events          #
-############################################################################
+##################################################################################################
+#        Authors: Monica Seglar-Arroyo, Halim Ashkar,  Fabian Schussler, Mathieu de Bony         #
+#                        Observation scheduler of GBM alerts and GW events                       #
+##################################################################################################
 
 
 from .TilingDetermination import PGWinFoV, PGalinFoV
