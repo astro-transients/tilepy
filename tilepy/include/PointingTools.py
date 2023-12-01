@@ -1392,6 +1392,7 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
             #    hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
             # plt.show()
             # plt.savefig('%s/Pointing-zencut_%g.png' % (path,counter))
+            plt.close()
 
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
@@ -1964,6 +1965,7 @@ def ComputeProbBCFOVSimple(prob, time, observatory, visiGals, allGals, tsum_dP_d
 
         # plt.show()
         plt.savefig("%s/Pointing_%g.png" % (path, len(ObservationTimearray)))
+        plt.close()
 
     return P_Gal, P_GW, talreadysumipixarray2
 
@@ -2103,6 +2105,7 @@ def ComputeProbGalTargeted(prob, time, finalGals, visiGals, allGals, tsum_dP_dV,
         #RandomCoordmin_radec = RandomCoordmin.transform_to('fk5')
         # hp.visufunc.projplot(RandomCoordmin_radec.ra, RandomCoordmin_radec.dec, 'y.', lonlat=True, coord="C")
         plt.savefig("%s/Zoom_Pointing_%g.png" % (path, counter))
+        plt.close()
 
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
 
@@ -2422,6 +2425,7 @@ def ComputeProbPGALIntegrateFoV(prob, time, observatory, centerPoint, UsePix, vi
 
         # plt.show()
         plt.savefig("%s/Zoom_Pointing_%g.png" % (path, counter))
+        plt.close()
 
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
 
@@ -3499,6 +3503,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, conf, time, Delay
                 altcoord = np.empty(100)
                 azcoord = np.random.rand(100) * 360
                 plt.savefig('%s/Pointing-prob-FoV_%g.png' % (path, counter))
+                plt.close()
             # for i in range(0,1):
             #    altcoord.fill(90-(maxZenith-5*i))
             #    RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,location=observatory)
@@ -3515,6 +3520,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, conf, time, Delay
         #    hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
         # plt.show()
         # plt.savefig('%s/Pointing-zencut_%g.png' % (path,counter))
+        #plt.close()
 
     return P_GW, targetCoord, ObsExp, ZenIni, ZenEnd, ObsCase, ipixlist, ipixlistHR
 

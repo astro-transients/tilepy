@@ -111,7 +111,7 @@ def GetSchedule(obspar):
                             '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name)
             if(obspar.doPlot):
                 PointingPlotting(prob, obspar, name, dirName,
-                                '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name, filename)
+                                '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name, filename, cat)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
@@ -132,6 +132,7 @@ def GetSchedule(obspar):
             filename, obspar.obsTime, obspar.pointingsFile, obspar, dirName)
 
         if (len(SuggestedPointings) != 0):
+            gal = []
             FOLLOWUP = True
             outfilename = '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName
             ascii.write(SuggestedPointings, outfilename,
@@ -142,7 +143,7 @@ def GetSchedule(obspar):
                                 '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name)
             if(obspar.doPlot):
                 PointingPlotting(prob, obspar, name, dirName,
-                                '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name, filename)
+                                '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name, filename, gal)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
@@ -195,6 +196,7 @@ def GetUniversalSchedule(obsparameters):
             os.makedirs(dirName)
         SuggestedPointings, cat, obsparameters = PGalinFoV_NObs(
             filename, ObservationTime, obsparameters[0].pointingsFile, galaxies, obsparameters, dirName)
+        print(cat)
     else:
         dirName = '%s/PGWinFoV_NObs' % outputDir
         if not os.path.exists(dirName):
@@ -220,9 +222,9 @@ def GetUniversalSchedule(obsparameters):
                 RankingTimes_2D(ObservationTime, prob, obsparameters[j], obsparameters[j].alertType, dirName,
                                 '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obsparameters[j].name), obsparameters[j].name)
                 PointingPlotting(prob, obsparameters[j], obsparameters[j].name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
-                    dirName, obsparameters[j].name), obsparameters[j].name, filename)
+                    dirName, obsparameters[j].name), obsparameters[j].name, filename, cat)
         PointingPlotting(prob, obsparameters[0], "all", dirName,
-                             '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all", filename)
+                             '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all", filename, cat)
     else:
         FOLLOWUP = False
         print('No observations are scheduled')
