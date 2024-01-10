@@ -3270,7 +3270,7 @@ def ProduceSummaryFile(Source, SuggestedPointings, totalPoswindow, ID, obspar, t
                     foundFirst, nP, totalPGW, str(0))
 
 
-def ProducePandasSummaryFile(Source, SuggestedPointings, totalPoswindow, ID, obspar, typeSimu, datasetDir, outDir, configID):
+def ProducePandasSummaryFile(Source, SuggestedPointings, ID, obspar, typeSimu, datasetDir, outDir, configID):
 
     # Where to save results
     dirNameFile = outDir + '/PandasSummaryFile/'
@@ -3297,14 +3297,18 @@ def ProducePandasSummaryFile(Source, SuggestedPointings, totalPoswindow, ID, obs
     SuggestedPointingsC.rename_column('DEC[deg]', 'dec')
     SuggestedPointingsC.rename_column('RA[deg]', 'ra')
     SuggestedPointingsC.rename_column('Observatory', 'observatory')
-    SuggestedPointingsC.rename_column('ZenIni[deg]', 'zenith_init')
-    SuggestedPointingsC.rename_column('ZenEnd[deg]', 'zenith_end')
-    SuggestedPointingsC.rename_column('Duration[s]','duration')
-    SuggestedPointingsC.rename_column('Delay[s]','delay')
-
     SuggestedPointingsC.remove_column('ObsInfo')
     SuggestedPointingsC.remove_column('PGW')
+    column_to_check = 'ZenIni[deg]'
+    if column_to_check in SuggestedPointingsC.colnames:
 
+        SuggestedPointingsC.rename_column('ZenIni[deg]', 'zenith_init')
+        SuggestedPointingsC.rename_column('ZenEnd[deg]', 'zenith_end')
+        SuggestedPointingsC.rename_column('Duration[s]','duration')
+        SuggestedPointingsC.rename_column('Delay[s]','delay')
+
+    if 'Round'in SuggestedPointingsC.colnames:
+        SuggestedPointingsC.remove_column('Round')
 
     if 'True' not in SuggestedPointings['ObsInfo']:
         print('No observations are scheduled')
@@ -3575,7 +3579,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, conf, time, Delay
     # Fill a the column EXPOSURE column. Corresponds to the time that one needs to observe to get 5sigma for the highest of the list
     # Three cases depending on the IRFs that should be used (60,40,20)
     grbSensPath = '/grbsens_output_v3_Sep_2022/'+ conf +'_configuration_EBL/grbsens-5.0sigma_t1s-t16384s_irf-'
-    #print(datasetDir + grbSensPath +obspar.name+ "_z60_0.5h.txt")
+
     if (np.any(sortcat['ZENITH_INI'] > 55)):
         # ObsCase, texp60 = ObtainSingleObservingTimes(TotalExposure, DelayObs, interObsSlew, ID, obspar,datasetDir, zenith=60)
         # if observatory.name == "North":

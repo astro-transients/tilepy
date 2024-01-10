@@ -3,7 +3,7 @@
 #        Functions needed to obtain the tiling pattern and time of the observation               #
 ##################################################################################################
 
-from .PointingTools import (NightDarkObservation, SelectObservatory_fromHotspot,
+from .PointingTools import (NightDarkObservation,
                             NightDarkObservationwithGreyTime, LoadHealpixMap, LoadHealpixUNIQMap,
                             Get90RegionPixReduced, ZenithAngleCut, ComputeProbability2D,
                             FulfillsRequirement, VisibleAtTime, LoadGalaxies, CorrelateGalaxies_LVC, SubstractPointings2D, SimpleGWprob, ComputeProbGalTargeted,
@@ -11,7 +11,6 @@ from .PointingTools import (NightDarkObservation, SelectObservatory_fromHotspot,
                             ModifyCatalogue, FulfillsRequirementGreyObservations, ComputeProbPGALIntegrateFoV,ComputeProbGalTargeted,
                             ModifyCataloguePIX, ObservationParameters, NextWindowTools,
                             ComputeProbability2D_SelectClusters, GiveProbToGalaxy, LoadGalaxiesSimulation)
-from .Observatories import CTASouthObservatory, CTANorthObservatory
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
@@ -36,7 +35,7 @@ utc = pytz.UTC
 
 ############################################
 
-def PGWinFoV(filename,ObservationTime0,PointingFile,obspar,dirName):
+def PGWinFoV(filename,obspar,dirName):
     """
     Mid-level function that is called by GetSchedule to compute a observation schedule based on a 2D method.  
     
@@ -54,7 +53,8 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,obspar,dirName):
     rtype: ascii table, astropy table
     """
 
-
+    ObservationTime0 = obspar.obsTime
+    PointingFile = obspar.pointingsFile 
     # Main parameters
 
     print(obspar)
@@ -163,7 +163,7 @@ def PGWinFoV(filename,ObservationTime0,PointingFile,obspar,dirName):
     return (SuggestedPointings, ObservationTime0)
 
 
-def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,obspar,dirName):
+def PGalinFoV(filename,galFile,obspar,dirName):
     """
     Mid-level function that is called by GetSchedule to compute a observation schedule based on a 3D method. 
     Depending on the user input in the configuration file and the telescope FoV the pointings use the targtet galaxy strategy or integrated galaxy probability strategy.
@@ -184,6 +184,9 @@ def PGalinFoV(filename,ObservationTime0,PointingFile,galFile,obspar,dirName):
     rtype: ascii table, astropy table
     """
 
+    ObservationTime0 = obspar.obsTime
+    PointingFile = obspar.pointingsFile 
+    
     # Main Parameters
     print(obspar)
 
@@ -1273,51 +1276,17 @@ def PGWonFoV_WindowsfromIRFs(filename, InputChar, TC, parameters, dirName):
     return (SuggestedPointings, ObservationTime0, obspar.FOV, nside, len(tobs))
 
 
-def PGWonFoV_WindowOptimisation(filename, timeStr, TC, parameters, conf, datasetDir, outDir):
+def PGWonFoV_WindowOptimisation(filename, TC, conf, obspar, datasetDir):
 
-    # UseObs = InputChar['Observatory']
-    UseObs = SelectObservatory_fromHotspot(filename)
-
-    # ID retrieved from the filename
-    ID = filename.split('/')[-1].split('.')[0]
-
-    # zenith=InputChar['Zenith']
-
-    ObservationTime0 = datetime.datetime.strptime(
-        timeStr.split('.')[0], '%Y-%m-%d %H:%M:%S')
-    ObservationTime0 = pytz.utc.localize(ObservationTime0)
-
-    # Main parameters from config
-
-    obspar = ObservationParameters()
-    obspar.from_configfile(parameters)
-
-    ##################
-
-    # path = outDir + '/PointingPlotting/' + run + '_' + mergerID + '/EvolutionPlot/'
-    path = outDir + '/PointingPlotting/' + ID + '/EvolutionPlot/'
-    # Observatory
-    if UseObs == 'South':
-        print('Observed form the', UseObs)
-        obspar.name = UseObs
-        obspar.lon = CTASouthObservatory().Lon
-        obspar.lat = CTASouthObservatory().Lat
-        obspar.height = CTASouthObservatory().Height
-        obspar.location = CTASouthObservatory().location
-    else:
-        print('Observed from the', UseObs)
-        obspar.name = UseObs
-        obspar.lon = CTANorthObservatory().Lon
-        obspar.lat = CTANorthObservatory().Lat
-        obspar.height = CTANorthObservatory().Height
-        obspar.location = CTANorthObservatory().location
-
-    print(obspar)
     # link to the GW map
     # name = filename.split('.')[0].split('/')[-1]
     # if('G' in filename):
     #    names = filename.split("_")
     #    name= names[0]
+    ObservationTime0 = obspar.obsTime
+    ID = filename.split('/')[-1].split('.')[0]
+    outDir = obspar.outDir
+    path = outDir + '/PointingPlotting/' + ID + '/EvolutionPlot/'
 
     random.seed()
 
@@ -1365,17 +1334,7 @@ def PGWonFoV_WindowOptimisation(filename, timeStr, TC, parameters, conf, dataset
     radecs = co.SkyCoord(rapix, decpix, frame='fk5', unit=(u.deg, u.deg))
     has3D = True
 
-    # if (len(distnorm) == 0):
-    #    print("Found a generic map without 3D information")
-    #    # flag the event for special treatment
-    #    has3D = False
-    # else:
-    #    print("Found a 3D reconstruction")
 
-    # print('----------   NEW FOLLOW-UP ATTEMPT   ----------')
-
-    # Set of delays and slewing times
-    # Units: seconds
     totalTime = obspar.maxNights*24*60 # in minutes, for 48h is 172800 
     followupDelay = 30  # in seconds, Minimum delay to start observaiton
     SlewingTime = 210  # in seconds, slewing to first position
