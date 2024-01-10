@@ -110,7 +110,7 @@ def GetSchedule(obspar):
                             '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name)
             if(obspar.doPlot):
                 PointingPlotting(prob, obspar, name, dirName,
-                                '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name, filename)
+                                '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name, filename, cat)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
@@ -130,6 +130,7 @@ def GetSchedule(obspar):
         SuggestedPointings, t0 = PGWinFoV(filename, obspar, dirName)
 
         if (len(SuggestedPointings) != 0):
+            gal = []
             FOLLOWUP = True
             outfilename = '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName
             ascii.write(SuggestedPointings, outfilename,
@@ -140,7 +141,7 @@ def GetSchedule(obspar):
                                 '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name)
             if(obspar.doPlot):
                 PointingPlotting(prob, obspar, name, dirName,
-                                '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name, filename)
+                                '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name, filename, gal)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')

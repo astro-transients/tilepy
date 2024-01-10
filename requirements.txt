@@ -1,4 +1,3 @@
-#gammapy
 astropy
 pytz
 scipy
@@ -9,7 +8,6 @@ matplotlib
 MOCpy
 numpy
 pandas
-pytz
 ephem
 gdpyc
 ligo.skymap
