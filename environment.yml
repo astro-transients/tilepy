@@ -4,7 +4,7 @@ channels:
   - cta-observatory
   - conda-forge
 dependencies:
-  - python==3.9
+  - python>=3.9
   - pip
   - astropy #>=4.1
   - pytz

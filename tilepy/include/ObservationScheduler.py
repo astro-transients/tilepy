@@ -97,8 +97,7 @@ def GetSchedule(obspar):
         print("===========================================================================================")
         print()
 
-        SuggestedPointings, cat = PGalinFoV(
-            filename, obspar.obsTime, obspar.pointingsFile, galaxies, obspar, dirName)
+        SuggestedPointings, cat = PGalinFoV(filename, galaxies, obspar, dirName)
 
         if (len(SuggestedPointings) != 0):
             FOLLOWUP = True
@@ -128,8 +127,7 @@ def GetSchedule(obspar):
         print("===========================================================================================")
         print()
 
-        SuggestedPointings, t0 = PGWinFoV(
-            filename, obspar.obsTime, obspar.pointingsFile, obspar, dirName)
+        SuggestedPointings, t0 = PGWinFoV(filename, obspar, dirName)
 
         if (len(SuggestedPointings) != 0):
             FOLLOWUP = True
@@ -149,25 +147,25 @@ def GetSchedule(obspar):
 
 
 
-def GetUniversalSchedule(obsparameters):
+def GetUniversalSchedule(obspar):
     '''
     Top level function that is called by the user with specific arguments and creates a folder 
     with the tiling schedules for multiple telescopes/observartories and visibility plots.  
 
-    :param obsparameters: a list of sets of parameters for each observatory needed to launch the tiling scheduler
+    :param obspar: a list of sets of parameters for each observatory needed to launch the tiling scheduler
     :type obsparameters: list of class ObservationParameters
     '''
 
-    URL = obsparameters[0].url
+    URL = obspar[0].url
     print(URL)
 
-    if obsparameters[0].alertType == 'gbmpng':
+    if obspar[0].alertType == 'gbmpng':
         fitsMap, filename = GetGBMMap(URL)
         if fitsMap is None and filename is None:
             print('The localization map is not available, returning.')
             return
         name = URL.split('/')[-3]
-    elif obsparameters[0].alertType == 'gbm':
+    elif obspar[0].alertType == 'gbm':
         fitsMap = fits.open(URL)
         if fitsMap is None:
             print('The localization map is not available, returning.')
@@ -179,28 +177,28 @@ def GetUniversalSchedule(obsparameters):
         name = URL.split('/')[-3]
 
     
-    prob, has3D, origNSIDE = Check2Dor3D(fitsMap, filename, obsparameters[0])
+    prob, has3D, origNSIDE = Check2Dor3D(fitsMap, filename, obspar[0])
 
     print("===========================================================================================")
-    ObservationTime = obsparameters[0].obsTime
-    outputDir =  "%s/%s" % (obsparameters[0].outDir, name)
-    print(obsparameters[0].datasetDir)
-    print(obsparameters[0].galcatName)
-    galaxies = obsparameters[0].datasetDir + obsparameters[0].galcatName
+    ObservationTime = obspar[0].obsTime
+    outputDir =  "%s/%s" % (obspar[0].outDir, name)
+    print(obspar[0].datasetDir)
+    print(obspar[0].galcatName)
+    galaxies = obspar[0].datasetDir + obspar[0].galcatName
 
     if has3D:
         dirName = '%s/PGalinFoV_NObs' % outputDir
-        galaxies = obsparameters[0].datasetDir + obsparameters[0].galcatName
+        galaxies = obspar[0].datasetDir + obspar[0].galcatName
         if not os.path.exists(dirName):
             os.makedirs(dirName)
-        SuggestedPointings, cat, obsparameters = PGalinFoV_NObs(
-            filename, ObservationTime, obsparameters[0].pointingsFile, galaxies, obsparameters, dirName)
+        SuggestedPointings, cat, obspar = PGalinFoV_NObs(
+            filename, ObservationTime, obspar[0].pointingsFile, galaxies, obspar, dirName)
     else:
         dirName = '%s/PGWinFoV_NObs' % outputDir
         if not os.path.exists(dirName):
             os.makedirs(dirName)
-        SuggestedPointings, obsparameters = PGWinFoV_NObs(
-            filename, ObservationTime, obsparameters[0].pointingsFile, obsparameters, dirName)
+        SuggestedPointings, obspar = PGWinFoV_NObs(
+            filename, ObservationTime, obspar[0].pointingsFile, obspar, dirName)
     if (len(SuggestedPointings) != 0):
         print(SuggestedPointings)
         FOLLOWUP = True
@@ -210,18 +208,18 @@ def GetUniversalSchedule(obsparameters):
         print()
 
         # for obspar in parameters:
-        for j in range(len(obsparameters)):
-            obspar1 = obsparameters[j]
+        for j in range(len(obspar)):
+            obspar1 = obspar[j]
             SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.name]
             print(SuggestedPointings_1)
             if (len(SuggestedPointings_1) != 0):
                 ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' %
-                            (dirName, obsparameters[j].name), overwrite=True, fast_writer=False)
-                RankingTimes_2D(ObservationTime, prob, obsparameters[j], obsparameters[j].alertType, dirName,
-                                '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obsparameters[j].name), obsparameters[j].name)
-                PointingPlotting(prob, obsparameters[j], obsparameters[j].name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
-                    dirName, obsparameters[j].name), obsparameters[j].name, filename)
-        PointingPlotting(prob, obsparameters[0], "all", dirName,
+                            (dirName, obspar[j].name), overwrite=True, fast_writer=False)
+                RankingTimes_2D(ObservationTime, prob, obspar[j], obspar[j].alertType, dirName,
+                                '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name), obspar[j].name)
+                PointingPlotting(prob, obspar[j], obspar[j].name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
+                    dirName, obspar[j].name), obspar[j].name, filename)
+        PointingPlotting(prob, obspar[0], "all", dirName,
                              '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all", filename)
     else:
         FOLLOWUP = False
