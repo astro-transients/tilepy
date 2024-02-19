@@ -235,9 +235,9 @@ def GetUniversalSchedule(obspar):
                 RankingTimes_2D(ObservationTime, prob, obspar[j], obspar[j].alertType, dirName,
                                 '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name), obspar[j].name)
                 PointingPlotting(prob, obspar[j], obspar[j].name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
-                    dirName, obspar[j].name), obspar[j].name, filename)
+                    dirName, obspar[j].name), obspar[j].name, filename, galaxies)
         PointingPlotting(prob, obspar[0], "all", dirName,
-                             '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all", filename)
+                             '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all", filename, galaxies)
     else:
         FOLLOWUP = False
         print('No observations are scheduled')

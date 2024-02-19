@@ -716,7 +716,7 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal):
 
     ax_inset = plt.axes([0.5, 0.1, 0.45, 0.45],
                         projection='astro degrees zoom',
-                        center=center_str, radius='5 deg')
+                        center=center_str, radius='20 deg')
 
     for key in ['ra', 'dec']:
         ax_inset.coords[key].set_ticklabel_visible(True)
@@ -839,7 +839,7 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal):
         #ax_inset.text(ra[i], dec[i], "%d" % i, transform=ax_inset.get_transform(
         #    'fk5'), color='k', rotation=-15, fontsize=8)
     try:
-        ax_inset.legend(handles= [LengendPatchATCA])
+        ax_inset.legend(handles= [LengendPatchLST1, LengendPatchLST2, LengendPatchLST3, LengendPatchLST4])
     except:
         #LengendPatch = mpatches.Patch(color=COLORS, label= name)
         ax_inset.legend()
@@ -854,7 +854,7 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal):
     cbar.formatter.set_powerlimits((0, 0))
     # to get 10^3 instead of 1e3
     cbar.formatter.set_useMathText(True)
-    cbar.set_label("Map probability",  color='black', fontsize=9)
+    cbar.set_label("Map probability density",  color='black', fontsize=9)
     plt.savefig("%s/Plot_PrettyMap_%s.png" % (dirName, name), dpi=300, bbox_inches='tight')
     plt.close()
     #plt.show()
