@@ -669,12 +669,12 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal):
     # tpointingFile = '/Users/mseglar/Documents/GitLab/lst_gwfollowup/output/bn180720598/PGWinFoV/RankingObservationTimes_Complete.txt'
     time = []
     try:
-        time1, time2, ra, dec, pgw, pgal, Round, nametel = np.genfromtxt(tpointingFile, usecols=(
-            0, 1, 2, 3, 4, 5, 6, 7), skip_header=1, delimiter=' ', unpack=True, dtype='str')  # ra, dec in degrees
+        time1, time2, ra, dec, pgw, pgal, Round, nametel, duration = np.genfromtxt(tpointingFile, usecols=(
+            0, 1, 2, 3, 4, 5, 6, 7, 8), skip_header=1, delimiter=' ', unpack=True, dtype='str')  # ra, dec in degrees
     except:
         try:
-            time1, time2, ra, dec, pgw, Round, nametel = np.genfromtxt(tpointingFile, usecols=(
-                0, 1, 2, 3, 4, 5, 6), skip_header=1, delimiter=' ', unpack=True, dtype='str')  # ra, dec in degrees
+            time1, time2, ra, dec, pgw, Round, nametel, duration = np.genfromtxt(tpointingFile, usecols=(
+                0, 1, 2, 3, 4, 5, 6, 7), skip_header=1, delimiter=' ', unpack=True, dtype='str')  # ra, dec in degrees
             pgal = pgw
         except:
             try:
@@ -741,7 +741,7 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal):
         norm = mcolors.Normalize(vmin=vmin_value, vmax=vmax_value)
         sc_inset = ax_inset.scatter(ragal, decgal, c = galprob, transform=ax_inset.get_transform('fk5'), alpha=0.5, s = 0.1, norm = norm)
         cbar_inset = plt.colorbar(sc_inset, ax=ax_inset)
-        cbar_inset.set_label('Galaxy probability')
+        cbar_inset.set_label('Galaxy probability density')
     except:
         print('NO GALAXIESW GIVEN TO PLOT')
 
@@ -749,7 +749,7 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal):
     #    c = Circle((ragal[j], decgal[j]), 0.1, edgecolor='magenta', facecolor="None",
     #               transform=ax_inset.get_transform('fk5'), alpha=0.5)
     #   ax_inset.add_patch(c)
-
+    print("nametel",nametel)
     for i in range(0, len(ra)):
         COLORS = 'k'
         fov_plot = obspar.FOV
