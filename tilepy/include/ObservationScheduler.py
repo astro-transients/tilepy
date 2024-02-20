@@ -202,7 +202,7 @@ def GetUniversalSchedule(obspar):
     print(obspar[0].datasetDir)
     print(obspar[0].galcatName)
     galaxies = obspar[0].datasetDir + obspar[0].galcatName
-
+    cat = None
     if has3D:
         dirName = '%s/PGalinFoV_NObs' % outputDir
         galaxies = obspar[0].datasetDir + obspar[0].galcatName
@@ -235,9 +235,9 @@ def GetUniversalSchedule(obspar):
                 RankingTimes_2D(ObservationTime, prob, obspar[j], obspar[j].alertType, dirName,
                                 '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name), obspar[j].name)
                 PointingPlotting(prob, obspar[j], obspar[j].name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
-                    dirName, obspar[j].name), obspar[j].name, filename, galaxies)
+                    dirName, obspar[j].name), obspar[j].name, filename, cat)
         PointingPlotting(prob, obspar[0], "all", dirName,
-                             '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all", filename, galaxies)
+                             '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all", filename, cat)
     else:
         FOLLOWUP = False
         print('No observations are scheduled')
