@@ -119,25 +119,26 @@ def ObtainCumulativeProbabilityPlotMWL(folder_path, event_name, WhatToPlot):
     max_rows = df.loc[max_value_indices]
 
     # Display the resulting DataFrame
-    print(max_rows)
+    #print(max_rows)
     print('---------------')
     print('---------------')
-    print(df[WhatToPlot])
+    #print(df[WhatToPlot])
     print('---------------')
     print('---------------')
     #x_values2 = pd.to_datetime(max_rows["Observation Time UTC"])
 
-    max_rows['date_column'] = pd.to_datetime(max_rows["Observation Time UTC"])+pd.Timedelta(minutes=15)
-
+    max_rows['date_column'] = pd.to_datetime(max_rows["Observation Time UTC"])+pd.Timedelta(minutes=5)
+    print(pd.to_datetime(max_rows["Observation Time UTC"]))
+    print(max_rows['date_column'])
     y_values2 = max_rows["cumsum"]
     # Plot the cumulative values for all observatories
     plt.plot(max_rows['date_column'], y_values2, '+',label='All Observatories', color='black')
     
 
     for observatory, observatory_data in grouped_data:
-        print(f"Observatory: {observatory}")
-        print(observatory_data)
-        print("\n")
+        #print(f"Observatory: {observatory}")
+        #print(observatory_data)
+        #print("\n")
         # Extract relevant columns for the plot
         x_values = pd.to_datetime(observatory_data["Observation Time UTC"])
         #print(x_values)
@@ -147,33 +148,33 @@ def ObtainCumulativeProbabilityPlotMWL(folder_path, event_name, WhatToPlot):
         y_values_shifted= [0] + y_values.tolist()[:-1]
 
         # Remove the last element from the column
-        print(y_values)
-        print(y_values_shifted)
-        print(observatory)
+        #print(y_values)
+        #print(y_values_shifted)
+        #print(observatory)
         if(observatory=='ESO'):
             x_shifted=x_values+pd.Timedelta(minutes=5)
-            plt.plot(x_values, y_values_shifted,'.',color = 'darkorange', label=observatory)
-            plt.plot(x_shifted, y_values,'.', color = 'darkorange')
+            plt.plot(x_values, y_values_shifted,'.',color = 'k', label=observatory)
+            plt.plot(x_shifted, y_values,'.', color = 'k')
         if(observatory=='ESO2'):
             x_shifted=x_values+pd.Timedelta(minutes=5)
-            plt.plot(x_values, y_values_shifted,'.',color = 'brown',label=observatory)
-            plt.plot(x_shifted, y_values,'.',color = 'brown')
+            plt.plot(x_values, y_values_shifted,'.',color = 'grey',label=observatory)
+            plt.plot(x_shifted, y_values,'.',color = 'grey')
         if(observatory=='LP'):
             x_shifted=x_values+pd.Timedelta(minutes=5)
-            plt.plot(x_values, y_values_shifted,'.',color = 'blueviolet',label=observatory)
-            plt.plot(x_shifted, y_values,'.',color = 'blueviolet')    
+            plt.plot(x_values, y_values_shifted,'.',color = 'g',label=observatory)
+            plt.plot(x_shifted, y_values,'.',color = 'g')    
         if(observatory=='LPL'):
             x_shifted=x_values+pd.Timedelta(minutes=5)
-            plt.plot(x_values, y_values_shifted,'.',color = 'yellowgreen',label=observatory)
-            plt.plot(x_shifted, y_values,'.',color = 'yellowgreen')   
+            plt.plot(x_values, y_values_shifted,'.',color = 'b',label='LP2')
+            plt.plot(x_shifted, y_values,'.',color = 'b')   
         if(observatory=='OHP'):
             x_shifted=x_values+pd.Timedelta(minutes=15)
-            plt.plot(x_values, y_values_shifted,'.',color = 'red',label=observatory)
-            plt.plot(x_shifted, y_values,'.',color = 'red')   
+            plt.plot(x_values, y_values_shifted,'.',color = 'c',label=observatory)
+            plt.plot(x_shifted, y_values,'.',color = 'c')    
         if(observatory=='SA'):
             x_shifted=x_values+pd.Timedelta(minutes=5)
-            plt.plot(x_values, y_values_shifted,'.',color = 'dodgerblue',label=observatory)
-            plt.plot(x_shifted, y_values,'.',color = 'dodgerblue')   
+            plt.plot(x_values, y_values_shifted,'.',color = 'r',label=observatory)
+            plt.plot(x_shifted, y_values,'.',color = 'r')   
 
     plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
@@ -184,7 +185,7 @@ def ObtainCumulativeProbabilityPlotMWL(folder_path, event_name, WhatToPlot):
     plt.xlabel('Date [UTC]')
     plt.ylabel('Total Covered Probability [%]')
     #plt.xscale('log')  # Set X-axis to log scale
-    #plt.yscale('log')  # Set Y-axis to log scale
+    plt.yscale('log')  # Set Y-axis to log scale
     plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
 
     plt.legend()
@@ -255,25 +256,25 @@ def ObtainCumulativeProbabilityPlotLST(folder_path, event_name, WhatToPlot):
         y_values_shifted= [0] + y_values.tolist()[:-1]
 
         # Remove the last element from the column
-        print(y_values)
-        print(y_values_shifted)
-        print(observatory)
+        #print(y_values)
+        #print(y_values_shifted)
+        #print(observatory)
         if(observatory=='LST1'):
             x_shifted=x_values+pd.Timedelta(minutes=15)
-            plt.plot(x_values, y_values_shifted,'.',color = 'darkorange', label=observatory)
-            plt.plot(x_shifted, y_values,'.', color = 'darkorange')
+            plt.plot(x_values, y_values_shifted,'.',color = 'g', label=observatory)
+            plt.plot(x_shifted, y_values,'.', color = 'g')
         if(observatory=='LST2'):
             x_shifted=x_values+pd.Timedelta(minutes=15)
-            plt.plot(x_values, y_values_shifted,'.',color = 'brown',label=observatory)
-            plt.plot(x_shifted, y_values,'.',color = 'brown')
+            plt.plot(x_values, y_values_shifted,'.',color = 'b',label=observatory)
+            plt.plot(x_shifted, y_values,'.',color = 'b')
         if(observatory=='LST3'):
             x_shifted=x_values+pd.Timedelta(minutes=15)
-            plt.plot(x_values, y_values_shifted,'.',color = 'blueviolet',label=observatory)
-            plt.plot(x_shifted, y_values,'.',color = 'blueviolet')    
+            plt.plot(x_values, y_values_shifted,'.',color = 'yellowgreen',label=observatory)
+            plt.plot(x_shifted, y_values,'.',color = 'yellowgreen')    
         if(observatory=='LST4'):
             x_shifted=x_values+pd.Timedelta(minutes=15)
-            plt.plot(x_values, y_values_shifted,'.',color = 'yellowgreen',label=observatory)
-            plt.plot(x_shifted, y_values,'.',color = 'yellowgreen')   
+            plt.plot(x_values, y_values_shifted,'.',color = 'magenta',label=observatory)
+            plt.plot(x_shifted, y_values,'.',color = 'magenta')   
         #plt.plot([x_values[0], x_shifted[0]], [y_values_shifted[0], y_values[0]], color='red', linestyle='dashed', linewidth=2)
 
 
@@ -343,7 +344,10 @@ def ObtainCumulativeProbabilityPlotCTA(folder_path, event_name, WhatToPlot):
     print('---------------')
     #x_values2 = pd.to_datetime(max_rows["Observation Time UTC"])
 
-    max_rows['date_column'] = pd.to_datetime(max_rows["Observation Time UTC"])+pd.Timedelta(minutes=15)
+    #delays = np.array([1, 2, 3, 4])
+    max_rows['date_column'] = pd.to_datetime(max_rows["Observation Time UTC"])#+pd.to_timedelta(np.arange(5), unit="s")
+    print(max_rows['date_column']) 
+    #pd.Timedelta(minutes=15)
 
     y_values2 = max_rows["cumsum"]
     # Plot the cumulative values for all observatories
@@ -368,12 +372,12 @@ def ObtainCumulativeProbabilityPlotCTA(folder_path, event_name, WhatToPlot):
         print(observatory)
         if(observatory=='CTAO-N'):
             x_shifted=x_values+pd.Timedelta(minutes=15)
-            plt.plot(x_values, y_values_shifted,'.',color = 'olive', label=observatory)
-            plt.plot(x_shifted, y_values,'.', color = 'olive')
+            plt.plot(x_values, y_values_shifted,'.',color = 'b', label=observatory)
+            plt.plot(x_shifted, y_values,'.', color = 'b')
         if(observatory=='CTAO-S'):
-            x_shifted=x_values+pd.Timedelta(minutes=20)
-            plt.plot(x_values, y_values_shifted,'.',color = 'brown',label=observatory)
-            plt.plot(x_shifted, y_values,'.',color = 'brown')
+            x_shifted=x_values+pd.Timedelta(minutes=10)
+            plt.plot(x_values, y_values_shifted,'.',color = 'g',label=observatory)
+            plt.plot(x_shifted, y_values,'.',color = 'g')
         #plt.plot([x_values[0], x_shifted[0]], [y_values_shifted[0], y_values[0]], color='red', linestyle='dashed', linewidth=2)
 
 
@@ -388,7 +392,7 @@ def ObtainCumulativeProbabilityPlotCTA(folder_path, event_name, WhatToPlot):
     plt.gcf().autofmt_xdate()  # Auto-format the date labels for better readability
 
     #plt.tight_layout()  # Adjust layout for better spacing
-    plt.title("%s trigger coverage on 2023-10-12" %(event_name))
+    #plt.title("%s trigger coverage on 2023-10-12" %(event_name))
     plt.xlabel('Date [UTC]')
     plt.ylabel('Total Covered Probability [%]')
     #plt.xscale('log')  # Set X-axis to log scale
