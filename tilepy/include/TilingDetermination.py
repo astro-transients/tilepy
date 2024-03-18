@@ -139,7 +139,7 @@ def PGWinFoV(filename,obspar,dirName):
                     P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(prob, yprob1, radecs, obspar.reducedNside, obspar.HRnside, obspar.minProbcut, ObservationTime,
                                                                            obspar.location, obspar.maxZenith, obspar.FOV, name, pixlist1, ipixlistHR1, counter, dirName, obspar.useGreytime, obspar.doPlot)
                     if ((P_GW <= obspar.minProbcut)):
-                        print('Tile Pgw= ',P_GW,' is smaller than the minProbCut (',obspar.minProbCut,') => skip this tile')
+                        print('Tile Pgw= ',P_GW,' is smaller than the minProbCut (',obspar.minProbcut,') => skip this tile')
                     else:
                         Round.append(2)
                         P_GWarray.append(float('{:1.4f}'.format(float(P_GW))))
