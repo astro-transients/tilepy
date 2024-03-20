@@ -2,7 +2,7 @@ dataset/BNS*
 ggwf*
 log
 build
-output*
+output/*
 tools/analysisResults
 include/__pycache__
 .DS_Store
