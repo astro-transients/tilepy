@@ -18,3 +18,4 @@ __pycache__
 *.eggs
 .vscode/
 tilepy_venv
+tilepy/include/ObservingTimes.py
