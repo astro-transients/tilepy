@@ -29,6 +29,7 @@ Requirements of the installation:
 
 In the case you are working in CC-Lyon, the easiest solution is to do```ccenv conda ``` and then follow the instructions given above. 
 
+If you have any problem with the installation of the package, please drop an email to astro.tilepy@gmail.com. 
 ## Description
 
 Package including functions to perform GW follow-up scheduling and simulations in IACTS. The package can be found in the folder tilepy, which contains the following folders: 
