@@ -13,3 +13,4 @@ gdpyc
 ligo.skymap
 fastparquet
 skyfield
+ipykernel

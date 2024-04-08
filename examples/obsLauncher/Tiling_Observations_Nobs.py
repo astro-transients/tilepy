@@ -52,7 +52,7 @@ ObsArray = ['HESS', 'LST']
 parameters = []
 
 for i in ObsArray:
-    parameters.append("./config/FollowupParameters_%s.ini" % i)
+    parameters.append("../obsConfig/FollowupParameters_%s.ini" % i)
 print("===========================================================================================")
 print('parameters', parameters)
 obsparameters = []
@@ -64,8 +64,6 @@ for j in range(len(parameters)):
     obsparameters.append(obspar)
 
 GetUniversalSchedule(obsparameters)
-
-
 
 end = time.time()
 print('Execution time: ', end - start)
