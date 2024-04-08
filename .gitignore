@@ -19,3 +19,4 @@ __pycache__
 .vscode/
 tilepy_venv
 tilepy/include/ObservingTimes.py
+tilepy/include/gwobserve.py
