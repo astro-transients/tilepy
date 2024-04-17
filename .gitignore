@@ -1,4 +1,5 @@
 dataset/BNS*
+dataset/*.h5
 ggwf*
 log
 build
