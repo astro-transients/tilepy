@@ -1,5 +1,7 @@
 dataset/BNS*
 dataset/*.h5
+examples/de440s.bsp
+examples/obsLauncher/LALInference.v1.fits.g
 ggwf*
 log
 build
