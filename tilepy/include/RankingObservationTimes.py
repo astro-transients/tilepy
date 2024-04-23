@@ -1,0 +1,569 @@
+#
+# Copyright (C) 2016-2024  tilepy developers (Monica Seglar-Arroyo, Halim Ashkar, Fabian Schussler, Mathieu de Bony)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+##################################################################################################
+#           Tools to rank the observations from the largest to the lowest probability covered, 
+#           adding the observability window of each of them, which gives a comprehensive view 
+##################################################################################################
+
+import datetime
+import os
+import astropy.coordinates as co
+import healpy as hp
+import matplotlib.pyplot as plt
+import numpy as np
+from astropy import units as u
+from astropy.coordinates import SkyCoord, EarthLocation, AltAz
+from astropy.coordinates import get_sun, get_moon
+from astropy.io import fits, ascii
+from astropy.table import Table
+from astropy.time import Time
+from astropy.utils import iers
+from astropy.utils.data import download_file
+import copy
+from .PointingTools import (LoadHealpixMap, Tools, CorrelateGalaxies_LVC,
+                            CorrelateGalaxies_LVC_SteMass, ObservationParameters)
+
+from six.moves import configparser
+import six
+if six.PY2:
+    ConfigParser = configparser.SafeConfigParser
+else:
+    ConfigParser = configparser.ConfigParser
+
+
+iers_file = os.path.join(os.path.abspath(
+    os.path.dirname(__file__)), '../dataset/finals2000A.all')
+iers.IERS.iers_table = iers.IERS_A.open(iers_file)
+
+def load_healpix_map(filename):
+    '''Download aLIGO HEALpix map and keep in cache
+        RETURNS:
+
+        --------
+
+        tprob : array of p-values as a function of sky position
+
+        tdistmu : array of distance estimate
+
+        tdistsigma : array of error on distance estimates
+
+        distnorm : array of distance normalisations
+
+        detectors: which interferometers triggered
+
+        event_id: ID of the event
+
+        distmean: mean distance from the header
+
+        disterr: error on distance from the header
+
+        '''
+    PrintFileName = "Loading LVC HEALPix map from file: " + filename
+    # print(PrintFileName)
+    fitsfile = fits.open(filename)
+
+    tevent_id = "Non specified"
+    tdetectors = ""
+    tdistmean = 0
+    tdisterr = 0
+    tdistmu = []
+    tdistsigma = []
+    tdistnorm = []
+
+    if 'OBJECT' in fitsfile[1].header:
+        tevent_id = fitsfile[1].header['OBJECT']
+    else:
+        tevent_id = "Non specified"
+
+    if 'INSTRUME' in fitsfile[1].header:
+        tdetectors = fitsfile[1].header['INSTRUME']
+    else:
+        tdetectors = "Non specified"
+
+    if (fitsfile[1].header['TFIELDS'] == 4):
+        tprob, tdistmu, tdistsigma, tdistnorm = hp.read_map(
+            filename, field=range(4))
+        tdistmean = fitsfile[1].header['DISTMEAN']
+        tdisterr = fitsfile[1].header['DISTSTD']
+        print('Event has triggered ', tdetectors, ' => distance = ',
+              tdistmean, ' +- ', tdisterr, ' Mpc')
+    else:
+        tprob = hp.read_map(filename, field=range(1))
+    # raise
+
+    fitsfile.close()
+
+    return tprob, tdistmu, tdistsigma, tdistnorm, tdetectors, tevent_id, tdistmean, tdisterr
+
+
+def load_pointingFile(tpointingFile):
+    # Read PointingsFile
+
+    print("Loading pointings from " + tpointingFile)
+    time1, time2, ra, dec, = np.genfromtxt(tpointingFile, usecols=(0, 1, 2, 3), dtype="str", skip_header=1,
+                                           delimiter=' ',
+                                           unpack=True)  # ra, dec in degrees
+    time1 = np.atleast_1d(time1)
+    time2 = np.atleast_1d(time2)
+
+    ra = np.atleast_1d(ra)
+    dec = np.atleast_1d(dec)
+
+    time = []
+
+    for i in range(len(time1)):
+        time.append((time1[i] + ' ' + time2[i].split(':')
+                    [0] + ':'+time2[i].split(':')[1]).split('"')[1])
+
+    ra = ra.astype(float)
+    dec = dec.astype(float)
+
+    l = list(range(len(ra)))
+    Pointings = Table([l, time, ra, dec], names=(
+        'Pointing', 'Time', 'RAJ2000', 'DEJ2000'))
+
+    return Pointings
+
+
+def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
+
+    source = SkyCoord(
+        Pointing['RAJ2000'], Pointing['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
+    WINDOW = []
+    ZENITH = []
+    SZENITH = []
+
+    try:
+        auxtime = datetime.datetime.strptime(
+            Pointing['Time'][0], '%Y-%m-%d %H:%M:%S.%f')
+    except ValueError:
+        try:
+            auxtime = datetime.datetime.strptime(
+                Pointing['Time'][0], '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            auxtime = datetime.datetime.strptime(
+                Pointing['Time'][0], '%Y-%m-%d %H:%M')
+
+    # frame = co.AltAz(obstime=auxtime, location=observatory)
+    timeInitial = auxtime-datetime.timedelta(minutes=30)
+    for i in range(0, len(source)):
+        NonValidwindow, Stepzenith = GetVisibility(
+            Pointing['Time'], source[i], obspar.maxZenith, obspar.location)
+        window, zenith = GetObservationPeriod(
+            timeInitial, source[i], obspar, i, dirName, False)
+        WINDOW.append(window)
+        ZENITH.append(zenith)
+        SZENITH.append(Stepzenith)
+
+        # At input ObservationTime the night is over, the scheduling has been computed for the next night (with the condition <24h holding)
+        if (Tools.IsGreyness(ObservationTime, obspar) == False):
+            window, zenith = GetObservationPeriod(
+                ObservationTime+datetime.timedelta(hours=12), source[i], obspar, i, dirName, True)
+        else:
+            window, zenith = GetObservationPeriod(
+                ObservationTime, source[i], obspar, i, dirName, True)
+
+    Pointing['Observation window'] = WINDOW
+    Pointing['Array of zenith angles'] = ZENITH
+    Pointing['Zenith angles in steps'] = SZENITH
+
+    return Pointing
+
+
+def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlot):
+
+    AltitudeCut = 90 - obspar.maxZenith
+    nights = obspar.maxNights
+    useGreytime = obspar.useGreytime
+    maxZenith = obspar.maxZenith
+    moonGrey = obspar.moonGrey
+    moonDown = obspar.moonDown
+    moonPhase = obspar.moonPhase
+    sunDown = obspar.sunDown
+    minMoonSourceSeparation = obspar.minMoonSourceSeparation
+    maxMoonSourceSeparation = obspar.maxMoonSourceSeparation
+
+    inputtime = Time(inputtime0)
+    initialframe = AltAz(obstime=inputtime, location=obspar.location)
+
+    ##############################################################################
+    suninitial = get_sun(inputtime).transform_to(initialframe)
+
+    if (suninitial.alt < -18.*u.deg):
+        hoursinDay = 12
+    else:
+        hoursinDay = 24
+    delta_day = np.linspace(0, hoursinDay+24*(nights-1), 1000*nights)*u.hour
+    interval = (hoursinDay+24*(nights-1))/(1000.*nights)
+
+    x = np.arange(int(hoursinDay/interval), dtype=int)
+    firstN = np.full_like(x, 1)
+    ratio2 = 24./interval
+    otherN = []
+    for i in range(2, nights+1):
+        otherN.extend(np.full_like(np.arange(int(ratio2)), i))
+    NightsCounter = []
+    NightsCounter.extend(firstN)
+    NightsCounter.extend(otherN)
+
+    while len(NightsCounter) != len(delta_day):
+        NightsCounter.extend([nights])
+
+    times = inputtime + delta_day
+    frame = AltAz(obstime=times, location=obspar.location)
+
+    ##############################################################################
+    # SUN
+    sunaltazs = get_sun(times).transform_to(frame)
+
+    # MOON
+    moon = get_moon(times)
+    moonaltazs = moon.transform_to(frame)
+    msourcealtazs = msource.transform_to(frame)
+
+    # Add Moon phase
+    moonPhase = np.full(len(msourcealtazs),
+                        Tools.MoonPhase(inputtime0, obspar))
+
+    MoonDistance = msourcealtazs.separation(moonaltazs)
+    ##############################################################################
+    if useGreytime:
+        Altitudes = Table([times, msourcealtazs.alt, sunaltazs.alt, moonaltazs.alt, moonPhase, MoonDistance, NightsCounter],
+                          names=['Time UTC', 'Alt Source', 'Alt Sun', 'AltMoon', 'moonPhase', 'MoonDistance', 'NightsCounter'])
+        # selectedTimes=Altitudes['Time UTC']
+        selection = (Altitudes['Alt Sun'] < -18.) & (Altitudes['Alt Source']
+                                                     > AltitudeCut) & (Altitudes['AltMoon'] < -0.5)
+        DTaltitudes = Altitudes[selection]
+        newtimes = []
+        newtimes.extend(DTaltitudes['Time UTC'].mjd)
+        selectionGreyness = (Altitudes['AltMoon'] < moonGrey) & (Altitudes['AltMoon'] > moonDown) & (Altitudes['moonPhase'] < moonPhase) & (Altitudes['Alt Sun'] < sunDown) & (
+            Altitudes['MoonDistance'] > minMoonSourceSeparation) & (Altitudes['MoonDistance'] < maxMoonSourceSeparation) & (Altitudes['Alt Source'] > AltitudeCut)
+        GTaltitudes = Altitudes[selectionGreyness]
+        newtimes.extend(GTaltitudes['Time UTC'].mjd)
+        newtimes = sorted(newtimes)
+        ScheduledTimes = Time(newtimes, format='mjd').iso
+
+    else:
+        Altitudes = Table([times, msourcealtazs.alt, sunaltazs.alt, moonaltazs.alt, NightsCounter],
+                          names=['Time UTC', 'Alt Source', 'Alt Sun', 'AltMoon', 'NightsCounter'])
+        Times = Altitudes['Time UTC']
+        selection = (Altitudes['Alt Sun'] < -18.) & (Altitudes['Alt Source']
+                                                     > AltitudeCut) & (Altitudes['AltMoon'] < -0.5)
+        ScheduledTimes = Time(Times[selection], format='mjd').iso
+
+    '''if doPlot:
+        plotDir = '%s/TransitPlots' % dirName
+        if not os.path.exists(plotDir):
+            os.makedirs(plotDir)
+
+        #print('delta_day',delta_day)
+        #print('delta_day.to(hr)',delta_day.to('hr').value)
+        #print('sunaltazs.alt.value',sunaltazs.alt)
+        #print((sunaltazs.alt < -18 * u.deg))
+
+
+        plt.figure(figsize=(20, 12))
+        plt.plot(delta_day, sunaltazs.alt, color='r', label='Sun')
+        plt.plot(delta_day, moonaltazs.alt, color=[0.75] * 3, ls='--', label='Moon')
+        plt.plot(delta_day, msourcealtazs.alt,color = 'b', label='Point source')
+        # ToDo: Debug these lines
+        #plt.scatter(delta_day, msourcealtazs.alt, c=msourcealtazs.az, label='Point source', lw=0, s=8, cmap='viridis')
+        plt.fill_between(delta_day.to('hr').value, 0, 90, sunaltazs.alt < -0 * u.deg, color='0.5', zorder=0)
+        plt.fill_between(delta_day.to('hr').value, 0, 90, (sunaltazs.alt < -18 * u.deg) & (moonaltazs.alt < -0.5 * u.deg), color='k', zorder=0)
+        #plt.colorbar().set_label('Azimuth [deg]')
+        plt.legend(loc='upper left')
+        plt.ylim(0, 90)
+        #plt.xlabel('Hours after injections')
+        plt.ylabel('Altitude [deg]')
+        plt.grid()
+        plt.savefig('%s/Source%g.png' % (plotDir, plotnumber))'''
+    try:
+        return (str(ScheduledTimes[0]).split('.')[0]+'-->'+str(ScheduledTimes[-1]).split('.')[0]), msourcealtazs.alt
+    except:
+        ScheduledTimesUni = str(ScheduledTimes).split('.')
+        ScheduledTimes1 = ScheduledTimesUni[0]
+        ScheduledTimes2 = ScheduledTimesUni[-1]
+        return (str(ScheduledTimes1)+'-->'+str(ScheduledTimes2)), msourcealtazs.alt
+
+
+def GetVisibility(time, radecs, maxZenith, obsLoc):
+
+    visibility = []
+    altitude = []
+
+    for i in range(0, len(time)):
+        try:
+            auxtime = datetime.datetime.strptime(
+                time[i], '%Y-%m-%d %H:%M:%S.%f')
+        except ValueError:
+            try:
+                auxtime = datetime.datetime.strptime(
+                    time[i], '%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                auxtime = datetime.datetime.strptime(time[i], '%Y-%m-%d %H:%M')
+        frame = co.AltAz(obstime=auxtime, location=obsLoc)
+        thisaltaz = radecs.transform_to(frame)
+        visible = thisaltaz.alt.value > (90-maxZenith)
+
+        if (visible):
+            visibility.append(auxtime)
+            altitude.append(thisaltaz.alt.value)
+        else:
+            #    visibility.append(auxtime)
+            altitude.append(thisaltaz.alt.value)
+    lasttime = auxtime+datetime.timedelta(minutes=30)
+    frame = co.AltAz(obstime=lasttime, location=obsLoc)
+    thisaltaz = radecs.transform_to(frame)
+    visible = thisaltaz.alt.value > (90 - maxZenith)
+
+    if (visible):
+        visibility.append(auxtime)
+        altitude.append(thisaltaz.alt.value)
+    else:
+        #    visibility.append(auxtime)
+        altitude.append(thisaltaz.alt.value)
+
+    window = visibility[0].strftime(
+        '%H:%M:%S') + '-' + visibility[-1].strftime('%H:%M:%S')
+    return window, altitude
+
+
+def ProbabilitiesinPointings3D(cat, galPointing, FOV, totaldPdV, prob, nside):
+
+    ra = galPointing['RAJ2000']
+    dec = galPointing['DEJ2000']
+    PGW = []
+    PGAL = []
+
+    # bucle
+    for i in range(0, len(ra)):
+        pgwcircle, pgalcircle = PGGPGalinFOV(
+            cat, ra[i], dec[i], prob, totaldPdV, FOV, nside)
+        PGW.append(float('{:1.4f}'.format(pgwcircle)))
+        PGAL.append(float('{:1.4f}'.format(pgalcircle)))
+
+    galPointing['Pgw'] = PGW
+    galPointing['Pgal'] = PGAL
+
+    return galPointing
+
+
+def PGGPGalinFOV(cat, ra, dec, prob, totaldPdV, FOV, nside):
+
+    targetCoordcat = co.SkyCoord(
+        cat['RAJ2000'], cat['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
+    targetCoordpointing = co.SkyCoord(
+        ra, dec, frame='fk5', unit=(u.deg, u.deg))
+    dp_dV = cat['dp_dV']
+
+    # Array of indices of pixels inside circle of FoV
+
+    radius = FOV
+    t = 0.5 * np.pi - targetCoordpointing.dec.rad
+    p = targetCoordpointing.ra.rad
+
+    # print('t, p, targetCoord[0].ra.deg, targetCoord[0].dec.deg', t, p, targetCoord.ra.deg, targetCoord.dec.deg)
+    xyz = hp.ang2vec(t, p)
+
+    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+    P_GW = prob[ipix_disc].sum()
+    Pgal_inFoV = dp_dV[targetCoordcat.separation(
+        targetCoordpointing).deg <= radius].sum() / totaldPdV
+
+    return P_GW, Pgal_inFoV
+
+
+def ProbabilitiesinPointings2D(Pointing, FOV, prob, nside):
+
+    ra = Pointing['RAJ2000']
+    dec = Pointing['DEJ2000']
+    PGW = []
+    PGAL = []
+    for i in range(0, len(ra)):
+        pgwcircle = PGinFOV(ra[i], dec[i], prob, FOV, nside)
+        PGW.append(float('{:1.4f}'.format(pgwcircle)))
+        PGAL.append(float('{:1.4f}'.format(0)))
+
+    Pointing['Pgw'] = PGW
+    Pointing['Pgal'] = PGAL
+
+    return Pointing
+
+
+def PGinFOV(ra, dec, prob, radius, nside):
+
+    targetCoordpointing = co.SkyCoord(
+        ra, dec, frame='fk5', unit=(u.deg, u.deg))
+
+    # Array of indices of pixels inside circle of FoV
+
+    t = 0.5 * np.pi - targetCoordpointing.dec.rad
+    p = targetCoordpointing.ra.rad
+
+    # print('t, p, targetCoord[0].ra.deg, targetCoord[0].dec.deg', t, p, targetCoord.ra.deg, targetCoord.dec.deg)
+    xyz = hp.ang2vec(t, p)
+
+    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+    P_GW = prob[ipix_disc].sum()
+
+    return P_GW
+
+
+def Sortingby(galPointing, targetType, name, exposure):
+
+    gggalPointing = galPointing[np.flipud(np.argsort(galPointing['Pgal']))]
+    prioritygal = list(range(len(galPointing['Pgal'])))
+    ra = gggalPointing['RAJ2000']
+    dec = gggalPointing['DEJ2000']
+    coord = SkyCoord(ra, dec, unit='deg')
+    # print(coord.to_string('hmsdms'))
+    gggalPointing['RA(HH:MM:SS) Dec (DD:MM:SS)'] = coord.to_string('hmsdms')
+    gggalPointing['PriorityGal'] = prioritygal
+    gggalPointing.remove_column('Array of zenith angles')
+    gggalPointing.remove_column('Zenith angles in steps')
+
+    # Prepare filename which is going to be complete
+    gwgalPointing = gggalPointing[np.flipud(np.argsort(gggalPointing['Pgw']))]
+    prioritygw = list(range(len(galPointing['Pgw'])))
+    gwgalPointing['PriorityGW'] = prioritygw
+
+    # gwgalPointing.remove_column('Array of zenith angles')
+    # gwgalPointing.remove_column('Zenith angles in steps')
+    # print(gwgalPointing)
+    outfilename = '%s/RankingObservationTimes_Complete.txt' % name
+    ascii.write(gwgalPointing[np.argsort(
+        gwgalPointing['Pointing'])], outfilename, overwrite=True)
+
+    gwgalPointing.remove_column('Pgal')
+    gwgalPointing.remove_column('Pgw')
+    gwgalPointing.remove_column('PriorityGW')
+    gwgalPointing.rename_column('PriorityGal', 'Priority')
+    gwgalPointing.remove_column('RA(HH:MM:SS) Dec (DD:MM:SS)')
+    outfilename = '%s/RankingObservationTimes_forShifters.txt' % name
+    ascii.write(gwgalPointing[np.argsort(
+        gwgalPointing['Pointing'])], outfilename, overwrite=True)
+
+    gwgalPointing.remove_column('Observation window')
+    gwgalPointing.remove_column('Priority')
+    print(name)
+
+    target = [(targetType + '_' + name.split('/')[2] +
+               '_{0}').format(element) for element in gwgalPointing['Pointing']]
+    gwgalPointing['Target'] = target
+    gwgalPointing.rename_column('Pointing', 'Id')
+    gwgalPointing['Duration'] = exposure
+
+    gwgalPointing_TH = gwgalPointing['Target', 'Id',
+                                     'RAJ2000', 'DEJ2000', 'Time', 'Duration']
+    # new_order = ['Target', 'Id', 'RAJ2000','DEJ2000']  # List or tuple
+    # gwgalPointing_TH = gwgalPointing[new_order]
+    outfilename = '%s/RankingObservationTimes_forAlerter.txt' % name
+    ascii.write(gwgalPointing_TH[np.argsort(
+        gwgalPointing_TH['Id'])], outfilename, overwrite=True)
+
+
+def EvolutionPlot(galPointing, tname, ObsArray):
+    cm = plt.get_cmap('gist_rainbow')
+
+    fig = plt.figure(figsize=(18, 10))
+    ax = fig.add_axes([0.1, 0.1, 0.6, 0.8])
+    ra = galPointing['RAJ2000']
+    dec = galPointing['DEJ2000']
+    pgw = galPointing['Pgw']
+    pgal = galPointing['Pgal']
+    time = galPointing['Time']
+    NUM_COLORS = len(time)
+    hour = []
+    for j in range(0, len(time)):
+        selecttime = time[j].split(" ")
+        hour.append(selecttime[1].split('.')[0])
+    try:
+        lasttime = datetime.datetime.strptime(
+            time[len(time) - 1], '%Y-%m-%d %H:%M') + datetime.timedelta(minutes=30)
+    except ValueError:
+        lasttime = datetime.datetime.strptime(
+            time[len(time) - 1], '%Y-%m-%d %H:%M') + datetime.timedelta(minutes=30)
+
+    hour.append(lasttime.strftime("%H:%M"))
+    GWordered = galPointing[np.flipud(np.argsort(galPointing['Pgw']))]
+
+    ax.set_prop_cycle(plt.cycler(
+        'color', plt.cm.Accent(np.linspace(0, 1, NUM_COLORS))))
+    for i in range(0, len(ra)):
+        # x = np.arange(0, len(ra), 1)
+        ZENITH = GWordered['Zenith angles in steps'][i]
+        x = np.arange(0, len(ZENITH), 1)
+        ax.plot(x, ZENITH, label='ra:%.2f dec:%.2f- Pgw:%.3f - Pgal:%.3f ' %
+                (ra[i], dec[i], 100*pgw[i], 100*pgal[i]))
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(hour)
+    ax.set_ylabel('Altitude (deg)', fontsize=14)
+    ax.set_xlabel('Time', fontsize=14)
+    ax.grid()
+    ax.legend(bbox_to_anchor=(1.02, 1), loc=2, borderaxespad=0.)
+    plt.savefig("%s/AltitudevsTime_%s.png" % (tname, ObsArray))
+
+
+def RankingTimes(ObservationTime, filename, cat, obspar, targetType, dirName, PointingFile, ObsArray):
+
+    point = load_pointingFile(PointingFile)
+
+    ################################################################
+
+    print()
+    print('---------  RANKING THE OBSERVATIONS AND PRODUCING THE OUTPUT FILES   ----------')
+    print()
+
+    print('Loading map from ', filename)
+    prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(
+        filename)
+    npix = len(prob)
+    nside = hp.npix2nside(npix)
+
+    has3D = True
+    if (len(distnorm) == 0):
+        has3D = False
+    # correlate GW map with galaxy catalog, retrieve ordered list
+    tGals, sum_dP_dV = CorrelateGalaxies_LVC(
+        prob, distmu, distsigma, distnorm, cat, has3D, obspar.minimumProbCutForCatalogue)
+    point = ProbabilitiesinPointings3D(
+        tGals, point, obspar.FOV, sum_dP_dV, prob, nside)
+    point = VisibilityWindow(ObservationTime, point, obspar, dirName)
+    EvolutionPlot(point, dirName, ObsArray)
+    Sortingby(point, targetType, dirName, obspar.duration)
+
+
+def RankingTimes_2D(ObservationTime, prob, obspar, targetType, dirName, PointingFile, ObsArray):
+
+    point = load_pointingFile(PointingFile)
+
+    ################################################################
+
+    print()
+    print('---------  RANKING THE OBSERVATIONS AND PRODUCING THE OUTPUT FILES   ----------')
+    print()
+
+    npix = len(prob)
+    nside = hp.npix2nside(npix)
+
+    # In this function, the 2D probability is computed and the 3D probability is set to zero
+    point = ProbabilitiesinPointings2D(point, obspar.FOV, prob, nside)
+    point = VisibilityWindow(ObservationTime, point, obspar, dirName)
+
+    EvolutionPlot(point, dirName, ObsArray)
+    Sortingby(point, targetType, dirName, obspar.duration)

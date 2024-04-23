@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>TilingDetermination &#8212; tilepy 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="ObservationScheduler" href="ObservationScheduler.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="tilingdetermination">
+<h1>TilingDetermination<a class="headerlink" href="#tilingdetermination" title="Link to this heading">¶</a></h1>
+<p>This is the documentation for the TilingDetermination module.</p>
+<section id="pgwinfov">
+<h2>PGWinFoV<a class="headerlink" href="#pgwinfov" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">tilepy.include.TilingDetermination.</span></span><span class="sig-name descname"><span class="pre">PGWinFoV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ObservationTime0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PointingFile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obspar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Mid-level function that is called by GetSchedule to compute a observation schedule based on a 2D method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em>) – the name of the probability map file</p></li>
+<li><p><strong>ObservationTime0</strong> (<em>str</em>) – the desired time for scheduling to start</p></li>
+<li><p><strong>PointingFile</strong> (<em>str</em>) – The path to the text file containing the pointings that have already been performed before the scheduling</p></li>
+<li><p><strong>obspar</strong> (<em>Observation parameters class</em>) – Class containing the telescope configuration parameters to be used in the scheduling</p></li>
+<li><p><strong>dirName</strong> (<em>str</em>) – Path to the output directory where the schedules and plots will eb saved</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>SuggestedPointings, cat</p>
+</dd>
+</dl>
+<p>rtype: ascii table, astropy table</p>
+</dd></dl>
+
+</section>
+<section id="pgalinfov">
+<h2>PGalinFoV<a class="headerlink" href="#pgalinfov" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">tilepy.include.TilingDetermination.</span></span><span class="sig-name descname"><span class="pre">PGalinFoV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ObservationTime0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PointingFile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">galFile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obspar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Mid-level function that is called by GetSchedule to compute a observation schedule based on a 3D method. 
+Depending on the user input in the configuration file and the telescope FoV the pointings use the targtet galaxy strategy or integrated galaxy probability strategy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em>) – the name of the probability map file</p></li>
+<li><p><strong>ObservationTime0</strong> (<em>str</em>) – the desired time for scheduling to start</p></li>
+<li><p><strong>PointingFile</strong> (<em>str</em>) – The path to the text file containing the pointings that have already been performed before the scheduling</p></li>
+<li><p><strong>galFile</strong> (<em>str</em>) – The path to the galaxy catalog</p></li>
+<li><p><strong>obspar</strong> (<em>Observation parameters class</em>) – Class containing the telescope configuration parameters to be used in the scheduling</p></li>
+<li><p><strong>dirName</strong> (<em>str</em>) – Path to the output directory where the schedules and plots will eb saved</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>SuggestedPointings, cat</p>
+</dd>
+</dl>
+<p>rtype: ascii table, astropy table</p>
+</dd></dl>
+
+</section>
+<section id="pgalinfov-pixregion">
+<h2>PGalinFoV_PixRegion<a class="headerlink" href="#pgalinfov-pixregion" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">tilepy.include.TilingDetermination.</span></span><span class="sig-name descname"><span class="pre">PGalinFoV_PixRegion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ObservationTime0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PointingFile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">galFile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obspar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Mid-level function that is called by GetSchedule to compute a observation schedule based on a 3D method.  
+Depending on the user input in the configuration file and the telescope FoV the pointings use the targtet galaxy strategy or integrated galaxy probability strategy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em>) – the name of the probability map file</p></li>
+<li><p><strong>ObservationTime0</strong> (<em>str</em>) – the desired time for scheduling to start</p></li>
+<li><p><strong>PointingFile</strong> (<em>str</em>) – The path to the text file containing the pointings that have already been performed before the scheduling</p></li>
+<li><p><strong>galFile</strong> (<em>str</em>) – The path to the galaxy catalog</p></li>
+<li><p><strong>obspar</strong> (<em>Observation parameters class</em>) – Class containing the telescope configuration parameters to be used in the scheduling</p></li>
+<li><p><strong>dirName</strong> (<em>str</em>) – Path to the output directory where the schedules and plots will eb saved</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>SuggestedPointings, cat</p>
+</dd>
+</dl>
+<p>rtype: ascii table, astropy table</p>
+</dd></dl>
+
+</section>
+<section id="observationstartperobs">
+<h2>ObservationStartperObs<a class="headerlink" href="#observationstartperobs" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">tilepy.include.TilingDetermination.</span></span><span class="sig-name descname"><span class="pre">ObservationStartperObs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obsparameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ObservationTime0</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Mid-level function that is called by Nobs Tiling functions for multiple telescopes to find the first observation time for each observatory involved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obsparameters</strong> (<em>list</em><em> of </em><em>class ObservationParameters</em>) – a list of sets of parameters for each observatory needed to launch the tiling scheduler</p></li>
+<li><p><strong>ObservationTime0</strong> (<em>str</em>) – the desired time for scheduling to start</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>obs_time, SameNight, NewActiveObs, NewActiveObsStart</p>
+</dd>
+</dl>
+<p>rtype: datetime, boolean, list, list</p>
+</dd></dl>
+
+</section>
+<section id="pgwinfov-nobs">
+<h2>PGWinFoV_NObs<a class="headerlink" href="#pgwinfov-nobs" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">tilepy.include.TilingDetermination.</span></span><span class="sig-name descname"><span class="pre">PGWinFoV_NObs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ObservationTime0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PointingFile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obsparameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Mid-level function that is called by GetSchedule to compute a observation schedule for multiple telescopes/observartories based on a 2D method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em>) – the name of the probability map file</p></li>
+<li><p><strong>ObservationTime0</strong> (<em>str</em>) – the desired time for scheduling to start</p></li>
+<li><p><strong>PointingFile</strong> (<em>str</em>) – The path to the text file containing the pointings that have already been performed before the scheduling</p></li>
+<li><p><strong>obsparameters</strong> (<em>list</em><em> of </em><em>class ObservationParameters</em>) – a list of sets of parameters for each observatory needed to launch the tiling scheduler</p></li>
+<li><p><strong>dirName</strong> (<em>str</em>) – Path to the output directory where the schedules and plots will eb saved</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>SuggestedPointings, cat</p>
+</dd>
+</dl>
+<p>rtype: ascii table, astropy table</p>
+</dd></dl>
+
+</section>
+<section id="pgalinfov-nobs">
+<h2>PGalinFoV_NObs<a class="headerlink" href="#pgalinfov-nobs" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">tilepy.include.TilingDetermination.</span></span><span class="sig-name descname"><span class="pre">PGalinFoV_NObs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ObservationTime0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PointingFile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">galFile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obsparameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Mid-level function that is called by GetSchedule to compute a observation schedule for multiple telescopes/observartories based on a 3D method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em>) – the name of the probability map file</p></li>
+<li><p><strong>ObservationTime0</strong> (<em>str</em>) – the desired time for scheduling to start</p></li>
+<li><p><strong>PointingFile</strong> (<em>str</em>) – The path to the text file containing the pointings that have already been performed before the scheduling</p></li>
+<li><p><strong>galFile</strong> (<em>str</em>) – The path to the galaxy catalog</p></li>
+<li><p><strong>obsparameters</strong> (<em>list</em><em> of </em><em>class ObservationParameters</em>) – a list of sets of parameters for each observatory needed to launch the tiling scheduler</p></li>
+<li><p><strong>dirName</strong> (<em>str</em>) – Path to the output directory where the schedules and plots will eb saved</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>SuggestedPointings, cat, obsparameters</p>
+</dd>
+</dl>
+<p>rtype: ascii table, astropy table, list</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">tilepy</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="ObservationScheduler.html">ObservationScheduler</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">TilingDetermination</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pgwinfov">PGWinFoV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pgalinfov">PGalinFoV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pgalinfov-pixregion">PGalinFoV_PixRegion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#observationstartperobs">ObservationStartperObs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pgwinfov-nobs">PGWinFoV_NObs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pgalinfov-nobs">PGalinFoV_NObs</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="ObservationScheduler.html" title="previous chapter">ObservationScheduler</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Halim, Monica, Fabian.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="../_sources/source/TilingDetermination.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
