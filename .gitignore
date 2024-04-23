@@ -21,3 +21,4 @@ __pycache__
 tilepy_venv
 tilepy/include/ObservingTimes.py
 tilepy/include/gwobserve.py
+tilepy/dataset/*
