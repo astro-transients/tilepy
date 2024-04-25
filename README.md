@@ -92,12 +92,7 @@ Example: use the script to keep only galaxies that are within 500 Mpc (recommend
 python ConvertGalaxyCatalog.py --input GLADE+.txt --output converted_GLADE.h5 --max-luminosity-distance 500
 ```
 
-## Help
-If any problem is found, please open a new issue in the project main page to document it. You can of course also directly create a Pull Request with new features.
-
-Otherwise you can also contact us at astro.tilepy@gmail.com. 
-
-# Issue with Daily Earth Orientation Parameters Solutions file (finals2000A)
+## Issue with Daily Earth Orientation Parameters Solutions file (finals2000A)
 
 Astropy requires a recent reference file to compute correctly the coordinates. This file is in general downloaded automatically by Astropy but if you are offline, you will be able to run tilepy if you do the following fix in a global variable.
 First you need to download the file, it is available through several sources, IERS, OBSPM, NASA, USNO, .... For a fully offline installation, try to update the file every few month.
@@ -110,3 +105,9 @@ from astropy.utils import iers
 iers_file = os.path.join(os.path.abspath(
     os.path.dirname(__file__)), pathToYourReferencefile)
 iers.IERS.iers_table = iers.IERS_A.open(iers_file)
+```
+
+## Help
+If any problem is found, please open a new issue in the project main page to document it. You can of course also directly create a Pull Request with new features.
+
+Otherwise you can also contact us at astro.tilepy@gmail.com.
