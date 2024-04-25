@@ -34,7 +34,6 @@ import healpy as hp
 import astropy.coordinates as co
 import random
 import pytz
-from .ObservingTimes import ObtainObservingTimes
 from six.moves import configparser
 import six
 if six.PY2:

@@ -54,7 +54,6 @@ from mocpy import MOC
 from scipy.stats import norm
 from six.moves import configparser
 import ligo.skymap.io.fits as lf
-from .gwobserve import Sensitivity, GRB
 import pandas as pd
 from astropy.table import QTable
 import astropy_healpix as ah
@@ -65,9 +64,9 @@ else:
     ConfigParser = configparser.ConfigParser
 
 
-iers_file = os.path.join(os.path.abspath(
-    os.path.dirname(__file__)), '../dataset/finals2000A.all')
-iers.IERS.iers_table = iers.IERS_A.open(iers_file)
+#iers_file = os.path.join(os.path.abspath(
+#    os.path.dirname(__file__)), '../dataset/finals2000A.all')
+#iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 # iers.IERS.iers_table = iers.IERS_A.open(download_file(iers_url_mirror, cache=True))
 
 

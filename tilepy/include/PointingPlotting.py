@@ -53,9 +53,9 @@ import matplotlib.colors as mcolors
 # iers_url_mirror='ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
 # iers.IERS.iers_table = iers.IERS_A.open(download_file(iers.IERS_A_URL, cache=True))
 
-iers_file = os.path.join(os.path.abspath(
-    os.path.dirname(__file__)), '../dataset/finals2000A.all')
-iers.IERS.iers_table = iers.IERS_A.open(iers_file)
+#iers_file = os.path.join(os.path.abspath(
+#    os.path.dirname(__file__)), '../dataset/finals2000A.all')
+#iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
 # iers.IERS.iers_table = iers.IERS_A.open(download_file(iers_url_mirror, cache=True))
 

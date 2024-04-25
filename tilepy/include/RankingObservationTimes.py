@@ -45,9 +45,9 @@ else:
     ConfigParser = configparser.ConfigParser
 
 
-iers_file = os.path.join(os.path.abspath(
-    os.path.dirname(__file__)), '../dataset/finals2000A.all')
-iers.IERS.iers_table = iers.IERS_A.open(iers_file)
+#iers_file = os.path.join(os.path.abspath(
+#    os.path.dirname(__file__)), '../dataset/finals2000A.all')
+#iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
 def load_healpix_map(filename):
     '''Download aLIGO HEALpix map and keep in cache
