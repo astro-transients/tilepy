@@ -37,14 +37,14 @@ Package including functions to perform GW follow-up scheduling and simulations i
 - tilepy: Folder including the package
     - tilepy.tools: Includes several scripts that have been used so far for different aims related to visualization and catalog cleaning 
     - tilepy.include: The main functions used by the two main scripts are in this folder. It includes the Pointing Tools specifically for CTA (the others are in GWHESSPointing tool which is imported by GWCTAPointingTools), the CTA observation scheduler, simulation tools and analysis tools (both using gammapy)
-    - tilepy.dataset: Some files that have been used in the past and in ongoing simulation efforts. The important file in this folder finals2000.all. To have the entire dataset, 
+    - tilepy.dataset: This is a folder where we recomend to put files as finals2000.all. You will see it empty. 
 
 - relics: Old scripts that may be useful in the future
 
 - examples: Example on how to use tilepy:
-    - Tiling_Observations.ipynb: Jupyter notebook calling the main functions to run tiling schedule. 
-    - Tiling_Observations.py: example of a python script to run a tiling schedule (same content as the jupyter notebook). Default values works for the alertType = gw
-    - config/ExampleConfig.ini includes the minimal required parameters to run a tile. These are 
+    - obsCases: plots and scripts used to produced the results presented in an incoming paper. It contains a variety of astrophysical cases and observatory configutations. 
+    - obsLauncher: Jupyter notebooks and .py to run observation schedulings for 1 telescope and N telescopes. We recommend to use the Jupyter notebooks as these are more comprehensive, specially with the inputs given. 
+    - obsConfig: three examples of configuration files, used in the notebooks to run the scripts. The format is the following: 
        - [observatory]
           - name: name of the observatory (it is not critical, you can use any name) 
           - lat: lat coordinates of the observatory 
@@ -96,3 +96,17 @@ python ConvertGalaxyCatalog.py --input GLADE+.txt --output converted_GLADE.h5 --
 If any problem is found, please open a new issue in the project main page to document it. You can of course also directly create a Pull Request with new features.
 
 Otherwise you can also contact us at astro.tilepy@gmail.com. 
+
+# Issue with Daily Earth Orientation Parameters Solutions file (finals2000A)
+
+Astropy requires a recent reference file to compute correctly the coordinates. This file is in general downloaded automatically by Astropy but if you are offline, you will be able to run tilepy if you do the following fix in a global variable.
+First you need to download the file, it is available through several sources, IERS, OBSPM, NASA, USNO, .... For a fully offline installation, try to update the file every few month.
+
+You need then to modify your script calling tilepy by adding the following lines before importing tilepy. Adapt the path to the file (here pathToYourReferencefile) in order that the system is able to find the file and loaded correctly.
+
+```python
+import os
+from astropy.utils import iers
+iers_file = os.path.join(os.path.abspath(
+    os.path.dirname(__file__)), pathToYourReferencefile)
+iers.IERS.iers_table = iers.IERS_A.open(iers_file)

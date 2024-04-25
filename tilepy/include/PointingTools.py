@@ -30,7 +30,6 @@ import numpy as np
 from pytz import timezone
 from skyfield import almanac
 from skyfield.api import wgs84, N, E, load
-
 import astropy.coordinates as co
 import ephem
 import healpy as hp
@@ -3791,8 +3790,3 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, conf, time, Delay
 
     return P_GW, targetCoord, ObsExp, ZenIni, ZenEnd, ObsCase, ipixlist, ipixlistHR
 
-
-def GetExposureForDetection(grbSensFile, grbFilename, DelayObs):
-    sens = Sensitivity(grbSensFile, min_energy=0.3, max_energy=10000,)
-    grb = GRB(grbFilename)
-    return grb.observe(sensitivity=sens, start_time=DelayObs, target_precision=0.1)
