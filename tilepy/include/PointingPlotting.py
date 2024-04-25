@@ -146,7 +146,7 @@ def PointingPlotting(prob, obspar, name, dirName, PointingsFile1, ObsArray, file
     # PlotPointingsTogether(prob,converted_time1[0],Coordinates1,sum(Probarray1),name1,Coordinates2,sum(Probarray2),name2, nside, obspar.FOV, doPlot=True)
     PlotPointings(prob, converted_time1, Coordinates1, sum(
         Probarray1), nside, obspar, name, dirName, ObsArray)
-    PlotPointings_Pretty(prob, name, PointingsFile1, dirName, obspar, gal)
+    #PlotPointings_Pretty(prob, name, PointingsFile1, dirName, obspar, gal)
 
 
 def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirName, ObsArray):
