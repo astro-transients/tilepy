@@ -21,9 +21,9 @@ start = time.time()
 
 parser = argparse.ArgumentParser(description='Start the LST pointing observation of a GW event')
 parser.add_argument('-alertType',metavar = 'type of followup', help = 'options: gbm, gbmpng or gw')
-parser.add_argument('-url', metavar='skymap', default = 'https://gracedb.ligo.org/api/superevents/MS230522j/files/bayestar.fits.gz',
+parser.add_argument('-url', metavar='skymap', default='https://gracedb.ligo.org/api/superevents/S240422ed/files/bayestar.fits.gz',
                     help='the url to the FITS file with the sky localization, e.g.for GW https://urlpath/Bayestar.fits.gz')
-parser.add_argument('-time', metavar='\"YYYY-MM-DD HH:MM:SS\"', default= "2022-12-14 14:30:10",
+parser.add_argument('-time', metavar='\"YYYY-MM-DD HH:MM:SS\"', default= "2024-04-30 14:30:10",
                     help='optional: date and time of the event (default: NOW, i.e. %(default)s)')
 parser.add_argument('-i',metavar = 'input path', help='Path to the input datasets (where galaxy cat should be for GW case)', default = "../dataset/")
 parser.add_argument('-o',metavar = 'output path', help='Path to the output folder',default='./output')
