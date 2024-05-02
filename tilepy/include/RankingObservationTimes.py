@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord, EarthLocation, AltAz
-from astropy.coordinates import get_sun, get_moon
+from astropy.coordinates import get_body
 from astropy.io import fits, ascii
 from astropy.table import Table
 from astropy.time import Time
@@ -201,7 +201,7 @@ def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlo
     initialframe = AltAz(obstime=inputtime, location=obspar.location)
 
     ##############################################################################
-    suninitial = get_sun(inputtime).transform_to(initialframe)
+    suninitial = get_body("sun",inputtime).transform_to(initialframe)
 
     if (suninitial.alt < -18.*u.deg):
         hoursinDay = 12
@@ -228,10 +228,10 @@ def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlo
 
     ##############################################################################
     # SUN
-    sunaltazs = get_sun(times).transform_to(frame)
+    sunaltazs = get_body("sun",times).transform_to(frame)
 
     # MOON
-    moon = get_moon(times)
+    moon = get_body("moon",times)
     moonaltazs = moon.transform_to(frame)
     msourcealtazs = msource.transform_to(frame)
 

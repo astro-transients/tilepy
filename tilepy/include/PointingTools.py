@@ -40,9 +40,9 @@ import pytz
 import six
 import tables
 from astropy import units as u
-from astropy.coordinates import EarthLocation, get_sun
+from astropy.coordinates import EarthLocation, get_body
 from astropy.coordinates import SkyCoord, AltAz
-from astropy.coordinates import get_moon
+from astropy.coordinates import get_body
 from astropy.io import fits, ascii
 from astropy.table import Table
 from astropy.time import Time
@@ -131,7 +131,7 @@ class Tools:
 
     @classmethod
     def SunAlt(cls, obsTime, obspar):
-        sun = get_sun(Time(obsTime, scale='utc')).transform_to(AltAz(obstime=Time(obsTime, scale='utc'),
+        sun = get_body("sun",Time(obsTime, scale='utc')).transform_to(AltAz(obstime=Time(obsTime, scale='utc'),
                                                                      location=obspar.location))
         # print(Time(obsTime),obsSite.location)
         # print(get_sun(Time(obsTime)))
@@ -1492,7 +1492,7 @@ def ZenithAngleCut(prob, nside, time, minProbcut, maxZenith, observatory, minMoo
 
     if useGreytime and ObsBool:
         # Get Alt/Az of the Moon
-        moonaltazs = get_moon(Time(time, scale='utc')).transform_to(AltAz(obstime=Time(time, scale='utc'),
+        moonaltazs = get_body("moon",Time(time, scale='utc')).transform_to(AltAz(obstime=Time(time, scale='utc'),
                                                                           location=observatory))
         separations = altaz_map.separation(moonaltazs)
         mask_moonDistance = np.zeros(hp.nside2npix(nside), dtype=bool)
@@ -1527,7 +1527,7 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
     # pix_alt1 = thisaltaz.alt.value
 
     if useGreytime:
-        moonaltazs = get_moon(Time(time, scale='utc')).transform_to(
+        moonaltazs = get_body("moon", Time(time, scale='utc')).transform_to(
             AltAz(obstime=Time(time, scale='utc'), location=observatory))
         # Zenith and Moon angular distance mask
         pix_ra = radecs.ra.value[(thisaltaz.alt.value > 90-maxZenith)
@@ -1997,7 +1997,7 @@ def FulfillsRequirementGreyObservations(Ktime, theseGals, observatory, minMoonSo
     targetCoord = co.SkyCoord(
         theseGals['RAJ2000'], theseGals['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
     frame = co.AltAz(obstime=Ktime, location=observatory)
-    moonaltazs = get_moon(Time(Ktime, scale='utc')).transform_to(frame)
+    moonaltazs = get_body("moon",Time(Ktime, scale='utc')).transform_to(frame)
 
     altaz_map = targetCoord.transform_to(frame)
     separations = altaz_map.separation(moonaltazs)
@@ -3542,7 +3542,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, conf, time, Delay
     grbFilename = datasetDir + 'GRB-GW_TeV_catO5/catO5_' + ID + '.fits'
 
     if useGreytime:
-        moonaltazs = get_moon(Time(time, scale='utc')).transform_to(
+        moonaltazs = get_body("moon",Time(time, scale='utc')).transform_to(
             AltAz(obstime=Time(time), location=obspar.location))
         # Zenith and Moon angular distance mask
         pix_ra = radecs.ra.value[
