@@ -1451,7 +1451,7 @@ def NightDarkObservationwithGreyTime(time, obspar):
                       run_duration=datetime.timedelta(minutes=obspar.duration),
                       minimal_run_duration=datetime.timedelta(minutes=obspar.minDuration),
                       max_sun_altitude=obspar.sunDown,
-                      max_moon_altitude=obspar.moonDown,
+                      max_moon_altitude=obspar.moonGrey,
                       max_moon_phase=obspar.moonPhase/100.)
     return obs.get_time_window(start_time=time,
                                nb_observation_night=obspar.maxNights)
