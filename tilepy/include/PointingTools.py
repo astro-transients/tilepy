@@ -982,7 +982,6 @@ def get_lvk_uniq_maps(sky_map, Order, map_names='all'):
     # print('Total probability is:', maps['PROB'].sum())
     return maps
 
-
 def uniq2order_ind(uniq):
     order = (np.log2(uniq / 4).astype(int) / 2).astype(int)
     inds = (uniq - 4 * (np.power(4, order))).astype(int)
