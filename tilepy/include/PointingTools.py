@@ -1111,7 +1111,6 @@ def LoadHealpixMap_Flat(thisfilename):
 
     return tprob, tdistmu, tdistsigma, tdistnorm, tdetectors, tevent_id, tdistmean, tdisterr
 
-
 def LoadHealpixUNIQMap(thisfilename):
     '''Download aLIGO HEALpix map and keep in cache
         RETURNS:
