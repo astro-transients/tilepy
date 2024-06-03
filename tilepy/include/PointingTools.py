@@ -987,11 +987,9 @@ def uniq2order_ind(uniq):
     inds = (uniq - 4 * (np.power(4, order))).astype(int)
     return order, inds
 
-
 def order_inds2uniq(order, inds):
     uniq = 4 * (np.power(4, order)).astype(int) + inds
     return uniq
-
 
 def LoadHealpixMap(thisfilename):
     """
