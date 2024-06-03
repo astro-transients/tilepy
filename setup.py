@@ -35,7 +35,7 @@ setup(name='tilepy',
       url='https://github.com/astro-transients/tilepy',
       long_description=readfile('README.md'),
       include_package_data=True,
-      # license='',
+      license='GNU3',
       classifiers=[],
       scripts=[],
       )
