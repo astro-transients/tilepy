@@ -3,6 +3,8 @@ dataset/*.h5
 examples/de440s.bsp
 examples/obsLauncher/LALInference.v1.fits.g
 examples/obsLauncher/de440s.bsp
+examples/visualization/Bilby.offline0.multiorder.fits
+examples/visualization/S240422ed_galaxies.csv
 de440s.bsp
 ggwf*
 log
