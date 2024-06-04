@@ -18,6 +18,7 @@ CTA_simu_job.sh
 test*
 __pycache__
 .idea
+.ipynb_checkpoints
 *.egg-info
 *.egg
 *.eggs
