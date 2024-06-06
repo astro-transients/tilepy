@@ -17,7 +17,6 @@ def ObtainCumulativeProbabilityPlot(folder_path, event_name, WhatToPlot, interac
     observatory_column = df.columns[-2]
     df[WhatToPlot] = df[WhatToPlot]*100
     grouped_data = df.groupby(observatory_column)
-    print(grouped_data)
 
     time_shifted = pd.to_datetime(df["Observation Time UTC"]) + pd.to_timedelta(df["Duration"],unit="m")
     df['end_obs'] = time_shifted
@@ -77,7 +76,6 @@ def ObtainCumulativeProbabilityPlotLog(folder_path, event_name, WhatToPlot, inte
     observatory_column = df.columns[-2]
     df[WhatToPlot] = df[WhatToPlot]*100
     grouped_data = df.groupby(observatory_column)
-    print(grouped_data)
 
     time_shifted = pd.to_datetime(df["Observation Time UTC"]) + pd.to_timedelta(df["Duration"],unit="m")
     df['end_obs'] = time_shifted
