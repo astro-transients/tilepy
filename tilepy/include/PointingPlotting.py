@@ -146,7 +146,7 @@ def PointingPlotting(prob, obspar, name, dirName, PointingsFile1, ObsArray, file
     # PlotPointingsTogether(prob,converted_time1[0],Coordinates1,sum(Probarray1),name1,Coordinates2,sum(Probarray2),name2, nside, obspar.FOV, doPlot=True)
     PlotPointings(prob, converted_time1, Coordinates1, sum(
         Probarray1), nside, obspar, name, dirName, ObsArray)
-    #PlotPointings_Pretty(prob, name, PointingsFile1, dirName, obspar, gal)
+    PlotPointings_Pretty(prob, name, PointingsFile1, dirName, obspar, gal)
 
 
 def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirName, ObsArray):
@@ -656,8 +656,7 @@ def PlotZenithAngleLines_fromID(ID, InputFileName, dirName, FOV, ObsArray):
         GWFile, name, dirName, FOV, InputTimeList[j], ObsArray)
 
 
-def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal):
-    print("gal", gal)
+def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, centerMap = None, radiusMap = None):
     try:
         ragal = gal['RAJ2000']
         decgal = gal['DEJ2000']
@@ -669,12 +668,12 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal):
     # tpointingFile = '/Users/mseglar/Documents/GitLab/lst_gwfollowup/output/bn180720598/PGWinFoV/RankingObservationTimes_Complete.txt'
     time = []
     try:
-        time1, time2, ra, dec, pgw, pgal, Round, nametel, duration = np.genfromtxt(tpointingFile, usecols=(
-            0, 1, 2, 3, 4, 5, 6, 7, 8), skip_header=1, delimiter=' ', unpack=True, dtype='str')  # ra, dec in degrees
+        time1, time2, ra, dec, pgw, pgal, Round, nametel, duration, fov = np.genfromtxt(tpointingFile, usecols=(
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9), skip_header=1, delimiter=' ', unpack=True, dtype='str')  # ra, dec in degrees
     except:
         try:
-            time1, time2, ra, dec, pgw, Round, nametel, duration = np.genfromtxt(tpointingFile, usecols=(
-                0, 1, 2, 3, 4, 5, 6, 7), skip_header=1, delimiter=' ', unpack=True, dtype='str')  # ra, dec in degrees
+            time1, time2, ra, dec, pgw, Round, nametel, duration, fov = np.genfromtxt(tpointingFile, usecols=(
+                0, 1, 2, 3, 4, 5, 6, 7, 8), skip_header=1, delimiter=' ', unpack=True, dtype='str')  # ra, dec in degrees
             pgal = pgw
         except:
             try:
@@ -694,6 +693,8 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal):
     dec = dec.astype(float)
     pgw = pgw.astype(float)
     pgal = pgal.astype(float)
+    fov = fov.astype(float)
+
     coordinates = SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
 
     # Prepare the color map
@@ -705,7 +706,15 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal):
     coolheat = colors.LinearSegmentedColormap('coolheat', cdict_coolheat, 1024)
 
     #center = SkyCoord(12, -25, unit='deg', frame='icrs')
-    center = SkyCoord(ra[0], dec[0], unit='deg', frame='icrs')
+    if centerMap == None:    
+        center = SkyCoord(ra[0], dec[0], unit='deg', frame='icrs')
+    else: 
+        center = centerMap
+    
+    if radiusMap == None:    
+        radius = '20 deg'
+    else: 
+        radius = radiusMap
     #center = SkyCoord(195, 15, unit='deg', frame='icrs')
     #center = SkyCoord(30, 20, unit='deg', frame='icrs')
     center_str = '%fd %fd' % (center.ra.deg, center.dec.deg)
@@ -719,7 +728,7 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal):
 
     ax_inset = plt.axes([0.5, 0.1, 0.45, 0.45],
                         projection='astro degrees zoom',
-                        center=center_str, radius='20 deg')
+                        center=center_str, radius=radius)
 
     for key in ['ra', 'dec']:
         ax_inset.coords[key].set_ticklabel_visible(True)
@@ -745,109 +754,36 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal):
         cbar_inset.set_label('Galaxy probability density')
     except:
         print('NO GALAXIESW GIVEN TO PLOT 2')
-
-    #for j in range(len(ragal)):
-    #    c = Circle((ragal[j], decgal[j]), 0.1, edgecolor='magenta', facecolor="None",
-    #               transform=ax_inset.get_transform('fk5'), alpha=0.5)
-    #   ax_inset.add_patch(c)
-    #print("nametel",nametel)
-    for i in range(0, len(ra)):
-        COLORS = 'k'
-        fov_plot = obspar.FOV
-        try:
-            if nametel[i] == "LST1":
-                COLORS = 'g'
-                fov_plot = obspar.FOV
-                LengendPatchLST1 = mpatches.Patch(color=COLORS, label=nametel[i]) 
-            if nametel[i] == "LST2":
-                COLORS = 'b'
-                fov_plot =  obspar.FOV
-                LengendPatchLST2 = mpatches.Patch(color=COLORS, label=nametel[i]) 
-            if nametel[i] == "LST3":
-                COLORS = 'C4'
-                fov_plot =  obspar.FOV
-                LengendPatchLST3 = mpatches.Patch(color=COLORS, label=nametel[i]) 
-            if nametel[i] == "LST4":
-                COLORS = 'cyan'
-                fov_plot =  obspar.FOV
-                LengendPatchLST4 = mpatches.Patch(color=COLORS, label=nametel[i]) 
-
-            if nametel[i] == "CTA-N":
-                COLORS = 'b'
-                fov_plot = 2
-                LengendPatchCTAN = mpatches.Patch(color=COLORS, label=nametel[i]) 
-            if nametel[i] == "CTA-S":
-                COLORS = 'g'
-                fov_plot = 4
-                LengendPatchCTAS = mpatches.Patch(color=COLORS, label=nametel[i]) 
-
-            if nametel[i] == "TMT":
-                COLORS = 'g'
-                fov_plot = 0.5
-                LengendPatchTMT = mpatches.Patch(color=COLORS, label=nametel[i]) 
-            if nametel[i] == "ELT":
-                COLORS = 'k'
-                fov_plot = 0.1
-                LengendPatchELT = mpatches.Patch(color=COLORS, label=nametel[i]) 
-
-            if nametel[i] == "ESO":
-                COLORS = 'k'
-                fov_plot = 0.05
-                LengendPatchESO = mpatches.Patch(color=COLORS, label=nametel[i]) 
-            if nametel[i] == "ESO2":
-                COLORS = 'grey'
-                fov_plot = 0.05
-                LengendPatchESO2 = mpatches.Patch(color=COLORS, label=nametel[i]) 
-            if nametel[i] == "LP":
-                COLORS = 'g'
-                fov_plot = 0.1
-                LengendPatchLP = mpatches.Patch(color=COLORS, label=nametel[i]) 
-            if nametel[i] == "LPL":
-                COLORS = 'b'
-                fov_plot = 0.4
-                LengendPatchLPL = mpatches.Patch(color=COLORS, label='LP2') 
-            if nametel[i] == "OHP":
-                COLORS = 'c'
-                fov_plot = 0.6
-                LengendPatchOHP = mpatches.Patch(color=COLORS, label=nametel[i]) 
-            if nametel[i] == "SA":
-                COLORS = 'm'
-                fov_plot = 0.05
-                LengendPatchSA = mpatches.Patch(color=COLORS, label=nametel[i]) 
-            if nametel[i] == "HA":
-                COLORS = 'r'
-                fov_plot = 0.1
-                LengendPatchHA = mpatches.Patch(color=COLORS, label=nametel[i]) 
-            if nametel[i] == "CHI":
-                COLORS = 'r'
-                fov_plot = 0.05
-                LengendPatchCHI = mpatches.Patch(color=COLORS, label=nametel[i]) 
-
-            if nametel[i] == "ATCA":
-                COLORS = 'k'
-                fov_plot = 0.1
-                LengendPatchATCA = mpatches.Patch(color=COLORS, label=nametel[i]) 
-        except:
-            print("Ploting with one telescope")
-
-        c = Circle((ra[i], dec[i]), fov_plot, edgecolor=COLORS, facecolor="None",
-                   transform=ax_inset.get_transform('fk5'), alpha=1)
-
-        ax_inset.add_patch(c)
-        legend_drawn_flag = True
         
-        # To have more details in the plot
-        # ax_inset.text(ra[i]-2.5, dec[i]-1, "%d\n%s \n %d%% %d deg " % (i,time[i], 100*pgw[i],pgal[i]),transform=ax_inset.get_transform('fk5'), color = 'k', rotation = -15, fontsize = 8)
-        # Only the number of pointing is included
-        #ax_inset.text(ra[i], dec[i], "%d" % i, transform=ax_inset.get_transform(
-        #    'fk5'), color='k', rotation=-15, fontsize=8)
-    try:
-        ax_inset.legend(handles= [LengendPatchLST1, LengendPatchLST2, LengendPatchLST3, LengendPatchLST4])
-    except:
-        #LengendPatch = mpatches.Patch(color=COLORS, label= name)
-        ax_inset.legend()
+    unique_obs_names = np.unique(nametel) 
+    colors1 = plt.cm.get_cmap('tab10', len(unique_obs_names))
+    obs_name_to_color = {name: colors1(i) for i, name in enumerate(unique_obs_names)}
 
     pos = ax_inset.imshow_hpx(filename, cmap='cylon')
+
+    for i in range(0, len(ra)):
+        obs_name = nametel[i]
+        color1 = obs_name_to_color[obs_name]
+
+        #ax_inset.scatter(ra[i], dec[i], s = fov[i], edgecolor=color1, facecolor="None", transform=ax_inset.get_transform('fk5'), alpha=1)
+        circle_patch = Circle((ra[i], dec[i]), fov[i], edgecolor=color1, facecolor="None", transform=ax_inset.get_transform('fk5'), alpha=1)
+        ax_inset.add_patch(circle_patch)
+        #c = Circle((ra[i], dec[i]), fov_plot, edgecolor=color_map[name], facecolor="None", transform=ax_inset.get_transform('fk5'), alpha=1)
+
+        legend_drawn_flag = True
+
+    # Step 6: Create a legend with unique labels
+    unique_labels = {}
+    for obs_name, color in obs_name_to_color.items():
+        unique_labels[color] = obs_name
+
+    handles = []
+    for color, label in unique_labels.items():
+        handles.append(mpatches.Patch(color=color, label=label))
+        #mpatches.Patch(color=color, label=label)
+
+    plt.legend(handles=handles, loc='best')
+
 
     ax.mark_inset_axes(ax_inset)
     ax.connect_inset_axes(ax_inset, loc = 'lower left')
