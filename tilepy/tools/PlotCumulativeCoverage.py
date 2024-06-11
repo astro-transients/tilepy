@@ -14,7 +14,7 @@ def ObtainCumulativeProbabilityPlot(folder_path, event_name, WhatToPlot, interac
 
     df = pd.read_csv(file_path, sep=' ')  # Adjust the separator if needed
 
-    observatory_column = df.columns[-2]
+    observatory_column = df.columns[-3]
     df[WhatToPlot] = df[WhatToPlot]*100
     grouped_data = df.groupby(observatory_column)
 
@@ -73,7 +73,7 @@ def ObtainCumulativeProbabilityPlotLog(folder_path, event_name, WhatToPlot, inte
 
     df = pd.read_csv(file_path, sep=' ')  # Adjust the separator if needed
 
-    observatory_column = df.columns[-2]
+    observatory_column = df.columns[-3]
     df[WhatToPlot] = df[WhatToPlot]*100
     grouped_data = df.groupby(observatory_column)
 

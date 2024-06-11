@@ -67,7 +67,7 @@ def RankPlot(url, alertType, obsTime, configDir, datasetDir, outDir, galcatName,
         cat = LoadGalaxies(galaxies)
     else:
         cat = LoadGalaxies_SteMgal(galaxies)
-    print('done loading galaxies')
+
 
     # correlate GW map with galaxy catalog, retrieve ordered list
     if not obspar.mangrove:

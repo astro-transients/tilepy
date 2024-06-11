@@ -259,24 +259,21 @@ class Tools:
 
     @classmethod
     def CheckWindow(cls, time, obspar):
-        MinimalWindowDuration = datetime.timedelta(minutes=10)
+        MinimalWindowDuration = datetime.timedelta(minutes=obspar.minDuration)
         if (Tools.IsDarkness(time, obspar) is True) and (Tools.IsDarkness(time + MinimalWindowDuration, obspar) is True):
             Observe = True
         else:
-            print('No window found')
             Observe = False
 
         return Observe
 
     @classmethod
     def CheckWindowGrey(cls, time, obspar):
-        MinimalWindowDuration = datetime.timedelta(minutes=10)
+        MinimalWindowDuration = datetime.timedelta(minutes=obspar.minDuration)
         if (Tools.IsGreyness(time, obspar) is True) and (Tools.IsGreyness(time + MinimalWindowDuration, obspar) is True):
             Observe = True
         else:
-            print('No window found')
             Observe = False
-
         return Observe
 
     @classmethod
@@ -376,12 +373,13 @@ class ObservationParameters(object):
 
     def __str__(self):
         txt = ''
-        txt += '----------------- Main parsed observation parameters ----------------- \n'.format()
+        txt += '============== Main parsed observation parameters ==============  \n'.format()
+        txt += 'Observatory Name: {}\n'.format(self.name)
         txt += 'Observatory: {}\n'.format(self.lat)
         txt += 'Observatory: {}\n'.format(self.lon)
         txt += 'Observatory: {}\n'.format(self.height)
-        txt += 'Name: {}\n'.format(self.name)
         txt += 'Max zenith: {}\n'.format(self.maxZenith)
+        txt += 'Using Greytime is: {}\n'.format(self.useGreytime)
         txt += 'FOV: {}\n'.format(self.FOV)
         txt += 'Max runs: {}\n'.format(self.maxRuns)
         txt += 'Duration: {}\n'.format(self.duration)
@@ -1933,15 +1931,14 @@ def VisibleAtTime(test_time, galaxies, maxz, observatory):
         return False, thisaltaz, galaxies
 
 
-def FulfillsRequirement(theseGals, maxz, FOV, zenithWeighting, UsePix):
+def FulfillsRequirement(theseGals,obspar, UsePix):
     '''
     Apply filter criteria to visible galaxy sample and compares them to get the best option of zenith angle
-
     '''
-
-    # print("Check if galaxies with minimum p-value are among candidates...")
-
-    # Initialise maximum p-value in map to 1
+    
+    maxz = obspar.maxZenith
+    FOV = obspar.FOV
+    zenithWeighting = obspar.zenithWeighting
 
     maxp = 1
     mask = 0
@@ -1949,34 +1946,23 @@ def FulfillsRequirement(theseGals, maxz, FOV, zenithWeighting, UsePix):
 
     alt = theseGals['Alt']
 
+    if(obspar.strategy == 'targeted'):
+        testedProba = 'dp_dV'
+    if(obspar.strategy == 'integrated'):
+        testedProba = 'dp_dV_FOV'
+
     for minz_aux in range(maxz, 5, -5):
 
         tmpmask = alt > 90 - (minz_aux)
-        # print('TheseGals', theseGals[tmpmask])
         tmpGals = theseGals.copy()
-        # print('len(tmpGals[tmpmask])', len(tmpGals[tmpmask]), 'without mask', len(tmpGals))
-        # cut on zenith angle and select most probable galaxy
 
         if (len(tmpGals[tmpmask]) > 0):
-
-            cur_maxp = tmpGals[tmpmask]['dp_dV'].max() / \
-                theseGals['dp_dV'].max()
-
-            # print("{0} galaxies visible with zen < {1} deg - maximum p-value {2:0.3f}"
-
-            #     .format(len(tmpGals[tmpmask]), minz_aux, cur_maxp))
-
-           # print("Maximum probability of {0:0.3f} of global maximum of {1:3f}"
-
-            #      .format(cur_maxp, theseGals['dp_dV'].max()))
-
-            # define final mask
-
+            cur_maxp = tmpGals[tmpmask][testedProba].max() / \
+                theseGals[testedProba].max()
             if (maxz == minz_aux):
                 maxp = cur_maxp
                 mask = tmpmask
                 thisminz = minz_aux
-
             if (cur_maxp > zenithWeighting * maxp):
                 mask = tmpmask
                 thisminz = minz_aux
@@ -2001,62 +1987,6 @@ def FulfillsRequirementGreyObservations(Ktime, theseGals, observatory, minMoonSo
     # Mask
     greymask = separations > minMoonSourceSeparation*u.deg
     return greymask
-
-
-def FulfillsRequirement_MinProb(thisGals_aux, maxz):
-    ''' Same as FulfillsRequirements but at the end a supplementary cut is performed.
-    This algorithm comes from the first version of the code but in the newer versions
-    the algorithms separates this two options.
-
-    '''
-
-    print("Check if galaxies with minimum p-value are among candidates...")
-
-    # Initialise maximum p-value in map to 1
-
-    maxp = 1
-    mask = 0
-
-    for minz_aux in range(maxz, 5, -5):
-
-        tmpmask = altaz.alt.value > 90 - minz_aux
-        tmpGals = thisGals_aux.copy()
-
-        # cut on zenith angle and select most probable galaxy
-
-        if (len(tmpGals[tmpmask]) > 0):
-
-            cur_maxp = tmpGals[tmpmask]['dp_dV'].max() / tGals['dp_dV'].max()
-
-            print("{0} galaxies visible with zen < {1} deg - maximum p-value {2:0.3f}".format(len(tmpGals[tmpmask]),
-                                                                                              minz_aux, cur_maxp))
-            print("Maximum probability of {0:0.3f} of global maximum of {1:3f}".format(
-                cur_maxp, tGals['dp_dV'].max()))
-
-            if (maxz == minz_aux):
-                maxp = cur_maxp
-                mask = tmpmask
-                minz = minz_aux
-
-            if (cur_maxp > 0.75 * maxp):
-                mask = tmpmask
-                minz = minz_aux
-            else:
-                minz = minz_aux + 5
-                break
-
-    if (maxp < 0.02 * thisGals_aux['dp_dV'].max()):
-
-        print("Probability too low, postpone observations --> AFTERGLOW")
-        return False, mask, minz
-
-    else:
-        print('This minz= ', minz)
-        return True, mask, minz
-
-
-def Afterglow():
-    print('Afterglow!')
 
 
 def ObtainHighestProbabilityCoordinates(filename):
