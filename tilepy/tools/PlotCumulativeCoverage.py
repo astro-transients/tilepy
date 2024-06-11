@@ -17,7 +17,6 @@ def ObtainCumulativeProbabilityPlot(folder_path, event_name, WhatToPlot, interac
     observatory_column = df.columns[-2]
     df[WhatToPlot] = df[WhatToPlot]*100
     grouped_data = df.groupby(observatory_column)
-    print(grouped_data)
 
     time_shifted = pd.to_datetime(df["Observation Time UTC"]) + pd.to_timedelta(df["Duration"],unit="m")
     df['end_obs'] = time_shifted
@@ -51,7 +50,7 @@ def ObtainCumulativeProbabilityPlot(folder_path, event_name, WhatToPlot, interac
             else:
                 plt.plot([xv, xs], [yvs, yv], marker='.', linestyle='-', color=colors[index])
         
-    plt.plot(max_rows['end_obs'], max_rows["cumsum"], marker='+', linestyle='-',label='CTAO full', color='black')
+    plt.plot(max_rows['end_obs'], max_rows["cumsum"], marker='+', linestyle='-',label='All', color='black')
     plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
     plt.gcf().autofmt_xdate()  # Auto-format the date labels for better readability
@@ -77,7 +76,6 @@ def ObtainCumulativeProbabilityPlotLog(folder_path, event_name, WhatToPlot, inte
     observatory_column = df.columns[-2]
     df[WhatToPlot] = df[WhatToPlot]*100
     grouped_data = df.groupby(observatory_column)
-    print(grouped_data)
 
     time_shifted = pd.to_datetime(df["Observation Time UTC"]) + pd.to_timedelta(df["Duration"],unit="m")
     df['end_obs'] = time_shifted
@@ -113,7 +111,7 @@ def ObtainCumulativeProbabilityPlotLog(folder_path, event_name, WhatToPlot, inte
             else:
                 plt.plot([xv, xs], [yvs, yv], marker='.', linestyle='-', color=colors[index])
 
-    plt.plot(max_rows['end_obs'], max_rows["cumsum"], marker='+', linestyle='-',label='All Observatories', color='black')
+    plt.plot(max_rows['end_obs'], max_rows["cumsum"], marker='+', linestyle='-',label='All', color='black')
     plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
     plt.gcf().autofmt_xdate()  # Auto-format the date labels for better readability
