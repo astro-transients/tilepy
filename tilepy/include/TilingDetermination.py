@@ -794,6 +794,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
     Round = []
     ObsName = []
     Duration = []
+    Fov_obs = []
 #################################################################################################################################################
     obspar = obsparameters[0]
     tprob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(
@@ -877,6 +878,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
                             counter = counter + 1
                             couter_per_obs[j] += 1
                             Duration.append(obspar.duration)
+                            Fov_obs.append(obspar.FOV)
 
                     elif (P_GW >= obspar.minProbcut):
                         Round.append(1)
@@ -899,6 +901,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
                         counter = counter+1
                         couter_per_obs[j] += 1
                         Duration.append(obspar.duration)
+                        Fov_obs.append(obspar.FOV)
 
                 # HERE WE DETERMINE THE OBSERVATION DURATION ... FOR NOW WE USE 30 MINS FOR ALL
                 NewActiveObsTime[j] = NewActiveObsTime[j] + \
@@ -928,8 +931,8 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
 
         i += 1
 
-    SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, Round, ObsName, Duration], names=[
-                               'Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'PGW', 'Round', 'ObsName', 'Duration'])
+    SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, Round, ObsName, Duration, Fov_obs], names=[
+                               'Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'PGW', 'Round', 'ObsName', 'Duration', 'FoV'])
     print('The total probability PGW: ', np.sum(P_GWarray))
 
     return SuggestedPointings, obsparameters
@@ -970,6 +973,7 @@ def PGalinFoV_NObs(filename, ObservationTime0, PointingFile, galFile, obsparamet
     ObsName = []
     has3D = True
     Duration = []
+    Fov_obs = []
 #################################################################################################################################################
     obspar = obsparameters[0]
     print('Loading map from ', filename)
@@ -1106,6 +1110,7 @@ def PGalinFoV_NObs(filename, ObservationTime0, PointingFile, galFile, obsparamet
                                     counter = counter + 1
                                     couter_per_obs[j] += 1
                                     Duration.append(obspar.duration)
+                                    Fov_obs.append(obspar.FOV)
 
                             else:
                                 # print("\n=================================")
@@ -1135,6 +1140,7 @@ def PGalinFoV_NObs(filename, ObservationTime0, PointingFile, galFile, obsparamet
                                 counter = counter + 1
                                 couter_per_obs[j] += 1
                                 Duration.append(obspar.duration)
+                                Fov_obs.append(obspar.FOV)
                             # ObservationTimearrayNamibia.append(Tools.UTCtoNamibia(ObservationTime))
 
                         else:
@@ -1193,6 +1199,7 @@ def PGalinFoV_NObs(filename, ObservationTime0, PointingFile, galFile, obsparamet
                                         counter = counter + 1
                                         couter_per_obs[j] += 1
                                         Duration.append(obspar.duration)
+                                        Fov_obs.append(obspar.FOV)
 
                                     else:  
                                         p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbGalTargeted(
@@ -1209,6 +1216,7 @@ def PGalinFoV_NObs(filename, ObservationTime0, PointingFile, galFile, obsparamet
                                         counter = counter + 1
                                         couter_per_obs[j] += 1
                                         Duration.append(obspar.duration)
+                                        Fov_obs.append(obspar.FOV)
                                 else:
                                     #print("We are in round 1")
                                     p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbGalTargeted(
@@ -1225,6 +1233,7 @@ def PGalinFoV_NObs(filename, ObservationTime0, PointingFile, galFile, obsparamet
                                     counter = counter + 1
                                     couter_per_obs[j] += 1
                                     Duration.append(obspar.duration)
+                                    Fov_obs.append(obspar.FOV)
 
                             else:
                                 print("NOT passing the cut on dp/dV_FOV > ", obspar.minProbcut)
@@ -1258,8 +1267,8 @@ def PGalinFoV_NObs(filename, ObservationTime0, PointingFile, galFile, obsparamet
 
         i += 1
     print(ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round, ObsName)
-    SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round, ObsName, Duration], names=[
-                               'Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'PGW', 'Pgal', 'Round', 'ObsName', 'Duration'])
+    SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round, ObsName, Duration, Fov_obs], names=[
+                               'Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'PGW', 'Pgal', 'Round', 'ObsName', 'Duration', 'FoV'])
     print('The total probability PGal: ', np.sum(P_GALarray))
     print('The total probability PGW: ', np.sum(P_GWarray))
     return SuggestedPointings, tGals0, obsparameters

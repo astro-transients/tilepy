@@ -228,4 +228,5 @@ def CompareTwoTilings(filename, PointingsFile1=False, PointingsFile2=False, FOV=
 
 
 def Pretty_Plot(filename, name, PointingsFile1, dirName):
-    PlotPointings_Pretty(filename, name, PointingsFile1, dirName)
+    #PlotPointings_Pretty(filename, name, PointingsFile1, dirName)
+    PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, center = None, radius = None)
