@@ -756,7 +756,7 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
         print('NO GALAXIESW GIVEN TO PLOT 2')
         
     unique_obs_names = np.unique(nametel) 
-    colors1 = plt.cm.get_cmap('tab11', len(unique_obs_names))
+    colors1 = plt.cm.get_cmap('tab10', len(unique_obs_names))
     obs_name_to_color = {name: colors1(i) for i, name in enumerate(unique_obs_names)}
 
     #color_list = ['blue', 'green']
