@@ -715,7 +715,7 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
         radius = '20 deg'
     else: 
         radius = radiusMap
-    center = SkyCoord(195, 15, unit='deg', frame='icrs')
+    #center = SkyCoord(195, 15, unit='deg', frame='icrs')
     #center = SkyCoord(30, 20, unit='deg', frame='icrs')
     center_str = '%fd %fd' % (center.ra.deg, center.dec.deg)
 
