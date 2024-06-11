@@ -715,7 +715,7 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
         radius = '20 deg'
     else: 
         radius = radiusMap
-    #center = SkyCoord(195, 15, unit='deg', frame='icrs')
+    center = SkyCoord(195, 15, unit='deg', frame='icrs')
     #center = SkyCoord(30, 20, unit='deg', frame='icrs')
     center_str = '%fd %fd' % (center.ra.deg, center.dec.deg)
 
@@ -756,8 +756,11 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
         print('NO GALAXIESW GIVEN TO PLOT 2')
         
     unique_obs_names = np.unique(nametel) 
-    colors1 = plt.cm.get_cmap('tab10', len(unique_obs_names))
+    colors1 = plt.cm.get_cmap('tab11', len(unique_obs_names))
     obs_name_to_color = {name: colors1(i) for i, name in enumerate(unique_obs_names)}
+
+    #color_list = ['blue', 'green']
+    #obs_name_to_color = {name: color_list[i % len(color_list)] for i, name in enumerate(unique_obs_names)}
 
     pos = ax_inset.imshow_hpx(filename, cmap='cylon')
 
