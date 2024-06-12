@@ -2894,7 +2894,7 @@ def PointingFileReadCTA(pointingFile):
     for i in range(len(time1)):
         time.append((time1[i] + ' ' + time2[i]).split('"')[1])
     OutputTable = Table([time, RA, Dec, Observatory, ZenIni, ZenEnd, Duration],
-                        names=['Observation Time UTC', 'RA[deg]', 'DEC[deg]', 'Observatory', 'ZenIni[deg]', 'ZenEnd[deg]',
+                        names=['Time[UTC]', 'RA[deg]', 'DEC[deg]', 'Observatory', 'ZenIni[deg]', 'ZenEnd[deg]',
                                'Duration[s]'])
     return OutputTable
 
@@ -3236,7 +3236,7 @@ def ProducePandasSummaryFile(Source, SuggestedPointings, ID, obspar, typeSimu, d
     totalPGW = float('{:1.4f}'.format(float(sum(SuggestedPointingsC['PGW']))))
     
     # Rename columns 
-    SuggestedPointingsC.rename_column('Observation Time UTC', 'obs_time_utc')
+    SuggestedPointingsC.rename_column('Time[UTC]', 'obs_time_utc')
     SuggestedPointingsC.rename_column('DEC[deg]', 'dec')
     SuggestedPointingsC.rename_column('RA[deg]', 'ra')
     SuggestedPointingsC.rename_column('Observatory', 'observatory')
