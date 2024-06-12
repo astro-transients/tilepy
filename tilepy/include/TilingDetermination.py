@@ -87,6 +87,9 @@ def PGWinFoV(filename,obspar,dirName):
     P_GWarray = []
     ObservationTimearray = []
     Round = []
+    Fov_obs = []
+    ObsName = []
+    Duration = []
 
     print()
     print('-------------------   NEW LVC EVENT   --------------------')
@@ -147,6 +150,9 @@ def PGWinFoV(filename,obspar,dirName):
                         DECarray.append(
                             float('{:3.4f}'.format(float(TC.dec.deg))))
                         ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
+                        ObsName.append(obspar.name)
+                        Duration.append(obspar.duration)
+                        Fov_obs.append(obspar.FOV)
                         counter = counter+1
                 elif (P_GW >= obspar.minProbcut):
                     Round.append(1)
@@ -154,6 +160,9 @@ def PGWinFoV(filename,obspar,dirName):
                     RAarray.append(float('{:3.4f}'.format(float(TC.ra.deg))))
                     DECarray.append(float('{:3.4f}'.format(float(TC.dec.deg))))
                     ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
+                    ObsName.append(obspar.name)
+                    Duration.append(obspar.duration)
+                    Fov_obs.append(obspar.FOV)
                     counter = counter+1
         else:
             break
@@ -166,8 +175,9 @@ def PGWinFoV(filename,obspar,dirName):
           len(NightDarkRuns), "Number of effective pointings: ", len(ObservationTimearray))
 
     # List of suggested pointings
-    SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, Round], names=[
-                               'Time[UTC]', 'RA[deg]', 'DEC[deg]', 'PGW', 'Round'])
+    SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, Round, ObsName, Duration, Fov_obs], names=[
+                               'Time[UTC]', 'RA[deg]', 'DEC[deg]', 'PGW', 'Round', 'ObsName', 'Duration', 'FoV'])
+
 
     print()
     print("================================= Tiling found =============================================")
@@ -268,6 +278,9 @@ def PGalinFoV(filename,galFile,obspar,dirName):
     ObservationTimearray = []
     RAarray = []
     DECarray = []
+    ObsName = []
+    Duration = []
+    Fov_obs = []
 
     Round = []
     print('----------   NEW FOLLOW-UP ATTEMPT   ----------')
@@ -334,6 +347,9 @@ def PGalinFoV(filename,galFile,obspar,dirName):
                                 P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                 P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                 ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
+                                ObsName.append(obspar.name)
+                                Duration.append(obspar.duration)
+                                Fov_obs.append(obspar.FOV)
                                 counter = counter + 1
 
                             else: 
@@ -347,6 +363,9 @@ def PGalinFoV(filename,galFile,obspar,dirName):
                                 P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                 P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                 ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
+                                ObsName.append(obspar.name)
+                                Duration.append(obspar.duration)
+                                Fov_obs.append(obspar.FOV)
                                 counter = counter + 1
                         else:
                             # print("We are in round 1")
@@ -364,6 +383,9 @@ def PGalinFoV(filename,galFile,obspar,dirName):
                             P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                             P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                             ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
+                            ObsName.append(obspar.name)
+                            Duration.append(obspar.duration)
+                            Fov_obs.append(obspar.FOV)
                             counter = counter + 1
 
                     else:
@@ -418,6 +440,9 @@ def PGalinFoV(filename,galFile,obspar,dirName):
                                 P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                 P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                 ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
+                                ObsName.append(obspar.name)
+                                Duration.append(obspar.duration)
+                                Fov_obs.append(obspar.FOV)
                                 counter = counter + 1
 
                             else:  
@@ -431,6 +456,9 @@ def PGalinFoV(filename,galFile,obspar,dirName):
                                 P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                 P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                 ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
+                                ObsName.append(obspar.name)
+                                Duration.append(obspar.duration)
+                                Fov_obs.append(obspar.FOV)
                                 counter = counter + 1
                         else:
                             #print("We are in round 1")
@@ -444,6 +472,9 @@ def PGalinFoV(filename,galFile,obspar,dirName):
                             P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                             P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                             ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
+                            ObsName.append(obspar.name)
+                            Duration.append(obspar.duration)
+                            Fov_obs.append(obspar.FOV)
                             counter = counter + 1
 
                     else:
@@ -453,8 +484,8 @@ def PGalinFoV(filename,galFile,obspar,dirName):
                 break
         
     # List of suggested pointings
-    SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round], names=[
-                               'Time[UTC]', 'RA[deg]', 'DEC[deg]', 'PGW', 'Pgal', 'Round'])
+    SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round, ObsName, Duration, Fov_obs], names=[
+                               'Time[UTC]', 'RA[deg]', 'DEC[deg]', 'PGW', 'Pgal', 'Round', 'ObsName', 'Duration', 'FoV'])
     print()
     print()
     print('The total probability PGal: ', np.sum(P_GALarray))
@@ -562,6 +593,10 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, obspar,d
     ObservationTimearray = []
     RAarray = []
     DECarray = []
+    ObsName = []
+    Duration = []
+    Fov_obs = []
+
 
     # In case one wants to see if a next round would give us better results..
     # So the time will be j-1
@@ -635,6 +670,9 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, obspar,d
                     P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                     ObservationTimearray.append(
                         str(ObservationTime).split('.')[0])
+                    Fov_obs.append(obspar.FOV)
+                    ObsName.append(obspar.name)
+                    Duration.append(obspar.duration)
                     counter = counter+1
 
                 else:
@@ -649,9 +687,10 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, obspar,d
     print("===========================================================================================")
     print()
     # List of suggested pointings
-    SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round],
+    SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round, Fov_obs],
                                names=['Time[UTC]', 'RA[deg]', 'DEC[deg]', 'PGW',
-                                      'Pgal', 'Round'], )
+                                      'Pgal', 'Round', "FoV"], )
+
     print(SuggestedPointings)
     print("Name", name, "Total GW probability covered: ", float('{:1.4f}'.format(float(sum(P_GWarray)))), "Total Gal probability covered: ", sum(P_GALarray),
           "Number of runs that fulfill darkness condition  :", len(

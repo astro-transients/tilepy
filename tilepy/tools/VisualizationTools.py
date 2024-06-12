@@ -15,9 +15,10 @@ import astropy.coordinates as co
 from astropy.utils import iers
 import ligo.skymap.io.fits as lf
 
-iers_file = os.path.join(os.path.abspath(
-    os.path.dirname(__file__)), '../dataset/finals2000A.all')
-iers.IERS.iers_table = iers.IERS_A.open(iers_file)
+
+#iers_file = os.path.join(os.path.abspath(
+#    os.path.dirname(__file__)), '../dataset/finals2000A.all')
+#iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
 
 def LocateSource(filename, ra, dec, PercentCov=90):
@@ -225,6 +226,6 @@ def CompareTwoTilings(filename, PointingsFile1=False, PointingsFile2=False, FOV=
     plt.show()
 
 
-def Pretty_Plot(filename, name, PointingsFile1, dirName,  obspar, gal, center, radius):
+def Pretty_Plot(filename, name, PointingsFile1, dirName,  obspar, gal, center, radius, colors):
     #PlotPointings_Pretty(filename, name, PointingsFile1, dirName)
-    PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, center, radius)
+    PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, center, radius, colors)

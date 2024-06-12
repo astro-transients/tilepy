@@ -524,11 +524,12 @@ def PlotZenithAngleLines_fromID(ID, InputFileName, dirName, FOV, ObsArray):
         GWFile, name, dirName, FOV, InputTimeList[j], ObsArray)
 
 
-def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, centerMap = None, radiusMap = None):
+def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, centerMap = None, radiusMap = None, colorspar = None):
     try:
         ragal = gal['RAJ2000']
         decgal = gal['DEJ2000']
         galprob = gal['dp_dV']
+        print("WE HAVE GALAXIES TO PLOT")
     except:
         print("NO GALAXIES GIVEN TO PLOT 1")
     # Read the pointings file
@@ -545,11 +546,11 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
             pgal = pgw
         except:
             try:
-                time1, time2, ra, dec, pgw, pgal, Round  = np.genfromtxt(tpointingFile, usecols=(
-                    0, 1, 2, 3, 4, 5, 6), skip_header=1, delimiter=' ', unpack=True, dtype='str')  # ra, dec in degrees
+                time1, time2, ra, dec, pgw, pgal, Round, nametel, duration, fov  = np.genfromtxt(tpointingFile, usecols=(
+                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9), skip_header=1, delimiter=' ', unpack=True, dtype='str')  # ra, dec in degrees
             except:
-                time1, time2, ra, dec, pgw, Round  = np.genfromtxt(tpointingFile, usecols=(
-                    0, 1, 2, 3, 4, 5), skip_header=1, delimiter=' ', unpack=True, dtype='str')  # ra, dec in degrees
+                time1, time2, ra, dec, pgw, Round, nametel, duration, fov  = np.genfromtxt(tpointingFile, usecols=(
+                    0, 1, 2, 3, 4, 5, 6, 7, 8), skip_header=1, delimiter=' ', unpack=True, dtype='str')  # ra, dec in degrees
                 pgal = pgw
         
 
@@ -583,6 +584,7 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
         radius = '20 deg'
     else: 
         radius = radiusMap
+    
     #center = SkyCoord(195, 15, unit='deg', frame='icrs')
     #center = SkyCoord(30, 20, unit='deg', frame='icrs')
     center_str = '%fd %fd' % (center.ra.deg, center.dec.deg)
@@ -612,8 +614,13 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
     #ax.connect_inset_axes(ax_inset, loc='lower left')
 
     ax.imshow_hpx(filename, cmap='cylon')
-    vmin_value = 0.000001
-    vmax_value = 0.00001
+    
+    try:
+        vmin_value = np.min(galprob)
+        vmax_value = np.max(galprob)
+    except:
+        vmin_value = 0.000001
+        vmax_value = 0.00001
     
     try:
         norm = mcolors.Normalize(vmin=vmin_value, vmax=vmax_value)
@@ -624,8 +631,13 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
         print('NO GALAXIESW GIVEN TO PLOT 2')
         
     unique_obs_names = np.unique(nametel) 
-    colors1 = plt.cm.get_cmap('tab10', len(unique_obs_names))
-    obs_name_to_color = {name: colors1(i) for i, name in enumerate(unique_obs_names)}
+    if colorspar == None:
+        colors1 = plt.cm.get_cmap('tab10', len(unique_obs_names))
+        obs_name_to_color = {name: colors1(i) for i, name in enumerate(unique_obs_names)}
+    else: 
+        colors1 = colorspar
+        obs_name_to_color = {name: colors1[i] for i, name in enumerate(unique_obs_names)}
+    
 
     #color_list = ['blue', 'green']
     #obs_name_to_color = {name: color_list[i % len(color_list)] for i, name in enumerate(unique_obs_names)}
@@ -635,6 +647,7 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
     for i in range(0, len(ra)):
         obs_name = nametel[i]
         color1 = obs_name_to_color[obs_name]
+
 
         #ax_inset.scatter(ra[i], dec[i], s = fov[i], edgecolor=color1, facecolor="None", transform=ax_inset.get_transform('fk5'), alpha=1)
         circle_patch = Circle((ra[i], dec[i]), fov[i], edgecolor=color1, facecolor="None", transform=ax_inset.get_transform('fk5'), alpha=1)
