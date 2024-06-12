@@ -18,12 +18,17 @@ url = 'https://dcc.ligo.org/public/0119/P1500071/007/927563_lalinference.fits.gz
 ObsArray = ['CTAN', 'CTAS']
 obsTime = '2023-03-15 10:30:10'
 colors_list = ['blue', 'green']
-parameters = []
-obsparameters = []
 
 name = '927563_lalinference_CTAO'
 PointingsFile1 = '/Users/hashkar/Desktop/tilepy/examples/obsCases/927563_lalinference_PAPER/PGalinFoV_NObs/SuggestedPointings_GWOptimisation.txt'
 dirName = '/Users/hashkar/Desktop/tilepy/examples/obsCases/paperPlots'
+
+center = SkyCoord(195, 15, unit='deg', frame='icrs')
+radius = '20 deg'
+
+
+parameters = []
+obsparameters = []
 
 
 for i in ObsArray:
@@ -47,9 +52,6 @@ cat = LoadGalaxies(galaxies)
 prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(url)
 tGals0, sum_dP_dV = CorrelateGalaxies_LVC(prob, distmu, distsigma, distnorm, cat, True, obspar.minimumProbCutForCatalogue)
 
-
-center = SkyCoord(195, 15, unit='deg', frame='icrs')
-radius = '20 deg'
 
 Pretty_Plot(url, name, PointingsFile1, dirName, obspar, tGals0, center, radius, colors_list)
 

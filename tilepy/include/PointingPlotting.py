@@ -746,8 +746,13 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
     #ax.connect_inset_axes(ax_inset, loc='lower left')
 
     ax.imshow_hpx(filename, cmap='cylon')
-    vmin_value = np.min(galprob)
-    vmax_value = np.max(galprob)
+    
+    try:
+        vmin_value = np.min(galprob)
+        vmax_value = np.max(galprob)
+    except:
+        vmin_value = 0.000001
+        vmax_value = 0.00001
     
     try:
         norm = mcolors.Normalize(vmin=vmin_value, vmax=vmax_value)
