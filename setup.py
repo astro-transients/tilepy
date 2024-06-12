@@ -9,7 +9,7 @@ def readfile(filename):
 
 
 setup(name='tilepy',
-      version='1.8.0',
+      version='2.0.0',
       description='Computation of the tiling scheduling of large localization uncertainty region event with multi-wavelength pointing telescopes',
       install_requires=[
           'astropy', #>=4.1',
