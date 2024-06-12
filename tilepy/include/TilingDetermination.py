@@ -176,7 +176,8 @@ def PGWinFoV(filename,obspar,dirName):
 
     # List of suggested pointings
     SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, Round, ObsName, Duration, Fov_obs], names=[
-                               'Observation Time UTC', 'RA[deg]', 'DEC[deg]', 'PGW', 'Round', 'ObsName', 'Duration', 'FoV'])
+                               'Time[UTC]', 'RA[deg]', 'DEC[deg]', 'PGW', 'Round', 'ObsName', 'Duration', 'FoV'])
+
 
     print()
     print("================================= Tiling found =============================================")
@@ -484,7 +485,7 @@ def PGalinFoV(filename,galFile,obspar,dirName):
         
     # List of suggested pointings
     SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round, ObsName, Duration, Fov_obs], names=[
-                               'Observation Time UTC', 'RA[deg]', 'DEC[deg]', 'PGW', 'Pgal', 'Round', 'ObsName', 'Duration', 'FoV'])
+                               'Time[UTC]', 'RA[deg]', 'DEC[deg]', 'PGW', 'Pgal', 'Round', 'ObsName', 'Duration', 'FoV'])
     print()
     print()
     print('The total probability PGal: ', np.sum(P_GALarray))
@@ -574,7 +575,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, obspar,d
         sumPGW = sum(AlreadyObservedPgw)
         sumPGAL = sum(AlreadyObservedPgal)
 
-        # ObservedPointings = Table([time, ra, dec, AlreadyObservedPgw, AlreadyObservedPgal],names=['Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'Covered GW probability','Pgal covered'])
+        # ObservedPointings = Table([time, ra, dec, AlreadyObservedPgw, AlreadyObservedPgal],names=['Time[UTC]', 'RA(deg)', 'DEC(deg)', 'Covered GW probability','Pgal covered'])
         # print(ObservedPointings)
         print("===========================================================================================")
         print()
@@ -687,8 +688,9 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, obspar,d
     print()
     # List of suggested pointings
     SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round, Fov_obs],
-                               names=['Observation Time UTC', 'RA[deg]', 'DEC[deg]', 'PGW',
+                               names=['Time[UTC]', 'RA[deg]', 'DEC[deg]', 'PGW',
                                       'Pgal', 'Round', "FoV"], )
+
     print(SuggestedPointings)
     print("Name", name, "Total GW probability covered: ", float('{:1.4f}'.format(float(sum(P_GWarray)))), "Total Gal probability covered: ", sum(P_GALarray),
           "Number of runs that fulfill darkness condition  :", len(
@@ -960,7 +962,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
         i += 1
 
     SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, Round, ObsName, Duration, Fov_obs], names=[
-                               'Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'PGW', 'Round', 'ObsName', 'Duration', 'FoV'])
+                               'Time[UTC]', 'RA(deg)', 'DEC(deg)', 'PGW', 'Round', 'ObsName', 'Duration', 'FoV'])
     print('The total probability PGW: ', np.sum(P_GWarray))
 
     return SuggestedPointings, obsparameters
@@ -1294,7 +1296,7 @@ def PGalinFoV_NObs(filename, ObservationTime0, PointingFile, galFile, obsparamet
         i += 1
     print(ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round, ObsName)
     SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round, ObsName, Duration, Fov_obs], names=[
-                               'Observation Time UTC', 'RA(deg)', 'DEC(deg)', 'PGW', 'Pgal', 'Round', 'ObsName', 'Duration', 'FoV'])
+                               'Time[UTC]', 'RA(deg)', 'DEC(deg)', 'PGW', 'Pgal', 'Round', 'ObsName', 'Duration', 'FoV'])
     print('The total probability PGal: ', np.sum(P_GALarray))
     print('The total probability PGW: ', np.sum(P_GWarray))
     return SuggestedPointings, tGals0, obsparameters
@@ -1517,7 +1519,7 @@ def PGWonFoV_WindowOptimisation(filename, TC, conf, obspar, datasetDir):
     SuggestedPointings = Table(
         [ObservationTimearray, RAarray, DECarray, Obsarray, P_GWarray, ObsBoolarray, ZenIniarray, ZenEndarray, Exposure,
          Delay],
-        names=['Observation Time UTC', 'RA[deg]', 'DEC[deg]', 'Observatory', 'PGW', 'ObsInfo', 'ZenIni[deg]', 'ZenEnd[deg]',
+        names=['Time[UTC]', 'RA[deg]', 'DEC[deg]', 'Observatory', 'PGW', 'ObsInfo', 'ZenIni[deg]', 'ZenEnd[deg]',
                'Duration[s]', 'Delay[s]'])
     return (SuggestedPointings, ObservationTime0, obspar, counter)
 

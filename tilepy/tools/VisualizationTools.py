@@ -114,8 +114,6 @@ def Time_DarkTime_GreyTime(filename, cfgFile, date=datetime.datetime.now(timezon
     obspar.from_configfile(cfgFile)
     ######################### Other parameters ##############################
 
-    observatory = HESSObservatory()
-
     skymap_OD = lf.read_sky_map(filename)
     prob = skymap_OD[0]
     npix = len(prob)
@@ -129,7 +127,7 @@ def Time_DarkTime_GreyTime(filename, cfgFile, date=datetime.datetime.now(timezon
     NightGreyRuns = NightDarkObservationwithGreyTime(time, obspar)
 
     print("-----------------------------------------------------------------")
-    print('Observatory is: ', observatory.Name)
+    print('Observatory is: ', obspar.name)
     print('Start of Darkness:', NightDarkRuns[0])
     print(NightDarkRuns)
     print('Last run:', NightDarkRuns[-1])
@@ -144,43 +142,43 @@ def Time_DarkTime_GreyTime(filename, cfgFile, date=datetime.datetime.now(timezon
 
     # InputTime
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,
-                           location=observatory.location)
+                           location=obspar.location)
     RandomCoord_radec = RandomCoord.transform_to('fk5')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'red', lonlat=True, coord="C", linewidth=0.4)
 
     # NightDarkRuns[0]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightDarkRuns[0],
-                           location=observatory.location)
+                           location=obspar.location)
     RandomCoord_radec = RandomCoord.transform_to('fk5')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'orange', lonlat=True, coord="C", linewidth=0.4)
 
     # NightDarkRuns[-1]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightDarkRuns[-1],
-                           location=observatory.location)
+                           location=obspar.location)
     RandomCoord_radec = RandomCoord.transform_to('fk5')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'orange', lonlat=True, coord="C", linewidth=0.4)
 
     # NightGreyRuns[0]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightGreyRuns[0],
-                           location=observatory.location)
+                           location=obspar.location)
     RandomCoord_radec = RandomCoord.transform_to('fk5')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'blue', lonlat=True, coord="C", linewidth=0.4)
 
     # NightGreyRuns[-1]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightGreyRuns[-1],
-                           location=observatory.location)
+                           location=obspar.location)
     RandomCoord_radec = RandomCoord.transform_to('fk5')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'blue', lonlat=True, coord="C", linewidth=0.4)
     hp.graticule()
     plt.savefig("VisibilityTime_DarkTime_GreyTime_Overview" +
-                observatory.Name + '.png')
+                obspar.name + '.png')
 
-    print('Plot created for observatory : ', observatory.Name)
+    print('Plot created for observatory : ', obspar.name)
     print("-----------------------------------------------------------------")
 
 

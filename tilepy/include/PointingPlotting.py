@@ -36,7 +36,7 @@ from datetime import date
 import ligo.skymap.io.fits as lf
 from astropy.coordinates import SkyCoord
 import matplotlib.patches as mpatches
-
+import pandas as pd
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -113,8 +113,19 @@ def LoadPointingsGAL(tpointingFile):
     return time, coordinates, Pgw, Pgal
 
 
-def PointingPlotting(prob, obspar, name, dirName, PointingsFile1, ObsArray, filename, gal):
 
+def LoadPointings(tpointingFile):
+    print("Loading pointings from " + tpointingFile)
+    # Read the first line of the file to determine column names
+    with open(tpointingFile, 'r') as f:
+        header_line = f.readline().strip()
+    # Read the data into a DataFrame
+    data = pd.read_csv(tpointingFile, delimiter=' ', header=None, names=header_line.split(), skiprows=1)
+    return data
+
+
+
+def PointingPlotting(prob, obspar, name, dirName, PointingsFile1, ObsArray, filename, gal):
     npix = len(prob)
     nside = hp.npix2nside(npix)
 
@@ -141,13 +152,9 @@ def PointingPlotting(prob, obspar, name, dirName, PointingsFile1, ObsArray, file
                         datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S'))
                 except ValueError:
                     converted_time1.append(time1)
-                    # converted_time1 = str(converted_time1).split('+')[0]
-                    # converted_time1.append(datetime.datetime.strptime(time1, '%Y-%m-%d %H:%M:%S'))
-    # PlotPointingsTogether(prob,converted_time1[0],Coordinates1,sum(Probarray1),name1,Coordinates2,sum(Probarray2),name2, nside, obspar.FOV, doPlot=True)
-    PlotPointings(prob, converted_time1, Coordinates1, sum(
-        Probarray1), nside, obspar, name, dirName, ObsArray)
-    PlotPointings_Pretty(prob, name, PointingsFile1, dirName, obspar, gal)
 
+    PlotPointings(prob, converted_time1, Coordinates1, sum(Probarray1), nside, obspar, name, dirName, ObsArray)
+    PlotPointings_Pretty(prob, name, PointingsFile1, dirName, obspar, gal)
 
 def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirName, ObsArray):
     FOV = obspar.FOV
@@ -161,7 +168,7 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
 
     # translate pixel indices to coordinates
     ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV))
-    #print(time)
+
     if (doPlot):
 
         tt, pp = hp.pix2ang(nside, ipix_disc)
@@ -182,7 +189,7 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
                                                           time[0].year,
                                                           time[0].hour, time[0].minute, time[0].second))
         hp.graticule()
-        # plt.show()
+
         theta = np.random.rand(400) * 360
         tarcoordra = np.empty(400)
         tarcoorddec = np.empty(400)
@@ -201,10 +208,8 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
             deccoord = tarcoorddec + Fov_array * np.sin(theta)
             hp.visufunc.projscatter(
                 racoord, deccoord, lonlat=True, marker='.', color=Colors[j], coord='C')
-            # hp.visufunc.projscatter(RA_GRB, DEC_GRB, lonlat=True, marker='+', color=Colors[1], coord='C')
 
             # Plotting the visibility of the instrument as specified in the config
-
             altcoord = np.empty(1000)
             altcoord.fill(90 - maxzenith)
             azcoord = np.random.rand(1000) * 360
@@ -214,145 +219,8 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
             RandomCoord_radec = RandomCoord.transform_to('fk5')
             hp.visufunc.projplot(RandomCoord_radec.ra,
                                  RandomCoord_radec.dec, 'b.', lonlat=True)
-            # plt.show()
             plt.savefig('%s/Pointings%s.png' % (dirName, j))
 
-        # dist = cat['Dist']
-        # hp.visufunc.projscatter(cat['RAJ2000'][dist < 200], cat['DEJ2000'][dist < 200], lonlat=True, marker='.',
-        #                        color='g', linewidth=0.1, coord='C')
-        # draw all galaxies within zenith-angle cut
-
-        # draw observation position, which is equivalent to galaxy with highest
-        # probability
-
-        # hp.visufunc.projscatter(targetCoord.ra.deg, targetCoord.dec.deg, lonlat=True, marker='.', color=Colors[1],coord=['E','G'])
-
-        # plt.savefig("Pointing_Plotting/G274296Pointing_Comparison_%g_%g:%g.png" % (time.day, time.hour, time.minute))
-        # draw circle of HESS-I FoV around best fit position
-
-        # hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'r.', lonlat=True, coord="E")
-
-        # Draw H.E.S.S. FOV
-
-        # dec = np.empty(500)
-        # dec.fill(10)
-        # ra = np.random.rand(500) * 360
-        # hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
-
-        # dec = np.empty(500)
-        # dec.fill(-10)
-        # hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
-
-        # dec = np.random.rand(500) * 20 - 10
-        # ra = np.empty(500)
-        # ra.fill(130)
-        # hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
-
-        # ra = np.empty(500)
-        # ra.fill(-100)
-        # hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
-
-        '''
-        ra = np.random.rand(500) * 130
-        dec = ra * (-10 / 130) + 10
-        hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
-
-        ra = np.random.rand(500) * 120 - 120
-        dec = ra * (10 / 120) + 10
-        hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
-
-        ra = np.random.rand(500) * 130
-        dec = ra * (10 / 130) - 10
-        hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
-
-        ra = np.random.rand(500) * 120 - 120
-        dec = ra * (-10 / 120) - 10
-        hp.visufunc.projscatter(ra, dec, lonlat=True, marker='.', color='w', coord='G')
-
-
-
-        altcoord = np.empty(1000)
-        altcoord.fill(45)
-        azcoord = np.random.rand(1000) * 360
-        #print(time)
-        RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time[0],
-                               location=observatory)
-        RandomCoord_radec = RandomCoord.transform_to('fk5')
-        hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord=['E','G'])
-
-        RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time[-1],
-                               location=observatory)
-        RandomCoord_radec = RandomCoord.transform_to('fk5')
-        hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord=['E','G'])
-
-        #plt.show()
-
-        #LOAD galaxies
-        c_icrs= SkyCoord(ra=cat['RAJ2000'][dist<200]*u.degree, dec=cat['DEJ2000'][dist<200]*u.degree, frame='icrs')
-        subset0=c_icrs[(np.absolute(c_icrs.galactic.l.value-180)>0)&(np.absolute(c_icrs.galactic.l.value-180)<30)]
-        subset1 = c_icrs[(np.absolute(c_icrs.galactic.l.value-180)>30)&(np.absolute(c_icrs.galactic.l.value-180)<60)]
-        subset2 = c_icrs[(np.absolute(c_icrs.galactic.l.value-180)>60)&(np.absolute(c_icrs.galactic.l.value-180)<90)]
-        subset3 = c_icrs[(np.absolute(c_icrs.galactic.l.value-180)>90)&(np.absolute(c_icrs.galactic.l.value-180)<120)]
-        subset4 = c_icrs[(np.absolute(c_icrs.galactic.l.value-180)>120)&(np.absolute(c_icrs.galactic.l.value-180)<150)]
-        subset5 = c_icrs[(np.absolute(c_icrs.galactic.l.value-180) > 150) & (np.absolute(c_icrs.galactic.l.value-180) < 180)]
-
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
-        #plt.hist(c_icrs.galactic.l.value-180,90,histtype='step', stacked=True, fill=False,facecolor='g')
-        #plt.hist(c_icrs.galactic.b.value,90,fill=False,facecolor='b',stacked=True,histtype='step')
-
-        #plt.hist(subset0.galactic.l.value-180,90,histtype='step', stacked=True, fill=False,facecolor='g')
-        plt.hist(subset0.galactic.b.value,40,fill=False,facecolor='b',stacked=True,histtype='step',label='|l-180|<30')
-
-        #plt.hist(subset1.galactic.l.value-180,90,histtype='step', stacked=True, fill=False,facecolor='g')
-        plt.hist(subset1.galactic.b.value,40,fill=False,facecolor='b',stacked=True,histtype='step',label='30<|l-180|<60')
-
-        #plt.hist(subset2.galactic.l.value-180,90,histtype='step', stacked=True, fill=False,facecolor='g')
-        plt.hist(subset2.galactic.b.value,40,fill=False,facecolor='b',stacked=True,histtype='step',label='60<|l-180|<90')
-        plt.hist(subset3.galactic.b.value,40,fill=False,facecolor='b',stacked=True,histtype='step',label='90<|l-180|<120')
-        plt.hist(subset4.galactic.b.value,40,fill=False,facecolor='b',stacked=True,histtype='step',label='120<|l-180|<150')
-        plt.hist(subset5.galactic.b.value,40,fill=False,facecolor='b',stacked=True,histtype='step',label='150<|l-180|<180')
-
-        # Major ticks every 20, minor ticks every 5
-        #major_ticks = np.arange(-200, 200, 50)
-        major_ticks = np.arange(-50, 50, 10)
-        minor_ticks = np.arange(-50, 50, 5)
-
-        #ax.set_xticks(major_ticks)
-        ax.set_xticks(major_ticks)
-        ax.set_xticks(minor_ticks, minor=True)
-
-        #ax.set_yticks(major_ticks)
-        #ax.set_yticks(minor_ticks, minor=True)
-        ax.legend(loc='lower left')
-        ax.set_xlabel('Galactic latitude')
-        ax.set_ylabel('#')
-        #ax.set_ylim(0, 4000)
-        ax.set_xlim(-50, 50)
-        ax.set_yscale("log")
-        # And a corresponding grid
-        ax.grid(which='major', alpha=0.2)
-        ax.grid(which='minor', alpha=0.2)
-        #ax.grid(which='major', alpha=0.5)
-        plt.savefig("Latitude-Longitude.png")
-
-        #include them in the plot
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
-        plt.hist(c_icrs.galactic.l.value-180,90,histtype='step', stacked=True, fill=False,facecolor='g',label='l 0-30')
-        plt.hist(subset0.galactic.l.value-180,90,histtype='step', stacked=True, fill=False,facecolor='g',label='Lat 0-30')
-        plt.hist(subset1.galactic.l.value-180,90,histtype='step', stacked=True, fill=False,facecolor='g',label='Lat 30-60')
-        plt.hist(subset2.galactic.l.value-180,90,histtype='step', stacked=True, fill=False,facecolor='g',label='Lat 60-90')
-        plt.hist(subset3.galactic.l.value-180,90,histtype='step', stacked=True, fill=False,facecolor='g',label='Lat 90-120')
-        plt.hist(subset4.galactic.l.value-180,90,histtype='step', stacked=True, fill=False,facecolor='g',label='Lat 120-150')
-        plt.hist(subset5.galactic.l.value-180,90,histtype='step', stacked=True, fill=False,facecolor='g',label='Lat 120-150')
-
-        ax.legend()
-
-        #plt.show()
-
-        plt.savefig("%s/Pointing_Galaxies.png"% dirName)
-        '''
 
 
 def PlotPointingsTogether(prob, time, targetCoord1, n1, targetCoord2, n2, nside, FOV, doPlot=True):
@@ -460,7 +328,7 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
     nside = hp.npix2nside(npix)
 
     # ObservationTimearray, Coordinates, Probarray = LoadPointingsGW(SuggestedPointings)
-    ObservationTimearray = SuggestedPointingsC["Observation Time UTC"]
+    ObservationTimearray = SuggestedPointingsC["Time[UTC]"]
     Coordinates = SkyCoord(SuggestedPointingsC['RA[deg]'], SuggestedPointingsC['DEC[deg]'], frame='fk5',
                            unit=(u.deg, u.deg))
     Probarray = SuggestedPointingsC["PGW"]
