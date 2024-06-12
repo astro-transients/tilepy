@@ -7,9 +7,9 @@ import numpy as np
 
 #adjust the following as desired
 alertType = 'gw'
-configDir = '/Users/hashkar/Desktop/UniversalScheduler/config'
-datasetDir =  "/Users/hashkar/Desktop/Universa/Users/hashkar/Desktop/UniversalScheduler/call_vistool.pylScheduler/dataset/"
-outDir = '/Users/hashkar/Desktop/UniversalScheduler/output'
+configDir = '/Users/hashkar/Desktop/tilepy/examples/obsConfig/'
+datasetDir =  "/Users/hashkar/Desktop/UniversalScheduler/dataset/"
+outDir = '/Users/hashkar/Desktop/tilepy/examples/obsCases/paperPlots/'
 galcatName = "converted_GLADE.h5"
 pointingsFile = None
 locCut = 500
@@ -17,18 +17,17 @@ locCut = 500
 url = 'https://dcc.ligo.org/public/0119/P1500071/007/927563_lalinference.fits.gz'
 ObsArray = ['CTAN', 'CTAS']
 obsTime = '2023-03-15 10:30:10'
+colors_list = ['blue', 'green']
 parameters = []
 obsparameters = []
 
-name = 'P1500071_CTAO'
-PointingsFile1 = '/Users/hashkar/Desktop/UniversalScheduler/output/P1500071/PGalinFoV_NObs/SuggestedPointings_GWOptimisation.txt'
-dirName = 'test_paper'
-
-
+name = '927563_lalinference_CTAO'
+PointingsFile1 = '/Users/hashkar/Desktop/tilepy/examples/obsCases/927563_lalinference_PAPER/PGalinFoV_NObs/SuggestedPointings_GWOptimisation.txt'
+dirName = '/Users/hashkar/Desktop/tilepy/examples/obsCases/paperPlots'
 
 
 for i in ObsArray:
-    parameters.append("./config/FollowupParameters_%s.ini" % i)
+    parameters.append("/Users/hashkar/Desktop/tilepy/examples/obsConfig/FollowupParameters_%s.ini" % i)
 print("===========================================================================================")
 print('parameters', parameters)
 obsparameters = []
@@ -49,19 +48,18 @@ prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanc
 tGals0, sum_dP_dV = CorrelateGalaxies_LVC(prob, distmu, distsigma, distnorm, cat, True, obspar.minimumProbCutForCatalogue)
 
 
-
 center = SkyCoord(195, 15, unit='deg', frame='icrs')
 radius = '20 deg'
 
-Pretty_Plot(url, name, PointingsFile1, dirName, obspar, tGals0, center, radius)
+Pretty_Plot(url, name, PointingsFile1, dirName, obspar, tGals0, center, radius, colors_list)
 
 
 
 ##################################
-ra = ['08:25:08.857']
-dec = ['-24:43:45.91']
+#ra = ['08:25:08.857']
+#dec = ['-24:43:45.91']
 
-filename = 'Bilby.offline0.multiorder-2.fits'
+#filename = 'Bilby.offline0.multiorder-2.fits'
 
-coordinates = SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
-LocateSource(filename, coordinates.ra, coordinates.dec, PercentCov=90)
+#coordinates = SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
+#LocateSource(filename, coordinates.ra, coordinates.dec, PercentCov=90)
