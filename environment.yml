@@ -21,7 +21,7 @@ dependencies:
   - pip:
     - gdpyc
     - MOCpy #==0.10.0
-    - matplotlib #==2.2.2
+    - matplotlib<3.9.0
     - ephem
     - ligo.skymap~=1.0.7
     - tables
