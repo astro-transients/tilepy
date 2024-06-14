@@ -18,7 +18,7 @@ def ObtainCumulativeProbabilityPlot(folder_path, event_name, WhatToPlot, interac
     df[WhatToPlot] = df[WhatToPlot]*100
     grouped_data = df.groupby(observatory_column)
 
-    time_shifted = pd.to_datetime(df["Observation Time UTC"]) + pd.to_timedelta(df["Duration"],unit="m")
+    time_shifted = pd.to_datetime(df["Time[UTC]"]) + pd.to_timedelta(df["Duration"],unit="m")
     df['end_obs'] = time_shifted
     sorted_df = df.sort_values(by='end_obs')
     
@@ -31,7 +31,7 @@ def ObtainCumulativeProbabilityPlot(folder_path, event_name, WhatToPlot, interac
         duration = observatory_data["Duration"].iloc[0]
         
         # Extract relevant columns for the plot
-        x_values = pd.to_datetime(observatory_data["Observation Time UTC"])
+        x_values = pd.to_datetime(observatory_data["Time[UTC]"])
         y_values = observatory_data[WhatToPlot].cumsum()
 
         #  Calculate shifted x_values
@@ -77,7 +77,7 @@ def ObtainCumulativeProbabilityPlotLog(folder_path, event_name, WhatToPlot, inte
     df[WhatToPlot] = df[WhatToPlot]*100
     grouped_data = df.groupby(observatory_column)
 
-    time_shifted = pd.to_datetime(df["Observation Time UTC"]) + pd.to_timedelta(df["Duration"],unit="m")
+    time_shifted = pd.to_datetime(df["Time[UTC]"]) + pd.to_timedelta(df["Duration"],unit="m")
     df['end_obs'] = time_shifted
     sorted_df = df.sort_values(by='end_obs')
     
@@ -90,7 +90,7 @@ def ObtainCumulativeProbabilityPlotLog(folder_path, event_name, WhatToPlot, inte
         duration = observatory_data["Duration"].iloc[0]
         
         # Extract relevant columns for the plot
-        x_values = pd.to_datetime(observatory_data["Observation Time UTC"])
+        x_values = pd.to_datetime(observatory_data["Time[UTC]"])
         y_values = observatory_data[WhatToPlot].cumsum()
 
         #  Calculate shifted x_values

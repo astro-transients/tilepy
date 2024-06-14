@@ -252,8 +252,7 @@ def GetUniversalSchedule(obspar):
                                 '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name), obspar[j].name)
                 PointingPlotting(prob, obspar[j], obspar[j].name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
                     dirName, obspar[j].name), obspar[j].name, filename, cat)
-        PointingPlotting(prob, obspar[0], "all", dirName,
-                             '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all", filename, cat)
+        PointingPlotting(prob, obspar[0], "all", dirName,'%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all", filename, cat)
     else:
         FOLLOWUP = False
         print('No observations are scheduled')

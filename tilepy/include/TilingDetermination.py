@@ -1294,7 +1294,7 @@ def PGalinFoV_NObs(filename, ObservationTime0, PointingFile, galFile, obsparamet
                 TIME_MIN = TIME_MIN + datetime.timedelta(hours=12)
 
         i += 1
-    print(ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round, ObsName)
+
     SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round, ObsName, Duration, Fov_obs], names=[
                                'Time[UTC]', 'RA(deg)', 'DEC(deg)', 'PGW', 'Pgal', 'Round', 'ObsName', 'Duration', 'FoV'])
     print('The total probability PGal: ', np.sum(P_GALarray))
