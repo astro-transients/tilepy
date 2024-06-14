@@ -21,4 +21,4 @@ dependencies:
   - ephem
   - ligo.skymap>=2.0.0
   - matplotlib<3.9.0
-  - mocpy==0.10.0
+  - mocpy
