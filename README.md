@@ -11,11 +11,11 @@ conda env create -n tilepyenv -f environment.yml
 conda activate tilepyenv
 python -m pip install .
 ```
-Some users have encounter problems with mocpy in conda. If this is your case:
+Some users have encounter problems with the use of the `mocpy` package within conda. If this is your case follow these instructions:
 ```python
-remove mocpy from the environment.yml
-create and activate the environment as described above
-run "pip install mocpy"
+- remove mocpy from the environment.yml
+- create and activate the environment as described above
+- run "pip install mocpy"
 ```
 
 If you prefer to avoid conda and use a virtual environment with your favorite python version, use the following sequence:
