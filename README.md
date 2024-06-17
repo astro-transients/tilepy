@@ -59,10 +59,9 @@ Package including functions to perform GW follow-up scheduling and simulations i
 
 - relics: Old scripts that may be useful in the future
 
-- examples: Example on how to use tilepy:
-    - obsCases: plots and scripts used to produced the results presented in an incoming paper. It contains a variety of astrophysical cases and observatory configurations. 
-    - obsLauncher: Jupyter notebooks and .py to run observation schedules for 1 telescope and N telescopes. We recommend to use the Jupyter notebooks as these are more comprehensive, specially with the inputs given. 
-    - obsConfig: three examples of configuration files, used in the notebooks to run the scripts. The format is the following: 
+- examples: Examples on how to use tilepy, see dedicated <a href="examples/README.md">README</a>
+    - launcher: Jupyter notebooks and .py scripts to run observation schedules for various use-cases. We recommend to use the Jupyter notebooks as these are more comprehensive, specially with the inputs given. 
+    - config: three examples of configuration files, used in the notebooks to run the scripts. The format is the following: 
        - [observatory]
           - name: name of the observatory (it is not critical, you can use any name) 
           - lat: lat coordinates of the observatory 
