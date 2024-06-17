@@ -28,14 +28,14 @@ python -m pip install -r requirements.txt
 
 Requirements of the installation: 
 
-- The current version of the package **only** runs with `python>=3.9`. Python 3.9 is recommended. Careful as well with the versions of matplotlib and healpy, they should be the ones explicited in the requirements.yml, otherwise there will be conflicts between them when plotting skymaps.  
+- The current version of the package **only** runs with `python>=3.9`. Python 3.9 is recommended. Be careful as well with the versions of matplotlib and healpy, they should be the ones explicitly given in the requirements.yml, otherwise conflicts between them when plotting skymaps will arise.  
 - Note that by creating the env from the environment.yml, the libraries and versions needed will be installed automatically.
-- Note that everytime we made changes to the package, you should update the installation of the package doing ```pip install .``` in the folder where the setup.py is. The changes will be only applied to the env where you are working. 
-- The package relies on 'curl' to download the localisaton map of the multi-messenger events.
+- Note that every time we made changes to the package, you should update the installation of the package doing ```pip install .``` in the folder where the setup.py is located. The changes will be only applied to the env in which you are working. 
+- The package relies on 'curl' to download the localisation map of the multi-messenger events.
 
 In the case you are working in CC-Lyon, the easiest solution is to do```ccenv conda ``` and then follow the instructions given above. 
 
-If you have any problem with the installation of the package, please drop an email to astro.tilepy@gmail.com. 
+If you have any problem with the installation of the package, please drop an email to `astro.tilepy@gmail.com` or join the discussion forum at `https://forum.astro-colibri.science/c/instrumentation-and-tools/tilepy`
 
 ## Creation of a galaxy catalog
 
@@ -48,7 +48,6 @@ Example: use the script to keep only galaxies that are within 500 Mpc (recommend
 python ConvertGalaxyCatalog.py --input GLADE+.txt --output Gladeplus.h5 --max-luminosity-distance 500
 ```
 
-
 ## Description
 
 Package including functions to perform GW follow-up scheduling and simulations in IACTS. The package can be found in the folder tilepy, which contains the following folders: 
@@ -56,13 +55,13 @@ Package including functions to perform GW follow-up scheduling and simulations i
 - tilepy: Folder including the package
     - tilepy.tools: Includes several scripts that have been used so far for different aims related to visualization and catalog cleaning 
     - tilepy.include: The main functions used by the two main scripts are in this folder. It includes the Pointing Tools specifically for CTA (the others are in GWHESSPointing tool which is imported by GWCTAPointingTools), the CTA observation scheduler, simulation tools and analysis tools (both using gammapy)
-    - tilepy.dataset: This is a folder where we recomend to put files as finals2000.all. You will see it empty. 
+    - tilepy.dataset: This is a folder where we recommend to put files as finals2000.all. You will see it empty. 
 
 - relics: Old scripts that may be useful in the future
 
 - examples: Example on how to use tilepy:
-    - obsCases: plots and scripts used to produced the results presented in an incoming paper. It contains a variety of astrophysical cases and observatory configutations. 
-    - obsLauncher: Jupyter notebooks and .py to run observation schedulings for 1 telescope and N telescopes. We recommend to use the Jupyter notebooks as these are more comprehensive, specially with the inputs given. 
+    - obsCases: plots and scripts used to produced the results presented in an incoming paper. It contains a variety of astrophysical cases and observatory configurations. 
+    - obsLauncher: Jupyter notebooks and .py to run observation schedules for 1 telescope and N telescopes. We recommend to use the Jupyter notebooks as these are more comprehensive, specially with the inputs given. 
     - obsConfig: three examples of configuration files, used in the notebooks to run the scripts. The format is the following: 
        - [observatory]
           - name: name of the observatory (it is not critical, you can use any name) 
@@ -117,6 +116,7 @@ iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 ```
 
 ## Help
-If any problem is found, please open a new issue in the project main page to document it. You can of course also directly create a Pull Request with new features.
+If you find any problem, please open a new issue in the project main page to document it. You can of course also directly create a Pull Request with new features.
 
-Otherwise you can also contact us at astro.tilepy@gmail.com.
+Otherwise you can also contact us at `astro.tilepy@gmail.com`
+A user/developer discussion forum is available at `https://forum.astro-colibri.science/c/instrumentation-and-tools/tilepy`
