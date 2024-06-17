@@ -11,7 +11,12 @@ conda env create -n tilepyenv -f environment.yml
 conda activate tilepyenv
 python -m pip install .
 ```
-Some users have encounter problems with mocpy in conda. If it is your case, once you activate the environment, install mocpy via ```pip install mocpy```.
+Some users have encounter problems with mocpy in conda. If this is your case:
+```python
+remove mocpy from the environment.yml
+create and activate the environment as described above
+run "pip install mocpy"
+```
 
 If you prefer to avoid conda and use a virtual environment with your favorite python version, use the following sequence:
 ```
@@ -24,13 +29,14 @@ python -m pip install -r requirements.txt
 Requirements of the installation: 
 
 - The current version of the package **only** runs with `python>=3.9`. Python 3.9 is recommended. Careful as well with the versions of matplotlib and healpy, they should be the ones explicited in the requirements.yml, otherwise there will be conflicts between them when plotting skymaps.  
-- Note that by creating the env from the environment.yml, the libraries and versions needed will be installed authomatically.
+- Note that by creating the env from the environment.yml, the libraries and versions needed will be installed automatically.
 - Note that everytime we made changes to the package, you should update the installation of the package doing ```pip install .``` in the folder where the setup.py is. The changes will be only applied to the env where you are working. 
 - The package relies on 'curl' to download the localisaton map of the multi-messenger events.
 
 In the case you are working in CC-Lyon, the easiest solution is to do```ccenv conda ``` and then follow the instructions given above. 
 
 If you have any problem with the installation of the package, please drop an email to astro.tilepy@gmail.com. 
+
 ## Description
 
 Package including functions to perform GW follow-up scheduling and simulations in IACTS. The package can be found in the folder tilepy, which contains the following folders: 
