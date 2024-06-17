@@ -10,7 +10,7 @@ logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
 # Define argument parser
 parser = argparse.ArgumentParser(
-    description='Tool to converte GLADE+ catalog to internal data format')
+    description='Tool to convert GLADE+ catalog into internal data format')
 parser.add_argument("-i", "--input", nargs='?',
                     dest='input', action='store',
                     required=True, help="Input catalog file")
