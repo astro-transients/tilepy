@@ -37,6 +37,18 @@ In the case you are working in CC-Lyon, the easiest solution is to do```ccenv co
 
 If you have any problem with the installation of the package, please drop an email to astro.tilepy@gmail.com. 
 
+## Creation of a galaxy catalog
+
+For using the 3D algorithm tilepy need to have access to a galaxy catalog. Currently, the only supported catalog is GLADE+. You'll find the download link on this webpage : https://glade.elte.hu.
+To prepare it for usage by tilepy we provide a the `ConvertGalaxyCatalog.py` script that converts the original catalog into a hdf5 file compatible with tilepy. The script is located in the `tilepy/tools` repository.
+
+Example: use the script to keep only galaxies that are within 500 Mpc (recommended). It reads the downloaded `GLADE+.txt` file and creates the output file `Gladeplus.h5` which is the one that should be used with tilepy. You'll be able to specify the path to that file in your tilepy configuration. The examples assume the `Gladeplus.h5` to be located in the `tilepy/dataset/` directory.
+
+```bash
+python ConvertGalaxyCatalog.py --input GLADE+.txt --output Gladeplus.h5 --max-luminosity-distance 500
+```
+
+
 ## Description
 
 Package including functions to perform GW follow-up scheduling and simulations in IACTS. The package can be found in the folder tilepy, which contains the following folders: 
@@ -88,16 +100,6 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - HRnside: nside of the high-resolution skymap used to compute the covered probability
           - mangrove: flag to use the mangrove method of weighting by the mass of the host galaxy
 
-## Creation of the reduced galaxy file
-
-For using the 3D algorithm tilepy need to have access to a galaxy catalog. Currently, the only supported catalog is GLADE+. You'll find the download link on this webpage : https://glade.elte.hu.
-To prepare it for usage by tilepy we provide a the `ConvertGalaxyCatalog.py` script that converts the original catalog into a hdf5 file compatible with tilepy. The script is located in the `tilepy/tools` repository.
-
-Example: use the script to keep only galaxies that are within 500 Mpc (recommended). It reads the downloaded `GLADE+.txt` file and creates the output file `converted_GLADE.h5` which is the one that should be used with tilepy.
-
-```bash
-python ConvertGalaxyCatalog.py --input GLADE+.txt --output converted_GLADE.h5 --max-luminosity-distance 500
-```
 
 ## Issue with Daily Earth Orientation Parameters Solutions file (finals2000A)
 
