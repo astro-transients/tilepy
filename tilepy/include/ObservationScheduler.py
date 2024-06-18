@@ -24,7 +24,7 @@ from .TilingDetermination import PGWinFoV, PGalinFoV
 from .TilingDetermination import PGWinFoV_NObs, PGalinFoV_NObs
 from .RankingObservationTimes import RankingTimes, RankingTimes_2D
 from .PointingPlotting import PointingPlotting
-from .PointingTools import GetGBMMap, GetGWMap,getdate, Check2Dor3D, ObservationParameters, GetAreaSkymap5090, GetAreaSkymap5090_Flat
+from .PointingTools import getdate, Check2Dor3D, ObservationParameters, GetAreaSkymap5090, GetAreaSkymap5090_Flat, GetSkymap
 from astropy.io import fits, ascii
 from astropy.table import QTable
 from astropy import units as u
@@ -48,26 +48,8 @@ def GetSchedule(obspar):
     :type obspar: class ObservationParameters
     """
 
-    URL = obspar.url
+    fitsMap, filename, name = GetSkymap(obspar)
 
-    if obspar.alertType == 'gbmpng':
-        fitsMap, filename = GetGBMMap(URL)
-        if fitsMap is None and filename is None:
-            print('The localization map is not available, returning.')
-            return
-        name = URL.split('/')[-3]
-    elif obspar.alertType == 'gbm':
-        fitsMap = fits.open(URL)
-        if fitsMap is None:
-            print('The localization map is not available, returning.')
-            return
-        filename = URL
-        name = URL.split('all_')[1].split('_v00')[0]
-    else:
-        fitsMap, filename = GetGWMap(URL)
-        name = URL.split('/')[-3]
-
-    
     prob, has3D, origNSIDE = Check2Dor3D(fitsMap, filename, obspar)
 
     # adapting the resolutions to the one provided in the original map
@@ -172,27 +154,7 @@ def GetUniversalSchedule(obspar):
     :param obspar: a list of sets of parameters for each observatory needed to launch the tiling scheduler
     :type obsparameters: list of class ObservationParameters
     '''
-
-    URL = obspar[0].url
-    print(URL)
-
-    if obspar[0].alertType == 'gbmpng':
-        fitsMap, filename = GetGBMMap(URL)
-        if fitsMap is None and filename is None:
-            print('The localization map is not available, returning.')
-            return
-        name = URL.split('/')[-3]
-    elif obspar[0].alertType == 'gbm':
-        fitsMap = fits.open(URL)
-        if fitsMap is None:
-            print('The localization map is not available, returning.')
-            return
-        filename = URL
-        name = URL.split('all_')[1].split('_v00')[0]
-    else:
-        fitsMap, filename = GetGWMap(URL)
-        name = URL.split('/')[-3]
-
+    fitsMap, filename, name = GetSkymap(obspar[0])
     
     prob, has3D, origNSIDE = Check2Dor3D(fitsMap, filename, obspar[0])
 

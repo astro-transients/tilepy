@@ -5,7 +5,7 @@ import argparse
 import os
 from tilepy.include.RankingObservationTimes import RankingTimes_2D
 from tilepy.include.PointingPlotting import PointingPlotting
-from tilepy.include.PointingTools import GetGBMMap, GetGWMap, Check2Dor3D, ObservationParameters, LoadHealpixMap, LoadGalaxies, LoadGalaxies_SteMgal, CorrelateGalaxies_LVC, CorrelateGalaxies_LVC_SteMass
+from tilepy.include.PointingTools import GetSkymap, Check2Dor3D, ObservationParameters, LoadHealpixMap, LoadGalaxies, LoadGalaxies_SteMgal, CorrelateGalaxies_LVC, CorrelateGalaxies_LVC_SteMass
 import os
 import time
 import healpy as hp
@@ -13,7 +13,7 @@ import numpy as np
 from astropy.io import fits
 
 
-def RankPlot(url, alertType, obsTime, configDir, datasetDir, outDir, galcatName, pointingsFile, locCut, ObsArray):
+def RankPlot(skymap, alertType, obsTime, configDir, datasetDir, outDir, galcatName, pointingsFile, locCut, ObsArray):
 
     parameters = []
 
@@ -27,7 +27,7 @@ def RankPlot(url, alertType, obsTime, configDir, datasetDir, outDir, galcatName,
 
     for j in range(len(parameters)):
         obspar = ObservationParameters()
-        obspar.add_parsed_args(url, obsTime, datasetDir, galcatName, outDir, pointingsFile, alertType, locCut)
+        obspar.add_parsed_args(skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, alertType, locCut)
         obspar.from_configfile(parameters[j])
         print(obspar)
         obsparameters.append(obspar)
@@ -35,23 +35,24 @@ def RankPlot(url, alertType, obsTime, configDir, datasetDir, outDir, galcatName,
     
     galaxies = datasetDir + galcatName
 
-    URL = obsparameters[0].url
-    print(URL)
+    skymap = obsparameters[0].skymap
+    print(skymap)
 
-    if obsparameters[0].alertType == 'gbmpng':
-        fitsMap, filename = GetGBMMap(URL)
-        if fitsMap is None and filename is None:
-            print('The localization map is not available, returning.')
-        name = URL.split('/')[-3]
-    elif obsparameters[0].alertType == 'gbm':
-        fitsMap = fits.open(URL)
-        if fitsMap is None:
-            print('The localization map is not available, returning.')
-        filename = URL
-        name = URL.split('all_')[1].split('_v00')[0]
-    else:
-        fitsMap, filename = GetGWMap(URL)
-        name = URL.split('/')[-3]
+    fitsMap, filename, name = GetSkymap(skymap) 
+    #if obsparameters[0].alertType == 'gbmpng':
+    #    fitsMap, filename = GetGBMMap(skymap)
+    #    if fitsMap is None and filename is None:
+    #        print('The localization map is not available, returning.')
+    #    name = URL.split('/')[-3]
+    #elif obsparameters[0].alertType == 'gbm':
+    #    fitsMap = fits.open(URL)
+    #    if fitsMap is None:
+    #        print('The localization map is not available, returning.')
+    #    filename = URL
+    #    name = URL.split('all_')[1].split('_v00')[0]
+    #else:
+    #    fitsMap, filename = GetGWMap(URL)
+    #    name = URL.split('/')[-3]
 
     prob, has3D, origNSIDE = Check2Dor3D(fitsMap, filename, obspar)
     print("Original NSIDE", origNSIDE, has3D)

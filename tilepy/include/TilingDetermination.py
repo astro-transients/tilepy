@@ -92,7 +92,7 @@ def PGWinFoV(filename,obspar,dirName):
     Duration = []
 
     print()
-    print('-------------------   NEW LVC EVENT   --------------------')
+    print('-------------------   NEW EVENT   --------------------')
     print()
 
     print('Loading map from ', filename)
