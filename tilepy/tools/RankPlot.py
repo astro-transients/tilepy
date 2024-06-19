@@ -97,8 +97,8 @@ def RankPlot(skymap, alertType, obsTime, configDir, datasetDir, outDir, galcatNa
         #RankingTimes_2D(ObservationTime, prob, obsparameters[j], obsparameters[j].alertType, dirName,
         #                '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obsparameters[j].name), obsparameters[j].name)
         PointingPlotting(prob, obsparameters[j], obsparameters[j].name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
-            dirName, obsparameters[j].name), obsparameters[j].name, filename, tGals0)
+            dirName, obsparameters[j].name), obsparameters[j].name, tGals0)
         
     PointingPlotting(prob, obsparameters[0], "all", dirName,
-                            '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all", filename, tGals0)
+                            '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all", tGals0)
 

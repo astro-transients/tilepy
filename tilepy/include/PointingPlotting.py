@@ -124,7 +124,7 @@ def LoadPointings(tpointingFile):
 
 
 
-def PointingPlotting(prob, obspar, name, dirName, PointingsFile1, ObsArray, filename, gal):
+def PointingPlotting(prob, obspar, name, dirName, PointingsFile1, ObsArray, gal):
     npix = len(prob)
     nside = hp.npix2nside(npix)
 

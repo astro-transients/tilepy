@@ -108,7 +108,7 @@ def GetSchedule(obspar):
                             '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name)
             if(obspar.doPlot):
                 PointingPlotting(prob, obspar, name, dirName,
-                                '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name, filename, cat)
+                                '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name, cat)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
@@ -139,7 +139,7 @@ def GetSchedule(obspar):
                                 '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name)
             if(obspar.doPlot):
                 PointingPlotting(prob, obspar, name, dirName,
-                                '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name, filename, gal)
+                                '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name, gal)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
@@ -213,8 +213,8 @@ def GetUniversalSchedule(obspar):
                 RankingTimes_2D(ObservationTime, prob, obspar[j], obspar[j].alertType, dirName,
                                 '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name), obspar[j].name)
                 PointingPlotting(prob, obspar[j], obspar[j].name, dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
-                    dirName, obspar[j].name), obspar[j].name, filename, cat)
-        PointingPlotting(prob, obspar[0], "all", dirName,'%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all", filename, cat)
+                    dirName, obspar[j].name), obspar[j].name, cat)
+        PointingPlotting(prob, obspar[0], "all", dirName,'%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all", cat)
     else:
         FOLLOWUP = False
         print('No observations are scheduled')
