@@ -113,7 +113,6 @@ def LoadPointingsGAL(tpointingFile):
     return time, coordinates, Pgw, Pgal
 
 
-
 def LoadPointings(tpointingFile):
     print("Loading pointings from " + tpointingFile)
     # Read the first line of the file to determine column names
@@ -449,21 +448,6 @@ def PointingPlottingGW_ZenithSteps(filename, name, dirName, FOV, InputTimeObs, O
             converted_time = datetime.datetime.strptime(
                 time, '%Y-%m-%d %H:%M:%S')
 
-    # t = 0.5 * np.pi - Coordinates[0].dec.rad
-    # p = Coordinates[0].ra.rad
-    # xyz = hp.ang2vec(t, p)
-
-    # ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
-
-    # tt, pp = hp.pix2ang(nside, ipix_disc)
-    # ra2 = np.rad2deg(pp)
-    # dec2 = np.rad2deg(0.5 * np.pi - tt)
-
-    # skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
-
-    # frame = co.AltAz(obstime=converted_time, location=observatory.location)
-    # altaz_all = skycoord.transform_to(frame)
-
     dirName = '%s/Pointing_Plotting_%s/%s' % (dirName, ObsArray, name)
     if not os.path.exists(dirName):
         os.makedirs(dirName)
@@ -529,9 +513,9 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
         ragal = gal['RAJ2000']
         decgal = gal['DEJ2000']
         galprob = gal['dp_dV']
-        print("WE HAVE GALAXIES TO PLOT")
+        print("Plotting galaxies")
     except:
-        print("NO GALAXIES GIVEN TO PLOT 1")
+        print("No galaxies given")
     # Read the pointings file
     tpointingFile = PointingsFile1
     # tpointingFile = '/Users/mseglar/Documents/GitLab/lst_gwfollowup/output/bn180720598/PGWinFoV/RankingObservationTimes_Complete.txt'
@@ -628,7 +612,7 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
         cbar_inset = plt.colorbar(sc_inset, ax=ax_inset)
         cbar_inset.set_label('Galaxy probability density')
     except:
-        print('NO GALAXIESW GIVEN TO PLOT 2')
+        print('No galaxies given for plot 2')
         
     unique_obs_names = np.unique(nametel) 
     if colorspar == None:
@@ -680,4 +664,3 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
     cbar.set_label("Map probability density",  color='black', fontsize=9)
     plt.savefig("%s/Plot_PrettyMap_%s.png" % (dirName, name), dpi=300, bbox_inches='tight')
     plt.close()
-    #plt.show()
