@@ -49,66 +49,6 @@ else:
 #    os.path.dirname(__file__)), '../dataset/finals2000A.all')
 #iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
-def load_healpix_map(filename):
-    '''Download aLIGO HEALpix map and keep in cache
-        RETURNS:
-
-        --------
-
-        tprob : array of p-values as a function of sky position
-
-        tdistmu : array of distance estimate
-
-        tdistsigma : array of error on distance estimates
-
-        distnorm : array of distance normalisations
-
-        detectors: which interferometers triggered
-
-        event_id: ID of the event
-
-        distmean: mean distance from the header
-
-        disterr: error on distance from the header
-
-        '''
-    PrintFileName = "Loading LVC HEALPix map from file: " + filename
-    # print(PrintFileName)
-    fitsfile = fits.open(filename)
-
-    tevent_id = "Non specified"
-    tdetectors = ""
-    tdistmean = 0
-    tdisterr = 0
-    tdistmu = []
-    tdistsigma = []
-    tdistnorm = []
-
-    if 'OBJECT' in fitsfile[1].header:
-        tevent_id = fitsfile[1].header['OBJECT']
-    else:
-        tevent_id = "Non specified"
-
-    if 'INSTRUME' in fitsfile[1].header:
-        tdetectors = fitsfile[1].header['INSTRUME']
-    else:
-        tdetectors = "Non specified"
-
-    if (fitsfile[1].header['TFIELDS'] == 4):
-        tprob, tdistmu, tdistsigma, tdistnorm = hp.read_map(
-            filename, field=range(4))
-        tdistmean = fitsfile[1].header['DISTMEAN']
-        tdisterr = fitsfile[1].header['DISTSTD']
-        print('Event has triggered ', tdetectors, ' => distance = ',
-              tdistmean, ' +- ', tdisterr, ' Mpc')
-    else:
-        tprob = hp.read_map(filename, field=range(1))
-    # raise
-
-    fitsfile.close()
-
-    return tprob, tdistmu, tdistsigma, tdistnorm, tdetectors, tevent_id, tdistmean, tdisterr
-
 
 def load_pointingFile(tpointingFile):
     # Read PointingsFile
