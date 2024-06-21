@@ -2,7 +2,7 @@ import os
 import sys
 from ..include.PointingTools import NightDarkObservation, NightDarkObservationwithGreyTime, ObservationParameters, getdate, Get90RegionPixReduced, TransformRADec
 from ..include.Observatories import CTANorthObservatory, CTASouthObservatory, HESSObservatory
-from ..include.PointingPlotting import LoadPointingsGAL, PlotPointingsTogether, PlotPointings_Pretty
+from ..include.PointingPlotting import LoadPointings, LoadPointingsGAL, PlotPointingsTogether, PlotPointings_Pretty
 
 import healpy as hp
 import numpy as np
@@ -182,7 +182,7 @@ def Time_DarkTime_GreyTime(filename, cfgFile, date=datetime.datetime.now(timezon
     print("-----------------------------------------------------------------")
 
 
-def CompareTwoTilings(filename, PointingsFile1=False, PointingsFile2=False, FOV=2):
+def CompareTwoTilings(filename, PointingsFile1=False, PointingsFile2=False, FOV=2, plotType='mollweide'):
     # Format of Pointing Files should be YYYY-MM-DD hh:mm:ss RAarray DECarray P_GWarray P_Galarray Round)
 
     print("===========================================================================================")
@@ -206,26 +206,26 @@ def CompareTwoTilings(filename, PointingsFile1=False, PointingsFile2=False, FOV=
 
     else:
         print('Loading pointings')
+        df1 = LoadPointings (PointingsFile1)
+        df2 = LoadPointings (PointingsFile2)
 
-        ObservationTimearray1, Coordinates1, Pgw1, Pgal1 = LoadPointingsGAL(
-            PointingsFile1)
-        ObservationTimearray2, Coordinates2, Pgw2, Pgal2 = LoadPointingsGAL(
-            PointingsFile2)
 
-        print('Summary of 1st file: sum(PW)=', sum(Pgw1),
-              'sum(PGAL)=', sum(Pgal1), 'total pointings', len(Pgal1))
-        print('Summary of 2nd file: sum(PW)=', sum(Pgw2),
-              'sum(PGAL)=', sum(Pgal1), 'total pointings', len(Pgal2))
+        print('Summary of 1st file: sum(PW)=', sum(df1['PGW']),
+              'sum(PGAL)=',  sum(df1['Pgal']), 'total pointings', len(df1['PGW']))
+        print('Summary of 2st file: sum(PW)=', sum(df2['PGW']),
+              'sum(PGAL)=',  sum(df2['Pgal']), 'total pointings', len(df2['PGW']))
         print("===========================================================================================")
 
         name1 = 'File1'
         name2 = 'File2'
+        ObservationTimearray1 = df1['Time[UTC]']
 
-        PlotPointingsTogether(prob, ObservationTimearray1, Coordinates1, name1, Coordinates2, name2, nside, FOV,
+        Coordinates1 = co.SkyCoord(df1['RA(deg)'].tolist(), df1['DEC(deg)'].tolist(), frame='fk5', unit=(u.deg, u.deg))
+        Coordinates2 = co.SkyCoord(df2['RA(deg)'].tolist(), df2['DEC(deg)'].tolist(), frame='fk5', unit=(u.deg, u.deg))
+        PlotPointingsTogether(prob, ObservationTimearray1, Coordinates1, name1, Coordinates2, name2, nside, FOV, plotType,
                               doPlot=True)
     plt.show()
 
 
 def Pretty_Plot(filename, name, PointingsFile1, dirName,  obspar, gal, center, radius, colors):
-    #PlotPointings_Pretty(filename, name, PointingsFile1, dirName)
     PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, center, radius, colors)

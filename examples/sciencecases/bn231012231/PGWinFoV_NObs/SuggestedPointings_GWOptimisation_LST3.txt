@@ -1,4 +1,4 @@
-"Observation Time UTC" RA(deg) DEC(deg) PGW Round ObsName Duration FoV
+Time[UTC] RA(deg) DEC(deg) PGW Pgal Round ObsName Duration FoV
 "2023-10-12 20:42:18" 32.6953 23.318 0.0646 1 LST3 15 2.5
 "2023-10-12 20:57:18" 27.7734 23.9695 0.049 1 LST3 15 2.5
 "2023-10-12 21:12:18" 24.2578 12.0247 0.0308 1 LST3 15 2.5

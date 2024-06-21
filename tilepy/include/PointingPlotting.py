@@ -222,19 +222,12 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
 
 
 
-def PlotPointingsTogether(prob, time, targetCoord1, n1, targetCoord2, n2, nside, FOV, doPlot=True):
+def PlotPointingsTogether(prob, time, targetCoord1, n1, targetCoord2, n2, nside, FOV, plotType, doPlot=True):
 
     t = 0.5 * np.pi - targetCoord1[0].dec.rad
     p = targetCoord1[0].ra.rad
 
-    # print('t, p, targetCoord1[0].ra.deg, targetCoord1[0].dec.deg',t, p, targetCoord1[0].ra.deg, targetCoord1[0].dec.deg)
-
     xyz = hp.ang2vec(t, p)
-
-    # print(xyz)
-
-    # translate pixel indices to coordinates
-
     ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV))
 
     if (doPlot):
@@ -252,54 +245,44 @@ def PlotPointingsTogether(prob, time, targetCoord1, n1, targetCoord2, n2, nside,
         # path = os.path.dirname(os.path.realpath(__file__)) + '/Pointing_Plotting'
         # if not os.path.exists(path):
         #    os.mkdir(path, 493)
-        hp.gnomview(prob, xsize=500, ysize=500, rot=[
-                    targetCoord1[0].ra.deg, targetCoord1[0].dec.deg], reso=5.0)
-        # hp.mollview(prob,title="GW prob map (Ecliptic)",coord='C')
+        if(plotType=='gnomonic'): 
+            hp.gnomview(prob, xsize=1000, ysize=1000, rot=[targetCoord1[0].ra.deg, targetCoord1[0].dec.deg], reso=5.0)
+        if(plotType=='mollweide'): 
+            hp.mollview(prob,title="GW prob map (Ecliptic)",coord='C')
         hp.graticule()
 
         hp.visufunc.projscatter(
             targetCoord1.ra.deg, targetCoord1.dec.deg, lonlat=True, marker='.', color=Colors[4])
         hp.visufunc.projscatter(
-            targetCoord2.ra.deg, targetCoord2.dec.deg, lonlat=True, marker='.', color=Colors[5])
+            targetCoord2.ra.deg, targetCoord2.dec.deg, lonlat=True, marker='.',color=Colors[5])
 
-        # plt.savefig("Pointing_Plotting/G274296Pointing_Comparison_%g_%g:%g.png" % (time.day, time.hour, time.minute))
-        # draw circle of HESS-I FoV around best fit position
-
-        # hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'r.', lonlat=True, coord="E")
-
-        # Draw H.E.S.S. FOV
-        Fov_array = np.empty(400)
+        npoints = 400
+        Fov_array = np.empty(npoints)
         Fov_array.fill(FOV)
 
-        theta = np.random.rand(400) * 360
-        tarcoordra1 = np.empty(400)
+        theta = np.random.rand(npoints) * 360
+        tarcoordra1 = np.empty(npoints)
 
-        tarcoorddec1 = np.empty(400)
+        tarcoorddec1 = np.empty(npoints)
         for j in range(0, len(targetCoord1.ra)):
             tarcoordra1.fill(targetCoord1[j].ra.deg)
             tarcoorddec1.fill(targetCoord1[j].dec.deg)
             racoord1 = tarcoordra1 + Fov_array * np.cos(theta)
             deccoord1 = tarcoorddec1 + Fov_array * np.sin(theta)
-            hp.visufunc.projscatter(
-                racoord1, deccoord1, lonlat=True, marker='.', color=Colors[2])
-            hp.projtext(targetCoord1[j].ra, targetCoord1[j].dec, str(
-                j), lonlat=True, color=Colors[2])
+            hp.visufunc.projscatter(racoord1, deccoord1, lonlat=True, marker='.', color=Colors[2])   
+            hp.projtext(targetCoord1[j].ra, targetCoord1[j].dec, str(j), lonlat=True, color=Colors[1])
         # plt.savefig("Pointing_Plotting_%s/G274296Pointing_GW_%g_%g:%g.png" % (ObsArray, time.day, time.hour,time.minute))
 
-        tarcoordra2 = np.empty(400)
+        tarcoordra2 = np.empty(npoints)
 
-        tarcoorddec2 = np.empty(400)
+        tarcoorddec2 = np.empty(npoints)
         for j in range(0, len(targetCoord2.ra)):
             tarcoordra2.fill(targetCoord2[j].ra.deg)
             tarcoorddec2.fill(targetCoord2[j].dec.deg)
             racoord2 = tarcoordra2 + Fov_array * np.cos(theta)
             deccoord2 = tarcoorddec2 + Fov_array * np.sin(theta)
-            hp.visufunc.projscatter(
-                racoord2, deccoord2, lonlat=True, marker='.', color=Colors[1])
-            hp.projtext(targetCoord1[j].ra, targetCoord1[j].dec, str(
-                j), lonlat=True, color=Colors[1])
-        # plt.show()
-        # plt.savefig("Pointing_Plotting_%s/PointingFOV_Comparison.png" %ObsArray)
+            hp.visufunc.projscatter(racoord2, deccoord2, lonlat=True, marker='.', color=Colors[1])
+            hp.projtext(targetCoord2[j].ra, targetCoord2[j].dec, str(j), lonlat=True, color=Colors[2])
 
 
 def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):

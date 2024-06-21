@@ -1742,12 +1742,9 @@ def TransformRADec(vra, vdec):
             ra.append(coord.ra.deg)
             dec.append(coord.dec.deg)
     else:
-        # print(vra,vdec)
         ra = vra.astype(float)
         dec = vdec.astype(float)
-        # float(vra)
-        # dec = float(vdec)
-    # print(ra,dec)
+
     coordinates = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
     return coordinates
 
