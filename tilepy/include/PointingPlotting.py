@@ -183,7 +183,7 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
         if not os.path.exists(dirName):
             os.makedirs(dirName)
 
-        hp.mollview(prob, rot=[180, 0], coord='C', title="GW prob map (Ecliptic) + %s %g  %s/%s/%s %s:%s:%s UTC" %
+        hp.mollview(prob, rot=[180, 0], coord='E', title="GW prob map (Ecliptic) + %s %g  %s/%s/%s %s:%s:%s UTC" %
                                                          (name, Totalprob * 100, time[0].day, time[0].month,
                                                           time[0].year,
                                                           time[0].hour, time[0].minute, time[0].second))
@@ -206,7 +206,7 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
             racoord = tarcoordra + Fov_array * np.cos(theta)
             deccoord = tarcoorddec + Fov_array * np.sin(theta)
             hp.visufunc.projscatter(
-                racoord, deccoord, lonlat=True, marker='.', color=Colors[j], coord='C')
+                racoord, deccoord, lonlat=True, marker='.', color=Colors[j], coord='E')
 
             # Plotting the visibility of the instrument as specified in the config
             altcoord = np.empty(1000)
@@ -248,7 +248,7 @@ def PlotPointingsTogether(prob, time, targetCoord1, n1, targetCoord2, n2, nside,
         if(plotType=='gnomonic'): 
             hp.gnomview(prob, xsize=1000, ysize=1000, rot=[targetCoord1[0].ra.deg, targetCoord1[0].dec.deg], reso=5.0)
         if(plotType=='mollweide'): 
-            hp.mollview(prob,title="GW prob map (Ecliptic)",coord='C')
+            hp.mollview(prob,title="GW prob map (Ecliptic)",coord='E')
         hp.graticule()
 
         hp.visufunc.projscatter(
@@ -358,7 +358,7 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
     # if not os.path.exists(path):
     #    os.mkdir(path, 493)
 
-    hp.mollview(prob, rot=[180, 0], coord='C', title="GW prob map (Ecliptic) + %s %g  %s/%s/%s %s:%s:%s UTC" %
+    hp.mollview(prob, rot=[180, 0], coord='E', title="GW prob map (Ecliptic) + %s %g  %s/%s/%s %s:%s:%s UTC" %
                 (str(ID), sum(Probarray) * 100, converted_time[0].day, converted_time[0].month, converted_time[0].year,
                  converted_time[0].hour, converted_time[0].minute, converted_time[0].second))
     hp.graticule()
