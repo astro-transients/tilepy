@@ -106,7 +106,7 @@ def PGWinFoV(filename,obspar,dirName):
     # Create table for 2D probability at 90% containment
     rapix, decpix, areapix = Get90RegionPixReduced(
         prob, obspar.percentageMOC, obspar.reducedNside)
-    radecs = co.SkyCoord(rapix, decpix, frame='fk5', unit=(u.deg, u.deg))
+    radecs = co.SkyCoord(rapix, decpix, frame='icrs', unit=(u.deg, u.deg))
 
     # Add observed pixels to pixlist
     if (PointingFile != None):
@@ -835,7 +835,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
     # Create table for 2D probability at 90% containment
     rapix, decpix, areapix = Get90RegionPixReduced(
         prob, obspar.percentageMOC, obspar.reducedNside)
-    radecs = co.SkyCoord(rapix, decpix, frame='fk5', unit=(u.deg, u.deg))
+    radecs = co.SkyCoord(rapix, decpix, frame='icrs', unit=(u.deg, u.deg))
     # Add observed pixels to pixlist
     if (PointingFile != None):
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
@@ -1356,7 +1356,7 @@ def PGWonFoV_WindowOptimisation(filename, TC, conf, obspar, datasetDir):
     # Create table for 2D probability at 90% containment
     rapix, decpix, areapix = Get90RegionPixReduced(
         prob, obspar.percentageMOC, obspar.reducedNside)
-    radecs = co.SkyCoord(rapix, decpix, frame='fk5', unit=(u.deg, u.deg))
+    radecs = co.SkyCoord(rapix, decpix, frame='icrs', unit=(u.deg, u.deg))
     has3D = True
 
 

@@ -82,7 +82,7 @@ def load_pointingFile(tpointingFile):
 def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
 
     source = SkyCoord(
-        Pointing['RAJ2000'], Pointing['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
+        Pointing['RAJ2000'], Pointing['DEJ2000'], frame='icrs', unit=(u.deg, u.deg))
     WINDOW = []
     ZENITH = []
     SZENITH = []
@@ -305,9 +305,9 @@ def ProbabilitiesinPointings3D(cat, galPointing, FOV, totaldPdV, prob, nside):
 def PGGPGalinFOV(cat, ra, dec, prob, totaldPdV, FOV, nside):
 
     targetCoordcat = co.SkyCoord(
-        cat['RAJ2000'], cat['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
+        cat['RAJ2000'], cat['DEJ2000'], frame='icrs', unit=(u.deg, u.deg))
     targetCoordpointing = co.SkyCoord(
-        ra, dec, frame='fk5', unit=(u.deg, u.deg))
+        ra, dec, frame='icrs', unit=(u.deg, u.deg))
     dp_dV = cat['dp_dV']
 
     # Array of indices of pixels inside circle of FoV
@@ -347,7 +347,7 @@ def ProbabilitiesinPointings2D(Pointing, FOV, prob, nside):
 def PGinFOV(ra, dec, prob, radius, nside):
 
     targetCoordpointing = co.SkyCoord(
-        ra, dec, frame='fk5', unit=(u.deg, u.deg))
+        ra, dec, frame='icrs', unit=(u.deg, u.deg))
 
     # Array of indices of pixels inside circle of FoV
 

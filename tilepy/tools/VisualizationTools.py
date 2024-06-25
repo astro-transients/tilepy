@@ -36,7 +36,7 @@ def LocateSource(filename, ra, dec, PercentCov=90):
     ra1 = coordinates.ra.rad
     dec1 = coordinates.dec.rad
 
-    radecs = co.SkyCoord(pix_ra1, pix_dec1, frame='fk5', unit=(u.deg, u.deg))
+    radecs = co.SkyCoord(pix_ra1, pix_dec1, frame='icrs', unit=(u.deg, u.deg))
     pix_ra11 = radecs.ra.rad
     pix_dec11 = radecs.dec.rad
 
@@ -87,13 +87,13 @@ def VisibilityOverview_forZenithCut(filename, date=datetime.datetime.now(timezon
 
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,
                            location=observatory.location)
-    RandomCoord_radec = RandomCoord.transform_to('fk5')
+    RandomCoord_radec = RandomCoord.transform_to('icrs')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'red', lonlat=True, coord="E", linewidth=0.4)
 
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,
                            location=observatory2.location)
-    RandomCoord_radec = RandomCoord.transform_to('fk5')
+    RandomCoord_radec = RandomCoord.transform_to('icrs')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'blue', lonlat=True, coord="E", linewidth=0.4)
 
@@ -143,35 +143,35 @@ def Time_DarkTime_GreyTime(filename, cfgFile, date=datetime.datetime.now(timezon
     # InputTime
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,
                            location=obspar.location)
-    RandomCoord_radec = RandomCoord.transform_to('fk5')
+    RandomCoord_radec = RandomCoord.transform_to('icrs')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'red', lonlat=True, coord="E", linewidth=0.4)
 
     # NightDarkRuns[0]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightDarkRuns[0],
                            location=obspar.location)
-    RandomCoord_radec = RandomCoord.transform_to('fk5')
+    RandomCoord_radec = RandomCoord.transform_to('icrs')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'orange', lonlat=True, coord="E", linewidth=0.4)
 
     # NightDarkRuns[-1]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightDarkRuns[-1],
                            location=obspar.location)
-    RandomCoord_radec = RandomCoord.transform_to('fk5')
+    RandomCoord_radec = RandomCoord.transform_to('icrs')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'orange', lonlat=True, coord="E", linewidth=0.4)
 
     # NightGreyRuns[0]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightGreyRuns[0],
                            location=obspar.location)
-    RandomCoord_radec = RandomCoord.transform_to('fk5')
+    RandomCoord_radec = RandomCoord.transform_to('icrs')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'blue', lonlat=True, coord="E", linewidth=0.4)
 
     # NightGreyRuns[-1]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightGreyRuns[-1],
                            location=obspar.location)
-    RandomCoord_radec = RandomCoord.transform_to('fk5')
+    RandomCoord_radec = RandomCoord.transform_to('icrs')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
                          'blue', lonlat=True, coord="E", linewidth=0.4)
     hp.graticule()
@@ -220,8 +220,8 @@ def CompareTwoTilings(filename, PointingsFile1=False, PointingsFile2=False, FOV=
         name2 = 'File2'
         ObservationTimearray1 = df1['Time[UTC]']
 
-        Coordinates1 = co.SkyCoord(df1['RA(deg)'].tolist(), df1['DEC(deg)'].tolist(), frame='fk5', unit=(u.deg, u.deg))
-        Coordinates2 = co.SkyCoord(df2['RA(deg)'].tolist(), df2['DEC(deg)'].tolist(), frame='fk5', unit=(u.deg, u.deg))
+        Coordinates1 = co.SkyCoord(df1['RA(deg)'].tolist(), df1['DEC(deg)'].tolist(), frame='icrs', unit=(u.deg, u.deg))
+        Coordinates2 = co.SkyCoord(df2['RA(deg)'].tolist(), df2['DEC(deg)'].tolist(), frame='icrs', unit=(u.deg, u.deg))
         PlotPointingsTogether(prob, ObservationTimearray1, Coordinates1, name1, Coordinates2, name2, nside, FOV, plotType,
                               doPlot=True)
     plt.show()
