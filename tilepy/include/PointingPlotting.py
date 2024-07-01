@@ -84,7 +84,7 @@ def LoadPointingsGW(tpointingFile):
 
     ra = ra.astype(float)
     dec = dec.astype(float)
-    coordinates = co.SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
+    coordinates = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
     # pgw = Pgw.astype(float)
     pgw = np.genfromtxt(tpointingFile, usecols=4,
                         skip_header=1, delimiter=' ', unpack=True)
@@ -174,7 +174,7 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
         ra2 = np.rad2deg(pp)
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
-        skycoord = co.SkyCoord(ra2, dec2, frame='icrs', unit=(u.deg, u.deg))
+        skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
         observatory = obspar.location
         frame = co.AltAz(obstime=time[0], location=observatory)
         altaz_all = skycoord.transform_to(frame)
@@ -198,7 +198,7 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
         # Position of the GRB: Add here your coordinates if you want to add them to the plot
         # RA_GRB = 0.526
         # DEC_GRB = -2.917
-        # skycoordGRB = co.SkyCoord(RA_GRB, DEC_GRB, frame='icrs', unit=(u.deg, u.deg))
+        # skycoordGRB = co.SkyCoord(RA_GRB, DEC_GRB, frame='fk5', unit=(u.deg, u.deg))
 
         for j in range(0, len(targetCoord.ra)):
             tarcoordra.fill(targetCoord[j].ra.deg)
@@ -215,7 +215,7 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
             # print(time)
             RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time[j],
                                    location=observatory)
-            RandomCoord_radec = RandomCoord.transform_to('icrs')
+            RandomCoord_radec = RandomCoord.transform_to('fk5')
             hp.visufunc.projplot(RandomCoord_radec.ra,
                                  RandomCoord_radec.dec, 'b.', lonlat=True)
             plt.savefig('%s/Pointings%s.png' % (dirName, j))
@@ -236,7 +236,7 @@ def PlotPointingsTogether(prob, time, targetCoord1, n1, targetCoord2, n2, nside,
         ra2 = np.rad2deg(pp)
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
-        # skycoord = co.SkyCoord(ra2, dec2, frame='icrs', unit=(u.deg, u.deg))
+        # skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
         # observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
 
         # frame = co.AltAz(obstime=time, location=observatory)
@@ -311,7 +311,7 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
 
     # ObservationTimearray, Coordinates, Probarray = LoadPointingsGW(SuggestedPointings)
     ObservationTimearray = SuggestedPointingsC["Time[UTC]"]
-    Coordinates = SkyCoord(SuggestedPointingsC['RA[deg]'], SuggestedPointingsC['DEC[deg]'], frame='icrs',
+    Coordinates = SkyCoord(SuggestedPointingsC['RA[deg]'], SuggestedPointingsC['DEC[deg]'], frame='fk5',
                            unit=(u.deg, u.deg))
     Probarray = SuggestedPointingsC["PGW"]
     # making sure to have an array on which we can call the sum() function
@@ -346,7 +346,7 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
     ra2 = np.rad2deg(pp)
     dec2 = np.rad2deg(0.5 * np.pi - tt)
 
-    skycoord = co.SkyCoord(ra2, dec2, frame='icrs', unit=(u.deg, u.deg))
+    skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
 
     frame = co.AltAz(obstime=converted_time[0], location=observatory.location)
     altaz_all = skycoord.transform_to(frame)
@@ -444,7 +444,7 @@ def PointingPlottingGW_ZenithSteps(filename, name, dirName, FOV, InputTimeObs, O
         #print(maxZenith+5*i)
         RandomCoord = co.SkyCoord(azcoord, altcoord, frame='altaz', unit=(
             u.deg, u.deg), obstime=time, location=observatory.location)
-        RandomCoord_radec = RandomCoord.transform_to('icrs')
+        RandomCoord_radec = RandomCoord.transform_to('fk5')
         hp.visufunc.projplot(RandomCoord_radec.ra,
                              RandomCoord_radec.dec, lonlat=True)
     # plt.show()
@@ -531,7 +531,7 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
     pgal = pgal.astype(float)
     fov = fov.astype(float)
 
-    coordinates = SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
+    coordinates = SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
 
     # Prepare the color map
     cdict_coolheat = {
@@ -591,7 +591,7 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
     
     try:
         norm = mcolors.Normalize(vmin=vmin_value, vmax=vmax_value)
-        sc_inset = ax_inset.scatter(ragal, decgal, c = galprob, transform=ax_inset.get_transform('icrs'), alpha=0.5, s = 0.1, norm = norm)
+        sc_inset = ax_inset.scatter(ragal, decgal, c = galprob, transform=ax_inset.get_transform('fk5'), alpha=0.5, s = 0.1, norm = norm)
         cbar_inset = plt.colorbar(sc_inset, ax=ax_inset)
         cbar_inset.set_label('Galaxy probability density')
     except:
@@ -616,10 +616,10 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
         color1 = obs_name_to_color[obs_name]
 
 
-        #ax_inset.scatter(ra[i], dec[i], s = fov[i], edgecolor=color1, facecolor="None", transform=ax_inset.get_transform('icrs'), alpha=1)
-        circle_patch = Circle((ra[i], dec[i]), fov[i], edgecolor=color1, facecolor="None", transform=ax_inset.get_transform('icrs'), alpha=1)
+        #ax_inset.scatter(ra[i], dec[i], s = fov[i], edgecolor=color1, facecolor="None", transform=ax_inset.get_transform('fk5'), alpha=1)
+        circle_patch = Circle((ra[i], dec[i]), fov[i], edgecolor=color1, facecolor="None", transform=ax_inset.get_transform('fk5'), alpha=1)
         ax_inset.add_patch(circle_patch)
-        #c = Circle((ra[i], dec[i]), fov_plot, edgecolor=color_map[name], facecolor="None", transform=ax_inset.get_transform('icrs'), alpha=1)
+        #c = Circle((ra[i], dec[i]), fov_plot, edgecolor=color_map[name], facecolor="None", transform=ax_inset.get_transform('fk5'), alpha=1)
 
         legend_drawn_flag = True
 

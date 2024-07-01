@@ -106,7 +106,7 @@ theta, phi = hp.pix2ang(nside, table_ipix_contour)
 ra = np.rad2deg(phi)
 dec = np.rad2deg(0.5 * np.pi - theta)
 
-radecs = SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
+radecs = SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
 
 # creating an astropy.table with RA[deg] and DEC[deg] ipix positions
 from astropy.table import Table
@@ -149,7 +149,7 @@ theta, phi = hp.pix2ang(nside, table_ipix_contour)
 ra = np.rad2deg(phi)
 dec = np.rad2deg(0.5 * np.pi - theta)
 
-radecs = SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
+radecs = SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
 
 # creating an astropy.table with RA[deg] and DEC[deg] ipix positions
 from astropy.table import Table
@@ -167,11 +167,11 @@ moc1.border(ax=ax_inset, wcs=wcs, alpha=3, color="cyan")
 moc2.border(ax=ax_inset, wcs=wcs, alpha=3, color="magenta")
 '''
 #neutrino fro S190728q
-c = Circle((312.87, 5.85), 4.81, edgecolor='green', facecolor='none', transform=ax_inset.get_transform('icrs'), linestyle='dashed')
+c = Circle((312.87, 5.85), 4.81, edgecolor='green', facecolor='none', transform=ax_inset.get_transform('fk5'), linestyle='dashed')
 #ax.add_patch(c)
 ax_inset.add_patch(c)
 
-c = Circle((312.87, 5.85), 4.81, edgecolor='green', facecolor='none', transform=ax.get_transform('icrs'), linestyle='dashed')
+c = Circle((312.87, 5.85), 4.81, edgecolor='green', facecolor='none', transform=ax.get_transform('fk5'), linestyle='dashed')
 #ax.add_patch(c)
 ax.add_patch(c)
 '''

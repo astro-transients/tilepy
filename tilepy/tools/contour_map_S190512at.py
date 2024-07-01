@@ -51,7 +51,7 @@ theta, phi = hp.pix2ang(nside, table_ipix_contour)
 ra = np.rad2deg(phi)
 dec = np.rad2deg(0.5 * np.pi - theta)
 
-radecs = co.SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
+radecs = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
 
 
 # creating an astropy.table with RA[deg] and DEC[deg] ipix positions
@@ -97,7 +97,7 @@ theta, phi = hp.pix2ang(nside, table_ipix_contour)
 ra = np.rad2deg(phi)
 dec = np.rad2deg(0.5 * np.pi - theta)
 
-radecs = co.SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
+radecs = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
 
 
 # creating an astropy.table with RA[deg] and DEC[deg] ipix positions
@@ -143,7 +143,7 @@ theta, phi = hp.pix2ang(nside, table_ipix_contour)
 ra = np.rad2deg(phi)
 dec = np.rad2deg(0.5 * np.pi - theta)
 
-radecs = co.SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
+radecs = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
 
 
 # creating an astropy.table with RA[deg] and DEC[deg] ipix positions
@@ -186,7 +186,7 @@ theta, phi = hp.pix2ang(nside, table_ipix_contour)
 ra = np.rad2deg(phi)
 dec = np.rad2deg(0.5 * np.pi - theta)
 
-radecs = co.SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
+radecs = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
 
 
 # creating an astropy.table with RA[deg] and DEC[deg] ipix positions
@@ -206,7 +206,7 @@ moc4 = MOC.from_lonlat(radecs.ra, radecs.dec, max_norder=moc_order)
 RA_OBS = [312.8027, 313.09, 317.109, 314.385, 312.979, 318.691, 316.143]
 DEC_OBS = [7.0304, 8.16, 15.018, 10.807, 5.679, 17.192, 12.941]
 RADIUS_OBS = [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5]
-#RADECS_OBS = co.SkyCoord(RA_OBS, DEC_OBS, frame='icrs', unit=(u.deg, u.deg))
+#RADECS_OBS = co.SkyCoord(RA_OBS, DEC_OBS, frame='fk5', unit=(u.deg, u.deg))
 '''
 
 # construct the figure
@@ -243,35 +243,35 @@ with World2ScreenMPL(fig,
 
     # add the schedule FoVs
     c = Circle((251.72, -25.28), 1.5, edgecolor='grey',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=0.8)
+               facecolor='none', transform=ax.get_transform('fk5'), alpha=0.8)
     ax.add_patch(c)
     c = Circle((248.91, -27.95), 1.5, edgecolor='grey',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=0.8)
+               facecolor='none', transform=ax.get_transform('fk5'), alpha=0.8)
     ax.add_patch(c)
     c = Circle((253.12, -26.61), 1.5, edgecolor='grey',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=0.8)
+               facecolor='none', transform=ax.get_transform('fk5'), alpha=0.8)
     ax.add_patch(c)
     c = Circle((255.94, -29.31), 1.5, edgecolor='grey',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=0.8)
+               facecolor='none', transform=ax.get_transform('fk5'), alpha=0.8)
     ax.add_patch(c)
 
     # add the observed FoVs
     c = Circle((250.313, -26.61), 1.5, edgecolor='black',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=15)
+               facecolor='none', transform=ax.get_transform('fk5'), alpha=15)
     ax.add_patch(c)
-    ax.text(250.313, -26.61, "1", transform=ax.get_transform('icrs'))
+    ax.text(250.313, -26.61, "1", transform=ax.get_transform('fk5'))
     c = Circle((251.719, -27.953), 1.5, edgecolor='black',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=15)
+               facecolor='none', transform=ax.get_transform('fk5'), alpha=15)
     ax.add_patch(c)
-    ax.text(251.719, -27.953, "2", transform=ax.get_transform('icrs'))
+    ax.text(251.719, -27.953, "2", transform=ax.get_transform('fk5'))
     c = Circle((248.906, -25.283), 1.5, edgecolor='black',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=15)
+               facecolor='none', transform=ax.get_transform('fk5'), alpha=15)
     ax.add_patch(c)
-    ax.text(248.906, -25.283, "3", transform=ax.get_transform('icrs'))
+    ax.text(248.906, -25.283, "3", transform=ax.get_transform('fk5'))
     c = Circle((254.531, -27.953), 1.5, edgecolor='black',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=15)
+               facecolor='none', transform=ax.get_transform('fk5'), alpha=15)
     ax.add_patch(c)
-    ax.text(254.531, -27.953, "4", transform=ax.get_transform('icrs'))
+    ax.text(254.531, -27.953, "4", transform=ax.get_transform('fk5'))
     ###########################
 
 plt.xlabel('Right ascension')

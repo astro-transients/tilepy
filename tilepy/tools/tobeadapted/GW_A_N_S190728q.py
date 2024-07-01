@@ -71,19 +71,19 @@ ax.imshow_hpx(filename, cmap='cylon')
 
 
 #BNS coordinates
-#Source = SkyCoord(InputList['RA'][j], InputList['Dec'][j], frame='icrs', unit=(u.deg, u.deg))
-source = Circle((RA_GRB, DEC_GRB), 0.1, edgecolor='green', facecolor='none', transform=ax_inset.get_transform('icrs'))
-#source = Circle((232.418, 32.271), 0.1, edgecolor='green', facecolor='none', transform=ax_inset.get_transform('icrs'))
+#Source = SkyCoord(InputList['RA'][j], InputList['Dec'][j], frame='fk5', unit=(u.deg, u.deg))
+source = Circle((RA_GRB, DEC_GRB), 0.1, edgecolor='green', facecolor='none', transform=ax_inset.get_transform('fk5'))
+#source = Circle((232.418, 32.271), 0.1, edgecolor='green', facecolor='none', transform=ax_inset.get_transform('fk5'))
 ax_inset.add_patch(source)
 
 #neutrino fro S190728q
-#c = Circle((312.87, 5.85), 4.81, edgecolor='green', facecolor='none', transform=ax_inset.get_transform('icrs'), linestyle='dashed')
+#c = Circle((312.87, 5.85), 4.81, edgecolor='green', facecolor='none', transform=ax_inset.get_transform('fk5'), linestyle='dashed')
 #ax_inset.add_patch(c)
 
 '''
-c = Circle((312.8027, 7.0304), 1.5, edgecolor='black', facecolor='none', transform=ax_inset.get_transform('icrs'),alpha=15)#this is the first pos that was actually observed
+c = Circle((312.8027, 7.0304), 1.5, edgecolor='black', facecolor='none', transform=ax_inset.get_transform('fk5'),alpha=15)#this is the first pos that was actually observed
 ax_inset.add_patch(c)
-ax_inset.text(312.8027, 7.0304, "1\n26 min\n54 deg",transform=ax_inset.get_transform('icrs'))
+ax_inset.text(312.8027, 7.0304, "1\n26 min\n54 deg",transform=ax_inset.get_transform('fk5'))
 '''
 #read coordinates from file
 
@@ -100,14 +100,14 @@ ra = ra.astype(float)
 dec = dec.astype(float)
 pgw = pgw.astype(float)
 pgal = pgal.astype(float)
-coordinates = SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
+coordinates = SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
 print(ra,dec,pgw,pgal)
 
 for i in range(0,len(ra)):
     print(ra[i])
-    c = Circle((ra[i], dec[i]), 2.0, edgecolor='black', facecolor='none', transform=ax_inset.get_transform('icrs'),alpha=15)
+    c = Circle((ra[i], dec[i]), 2.0, edgecolor='black', facecolor='none', transform=ax_inset.get_transform('fk5'),alpha=15)
     ax_inset.add_patch(c)
-    ax_inset.text(ra[i]-2.5, dec[i]-1, "%d\n%s \n %d%% %d deg " % (i,time[i], 100*pgw[i],pgal[i]),transform=ax_inset.get_transform('icrs'), color = 'k', rotation = -15, fontsize = 8)
+    ax_inset.text(ra[i]-2.5, dec[i]-1, "%d\n%s \n %d%% %d deg " % (i,time[i], 100*pgw[i],pgal[i]),transform=ax_inset.get_transform('fk5'), color = 'k', rotation = -15, fontsize = 8)
 
 
 pos=ax_inset.imshow_hpx(filename, cmap='cylon')
