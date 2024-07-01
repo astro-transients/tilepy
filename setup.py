@@ -14,7 +14,7 @@ setup(name='tilepy',
       install_requires=[
           'astropy',
           'scipy',
-          'healpy',
+          'healpy==1.16.2',
           'ipython',
           'matplotlib<3.9.0',
           'MOCpy',
