@@ -20,23 +20,16 @@
 ##################################################################################################
 
 
+import os
+
+from astropy.io import ascii
+
+from .MapReader import GetSkymap
+from .PointingPlotting import PointingPlotting
+from .PointingTools import Check2Dor3D, GetAreaSkymap5090, GetAreaSkymap5090_Flat
+from .RankingObservationTimes import RankingTimes, RankingTimes_2D
 from .TilingDetermination import PGWinFoV, PGalinFoV
 from .TilingDetermination import PGWinFoV_NObs, PGalinFoV_NObs
-from .RankingObservationTimes import RankingTimes, RankingTimes_2D
-from .PointingPlotting import PointingPlotting
-from .PointingTools import getdate, Check2Dor3D, ObservationParameters, GetAreaSkymap5090, GetAreaSkymap5090_Flat, GetSkymap
-from astropy.io import fits, ascii
-from astropy.table import QTable
-from astropy import units as u
-import os
-import json
-import numpy as np
-import healpy as hp
-import ligo.skymap.postprocess as lsp
-from astropy.coordinates import SkyCoord
-
-import time
-import datetime
 
 
 def GetSchedule(obspar):

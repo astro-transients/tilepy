@@ -21,12 +21,10 @@
 
 #####################################################################
 # Packages
-import datetime
 import os
 import time
 
 import datetime
-import numpy as np
 from pytz import timezone
 from skyfield import almanac
 from skyfield.api import wgs84, N, E, load
@@ -40,13 +38,12 @@ import pytz
 import six
 import tables
 from astropy import units as u
-from astropy.coordinates import EarthLocation, get_body
+from astropy.coordinates import EarthLocation
 from astropy.coordinates import SkyCoord, AltAz
 from astropy.coordinates import get_body
 from astropy.io import fits, ascii
 from astropy.table import Table
 from astropy.time import Time
-from astropy.utils import iers
 from astropy.coordinates import Angle
 from gdpyc import DustMap
 from mocpy import MOC
@@ -779,182 +776,6 @@ def getdate(x):
     else:
         print("ERROR: something is wrong with the format of the date: ", x)
         return None
-
-def GetSkymap(obspar):
-    skymap = obspar.skymap
-
-    isURL = False
-    # Check if the file is local or not 
-    if "https" in skymap or "http" in skymap:
-        print('it is a url')
-        isURL = True
-    # Adapt the download of the file from URL to the type of event 
-    if isURL: 
-        if obspar.alertType == 'gbmpng':
-            fitsMap, filename = GetGBMMap(skymap)
-            if fitsMap is None and filename is None:
-                print('The localization map is not available, returning.')
-                return
-            name = skymap.split('/')[-3]
-        elif obspar.alertType == 'gbm':
-            fitsMap = fits.open(skymap)
-            if fitsMap is None:
-                print('The localization map is not available, returning.')
-                return
-            filename = skymap
-            name = skymap.split('all_')[1].split('_v00')[0]
-        elif obspar.alertType == 'nucascade':
-            fitsMap = fits.open(skymap)
-            if fitsMap is None:
-                print('The localization map is not available, returning.')
-                return
-            filename = skymap
-            name = skymap.split('/')[-1].split('_run')[0]
-        else:
-            fitsMap, filename = GetGWMap(skymap)
-            name = skymap.split('/')[-3]
-    else: 
-        # Open the local file, that is the correct one. There is no further manipulation of the filename needed. 
-        fitsMap = fits.open(skymap)
-        if fitsMap is None:
-            print('The localization map is not available, returning.')
-            return
-        
-        filename = skymap
-        if  '/' in filename:
-            if  '.' in filename:
-                name = filename.split('/')[-1].split('.')[0]
-            else: 
-                name = filename
-        else: 
-            if '.' in filename:
-                name = filename.split('.')[0]
-            else: 
-                name = filename
-    return fitsMap, filename, name
-
-def GetGBMMap(URL):
-    """
-    Bottom-level function that takes a url searches for the localisatios maps from the Fermi-GBM database, or waits until it is uplaoded. 
-    
-    :param URL: the URL of the map
-    :type URL: str
-
-    :return: fitsfile, filename
-    rtype: fits, str
-    """
-    
-    filename = URL.split("/")[-1].split(".")[0]
-    filename = "./maps/" + filename + ".fit"
-    # filename = "glg_healpix_all_bn211130636_2.fit"
-    print("The GBM filename is ", filename)
-    try:
-        fits_map_url_intial = URL
-        fits_map_url1 = fits_map_url_intial.split("/")
-        fits_map_url2 = fits_map_url_intial.split("_")[-1]
-        # fits_map_url1[-1] = ""
-        i = 0
-        fits_map_url = ""
-        for i in range(len(fits_map_url1) - 1):
-            fits_map_url += fits_map_url1[i] + "/"
-        fits_map_url += "glg_healpix_all" + "_" + \
-            fits_map_url2.split(".")[0] + ".fit"
-
-        filename = fits_map_url
-    except:
-        warn = "Caught exception: "
-        print(warn)
-        pass
-
-    max_delay = 20
-    delay = 0
-    d = 0
-    while delay == 0:
-        delay = 1
-        d = d + 1
-        try:
-            fitsfile = fits.open(filename)
-        except:
-            print('map is not uploaded yet... Waiting for minute:', d)
-            time.sleep(60)
-            delay = 0
-            if d > max_delay:
-                print(
-                    f"Waited for {max_delay} minutes... can't wait anymore... I'm leaving")
-                fitsfile = None
-                filename = None
-                break
-
-    return fitsfile, filename
-
-
-def GetGWMap_Flat(URL):
-    """
-    Bottom-level function that takes a url searches for the localisatios maps from the GW database, or waits until it is uplaoded. 
-    
-    :param URL: the URL of the map
-    :type URL: str
-
-    :return: fitsfile, filename
-    rtype: fits, str
-    """
-
-    filename = URL.split("/")[-1]
-    print("The filename is ", filename)
-    fits_map_url = URL
-    # fits_map_url = self.What["GW_SKYMAP"]['skymap_fits']['value']
-    if 'multiorder.' in filename:
-        fits_map_url = str(fits_map_url).replace('multiorder.', '')
-        fits_map_url = str(fits_map_url).replace('fits', 'fits.gz')
-        print('The GW map is in the right multiorder format')
-    else:
-        print('The GW map is not in multiorder format, we will try the .fits.gz format, you are welcome')
-
-    newFilename = filename + "_"+str(int(time.time() * 1e6))
-    print("internal filename: ", newFilename)
-
-    try:
-        command = f'curl {fits_map_url} -o {newFilename}'
-        print(command)
-        os.system(command)
-    except x:
-        print('Problem with downloading map from url, it was not multiorder or fits.gz')
-        warn = "Caught exception: %s" % x
-        print(warn)
-        pass
-
-    fitsfile = fits.open(newFilename)
-
-    return fitsfile, newFilename
-
-
-def GetGWMap(URL):
-    """
-    Bottom-level function that takes a url searches for the localisation maps in multi-order format from the GW database, or waits until it is uplaoded. 
-    
-    :param URL: the URL of the map
-    :type URL: str
-
-    :return: fitsfile, filename
-    rtype: fits, str
-    """
-    filename = URL.split("/")[-1]
-    print("The filename is ", filename)
-    fits_map_url = URL
-    try:
-        command = f'curl {fits_map_url} -o {filename}'
-        print(command)
-        os.system(command)
-
-    except x:
-        print('Problem with downloading map from url, it was not multiorder or fits.gz')
-        warn = "Caught exception: %s" % x
-        print(warn)
-        pass
-
-    fitsfile = fits.open(filename)
-    
-    return fitsfile, filename
 
 def UNIQSkymap_toNested(skymap_fname):
     """
