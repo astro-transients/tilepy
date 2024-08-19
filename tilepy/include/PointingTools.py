@@ -54,6 +54,8 @@ import pandas as pd
 from astropy.table import QTable
 import astropy_healpix as ah
 
+from tilepy.include.MapReader import IsMultiOrder
+
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
 else:
@@ -1123,14 +1125,6 @@ def MOC_confidence_region2D_Flat(hpx, percentage, short_name=' ', save2File=Fals
     return moc
 
 
-def IsMultiOrder(fields):
-    isMO = True
-    if fields==1:
-        isMO = False
-    if fields == 4:
-        isMO = False
-    return isMO
-
 def Intersect2D(filename,intersectionThres,obspar):
 
     distCut = obspar.distCut
@@ -1185,61 +1179,6 @@ def Intersect2D(filename,intersectionThres,obspar):
     elif intersectionThres/100 > totprob >= 0:
         ver = True
         return has3D, nside, totprob, ver #the percentage of GW behind the galactic plane is still low enough to apply the 2D method
-
-def Check2Dor3D(fitsfile, filename, obspar):
-    
-    if obspar.alertType == 'gw':
-        distCut = obspar.distCut
-        distnorm = []
-        tdistmean = 0
-        tdiststd = 0
-        #fitsfile = fits.open(filename)
-        has3D = True
-        skymap = lf.read_sky_map(filename)  
-        prob = skymap[0]
-
-        #Check if the skymap has 3D information
-        obspar.MO = IsMultiOrder(fitsfile[1].header['TFIELDS'])
-        if (fitsfile[1].header['TFIELDS'] <= 2):
-            has3D = False
-        else:
-            tdistmean = fitsfile[1].header['DISTMEAN']
-            tdiststd= fitsfile[1].header['DISTSTD']
-            # Check if the object is too far away to use a catalog
-            if tdistmean+2*tdiststd > distCut:
-                has3D = False
-
-        # Check if no galaxy catalog was given as has3D should be False
-        if obspar.galcatName == None:
-            has3D = False
-
-        # Check if the algorithm type is declared in the config file 
-        if obspar.algorithm != None: 
-            if has3D == True:
-                if obspar.algorithm == '2D':
-                    has3D = False 
-                
-        # Check if the hotspot is in the galactic plane
-        npix = len(prob)
-        Nside = hp.npix2nside(npix)
-        MaxPix = np.argmax(prob)
-        MaxTheta, MaxPhi = hp.pix2ang(Nside, MaxPix)
-        raMax = np.rad2deg(MaxPhi)
-        decMax = np.rad2deg(0.5 * np.pi - MaxTheta)
-        c_icrs = SkyCoord(raMax, decMax, frame='fk5', unit=(u.deg, u.deg))
-
-        InsidePlane = Tools.GalacticPlaneBorder(c_icrs)
-        print('Is the hotspot in the galactic plane?',InsidePlane)
-        if InsidePlane:
-            has3D = False 
-        fitsfile.close()
-    else: 
-        has3D = False
-        prob = hp.read_map(fitsfile, field=range(1))
-        npix = len(prob)
-        Nside = hp.npix2nside(npix)
-    
-    return prob, has3D, Nside
 
 
 def Check2Dor3D_Flat(fitsfile, filename, obspar):

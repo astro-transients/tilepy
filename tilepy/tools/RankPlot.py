@@ -5,8 +5,8 @@ import argparse
 import os
 from tilepy.include.RankingObservationTimes import RankingTimes_2D
 from tilepy.include.PointingPlotting import PointingPlotting
-from tilepy.include.PointingTools import Check2Dor3D, ObservationParameters, LoadHealpixMap, LoadGalaxies, LoadGalaxies_SteMgal, CorrelateGalaxies_LVC, CorrelateGalaxies_LVC_SteMass
-from tilepy.include.MapReader import GetSkymap
+from tilepy.include.PointingTools import ObservationParameters, LoadHealpixMap, LoadGalaxies, LoadGalaxies_SteMgal, CorrelateGalaxies_LVC, CorrelateGalaxies_LVC_SteMass
+from tilepy.include.MapReader import GetSkymap, Check2Dor3D
 import os
 import time
 import healpy as hp

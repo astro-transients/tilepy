@@ -24,9 +24,9 @@ import os
 
 from astropy.io import ascii
 
-from .MapReader import GetSkymap
+from .MapReader import GetSkymap, Check2Dor3D
 from .PointingPlotting import PointingPlotting
-from .PointingTools import Check2Dor3D, GetAreaSkymap5090, GetAreaSkymap5090_Flat
+from .PointingTools import GetAreaSkymap5090, GetAreaSkymap5090_Flat
 from .RankingObservationTimes import RankingTimes, RankingTimes_2D
 from .TilingDetermination import PGWinFoV, PGalinFoV
 from .TilingDetermination import PGWinFoV_NObs, PGalinFoV_NObs
