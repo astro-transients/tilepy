@@ -20,25 +20,22 @@
 ##################################################################################################
 
 import datetime
-import os
+
 import astropy.coordinates as co
 import healpy as hp
 import matplotlib.pyplot as plt
 import numpy as np
+import six
 from astropy import units as u
-from astropy.coordinates import SkyCoord, EarthLocation, AltAz
+from astropy.coordinates import SkyCoord, AltAz
 from astropy.coordinates import get_body
-from astropy.io import fits, ascii
+from astropy.io import ascii
 from astropy.table import Table
 from astropy.time import Time
-from astropy.utils import iers
-from astropy.utils.data import download_file
-import copy
-from .PointingTools import (LoadHealpixMap, Tools, CorrelateGalaxies_LVC,
-                            CorrelateGalaxies_LVC_SteMass, ObservationParameters)
-
 from six.moves import configparser
-import six
+
+from .PointingTools import (Tools, FilterGalaxies)
+
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
 else:
@@ -459,7 +456,7 @@ def EvolutionPlot(galPointing, tname, ObsArray):
     plt.savefig("%s/AltitudevsTime_%s.png" % (tname, ObsArray))
 
 
-def RankingTimes(ObservationTime, filename, cat, obspar, targetType, dirName, PointingFile, ObsArray):
+def RankingTimes(ObservationTime, skymap, cat, obspar, targetType, dirName, PointingFile, ObsArray):
 
     point = load_pointingFile(PointingFile)
 
@@ -469,20 +466,14 @@ def RankingTimes(ObservationTime, filename, cat, obspar, targetType, dirName, Po
     print('---------  RANKING THE OBSERVATIONS AND PRODUCING THE OUTPUT FILES   ----------')
     print()
 
-    print('Loading map from ', filename)
-    prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(
-        filename)
-    npix = len(prob)
-    nside = hp.npix2nside(npix)
+    nside = obspar.HRnside
+    prob = skymap.getMap('prob', obspar.HRnside)
 
-    has3D = True
-    if (len(distnorm) == 0):
-        has3D = False
     # correlate GW map with galaxy catalog, retrieve ordered list
-    tGals, sum_dP_dV = CorrelateGalaxies_LVC(
-        prob, distmu, distsigma, distnorm, cat, has3D, obspar.minimumProbCutForCatalogue)
-    point = ProbabilitiesinPointings3D(
-        tGals, point, obspar.FOV, sum_dP_dV, prob, nside)
+    cat = skymap.computeGalaxyProbability(cat)
+    tGals = FilterGalaxies(cat, obspar.minimumProbCutForCatalogue)
+    sum_dP_dV = cat['dp_dV'].sum()
+    point = ProbabilitiesinPointings3D(tGals, point, obspar.FOV, sum_dP_dV, prob, nside)
     point = VisibilityWindow(ObservationTime, point, obspar, dirName)
     EvolutionPlot(point, dirName, ObsArray)
     Sortingby(point, targetType, dirName, obspar.duration)

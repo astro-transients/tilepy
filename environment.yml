@@ -19,6 +19,7 @@ dependencies:
   - skyfield
   - ipykernel
   - ephem
+  - mhealpy
   - ligo.skymap>=2.0.0
   - matplotlib<3.9.0
   - mocpy
