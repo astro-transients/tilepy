@@ -1681,19 +1681,19 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
             dec2 = np.rad2deg(0.5 * np.pi - tt)
             skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
 
-            # hp.visufunc.projplot(skycoord.ra, skycoord.dec, 'y.', lonlat=True, coord="E")
+            # hp.visufunc.projplot(skycoord.ra, skycoord.dec, 'y.', lonlat=True, coord="C")
             # plt.show()
             # observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
 
             hp.visufunc.projplot(
-                sortcat['PIXRA'][:1], sortcat['PIXDEC'][:1], 'r.', lonlat=True, coord="E")
+                sortcat['PIXRA'][:1], sortcat['PIXDEC'][:1], 'r.', lonlat=True, coord="C")
             MaxCoord = SkyCoord(
                 sortcat['PIXRA'][:1], sortcat['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
             separations = skycoord.separation(MaxCoord)
             tempmask = separations < (radius + 0.05 * radius) * u.deg
             tempmask2 = separations > (radius - 0.05 * radius) * u.deg
             hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask &
-                                 tempmask2].dec, 'r.', lonlat=True, coord="E", linewidth=0.1)
+                                 tempmask2].dec, 'r.', lonlat=True, coord="C", linewidth=0.1)
             altcoord = np.empty(1000)
             azcoord = np.random.rand(1000) * 360
 
@@ -2138,7 +2138,7 @@ def ComputeProbBCFOVSimple(prob, time, observatory, visiGals, allGals, tsum_dP_d
         path = dirName + '/EvolutionPlot'
         if not os.path.exists(path):
             os.mkdir(path, 493)
-        hp.mollview(prob, title="GW prob map (Ecliptic)   %s/%s/%s %s:%s UTC" % (
+        hp.mollview(prob, coord='C', title="GW prob map (Equatorial)   %s/%s/%s %s:%s UTC" % (
             time.day, time.month, time.year, time.hour, time.minute))
         hp.graticule()
         tt, pp = hp.pix2ang(nside, ipix_disc)
@@ -2154,7 +2154,7 @@ def ComputeProbBCFOVSimple(prob, time, observatory, visiGals, allGals, tsum_dP_d
         tempmask = separations < (radius + 0.05 * radius) * u.deg
         tempmask2 = separations > (radius - 0.05 * radius) * u.deg
 
-        # hp.gnomview(prob, title="GW prob map (Ecliptic)   %s/%s/%s %s:%s UTC" % (time.day, time.month, time.year, time.hour, time.minute),xsize = 4000,ysize=6000,rot = [90,-50],reso=0.8)
+        # hp.gnomview(prob, title="GW prob map (Equatorial)   %s/%s/%s %s:%s UTC" % (time.day, time.month, time.year, time.hour, time.minute),xsize = 4000,ysize=6000,rot = [90,-50],reso=0.8)
         # plt.show()
         # plt.savefig("Figures/ExampleGW_%g.png" % (j))
 
@@ -2174,9 +2174,9 @@ def ComputeProbBCFOVSimple(prob, time, observatory, visiGals, allGals, tsum_dP_d
         # hp.visufunc.projscatter(allGals['RAJ2000'], allGals['DEJ2000'], lonlat=True, marker='.', color='g',linewidth=0.1)
         # plt.show()
         hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'k.', lonlat=True,
-                             coord="E", linewidth=0.1)
+                             coord="C", linewidth=0.1)
 
-        # hp.visufunc.projplot(tsavedcircle.ra, tsavedcircle.dec, 'r.', lonlat=True, coord="E",linewidth=0.1)
+        # hp.visufunc.projplot(tsavedcircle.ra, tsavedcircle.dec, 'r.', lonlat=True, coord="C",linewidth=0.1)
 
         # Draw H.E.S.S. visibility
 
@@ -2190,7 +2190,7 @@ def ComputeProbBCFOVSimple(prob, time, observatory, visiGals, allGals, tsum_dP_d
             u.deg, u.deg), obstime=time, location=observatory)
         RandomCoord_radec = RandomCoord.transform_to('fk5')
         hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
-                             'b.', lonlat=True, coord="E", linewidth=0.1)
+                             'b.', lonlat=True, coord="C", linewidth=0.1)
         # plt.show()
         # Draw MinZ area
 
@@ -2203,7 +2203,7 @@ def ComputeProbBCFOVSimple(prob, time, observatory, visiGals, allGals, tsum_dP_d
             u.deg, u.deg), obstime=time, location=observatory)
         RandomCoordmin_radec = RandomCoordmin.transform_to('fk5')
 
-        # hp.visufunc.projplot(RandomCoordmin_radec.ra, RandomCoordmin_radec.dec, 'y.', lonlat=True, coord="E", marker='.', markersize = 8 )
+        # hp.visufunc.projplot(RandomCoordmin_radec.ra, RandomCoordmin_radec.dec, 'y.', lonlat=True, coord="C", marker='.', markersize = 8 )
 
         # plt.show()
         plt.savefig("%s/Pointing_%g.png" % (path, len(ObservationTimearray)))
@@ -2290,7 +2290,7 @@ def ComputeProbGalTargeted(prob, time, finalGals, visiGals, allGals, tsum_dP_dV,
         # if not os.path.exists(path):
         #    os.mkdir(path, 493)
 
-        # hp.mollview(prob, title="GW prob map (Ecliptic)   %s/%s/%s %s:%s UTC" % (time.day, time.month, time.year, time.hour, time.minute), xsize=2000)
+        # hp.mollview(prob, title="GW prob map (Equatorial)   %s/%s/%s %s:%s UTC" % (time.day, time.month, time.year, time.hour, time.minute), xsize=2000)
         hp.gnomview(prob, xsize=500, ysize=500, rot=[
                     targetCoord.ra.deg, targetCoord.dec.deg], reso=5.0)
 
@@ -2329,7 +2329,7 @@ def ComputeProbGalTargeted(prob, time, finalGals, visiGals, allGals, tsum_dP_dV,
         RandomCoord_radec = RandomCoord.transform_to('fk5')
 
         hp.visufunc.projplot(
-            RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="E")
+            RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
         # MOON
 
         # hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
@@ -2345,7 +2345,7 @@ def ComputeProbGalTargeted(prob, time, finalGals, visiGals, allGals, tsum_dP_dV,
                                     location=observatory)
         
         #RandomCoordmin_radec = RandomCoordmin.transform_to('fk5')
-        # hp.visufunc.projplot(RandomCoordmin_radec.ra, RandomCoordmin_radec.dec, 'y.', lonlat=True, coord="E")
+        # hp.visufunc.projplot(RandomCoordmin_radec.ra, RandomCoordmin_radec.dec, 'y.', lonlat=True, coord="C")
         plt.savefig("%s/Zoom_Pointing_%g.png" % (path, counter))
         plt.close()
 
@@ -2605,7 +2605,7 @@ def ComputeProbPGALIntegrateFoV(prob, time, observatory, centerPoint, UsePix, vi
         # if not os.path.exists(path):
         #    os.mkdir(path, 493)
 
-        # hp.mollview(prob, title="GW prob map (Ecliptic)   %s/%s/%s %s:%s UTC" % (time.day, time.month, time.year, time.hour, time.minute), xsize=2000)
+        # hp.mollview(prob, title="GW prob map (Equatorial)   %s/%s/%s %s:%s UTC" % (time.day, time.month, time.year, time.hour, time.minute), xsize=2000)
         hp.gnomview(prob, xsize=500, ysize=500, rot=[
                     targetCoord.ra.deg, targetCoord.dec.deg], reso=5.0)
 
@@ -2626,7 +2626,7 @@ def ComputeProbPGALIntegrateFoV(prob, time, observatory, centerPoint, UsePix, vi
         # draw circle of FoV around best fit position
 
         hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'r.', lonlat=True,
-                             coord="E")
+                             coord="C")
 
         # Draw H.E.S.S. visibility
 
@@ -2644,7 +2644,7 @@ def ComputeProbPGALIntegrateFoV(prob, time, observatory, centerPoint, UsePix, vi
         RandomCoord_radec = RandomCoord.transform_to('fk5')
 
         hp.visufunc.projplot(
-            RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="E")
+            RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
         # MOON
 
         # hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
@@ -2663,7 +2663,7 @@ def ComputeProbPGALIntegrateFoV(prob, time, observatory, centerPoint, UsePix, vi
 
         RandomCoordmin_radec = RandomCoordmin.transform_to('fk5')
 
-        # hp.visufunc.projplot(RandomCoordmin_radec.ra, RandomCoordmin_radec.dec, 'y.', lonlat=True, coord="E")
+        # hp.visufunc.projplot(RandomCoordmin_radec.ra, RandomCoordmin_radec.dec, 'y.', lonlat=True, coord="C")
 
         # plt.show()
         plt.savefig("%s/Zoom_Pointing_%g.png" % (path, counter))
@@ -3735,12 +3735,12 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, conf, time, Delay
                 dec2 = np.rad2deg(0.5 * np.pi - tt)
                 skycoord = co.SkyCoord(
                     ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
-                # hp.visufunc.projplot(skycoord.ra, skycoord.dec, 'y.', lonlat=True, coord="E")
+                # hp.visufunc.projplot(skycoord.ra, skycoord.dec, 'y.', lonlat=True, coord="C")
                 # plt.show()
                 # observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
 
                 hp.visufunc.projplot(
-                    sortcat['PIXRA'][:1], sortcat['PIXDEC'][:1], 'r.', lonlat=True, coord="E")
+                    sortcat['PIXRA'][:1], sortcat['PIXDEC'][:1], 'r.', lonlat=True, coord="C")
                 MaxCoord = SkyCoord(
                     sortcat['PIXRA'][:1], sortcat['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
                 separations = skycoord.separation(MaxCoord)
@@ -3758,7 +3758,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, conf, time, Delay
             #    altcoord.fill(90-(maxZenith-5*i))
             #    RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,location=observatory)
             #    RandomCoord_radec = RandomCoord.transform_to('fk5')
-            #    hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="E")
+            #    hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
             # plt.show()
             # plt.savefig('%s/Pointing-zencut_%g.png' % (path,counter))
         altcoord = np.empty(100)
@@ -3767,7 +3767,7 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, conf, time, Delay
         #    altcoord.fill(90-(maxZenith-5*i))
         #    RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,location=observatory)
         #    RandomCoord_radec = RandomCoord.transform_to('fk5')
-        #    hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="E")
+        #    hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
         # plt.show()
         # plt.savefig('%s/Pointing-zencut_%g.png' % (path,counter))
         #plt.close()
