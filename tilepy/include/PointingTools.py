@@ -1079,8 +1079,16 @@ def LoadHealpixMap(thisfilename):
     else:
         tdetectors = "Non specified"
 
+    # 2-dimensional fits
     if (fitsfile[1].header['TFIELDS'] <= 2):
-        tprob = hp.read_map(thisfilename, field=range(1))
+        # LVK CWB
+        if 'CREATOR' in fitsfile[1].header:
+            skymap = lf.read_sky_map(thisfilename, distances = False) 
+            tprob = skymap[0]
+        # IC Cascades, GBM and general case
+        else:   
+            tprob = hp.read_map(thisfilename, field=range(1))
+    # 3-dimensional fits (LVK CBC) 
     else:
         skymap = lf.read_sky_map(thisfilename, distances = True) 
         tprob = skymap[0][0]
