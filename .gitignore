@@ -28,3 +28,4 @@ src/tilepy/include/gwobserve.py
 src/tilepy/dataset/*
 src/tilepy/_version.py
 src/tilepy/_version_cache.py
+GLADE+.txt
