@@ -619,8 +619,6 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
         colors1 = colorspar
         obs_name_to_color = {name: colors1[i] for i, name in enumerate(unique_obs_names)}
 
-    print(f"obs_name_to_color: {obs_name_to_color}")
-
     # color_list = ['blue', 'green']
     # obs_name_to_color = {name: color_list[i % len(color_list)] for i, name in enumerate(unique_obs_names)}
 
