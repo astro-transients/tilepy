@@ -38,6 +38,11 @@ from astropy.coordinates import SkyCoord
 import time
 import datetime
 
+__all__ = [
+    "GetSchedule",
+    "GetUniversalSchedule",
+]
+
 
 def GetSchedule(obspar):
     """
