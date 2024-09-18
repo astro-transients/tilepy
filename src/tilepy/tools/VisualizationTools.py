@@ -209,11 +209,15 @@ def CompareTwoTilings(filename, PointingsFile1=False, PointingsFile2=False, FOV=
         df1 = LoadPointings (PointingsFile1)
         df2 = LoadPointings (PointingsFile2)
 
-
+    if 'Pgal' in df2.columns:
         print('Summary of 1st file: sum(PW)=', sum(df1['PGW']),
               'sum(PGAL)=',  sum(df1['Pgal']), 'total pointings', len(df1['PGW']))
         print('Summary of 2st file: sum(PW)=', sum(df2['PGW']),
               'sum(PGAL)=',  sum(df2['Pgal']), 'total pointings', len(df2['PGW']))
+        print("===========================================================================================")
+    else:  
+        print('Summary of 1st file: sum(PW)=', sum(df1['PGW']),'total pointings', len(df1['PGW']))
+        print('Summary of 2st file: sum(PW)=', sum(df2['PGW']),'total pointings', len(df2['PGW']))
         print("===========================================================================================")
 
         name1 = 'File1'

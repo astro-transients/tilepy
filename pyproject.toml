@@ -66,6 +66,7 @@ all = [
 
 [project.scripts]
 Tiling_Observations = "tilepy.scripts.Tiling_Observations:main"
+PlottingTwoCampaigns = "tilepy.scripts.PlottingTwoCampaigns:main"
 
 [project.urls]
 repository = "https://github.com/astro-transients/tilepy"
