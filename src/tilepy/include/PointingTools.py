@@ -2842,10 +2842,12 @@ def GetAreaSkymap5090(filename):
     i = cumprob.searchsorted(0.9)
     area_90 = pixel_area[:i].sum()
     area_90_deg =area_90.to_value(u.deg**2)
-    
+    print(f"90% area: {area_90} deg2")
+
     j = cumprob.searchsorted(0.5)
     area_50 = pixel_area[:j].sum()
     area_50_deg = area_50.to_value(u.deg**2)
+    print(f"50% area: {area_50} deg2")
     
     return area_50_deg, area_90_deg
 
