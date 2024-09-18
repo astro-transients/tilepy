@@ -53,11 +53,26 @@ import matplotlib.colors as mcolors
 # iers_url_mirror='ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
 # iers.IERS.iers_table = iers.IERS_A.open(download_file(iers.IERS_A_URL, cache=True))
 
-#iers_file = os.path.join(os.path.abspath(
+# iers_file = os.path.join(os.path.abspath(
 #    os.path.dirname(__file__)), '../dataset/finals2000A.all')
-#iers.IERS.iers_table = iers.IERS_A.open(iers_file)
+# iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
 # iers.IERS.iers_table = iers.IERS_A.open(download_file(iers_url_mirror, cache=True))
+
+__all__ = [
+    "LoadPointingsGW",
+    "LoadPointingsGAL",
+    "LoadPointings",
+    "PointingPlotting",
+    "PlotPointings",
+    "PlotPointingsTogether",
+    "PointingPlottingGWCTA",
+    "PointingPlottingGW_ZenithSteps",
+    "PlotScheduling_fromID",
+    "PlotZenithAngleLines_fromID",
+    "PlotPointings_Pretty",
+]
+
 
 Colors = ['b', 'm', 'y', 'c', 'g', 'w', 'k', 'c', 'b', 'c', 'm', 'b', 'g', 'y', 'b', 'c', 'm', 'b', 'g', 'y',
           'b', 'c', 'm', 'b','b', 'm', 'y', 'c', 'g', 'w', 'k', 'c', 'b', 'c', 'm', 'b', 'g', 'y', 'b', 'c', 'm', 'b', 'g', 'y',
@@ -121,7 +136,6 @@ def LoadPointings(tpointingFile):
     # Read the data into a DataFrame
     data = pd.read_csv(tpointingFile, delimiter=' ', header=None, names=header_line.split(), skiprows=1)
     return data
-
 
 
 def PointingPlotting(prob, obspar, name, dirName, PointingsFile1, ObsArray, gal):
@@ -219,7 +233,6 @@ def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirNa
             hp.visufunc.projplot(RandomCoord_radec.ra,
                                  RandomCoord_radec.dec, 'b.', lonlat=True)
             plt.savefig('%s/Pointings%s.png' % (dirName, j))
-
 
 
 def PlotPointingsTogether(prob, time, targetCoord1, n1, targetCoord2, n2, nside, FOV, plotType, doPlot=True):
@@ -519,12 +532,13 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
                 time1, time2, ra, dec, pgw, Round, nametel, duration, fov  = np.genfromtxt(tpointingFile, usecols=(
                     0, 1, 2, 3, 4, 5, 6, 7, 8), skip_header=1, delimiter=' ', unpack=True, dtype='str')  # ra, dec in degrees
                 pgal = pgw
-        
 
     # print(time1, time2)
 
     ra = np.atleast_1d(ra)
     dec = np.atleast_1d(dec)
+    fov = np.atleast_1d(fov)
+    nametel = np.atleast_1d(nametel)
     ra = ra.astype(float)
     dec = dec.astype(float)
     pgw = pgw.astype(float)
@@ -541,19 +555,19 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
     }
     coolheat = colors.LinearSegmentedColormap('coolheat', cdict_coolheat, 1024)
 
-    #center = SkyCoord(12, -25, unit='deg', frame='icrs')
+    # center = SkyCoord(12, -25, unit='deg', frame='icrs')
     if centerMap == None:    
         center = SkyCoord(ra[0], dec[0], unit='deg', frame='icrs')
     else: 
         center = centerMap
-    
+
     if radiusMap == None:    
         radius = '20 deg'
     else: 
         radius = radiusMap
-    
-    #center = SkyCoord(195, 15, unit='deg', frame='icrs')
-    #center = SkyCoord(30, 20, unit='deg', frame='icrs')
+
+    # center = SkyCoord(195, 15, unit='deg', frame='icrs')
+    # center = SkyCoord(30, 20, unit='deg', frame='icrs')
     center_str = '%fd %fd' % (center.ra.deg, center.dec.deg)
 
     # start preparing figure and inset figure
@@ -577,18 +591,18 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
     ax_inset.set_xlabel('RA (J2000)')
     ax_inset.set_ylabel('Dec (J2000)')
 
-    #ax.connect_inset_axes(ax_inset, loc='upper left')
-    #ax.connect_inset_axes(ax_inset, loc='lower left')
+    # ax.connect_inset_axes(ax_inset, loc='upper left')
+    # ax.connect_inset_axes(ax_inset, loc='lower left')
 
     ax.imshow_hpx(filename, cmap='cylon')
-    
+
     try:
         vmin_value = np.min(galprob)
         vmax_value = np.max(galprob)
     except:
         vmin_value = 0.000001
         vmax_value = 0.00001
-    
+
     try:
         norm = mcolors.Normalize(vmin=vmin_value, vmax=vmax_value)
         sc_inset = ax_inset.scatter(ragal, decgal, c = galprob, transform=ax_inset.get_transform('icrs'), alpha=0.5, s = 0.1, norm = norm)
@@ -596,7 +610,7 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
         cbar_inset.set_label('Galaxy probability density')
     except:
         print('No galaxies given for plot 2')
-        
+
     unique_obs_names = np.unique(nametel) 
     if colorspar == None:
         colors1 = plt.cm.get_cmap('tab10', len(unique_obs_names))
@@ -604,10 +618,9 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
     else: 
         colors1 = colorspar
         obs_name_to_color = {name: colors1[i] for i, name in enumerate(unique_obs_names)}
-    
 
-    #color_list = ['blue', 'green']
-    #obs_name_to_color = {name: color_list[i % len(color_list)] for i, name in enumerate(unique_obs_names)}
+    # color_list = ['blue', 'green']
+    # obs_name_to_color = {name: color_list[i % len(color_list)] for i, name in enumerate(unique_obs_names)}
 
     pos = ax_inset.imshow_hpx(filename, cmap='cylon')
 
@@ -615,11 +628,10 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
         obs_name = nametel[i]
         color1 = obs_name_to_color[obs_name]
 
-
-        #ax_inset.scatter(ra[i], dec[i], s = fov[i], edgecolor=color1, facecolor="None", transform=ax_inset.get_transform('icrs'), alpha=1)
+        # ax_inset.scatter(ra[i], dec[i], s = fov[i], edgecolor=color1, facecolor="None", transform=ax_inset.get_transform('icrs'), alpha=1)
         circle_patch = Circle((ra[i], dec[i]), fov[i], edgecolor=color1, facecolor="None", transform=ax_inset.get_transform('icrs'), alpha=1)
         ax_inset.add_patch(circle_patch)
-        #c = Circle((ra[i], dec[i]), fov_plot, edgecolor=color_map[name], facecolor="None", transform=ax_inset.get_transform('icrs'), alpha=1)
+        # c = Circle((ra[i], dec[i]), fov_plot, edgecolor=color_map[name], facecolor="None", transform=ax_inset.get_transform('icrs'), alpha=1)
 
         legend_drawn_flag = True
 
@@ -631,10 +643,9 @@ def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, c
     handles = []
     for color, label in unique_labels.items():
         handles.append(mpatches.Patch(color=color, label=label))
-        #mpatches.Patch(color=color, label=label)
+        # mpatches.Patch(color=color, label=label)
 
     plt.legend(handles=handles, loc='best')
-
 
     ax.mark_inset_axes(ax_inset)
     ax.connect_inset_axes(ax_inset, loc = 'lower left')

@@ -11,10 +11,7 @@ log
 build
 output/*
 tools/analysisResults
-include/__pycache__
 .DS_Store
-include/.DS_Store
-tools/.DS_Store
 submit_arrayjob.sh
 CTA_simu_job.sh
 test*
@@ -26,6 +23,9 @@ __pycache__
 *.eggs
 .vscode/
 tilepy_venv
-tilepy/include/ObservingTimes.py
-tilepy/include/gwobserve.py
-tilepy/dataset/*
+src/tilepy/include/ObservingTimes.py
+src/tilepy/include/gwobserve.py
+src/tilepy/dataset/*
+src/tilepy/_version.py
+src/tilepy/_version_cache.py
+GLADE+.txt
