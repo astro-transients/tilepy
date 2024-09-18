@@ -1,8 +1,8 @@
 import os
 import sys
-from ..include.PointingTools import NightDarkObservation, NightDarkObservationwithGreyTime, ObservationParameters, getdate, Get90RegionPixReduced, TransformRADec
-from ..include.Observatories import CTANorthObservatory, CTASouthObservatory, HESSObservatory
-from ..include.PointingPlotting import LoadPointings, LoadPointingsGAL, PlotPointingsTogether, PlotPointings_Pretty
+from tilepy.include.PointingTools import NightDarkObservation, NightDarkObservationwithGreyTime, ObservationParameters, getdate, Get90RegionPixReduced, TransformRADec
+from tilepy.include.Observatories import CTANorthObservatory, CTASouthObservatory, HESSObservatory
+from tilepy.include.PointingPlotting import LoadPointings, LoadPointingsGAL, PlotPointingsTogether, PlotPointings_Pretty
 
 import healpy as hp
 import numpy as np

@@ -1,0 +1,84 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tilepy"
+description = "Computation of the tiling scheduling of large localization uncertainty region event with multi-wavelength pointing telescopes."
+readme = "README.md"
+authors = [
+    {name = "Monica Seglar-Arroyo, Halim Ashkar, Fabian Schussler, Mathieu de Bony", email = "astro.tilepy@gmail.com"},
+]
+maintainers = [
+    {name = "Monica Seglar-Arroyo", email = "mosear2@gmail.com"},
+    {name = "Halim Ashkar", email = "halim.ashkar@llr.in2p3.fr"},
+    {name = "Fabian Schussler", email = "fabian.schussler@cea.fr"},
+    {name = "Mathieu de Bony", email = "mathieu.debony@cea.fr"},
+]
+license = {file = "LICENSE.rst"}
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Development Status :: 5 - Production/Stable",
+]
+
+dynamic = ["version"]
+requires-python = ">=3.9"
+
+dependencies = [
+    "astropy",
+    "scipy <1.14.0",
+    "healpy",
+    "ipython",
+    "matplotlib <3.9.0",
+    "MOCpy",
+    "numpy",
+    "pandas",
+    "pytz",
+    "ephem",
+    "gdpyc",
+    "tables",
+    "fastparquet",
+    "skyfield",
+    "ligo.skymap >=2.0.0",
+]
+
+[project.optional-dependencies]
+tests = [
+    "pytest >= 7.0",
+    "pytest-cov",
+    "tomli",
+]
+
+dev = [
+    "setuptools_scm[toml]",
+]
+
+all = [
+    # self-reference with all extras to simplify
+    "tilepy[tests,docs,dev]",
+]
+
+[project.scripts]
+Tiling_Observations = "tilepy.scripts.Tiling_Observations:main"
+
+[project.urls]
+repository = "https://github.com/astro-transients/tilepy"
+documentation = "https://github.com/astro-transients/tilepy"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = [
+    "tilepy._dev_version",
+]
+
+[tool.setuptools_scm]
+write_to = "src/tilepy/_version.py"
