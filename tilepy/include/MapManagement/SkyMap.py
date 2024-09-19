@@ -69,7 +69,7 @@ class SkyMap:
     def getArea(self, fraction_localisation):
         return np.sum(self.raw_map_prob_density.pixarea[self.getPixIdArea(fraction_localisation)])*u.sr
 
-    def getMap(self, mapType, nside, scheme='nested'):
+    def getMap(self, mapType, nside, scheme='ring'):
         cache_entry = mapType + '_' + str(nside) + '_' + scheme
         if cache_entry in self.rasterized_map_cache.keys():
             return self.rasterized_map_cache[cache_entry]
