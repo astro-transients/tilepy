@@ -28,7 +28,7 @@ class SkyMap:
         self.raw_map_prob_density = mapReader.getMap('prob')
         self.is3D = self.determine3D(obspar, mapReader)
 
-        if obspar.is3D:
+        if self.is3D:
             self.raw_map_dist_mean = mapReader.getMap('distMean')
             self.raw_map_dist_sigma = mapReader.getMap('distSigma')
             self.raw_map_dist_norm = mapReader.getMap('distNorm')
@@ -75,7 +75,7 @@ class SkyMap:
             return self.rasterized_map_cache[cache_entry]
 
         if mapType == 'prob_density':
-            self.rasterized_map_cache[cache_entry] = self.raw_map_prob_density.rasterize(nside=nside, scheme=scheme)
+            self.rasterized_map_cache[cache_entry] = self.raw_map_prob_density.rasterize(nside=nside, scheme=scheme).data
         elif mapType == 'prob':
             self.rasterized_map_cache[cache_entry] = self.getMap('prob_density', nside, scheme) * hp.nside2pixarea(nside)
         elif mapType == 'coordinate':
