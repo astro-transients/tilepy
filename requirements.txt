@@ -1,7 +1,7 @@
 astropy
 pytz
 scipy
-healpy
+healpy==1.16.2
 tables
 ipython
 matplotlib
@@ -16,6 +16,6 @@ skyfield
 ipykernel
 tilepy
 six
-mhealpy
+mhealpy>=0.3.0,<0.4
 setuptools
 requests

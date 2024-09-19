@@ -15,15 +15,14 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+import logging
 import os
 import time
-import logging
 import traceback
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 
-import mhealpy as mh
-
+import astropy.units as u
 from astropy.io import fits
 
 ##################################################################################################
@@ -83,22 +82,57 @@ class MapReader:
         nb_column = self.fits_map[self.id_hdu_map].header['TFIELDS']
         if nb_column == 1:
             self.id_prob = 0
+            self.unit_prob = u.dimensionless_unscaled
             self.id_dist_mean = None
+            self.unit_dist_mean = None
             self.id_dist_sigma = None
+            self.unit_dist_sigma = None
             self.id_dist_norm = None
+            self.unit_dist_norm = None
         else:
+            self.unit_prob = None
             self.id_dist_mean = None
+            self.unit_dist_mean = None
             self.id_dist_sigma = None
+            self.unit_dist_sigma = None
             self.id_dist_norm = None
+            self.unit_dist_norm = None
             for i in range(nb_column):
-                if self.fits_map[self.id_hdu_map].header['TTYPE'+str(i)] == 'PROB':
+                columns_name = self.fits_map[self.id_hdu_map].header['TTYPE' + str(i)]
+                unit_information = ('TUNIT'+str(i)) in self.fits_map[self.id_hdu_map].header
+                if columns_name in ['PROB', 'T', 'PROBABILITY', 'PROBDENSITY']:
                     self.id_prob = i
-                elif self.fits_map[self.id_hdu_map].header['TTYPE'+str(i)] == 'DISTMU':
+                    if unit_information:
+                        self.unit_prob = u.Unit(self.fits_map[self.id_hdu_map].header['TUNIT' + str(i)])
+                    else:
+                        columns_name = self.fits_map[self.id_hdu_map].header['TTYPE'+str(i)]
+                        if columns_name in ['T', 'PROBABILITY']:
+                            self.unit_prob = u.dimensionless_unscaled
+                        else:
+                            self.unit_prob = u.Unit('sr^-1')
+                elif columns_name == 'DISTMU':
                     self.id_dist_mean = i
-                elif self.fits_map[self.id_hdu_map].header['TTYPE'+str(i)] == 'DISTSIGMA':
+                    if unit_information:
+                        self.unit_dist_mean = u.Unit(self.fits_map[self.id_hdu_map].header['TUNIT' + str(i)])
+                    else:
+                        self.unit_dist_mean = u.Mpc
+                elif columns_name == 'DISTSIGMA':
                     self.id_dist_sigma = i
-                elif self.fits_map[self.id_hdu_map].header['TTYPE'+str(i)] == 'DISTNORM':
+                    if unit_information:
+                        self.unit_dist_sigma = u.Unit(self.fits_map[self.id_hdu_map].header['TUNIT' + str(i)])
+                    else:
+                        self.unit_dist_sigma = u.Mpc
+                elif columns_name == 'DISTNORM':
                     self.id_dist_norm = i
+                    if unit_information:
+                        self.unit_dist_norm = u.Unit(self.fits_map[self.id_hdu_map].header['TUNIT' + str(i)])
+                    else:
+                        self.unit_dist_norm = u.Unit('Mpc^-2')
+
+        # Check if probabilities is probabilities density
+        self.prob_density = True
+        if self.unit_prob.is_equivalent(u.dimensionless_unscaled):
+            self.prob_density = False
 
         if self.id_dist_mean is None or self.id_dist_mean is None or self.id_dist_norm is None:
             self.has3D = False
@@ -163,17 +197,26 @@ class MapReader:
 
     def getMap(self, mapType):
         if mapType == 'prob':
-            mh.HealpixMap.read_map(self.skymap_filename, field=self.id_prob, hdu=self.id_hdu_map, density=True)
+            raw_map = mh.HealpixMap.read_map(self.skymap_filename, field=self.id_prob, hdu=self.id_hdu_map, density=True)
+            if not self.prob_density:
+                raw_map.data = (raw_map.data * self.unit_prob / raw_map.pixarea()).to_value(u.Unit('sr^-1'))
+            else:
+                raw_map.data = (raw_map.data * self.unit_prob).to_value(u.Unit('sr^-1'))
         elif mapType == 'distMean' and self.has3D:
-            mh.HealpixMap.read_map(self.skymap_filename, field=self.id_dist_mean, hdu=self.id_hdu_map, density=False)
+            raw_map = mh.HealpixMap.read_map(self.skymap_filename, field=self.id_dist_mean, hdu=self.id_hdu_map, density=False)
+            raw_map.data = (raw_map.data * self.unit_dist_mean).to_value(u.Unit('Mpc'))
         elif mapType == 'distSigma' and self.has3D:
-            mh.HealpixMap.read_map(self.skymap_filename, field=self.id_dist_sigma, hdu=self.id_hdu_map, density=False)
+            raw_map = mh.HealpixMap.read_map(self.skymap_filename, field=self.id_dist_sigma, hdu=self.id_hdu_map, density=False)
+            raw_map.data = (raw_map.data * self.unit_dist_sigma).to_value(u.Unit('Mpc'))
         elif mapType == 'distNorm' and self.has3D:
-            mh.HealpixMap.read_map(self.skymap_filename, field=self.id_dist_norm, hdu=self.id_hdu_map, density=False)
+            raw_map = mh.HealpixMap.read_map(self.skymap_filename, field=self.id_dist_norm, hdu=self.id_hdu_map, density=False)
+            raw_map.data = (raw_map.data * self.unit_dist_norm).to_value(u.Unit('Mpc^-2'))
         elif not self.has3D and (mapType == 'distMean' or mapType == 'distSigma' or mapType == 'distNorm'):
             raise Exception('No distance information available')
         else:
             raise Exception('Unknown type of map')
+
+        return raw_map
 
     def getDistance(self):
         if self.has3D:
