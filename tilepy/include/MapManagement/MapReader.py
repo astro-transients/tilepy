@@ -206,18 +206,18 @@ class MapReader:
         if mapType == 'prob':
             raw_map = mh.HealpixMap.read_map(self.skymap_filename, field=self.id_prob, hdu=self.id_hdu_map, density=True)
             if not self.prob_density:
-                raw_map.data = (raw_map.data * self.unit_prob / raw_map.pixarea()).to_value(u.Unit('sr^-1'))
+                raw_map._data = (raw_map.data * self.unit_prob / raw_map.pixarea()).to_value(u.Unit('sr^-1'))
             else:
-                raw_map.data = (raw_map.data * self.unit_prob).to_value(u.Unit('sr^-1'))
+                raw_map._data = (raw_map.data * self.unit_prob).to_value(u.Unit('sr^-1'))
         elif mapType == 'distMean' and self.has3D:
             raw_map = mh.HealpixMap.read_map(self.skymap_filename, field=self.id_dist_mean, hdu=self.id_hdu_map, density=False)
-            raw_map.data = (raw_map.data * self.unit_dist_mean).to_value(u.Unit('Mpc'))
+            raw_map._data = (raw_map.data * self.unit_dist_mean).to_value(u.Unit('Mpc'))
         elif mapType == 'distSigma' and self.has3D:
             raw_map = mh.HealpixMap.read_map(self.skymap_filename, field=self.id_dist_sigma, hdu=self.id_hdu_map, density=False)
-            raw_map.data = (raw_map.data * self.unit_dist_sigma).to_value(u.Unit('Mpc'))
+            raw_map._data = (raw_map.data * self.unit_dist_sigma).to_value(u.Unit('Mpc'))
         elif mapType == 'distNorm' and self.has3D:
             raw_map = mh.HealpixMap.read_map(self.skymap_filename, field=self.id_dist_norm, hdu=self.id_hdu_map, density=False)
-            raw_map.data = (raw_map.data * self.unit_dist_norm).to_value(u.Unit('Mpc^-2'))
+            raw_map._data = (raw_map.data * self.unit_dist_norm).to_value(u.Unit('Mpc^-2'))
         elif not self.has3D and (mapType == 'distMean' or mapType == 'distSigma' or mapType == 'distNorm'):
             raise Exception('No distance information available')
         else:
