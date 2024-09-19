@@ -1157,13 +1157,15 @@ def LoadHealpixMap(thisfilename):
 
     # 2-dimensional fits
     if (fitsfile[1].header['TFIELDS'] <= 2):
-        # LVK CWB
-        if 'CREATOR' in fitsfile[1].header:
+        # and MOskymaps
+        if fitsfile[1].header['ORDERING'] == 'NUNIQ': 
             skymap = lf.read_sky_map(thisfilename, distances = False) 
             tprob = skymap[0]
         # IC Cascades, GBM and general case
         else:   
             tprob = hp.read_map(thisfilename, field=range(1))
+    
+    
     # 3-dimensional fits (LVK CBC) 
     else:
         skymap = lf.read_sky_map(thisfilename, distances = True) 
@@ -1498,7 +1500,11 @@ def Check2Dor3D(fitsfile, filename, obspar):
         fitsfile.close()
     else: 
         has3D = False
-        prob = hp.read_map(fitsfile, field=range(1))
+        if fitsfile[1].header['ORDERING'] == 'NUNIQ': 
+            skymap = lf.read_sky_map(fitsfile, distances = False) 
+            prob = skymap[0]
+        else: 
+            prob = hp.read_map(fitsfile, field=range(1))
         npix = len(prob)
         Nside = hp.npix2nside(npix)
     
