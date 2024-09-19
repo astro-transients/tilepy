@@ -22,6 +22,7 @@ import traceback
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 
+import mhealpy as mh
 import astropy.units as u
 from astropy.io import fits
 
@@ -80,6 +81,12 @@ class MapReader:
 
     def identifyColumns(self):
         nb_column = self.fits_map[self.id_hdu_map].header['TFIELDS']
+
+        # Identify if column numeration start at 0 or 1
+        self.offset_column = 1
+        if 'TTYPE0' in self.fits_map[self.id_hdu_map].header:
+            self.offset_column = 0
+
         if nb_column == 1:
             self.id_prob = 0
             self.unit_prob = u.dimensionless_unscaled
@@ -97,7 +104,7 @@ class MapReader:
             self.unit_dist_sigma = None
             self.id_dist_norm = None
             self.unit_dist_norm = None
-            for i in range(nb_column):
+            for i in range(self.offset_column, nb_column+self.offset_column):
                 columns_name = self.fits_map[self.id_hdu_map].header['TTYPE' + str(i)]
                 unit_information = ('TUNIT'+str(i)) in self.fits_map[self.id_hdu_map].header
                 if columns_name in ['PROB', 'T', 'PROBABILITY', 'PROBDENSITY']:
