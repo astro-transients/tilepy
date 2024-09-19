@@ -8,7 +8,7 @@ dependencies:
   - pip
   - astropy
   - pytz
-  - scipy
+  - scipy<1.14.0
   - ipython
   - numpy
   - pandas
@@ -19,7 +19,8 @@ dependencies:
   - skyfield
   - ipykernel
   - ephem
-  - mhealpy>=0.3.0,<0.4
   - ligo.skymap>=2.0.0
   - matplotlib<3.9.0
   - mocpy
+  - pip:
+    - mhealpy>=0.3.0,<0.4

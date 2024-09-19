@@ -54,8 +54,6 @@ import pandas as pd
 from astropy.table import QTable
 import astropy_healpix as ah
 
-from tilepy.include.MapManagement.MapReader import IsMultiOrder
-
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
 else:

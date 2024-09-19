@@ -1,6 +1,6 @@
 astropy
 pytz
-scipy
+scipy<1.14.0
 healpy==1.16.2
 tables
 ipython

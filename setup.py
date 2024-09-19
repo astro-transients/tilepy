@@ -13,7 +13,7 @@ setup(name='tilepy',
       description='Computation of the tiling scheduling of large localization uncertainty region event with multi-wavelength pointing telescopes',
       install_requires=[
           'astropy',
-          'scipy',
+          'scipy<1.14.0',
           'healpy==1.16.2',
           'ipython',
           'matplotlib<3.9.0',
