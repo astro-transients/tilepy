@@ -46,6 +46,21 @@ else:
 #    os.path.dirname(__file__)), '../dataset/finals2000A.all')
 #iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
+__all__ = [
+    "load_pointingFile",
+    "VisibilityWindow",
+    "GetObservationPeriod",
+    "GetVisibility",
+    "ProbabilitiesinPointings3D",
+    "PGGPGalinFOV",
+    "ProbabilitiesinPointings2D",
+    "PGinFOV",
+    "Sortingby",
+    "EvolutionPlot",
+    "RankingTimes",
+    "RankingTimes_2D",
+]
+
 
 def load_pointingFile(tpointingFile):
     # Read PointingsFile

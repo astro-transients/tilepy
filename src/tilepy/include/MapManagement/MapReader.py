@@ -32,6 +32,9 @@ from astropy.io import fits
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "MapReader"
+]
 
 class MapReader:
     download_max_nb_try = 20

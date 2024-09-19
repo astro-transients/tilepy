@@ -1,7 +1,5 @@
 name: tilepy
 channels:
-  - default
-  - cta-observatory
   - conda-forge
 dependencies:
   - python>=3.9
@@ -22,5 +20,9 @@ dependencies:
   - ligo.skymap>=2.0.0
   - matplotlib<3.9.0
   - mocpy
+  - setuptools
+  - pytest
+  - pytest-cov
+  - pytest-runner
   - pip:
     - mhealpy>=0.3.0,<0.4

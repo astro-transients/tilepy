@@ -21,6 +21,10 @@ from astropy.coordinates import SkyCoord
 from scipy.stats import norm
 from tilepy.include.PointingTools import Tools
 
+__all__ = [
+    "SkyMap"
+]
+
 
 class SkyMap:
 

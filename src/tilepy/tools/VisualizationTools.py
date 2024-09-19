@@ -1,8 +1,8 @@
 import os
 import sys
-from ..include.PointingTools import NightDarkObservation, NightDarkObservationwithGreyTime, ObservationParameters, getdate, Get90RegionPixReduced, TransformRADec
-from ..include.Observatories import CTANorthObservatory, CTASouthObservatory, HESSObservatory
-from ..include.PointingPlotting import LoadPointings, LoadPointingsGAL, PlotPointingsTogether, PlotPointings_Pretty
+from tilepy.include.PointingTools import NightDarkObservation, NightDarkObservationwithGreyTime, ObservationParameters, getdate, Get90RegionPixReduced, TransformRADec
+from tilepy.include.Observatories import CTANorthObservatory, CTASouthObservatory, HESSObservatory
+from tilepy.include.PointingPlotting import LoadPointings, LoadPointingsGAL, PlotPointingsTogether, PlotPointings_Pretty
 
 import healpy as hp
 import numpy as np
@@ -77,7 +77,7 @@ def VisibilityOverview_forZenithCut(filename, date=datetime.datetime.now(timezon
     # hp.newvisufunc.projview(prob, unit="Probability", graticule=True, graticule_labels=True, projection_type="mollweide",
     #    xlabel="RA", ylabel="Dec", phi_convention="clockwise", longitude_grid_spacing=30,title=titlePlot,format="%#.3g")
     # Just do a plotting
-    hp.mollview(prob, coord='E', title=titlePlot,
+    hp.mollview(prob, coord='C', title=titlePlot,
                 unit="Probability")  # Celestial=Equatorial
     # frame = co.AltAz(obstime=time, location=observatory.location)
 
@@ -89,13 +89,13 @@ def VisibilityOverview_forZenithCut(filename, date=datetime.datetime.now(timezon
                            location=observatory.location)
     RandomCoord_radec = RandomCoord.transform_to('icrs')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
-                         'red', lonlat=True, coord="E", linewidth=0.4)
+                         'red', lonlat=True, coord="C", linewidth=0.4)
 
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,
                            location=observatory2.location)
     RandomCoord_radec = RandomCoord.transform_to('icrs')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
-                         'blue', lonlat=True, coord="E", linewidth=0.4)
+                         'blue', lonlat=True, coord="C", linewidth=0.4)
 
     hp.graticule()
     plt.savefig("Visibility_Overview.png")
@@ -145,35 +145,35 @@ def Time_DarkTime_GreyTime(filename, cfgFile, date=datetime.datetime.now(timezon
                            location=obspar.location)
     RandomCoord_radec = RandomCoord.transform_to('icrs')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
-                         'red', lonlat=True, coord="E", linewidth=0.4)
+                         'red', lonlat=True, coord="C", linewidth=0.4)
 
     # NightDarkRuns[0]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightDarkRuns[0],
                            location=obspar.location)
     RandomCoord_radec = RandomCoord.transform_to('icrs')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
-                         'orange', lonlat=True, coord="E", linewidth=0.4)
+                         'orange', lonlat=True, coord="C", linewidth=0.4)
 
     # NightDarkRuns[-1]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightDarkRuns[-1],
                            location=obspar.location)
     RandomCoord_radec = RandomCoord.transform_to('icrs')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
-                         'orange', lonlat=True, coord="E", linewidth=0.4)
+                         'orange', lonlat=True, coord="C", linewidth=0.4)
 
     # NightGreyRuns[0]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightGreyRuns[0],
                            location=obspar.location)
     RandomCoord_radec = RandomCoord.transform_to('icrs')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
-                         'blue', lonlat=True, coord="E", linewidth=0.4)
+                         'blue', lonlat=True, coord="C", linewidth=0.4)
 
     # NightGreyRuns[-1]
     RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=NightGreyRuns[-1],
                            location=obspar.location)
     RandomCoord_radec = RandomCoord.transform_to('icrs')
     hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec,
-                         'blue', lonlat=True, coord="E", linewidth=0.4)
+                         'blue', lonlat=True, coord="C", linewidth=0.4)
     hp.graticule()
     plt.savefig("VisibilityTime_DarkTime_GreyTime_Overview" +
                 obspar.name + '.png')
@@ -200,7 +200,7 @@ def CompareTwoTilings(filename, PointingsFile1=False, PointingsFile2=False, FOV=
     if (PointingsFile1 == 'False') or (PointingsFile2 == 'False'):
         print('At least one of the pointings has not been given, try again')
         # Just do a plotting
-        hp.mollview(prob, coord='E')
+        hp.mollview(prob, coord='C')
         hp.graticule()
         plt.show()
 
@@ -209,11 +209,15 @@ def CompareTwoTilings(filename, PointingsFile1=False, PointingsFile2=False, FOV=
         df1 = LoadPointings (PointingsFile1)
         df2 = LoadPointings (PointingsFile2)
 
-
+    if 'Pgal' in df2.columns:
         print('Summary of 1st file: sum(PW)=', sum(df1['PGW']),
               'sum(PGAL)=',  sum(df1['Pgal']), 'total pointings', len(df1['PGW']))
         print('Summary of 2st file: sum(PW)=', sum(df2['PGW']),
               'sum(PGAL)=',  sum(df2['Pgal']), 'total pointings', len(df2['PGW']))
+        print("===========================================================================================")
+    else:  
+        print('Summary of 1st file: sum(PW)=', sum(df1['PGW']),'total pointings', len(df1['PGW']))
+        print('Summary of 2st file: sum(PW)=', sum(df2['PGW']),'total pointings', len(df2['PGW']))
         print("===========================================================================================")
 
         name1 = 'File1'

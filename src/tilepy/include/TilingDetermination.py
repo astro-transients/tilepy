@@ -51,6 +51,15 @@ utc = pytz.UTC
 
 ############################################
 
+__all__ = [
+    "PGWinFoV",
+    "PGalinFoV",
+    "ObservationStartperObs",
+    "PGWinFoV_NObs",
+    "PGalinFoV_NObs",
+]
+
+
 def PGWinFoV(skymap, eventName, obspar, dirName):
     """
     Mid-level function that is called by GetSchedule to compute a observation schedule based on a 2D method.  

@@ -25,12 +25,17 @@ import os
 import astropy.units as u
 from astropy.io import ascii
 
-from tilepy.include.MapManagement.MapReader import MapReader
-from tilepy.include.MapManagement.SkyMap import SkyMap
+from .MapManagement import MapReader
+from .MapManagement import SkyMap
 from .PointingPlotting import PointingPlotting
 from .RankingObservationTimes import RankingTimes, RankingTimes_2D
 from .TilingDetermination import PGWinFoV, PGalinFoV
 from .TilingDetermination import PGWinFoV_NObs, PGalinFoV_NObs
+
+__all__ = [
+    "GetSchedule",
+    "GetUniversalSchedule",
+]
 
 
 def GetSchedule(obspar):
