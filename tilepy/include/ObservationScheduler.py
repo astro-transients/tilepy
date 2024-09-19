@@ -136,7 +136,7 @@ def GetUniversalSchedule(obspar):
     :type obsparameters: list of class ObservationParameters
     '''
 
-    raw_map = MapReader(obspar)
+    raw_map = MapReader(obspar[0])
     skymap = SkyMap(obspar, raw_map)
 
     print("===========================================================================================")
