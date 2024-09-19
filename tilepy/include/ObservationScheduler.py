@@ -137,11 +137,11 @@ def GetUniversalSchedule(obspar):
     '''
 
     raw_map = MapReader(obspar[0])
-    skymap = SkyMap(obspar, raw_map)
+    skymap = SkyMap(obspar[0], raw_map)
 
     print("===========================================================================================")
     ObservationTime = obspar[0].obsTime
-    outputDir = "%s/%s" % (obspar.outDir, raw_map.name_event)
+    outputDir = "%s/%s" % (obspar[0].outDir, raw_map.name_event)
     galaxies = obspar[0].datasetDir + obspar[0].galcatName
     cat = None
 
@@ -191,13 +191,13 @@ def GetUniversalSchedule(obspar):
             if (len(SuggestedPointings_1) != 0):
                 ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' %
                             (dirName, obspar[j].name), overwrite=True, fast_writer=False)
-                RankingTimes_2D(ObservationTime, skymap.getMap('prob', obspar.HRnside), obspar[j], obspar[j].alertType, dirName,
+                RankingTimes_2D(ObservationTime, skymap.getMap('prob', obspar[j].HRnside), obspar[j], obspar[j].alertType, dirName,
                                 '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name),
                                 obspar[j].name)
-                PointingPlotting(skymap.getMap('prob', obspar.HRnside), obspar[j], obspar[j].name, dirName,
+                PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[j], obspar[j].name, dirName,
                                  '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
                                      dirName, obspar[j].name), obspar[j].name, cat)
-        PointingPlotting(skymap.getMap('prob', obspar.HRnside), obspar[0], "all", dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all",
+        PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[0], "all", dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all",
                          cat)
     else:
         FOLLOWUP = False

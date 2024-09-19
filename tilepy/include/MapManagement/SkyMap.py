@@ -91,18 +91,18 @@ class SkyMap:
     def computeGalaxyProbability(self, galaxyCatalog, mangrove=False):
 
         # Identify the pixel associated to each galaxy
-        ra = galaxyCatalog['RA']
-        dec = galaxyCatalog['Dec']
-        dist = galaxyCatalog['d_L']
+        ra = galaxyCatalog['RAJ2000']
+        dec = galaxyCatalog['DEJ2000']
+        dist = galaxyCatalog['Dist']
         theta = 0.5 * np.pi - np.deg2rad(dec)
         phi = np.deg2rad(ra)
         pix_id = self.raw_map_prob_density.ang2pix(theta, phi)
 
         # Compute the probability associated to each galaxy
         if self.is3D:
-            galaxyCatalog['dp_dv'] = self.raw_map_prob_density[pix_id] * self.raw_map_dist_norm[pix_id] * norm(
+            galaxyCatalog['dp_dV'] = self.raw_map_prob_density[pix_id] * self.raw_map_dist_norm[pix_id] * norm(
                 self.raw_map_dist_mean[pix_id], self.raw_map_dist_sigma[pix_id]).pdf(dist) * self.raw_map_prob_density.pixarea(pix_id)
         else:
-            galaxyCatalog['dp_dv'] = self.raw_map_prob_density[pix_id] * self.raw_map_prob_density.pixarea(pix_id)
+            galaxyCatalog['dp_dV'] = self.raw_map_prob_density[pix_id] * self.raw_map_prob_density.pixarea(pix_id)
 
         return galaxyCatalog

@@ -111,8 +111,6 @@ class MapReader:
                     self.id_prob = i
                     if unit_information:
                         self.unit_prob = u.Unit(self.fits_map[self.id_hdu_map].header['TUNIT' + str(i)])
-                        print(self.fits_map[self.id_hdu_map].header['TUNIT' + str(i)])
-                        print(self.unit_prob)
                     else:
                         columns_name = self.fits_map[self.id_hdu_map].header['TTYPE'+str(i)]
                         if columns_name in ['T', 'PROBABILITY']:
@@ -146,7 +144,6 @@ class MapReader:
         self.prob_density = True
         if self.unit_prob.is_equivalent(u.dimensionless_unscaled):
             self.prob_density = False
-        print(self.prob_density)
 
         if self.id_dist_mean is None or self.id_dist_mean is None or self.id_dist_norm is None:
             self.has3D = False

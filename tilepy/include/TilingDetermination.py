@@ -236,7 +236,7 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
         sum_dP_dV = cat['dp_dV'].sum()
     else:
         cat = skymap.computeGalaxyProbability(cat)
-        tGals0 = FilterGalaxies(cat)
+        tGals0 = FilterGalaxies(cat, obspar.minimumProbCutForCatalogue)
         tGals0 = MangroveGalaxiesProbabilities(tGals0)
         sum_dP_dV = cat['dp_dV'].sum()
 
@@ -806,7 +806,7 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
         sum_dP_dV = cat['dp_dV'].sum()
     else:
         cat = skymap.computeGalaxyProbability(cat)
-        tGals0 = FilterGalaxies(cat)
+        tGals0 = FilterGalaxies(cat, obspar.minimumProbCutForCatalogue)
         tGals0 = MangroveGalaxiesProbabilities(tGals0)
         sum_dP_dV = cat['dp_dV'].sum()
 
