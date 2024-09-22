@@ -87,7 +87,6 @@ def GetSchedule(obspar):
     if not os.path.exists(dirName):
         os.makedirs(dirName)
 
-
     if has3D:
         print("===========================================================================================")
         print("Starting the 3D pointing calculation with the following parameters\n")
@@ -108,6 +107,7 @@ def GetSchedule(obspar):
             ascii.write(SuggestedPointings, outfilename,
                         overwrite=True, fast_writer=False)
             print()
+            print(f"Resulting pointings file is {outfilename}")
             if(obspar.doRank):
                 RankingTimes(obspar.obsTime, filename, cat, obspar, obspar.alertType, dirName,
                             '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name)
@@ -139,6 +139,7 @@ def GetSchedule(obspar):
             ascii.write(SuggestedPointings, outfilename,
                         overwrite=True, fast_writer=False)
             print()
+            print(f"Resulting pointings file is {outfilename}")
             if(obspar.doRank):
                 RankingTimes_2D(obspar.obsTime, prob, obspar, obspar.alertType, dirName,
                                 '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name)
@@ -150,7 +151,6 @@ def GetSchedule(obspar):
             print('No observations are scheduled')
 
 
-
 def GetUniversalSchedule(obspar):
     '''
     Top level function that is called by the user with specific arguments and creates a folder 
@@ -160,7 +160,7 @@ def GetUniversalSchedule(obspar):
     :type obsparameters: list of class ObservationParameters
     '''
     fitsMap, filename, name = GetSkymap(obspar[0])
-    
+
     prob, has3D, origNSIDE = Check2Dor3D(fitsMap, filename, obspar[0])
 
     print("===========================================================================================")
@@ -168,7 +168,7 @@ def GetUniversalSchedule(obspar):
     outputDir =  "%s/%s" % (obspar[0].outDir, name)
     galaxies = obspar[0].datasetDir + obspar[0].galcatName
     cat = None
-    
+
     if has3D:
         print("===========================================================================================")
         print("Starting the 3D pointing calculation with the following parameters\n")
@@ -206,7 +206,7 @@ def GetUniversalSchedule(obspar):
         ascii.write(SuggestedPointings, outfilename,
                     overwrite=True, fast_writer=False)
         print()
-
+        print(f"Resulting pointings file is {outfilename}")
         # for obspar in parameters:
         for j in range(len(obspar)):
             obspar1 = obspar[j]
