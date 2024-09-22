@@ -63,9 +63,9 @@ else:
     ConfigParser = configparser.ConfigParser
 
 
-#iers_file = os.path.join(os.path.abspath(
+# iers_file = os.path.join(os.path.abspath(
 #    os.path.dirname(__file__)), '../dataset/finals2000A.all')
-#iers.IERS.iers_table = iers.IERS_A.open(iers_file)
+# iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 # iers.IERS.iers_table = iers.IERS_A.open(download_file(iers_url_mirror, cache=True))
 
 
@@ -832,7 +832,7 @@ class Observer:
 
 ######################################################
 
-# Functions related to the Skymap handling 
+# Functions related to the Skymap handling
 
 ######################################################
 
@@ -1794,7 +1794,7 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
 
 def SubstractPointings2D(tpointingFile, prob, nside, FOV, pixlist):
     radius = FOV
-    print("Loading pointings from " + tpointingFile)
+    print("Subtracting pointings from " + tpointingFile)
     ra, dec = np.genfromtxt(tpointingFile, usecols=(2, 3), dtype="str", skip_header=1,
                             delimiter=' ',
                             unpack=True)  # ra, dec in degrees
@@ -2461,7 +2461,7 @@ def SubstractPointings(tpointingFile, galaxies, talreadysumipixarray, tsum_dP_dV
 
     # Read PointingsFile
 
-    print("Loading pointings from " + tpointingFile)
+    print("Subtracting pointings from " + tpointingFile)
     rap, decP, = np.genfromtxt(tpointingFile, usecols=(2, 3), dtype="str", skip_header=1,
                                delimiter=' ',
                                unpack=True)  # ra, dec in degrees
@@ -3857,4 +3857,3 @@ def ComputeProbability2D_SelectClusters(prob, highres, radecs, conf, time, Delay
         #plt.close()
 
     return P_GW, targetCoord, ObsExp, ZenIni, ZenEnd, ObsCase, ipixlist, ipixlistHR
-
