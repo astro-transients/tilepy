@@ -31,9 +31,8 @@ def ComputeCoveredProbability(GWFile, PointingsFile, galFile="../dataset/GLADEpl
 
     tGals0, sum_dP_dV = CorrelateGalaxies_LVC(
         prob, distmu, distsigma, distnorm, cat, has3D, MinimumProbCutForCatalogue)
-    # alreadysumipixarray,AlreadyObservedPgw = SubstractPointings2D(PointingsFile,prob, nside, FOV,alreadysumipixarray)
-    ra, dec, tGals, alreadyObservedPgw, alreadyObservedPgal, alreadysumipixarray = SubstractPointings(
-        PointingsFile, tGals0, alreadysumipixarray, sum_dP_dV, FOV, prob, nside)
+    ra, dec, tGals, alreadyObservedPgw, alreadyObservedPgal, alreadysumipixarray, doneObs = SubstractPointings(
+        PointingsFile, tGals0, alreadysumipixarray, sum_dP_dV, prob, obspar, nside)
 
     print('Total PGW covered: ', sum(alreadyObservedPgw))
     print('Total PGAL covered: ', sum(alreadyObservedPgal))

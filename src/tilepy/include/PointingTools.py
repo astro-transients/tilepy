@@ -388,10 +388,11 @@ class ObservationParameters(object):
     def __init__(self, name=None, lat=0, lon=0, height=0, sunDown=None, moonDown=None,
                  moonGrey=None, moonPhase=None, minMoonSourceSeparation=None,
                  maxMoonSourceSeparation=None, maxZenith=None, FOV=None, maxRuns=None, maxNights=None,
-                 duration=None, minDuration=None, useGreytime=None, minSlewing=None, online=False,
+                 duration=None, minDuration=None, useGreytime=None, minSlewing=None,
                  minimumProbCutForCatalogue=None, minProbcut=None, distCut=None, doPlot=False, secondRound=None,
                  zenithWeighting=None, percentageMOC=None, reducedNside=None, HRnside=None,
-                 mangrove=None, skymap=None,obsTime=None,datasetDir=None,galcatName=None,outDir=None,pointingsFile=None,alertType=None, locCut=None, MO=False, algorithm=None, strategy=None, doRank=False):
+                 mangrove=None, skymap=None,obsTime=None,datasetDir=None,galcatName=None,outDir=None,pointingsFile=None, countPrevious=False,
+                 alertType=None, locCut=None, MO=False, algorithm=None, strategy=None, doRank=False):
 
         self.name = name
         self.lat = lat
@@ -419,7 +420,6 @@ class ObservationParameters(object):
         self.minSlewing = minSlewing
 
         # Tiling
-        self.online = online
         self.minimumProbCutForCatalogue = minimumProbCutForCatalogue
         self.minProbcut = minProbcut
         self.distCut = distCut
@@ -433,6 +433,7 @@ class ObservationParameters(object):
         self.algorithm = algorithm
         self.strategy = strategy
         self.doRank = doRank
+        self.countPrevious = countPrevious
 
         # Parsed args
         self.skymap = skymap 
@@ -517,7 +518,6 @@ class ObservationParameters(object):
         self.minSlewing = float(parser.get(section, 'minslewing', fallback=0))
 
         section = 'tiling'
-        self.online = (parser.getboolean(section, 'online', fallback=None))
         self.minimumProbCutForCatalogue = float(parser.get(
             section, 'minimumprobcutforcatalogue', fallback=0))
         self.minProbcut = float(parser.get(section, 'minProbcut', fallback=0))
@@ -536,11 +536,12 @@ class ObservationParameters(object):
         self.algorithm = str(parser.get(section, 'algorithm', fallback=None))
         self.strategy = str(parser.get(section, 'strategy', fallback=None))
         self.doRank = (parser.getboolean(section, 'doRank', fallback=None))
+        self.countPrevious = (parser.getboolean(section, 'countPrevious', fallback=None))
 
     def from_args(self, name, lat, lon, height, sunDown, moonDown,
                   moonGrey, moonPhase, minMoonSourceSeparation,
                   maxMoonSourceSeparation, maxZenith, FOV, maxRuns, maxNights,
-                  duration, minDuration, useGreytime, minSlewing, online,
+                  duration, minDuration, useGreytime, minSlewing,
                   minimumProbCutForCatalogue, minProbcut,distCut, doPlot, secondRound,
                   zenithWeighting, percentageMOC, reducedNside, HRnside,
                   mangrove):
@@ -572,7 +573,6 @@ class ObservationParameters(object):
         self.minSlewing = minSlewing
 
         # Tiling
-        self.online = online
         self.minimumProbCutForCatalogue = minimumProbCutForCatalogue
         self.minProbcut = minProbcut
         self.distCut = distCut
@@ -1792,8 +1792,11 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
 
-def SubstractPointings2D(tpointingFile, prob, nside, FOV, pixlist):
-    radius = FOV
+def SubstractPointings2D(tpointingFile, prob, obspar, pixlist):
+
+    nside = obspar.reducedNside
+    radius = obspar.FOV
+
     print("Subtracting pointings from " + tpointingFile)
     ra, dec = np.genfromtxt(tpointingFile, usecols=(2, 3), dtype="str", skip_header=1,
                             delimiter=' ',
@@ -1816,7 +1819,7 @@ def SubstractPointings2D(tpointingFile, prob, nside, FOV, pixlist):
         P_GW.append(prob[effectiveipix_disc].sum())
         print('Coordinates ra:', ra[i], 'dec:', dec[i],
               'Pgw:', P_GW[i], 'vs', prob[ipix_disc].sum())
-    return pixlist, np.sum(P_GW)
+    return pixlist, np.sum(P_GW), len(ra)
 
 ######################################################
 
@@ -2455,9 +2458,9 @@ def SimpleGWprob(prob, finalGals, talreadysumipixarray, FOV, nside):
     return probability
 
 
-def SubstractPointings(tpointingFile, galaxies, talreadysumipixarray, tsum_dP_dV, FOV, prob, nside):
+def SubstractPointings(tpointingFile, galaxies, talreadysumipixarray, tsum_dP_dV, prob, obspar, nside):
 
-    # targetCoord = co.SkyCoord(galaxies['RAJ2000'], galaxies['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
+    FOV = obspar.FOV
 
     # Read PointingsFile
 
@@ -2490,7 +2493,7 @@ def SubstractPointings(tpointingFile, galaxies, talreadysumipixarray, tsum_dP_dV
             PGAL.append(pgalcircle)
             print('Coordinates ra:', ra, 'dec:', dec,
                   'Pgw:', pgwcircle, 'PGAL:', pgalcircle)
-    return ra, dec, updatedGalaxies, PGW, PGAL, talreadysumipixarray
+    return ra, dec, updatedGalaxies, PGW, PGAL, talreadysumipixarray, len(np.atleast_1d(ra))
 
 
 def SubstractGalaxiesCircle(galaux, ra, dec, talreadysumipixarray, tsum_dP_dV, FOV, prob, nside):

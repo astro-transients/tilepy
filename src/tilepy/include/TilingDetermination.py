@@ -120,10 +120,18 @@ def PGWinFoV(filename,obspar,dirName):
     radecs = co.SkyCoord(rapix, decpix, frame='icrs', unit=(u.deg, u.deg))
 
     # Add observed pixels to pixlist
+    maxRuns = obspar.maxRuns
     if (PointingFile != None):
-        pixlist, P_GW = SubstractPointings2D(
-            PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        print('Already observed probability =', P_GW)
+        pixlist, sumPGW, doneObs = SubstractPointings2D(PointingFile, prob, obspar, pixlist)
+
+        if obspar.countPrevious:
+            maxRuns = obspar.maxRuns - doneObs
+        print("===========================================================================================")
+        print()
+        print(f"{name}: Total GW probability already covered: {sumPGW}")
+        print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
+            f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
+        print("===========================================================================================")
 
     #######################################################
 
@@ -137,7 +145,7 @@ def PGWinFoV(filename,obspar,dirName):
 
     counter = 0
     for j, NightDarkRun in enumerate(NightDarkRuns):
-        if (len(ObservationTimearray) < obspar.maxRuns):
+        if (len(ObservationTimearray) < maxRuns):
             ObservationTime = NightDarkRun
             ObsBool, yprob = ZenithAngleCut(prob, nside, ObservationTime, obspar.minProbcut,
                                             obspar.maxZenith, obspar.location, obspar.minMoonSourceSeparation, obspar.useGreytime)
@@ -260,25 +268,27 @@ def PGalinFoV(filename,galFile,obspar,dirName):
     alreadysumipixarray2 = []
 
     #########################
+    maxRuns = obspar.maxRuns
     if (PointingFile == None):
         tGals = tGals0
         print('No pointings were given to be substracted')
     else:
 
-        ra, dec, tGals, AlreadyObservedPgw, AlreadyObservedPgal, alreadysumipixarray1 = SubstractPointings(
-            PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, obspar.FOV, prob, nside)
-        # for second round
-        # ra, dec, tGals, AlreadyObservedPgw, AlreadyObservedPgal,alreadysumipixarray2 = SubstractPointings(PointingFile, tGals0,alreadysumipixarray1,sum_dP_dV,obspar.FOV,prob,nside)
-        maxRuns = obspar.maxRuns - len(np.atleast_1d(ra))
+        ra, dec, tGals, AlreadyObservedPgw, AlreadyObservedPgal, alreadysumipixarray1, doneObs = SubstractPointings(
+            PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, prob, obspar, nside)
         sumPGW = sum(AlreadyObservedPgw)
         sumPGAL = sum(AlreadyObservedPgal)
-
+        # for second round
+        # ra, dec, tGals, AlreadyObservedPgw, AlreadyObservedPgal,alreadysumipixarray2, doneObs = SubstractPointings(PointingFile, tGals0,alreadysumipixarray1,sum_dP_dV,prob, obspar, nside)
+        if obspar.countPrevious:
+            maxRuns = obspar.maxRuns - doneObs
         print("===========================================================================================")
         print()
-        print(name, "Total GW probability already covered: ", sumPGW,
-            "Total Gal probability already covered: ",
-            sumPGAL, "Number of effective pointings already done: ", len(np.atleast_1d(ra)))
-
+        print(f"{name}: Total GW probability already covered: {sumPGW}, "
+            f"Total Gal probability already covered: {sumPGAL}")
+        print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
+            f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
+        print("===========================================================================================")
     ##########################
 
     tGals_aux = tGals
@@ -295,7 +305,7 @@ def PGalinFoV(filename,galFile,obspar,dirName):
 
     Round = []
     print('----------   NEW FOLLOW-UP ATTEMPT   ----------')
-    print('maxRuns: ', obspar.maxRuns, 'MinimumProbCutForCatalogue: ',
+    print('maxRuns: ', maxRuns, 'MinimumProbCutForCatalogue: ',
           obspar.minimumProbCutForCatalogue)
 
     if (obspar.useGreytime):
@@ -308,7 +318,7 @@ def PGalinFoV(filename,galFile,obspar,dirName):
     counter = 0
     if(obspar.strategy == 'integrated'):
         for j, NightDarkRun in enumerate(NightDarkRuns):
-            if (len(ObservationTimearray) < obspar.maxRuns):
+            if (len(ObservationTimearray) < maxRuns):
                 ObservationTime = NightDarkRun
                 visible, altaz, tGals_aux = VisibleAtTime(
                     ObservationTime, tGals_aux, obspar.maxZenith, obspar.location)
@@ -405,7 +415,7 @@ def PGalinFoV(filename,galFile,obspar,dirName):
                 break
     if(obspar.strategy == 'targeted'):
         for j, NightDarkRun in enumerate(NightDarkRuns):
-            if (len(ObservationTimearray) < obspar.maxRuns):
+            if (len(ObservationTimearray) < maxRuns):
                 ObservationTime = NightDarkRun
                 visible, altaz, tGals_aux = VisibleAtTime(
                     ObservationTime, tGals_aux, obspar.maxZenith, obspar.location)
@@ -573,27 +583,29 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, obspar,d
 
     alreadysumipixarray1 = []
     alreadysumipixarray2 = []
-    #########################
-
+    #########################   
+    maxRuns = obspar.maxRuns
     if (PointingFile == None):
         tGals = tGals0
         print('No pointings were given to be substracted')
     else:
         # tGals_aux = tGals
-        ra, dec, tGals, AlreadyObservedPgw, AlreadyObservedPgal, alreadysumipixarray1 = SubstractPointings(
-            PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, obspar.FOV, prob, nside)
-        maxRuns = obspar.maxRuns - len(np.atleast_1d(ra))
+        ra, dec, tGals, AlreadyObservedPgw, AlreadyObservedPgal, alreadysumipixarray1, doneObs = SubstractPointings(
+            PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, prob, obspar, nside)
         sumPGW = sum(AlreadyObservedPgw)
         sumPGAL = sum(AlreadyObservedPgal)
 
         # ObservedPointings = Table([time, ra, dec, AlreadyObservedPgw, AlreadyObservedPgal],names=['Time[UTC]', 'RA(deg)', 'DEC(deg)', 'Covered GW probability','Pgal covered'])
         # print(ObservedPointings)
+        if obspar.countPrevious:
+            maxRuns = obspar.maxRuns - doneObs
         print("===========================================================================================")
         print()
-        print(
-            name, "Total GW probability already covered: ", sumPGW,
-            "Total Gal probability already covered: ",
-            sumPGAL, "Number of effective pointings already done: ", len(np.atleast_1d(ra)))
+        print(f"{name}: Total GW probability already covered: {sumPGW}, "
+            f"Total Gal probability already covered: {sumPGAL}")
+        print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
+            f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
+        print("===========================================================================================")
     #########################
 
     tGals_aux = tGals
@@ -614,7 +626,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, obspar,d
     nextround = False
     Round = []
     print('----------   NEW FOLLOW-UP ATTEMPT   ----------')
-    print('maxRuns: ', obspar.maxRuns, 'MinimumProbCutForCatalogue: ',
+    print('maxRuns: ', maxRuns, 'MinimumProbCutForCatalogue: ',
           obspar.minimumProbCutForCatalogue)
 
     if (obspar.useGreytime):
@@ -637,7 +649,7 @@ def PGalinFoV_PixRegion(filename,ObservationTime0,PointingFile,galFile, obspar,d
     ##############################
     counter = 0
     for j in range(0, len(NightDarkRuns)):
-        if (len(ObservationTimearray) < obspar.maxRuns):
+        if (len(ObservationTimearray) < maxRuns):
             ObservationTime = NightDarkRuns[j]
             if (nextround):
                 ObservationTime = NightDarkRuns[j - 1]
@@ -847,12 +859,20 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
     rapix, decpix, areapix = Get90RegionPixReduced(
         prob, obspar.percentageMOC, obspar.reducedNside)
     radecs = co.SkyCoord(rapix, decpix, frame='icrs', unit=(u.deg, u.deg))
+    maxRuns = obspar.maxRuns
     # Add observed pixels to pixlist
     if (PointingFile != None):
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        pixlist, P_GW = SubstractPointings2D(
-            PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        print('Already observed probability =', P_GW)
+        pixlist, sumPGW, doneObs = SubstractPointings2D(PointingFile, prob, obspar, pixlist)
+
+        if obspar.countPrevious:
+            maxRuns = obspar.maxRuns - doneObs
+        print("===========================================================================================")
+        print()
+        print(f"{name}: Total GW probability already covered: {sumPGW}")
+        print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
+            f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
+        print("===========================================================================================")
 #################################################################################################################################################
     ITERATION_OBS = 0
     TIME_MIN_ALL = []
@@ -877,7 +897,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
                 ITERATION_OBS = 0
             ITERATION_OBS += 1
             
-            if(couter_per_obs[j] >=  obspar.maxRuns):
+            if(couter_per_obs[j] >=  maxRuns):
                 SameNight[j] = False
             if (TIME_MIN >= NewActiveObsTime[j]) & SameNight[j]:
                 ObsBool, yprob = ZenithAngleCut(prob, nside, ObservationTime, obspar.minProbcut,
@@ -1038,16 +1058,26 @@ def PGalinFoV_NObs(filename, ObservationTime0, PointingFile, galFile, obsparamet
             prob, distmu, distsigma, thisDistance, thisDistanceErr, distnorm, cat, has3D, obspar.minimumProbCutForCatalogue)
 
     # Add observed pixels to pixlist
+    maxRuns = obspar.maxRuns
     if (PointingFile == None):
         tGals = tGals0
         print('No pointings were given to be substracted')
     else:
         # tGals_aux = tGals
-        ra, dec, tGals, AlreadyObservedPgw, AlreadyObservedPgal, alreadysumipixarray1 = SubstractPointings(
-            PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, obspar.FOV, prob, nside)
+        ra, dec, tGals, AlreadyObservedPgw, AlreadyObservedPgal, alreadysumipixarray1, doneObs= SubstractPointings(
+            PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, prob, obspar, nside)
         maxRuns = obspar.maxRuns - len(ra)
         sumPGW = sum(AlreadyObservedPgw)
         sumPGAL = sum(AlreadyObservedPgal)
+        if obspar.countPrevious:
+            maxRuns = obspar.maxRuns - doneObs
+        print("===========================================================================================")
+        print()
+        print(f"{name}: Total GW probability already covered: {sumPGW}, "
+            f"Total Gal probability already covered: {sumPGAL}")
+        print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
+            f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
+        print("===========================================================================================")
 
     tGals_aux = tGals
     tGals_aux2 = tGals
@@ -1077,7 +1107,7 @@ def PGalinFoV_NObs(filename, ObservationTime0, PointingFile, galFile, obsparamet
                 ITERATION_OBS = 0
 
             ITERATION_OBS += 1
-            if(couter_per_obs[j] >=  obspar.maxRuns):
+            if(couter_per_obs[j] >=  maxRuns):
                 SameNight[j] = False
             if (TIME_MIN >= NewActiveObsTime[j]) & SameNight[j]:
 
