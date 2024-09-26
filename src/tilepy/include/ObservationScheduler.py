@@ -51,8 +51,8 @@ def GetSchedule(obspar):
     skymap = SkyMap(obspar, raw_map)
 
     if obspar.locCut != None:
-        area_50 = skymap.getArea(0.5).to_value(u.deg)
-        area_90 = skymap.getArea(0.9).to_value(u.deg)
+        area_50 = skymap.getArea(0.5).to_value(u.deg*u.deg)
+        area_90 = skymap.getArea(0.9).to_value(u.deg*u.deg)
         if (obspar.locCut == 'loose' and area_90 > 10000) or (obspar.locCut == 'std' and area_50 > 1000) or (
                 obspar.locCut == 'tight' and area_90 > 650):
             return
