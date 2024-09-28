@@ -4,8 +4,8 @@
 #  with several sites  #
 #####################################################################
 
-from tilepy.include.ObservationScheduler import getdate, GetUniversalSchedule
-from tilepy.include.PointingTools import ObservationParameters
+from tilepy.include.ObservationScheduler import GetUniversalSchedule
+from tilepy.include.PointingTools import getdate, ObservationParameters
 import time
 import argparse
 import os
