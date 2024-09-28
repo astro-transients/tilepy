@@ -86,7 +86,7 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - useGreytime: flag to schedule greyness observations in addition to darkness
 
         - [tiling]
-          - online: tbd
+    
           - minimumProbCutforCatalogue: only galaxies that have probabilities higher than 'minimumProbCutforCatalogue x (GW x galaxy)_max' participate in the scheduling calculation
           - minProbcut:  minimal probability covered per tile to schedule observation
           - distCut: distance cut to define the mandatory use of 2D strategy (coming from galaxy catalogue completeness)
@@ -97,7 +97,7 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - reducedNside: nside of the low-resolution skymap used as a grid to speed up the computation
           - HRnside: nside of the high-resolution skymap used to compute the covered probability
           - mangrove: flag to use the mangrove method of weighting by the mass of the host galaxy
-
+          - countPrevious: True if you want previous observation to be considered in number to set the max run variable. False else
 
 ## Issue with Daily Earth Orientation Parameters Solutions file (finals2000A)
 

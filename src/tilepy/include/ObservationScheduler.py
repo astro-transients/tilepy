@@ -90,6 +90,7 @@ def GetSchedule(obspar):
             ascii.write(SuggestedPointings, outfilename,
                         overwrite=True, fast_writer=False)
             print()
+            print(f"Resulting pointings file is {outfilename}")
             if (obspar.doRank):
                 RankingTimes(obspar.obsTime, skymap, cat, obspar, obspar.alertType, dirName,
                              '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name)
@@ -121,6 +122,7 @@ def GetSchedule(obspar):
             ascii.write(SuggestedPointings, outfilename,
                         overwrite=True, fast_writer=False)
             print()
+            print(f"Resulting pointings file is {outfilename}")
             if (obspar.doRank):
                 RankingTimes_2D(obspar.obsTime, skymap.getMap('prob', obspar.HRnside), obspar, obspar.alertType, dirName,
                                 '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name)
@@ -187,7 +189,7 @@ def GetUniversalSchedule(obspar):
         ascii.write(SuggestedPointings, outfilename,
                     overwrite=True, fast_writer=False)
         print()
-
+        print(f"Resulting pointings file is {outfilename}")
         # for obspar in parameters:
         for j in range(len(obspar)):
             obspar1 = obspar[j]
