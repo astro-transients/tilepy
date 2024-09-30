@@ -30,8 +30,6 @@ parser.add_argument('-o',metavar = 'output path', help='Path to the output folde
 parser.add_argument('-cfg',metavar = 'config file', help='Config file for the tiling scheduling',default='../config/FollowupParameters_LST.ini')
 parser.add_argument('-galcatName', metavar='galaxy catalog name', default="Gladeplus.h5")
 parser.add_argument('-tiles', metavar='tiles already observed', default= None)
-parser.add_argument('-locCut', metavar='limit on skyloc to perform a followup', help='Options are: loose or std', default=None)
-
 args = parser.parse_args()
 alertType = args.alertType
 url = args.url
@@ -41,7 +39,6 @@ outDir = args.o
 cfgFile = args.cfg
 galcatName = args.galcatName
 pointingsFile = args.tiles
-locCut = args.locCut
 
 if not os.path.exists(outDir):
     os.makedirs(outDir)
@@ -50,7 +47,7 @@ if not os.path.exists(outDir):
 skymap = 'https://gracedb.ligo.org/api/superevents/S190728q/files/GW190728_064510_PublicationSamples_flattened.fits.gz,0'
 
 obspar = ObservationParameters()
-obspar.add_parsed_args(skymap,obsTime,datasetDir,galcatName,outDir,pointingsFile,alertType,locCut)
+obspar.add_parsed_args(skymap,obsTime,datasetDir,galcatName,outDir,pointingsFile,alertType)
 obspar.from_configfile(cfgFile)
 
 #GetSchedule_confile(url,ObsTime,datasetDir,galcatname,outDir,cfgFile,PointingsFile,type)

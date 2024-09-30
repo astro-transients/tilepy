@@ -50,7 +50,6 @@ def main():
     cfgFile = args.cfg
     galcatName = args.galcatName
     pointingsFile = args.tiles
-    locCut = args.locCut
 
     if not os.path.exists(outDir):
         os.makedirs(outDir)
@@ -58,7 +57,7 @@ def main():
     ################################################
 
     obspar = ObservationParameters()
-    obspar.add_parsed_args(skymap,obsTime,datasetDir,galcatName,outDir,pointingsFile,alertType,locCut)
+    obspar.add_parsed_args(skymap,obsTime,datasetDir,galcatName,outDir,pointingsFile,alertType)
     obspar.from_configfile(cfgFile)
 
     PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2)

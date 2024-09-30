@@ -28,7 +28,6 @@ parser.add_argument('-o',metavar = 'output path', help='Path to the output folde
 parser.add_argument('-cfg',metavar = 'config file', help='Config file for the tiling scheduling',default='../config/FollowupParameters.ini')
 parser.add_argument('-galcatName', metavar='galaxy catalog name', default="Gladeplus.h5")
 parser.add_argument('-tiles', metavar='tiles already observed', default= None)
-parser.add_argument('-locCut', metavar='limit on skyloc to perform a followup', help='Options are: loose or std', default=None)
 
 args = parser.parse_args()
 alertType = args.alertType
@@ -39,7 +38,6 @@ outDir = args.o
 cfgFile = args.cfg
 galcatName = args.galcatName
 pointingsFile = args.tiles
-locCut = args.locCut
 
 if not os.path.exists(outDir):
     os.makedirs(outDir)
@@ -59,7 +57,7 @@ obsparameters = []
 
 for j in range(len(parameters)):
     obspar = ObservationParameters()
-    obspar.add_parsed_args(skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, alertType, locCut)
+    obspar.add_parsed_args(skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, alertType)
     obspar.from_configfile(parameters[j])
     obsparameters.append(obspar)
 

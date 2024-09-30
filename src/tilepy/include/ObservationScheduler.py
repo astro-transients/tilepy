@@ -64,13 +64,14 @@ def GetSchedule(obspar):
     if (obspar.reducedNside > obspar.HRnside):
         obspar.reducedNside = obspar.HRnside
 
-    if obspar.locCut != None:
+    if obspar.locCut90 != None:
         if(obspar.MO==True):
             area_50, area_90 = GetAreaSkymap5090(filename)
         if(obspar.MO==False):
             area_50, area_90 = GetAreaSkymap5090_Flat(filename)
-        if (obspar.locCut== 'loose' and area_90 > 10000) or (obspar.locCut== 'std' and area_50 > 1000) or (obspar.locCut== 'tight' and area_90 > 650) :
-            return
+        if (area_90>obspar.locCut90):
+                print('You are here????', area_90, obspar.locCut90)
+                return
 
     print("===========================================================================================")
 

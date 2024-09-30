@@ -27,7 +27,7 @@ def RankPlot(skymap, alertType, obsTime, configDir, datasetDir, outDir, galcatNa
 
     for j in range(len(parameters)):
         obspar = ObservationParameters()
-        obspar.add_parsed_args(skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, alertType, locCut)
+        obspar.add_parsed_args(skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, alertType)
         obspar.from_configfile(parameters[j])
         print(obspar)
         obsparameters.append(obspar)

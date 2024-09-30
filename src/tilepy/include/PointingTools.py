@@ -388,10 +388,10 @@ class ObservationParameters(object):
                  moonGrey=None, moonPhase=None, minMoonSourceSeparation=None,
                  maxMoonSourceSeparation=None, maxZenith=None, FOV=None, maxRuns=None, maxNights=None,
                  duration=None, minDuration=None, useGreytime=None, minSlewing=None,
-                 minimumProbCutForCatalogue=None, minProbcut=None, distCut=None, doPlot=False, secondRound=None,
+                 locCut90=None, minimumProbCutForCatalogue=None, minProbcut=None, distCut=None, doPlot=False, secondRound=None,
                  zenithWeighting=None, percentageMOC=None, reducedNside=None, HRnside=None,
                  mangrove=None, skymap=None,obsTime=None,datasetDir=None,galcatName=None,outDir=None,pointingsFile=None, countPrevious=False,
-                 alertType=None, locCut=None, MO=False, algorithm=None, strategy=None, doRank=False):
+                 alertType=None,  MO=False, algorithm=None, strategy=None, doRank=False):
 
         self.name = name
         self.lat = lat
@@ -419,6 +419,7 @@ class ObservationParameters(object):
         self.minSlewing = minSlewing
 
         # Tiling
+        self.locCut90 = locCut90
         self.minimumProbCutForCatalogue = minimumProbCutForCatalogue
         self.minProbcut = minProbcut
         self.distCut = distCut
@@ -442,7 +443,7 @@ class ObservationParameters(object):
         self.outDir = outDir
         self.pointingsFile = pointingsFile
         self.alertType = alertType
-        self.locCut = locCut
+
 
         #Characterstics of the event
         self.MO = MO
@@ -467,7 +468,7 @@ class ObservationParameters(object):
         # txt += '----------------------------------------------------------------------\n'.format()
         return txt
 
-    def add_parsed_args(self, skymap,obsTime,datasetDir,galcatName,outDir,pointingsFile,alertType,locCut):
+    def add_parsed_args(self, skymap,obsTime,datasetDir,galcatName,outDir,pointingsFile,alertType):
         # Parsed args in command line
         self.skymap = skymap 
         self.obsTime = obsTime 
@@ -476,7 +477,7 @@ class ObservationParameters(object):
         self.outDir = outDir
         self.pointingsFile = pointingsFile
         self.alertType = alertType
-        self.locCut = locCut
+
 
     def from_configfile(self, filepath):
 
@@ -517,6 +518,8 @@ class ObservationParameters(object):
         self.minSlewing = float(parser.get(section, 'minslewing', fallback=0))
 
         section = 'tiling'
+        self.locCut90 = float(parser.get(
+            section, 'locCut90', fallback=99999))
         self.minimumProbCutForCatalogue = float(parser.get(
             section, 'minimumprobcutforcatalogue', fallback=0))
         self.minProbcut = float(parser.get(section, 'minProbcut', fallback=0))
