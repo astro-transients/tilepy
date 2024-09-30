@@ -95,7 +95,6 @@ __all__ = [
     "IsMultiOrder",
     "Intersect2D",
     "Check2Dor3D",
-    "Check2Dor3D_Flat",
     "NightDarkObservation",
     "NightDarkObservationwithGreyTime",
     "ZenithAngleCut",
@@ -862,7 +861,7 @@ def GetSkymap(obspar):
     isURL = False
     # Check if the file is local or not 
     if "https" in skymap or "http" in skymap:
-        print('it is a url')
+        #print('it is a url')
         isURL = True
     # Adapt the download of the file from URL to the type of event 
     if isURL: 
@@ -1388,12 +1387,11 @@ def MOC_confidence_region2D_Flat(hpx, percentage, short_name=' ', save2File=Fals
     return moc
 
 
-def IsMultiOrder(fields):
-    isMO = True
-    if fields==1:
-        isMO = False
-    if fields == 4:
-        isMO = False
+def IsMultiOrder(fitsfile):
+    isMO = False
+    if (fitsfile[1].header['ORDERING'] == 'NUNIQ'): 
+        isMO = True
+    print('The map is MO? =',isMO)
     return isMO
 
 def Intersect2D(filename,intersectionThres,obspar):
@@ -1408,7 +1406,7 @@ def Intersect2D(filename,intersectionThres,obspar):
     prob = skymap[0]
     
     #Check if the skymap has 3D information
-    obspar.MO = IsMultiOrder(fitsfile[1].header['TFIELDS'])
+    obspar.MO = IsMultiOrder(fitsfile)
     if (fitsfile[1].header['TFIELDS'] <= 2):
         has3D = False
     else:
@@ -1452,7 +1450,7 @@ def Intersect2D(filename,intersectionThres,obspar):
         return has3D, nside, totprob, ver #the percentage of GW behind the galactic plane is still low enough to apply the 2D method
 
 def Check2Dor3D(fitsfile, filename, obspar):
-    
+    obspar.MO = IsMultiOrder(fitsfile)
     if obspar.alertType == 'gw':
         distCut = obspar.distCut
         distnorm = []
@@ -1464,7 +1462,7 @@ def Check2Dor3D(fitsfile, filename, obspar):
         prob = skymap[0]
 
         #Check if the skymap has 3D information
-        obspar.MO = IsMultiOrder(fitsfile[1].header['TFIELDS'])
+
         if (fitsfile[1].header['TFIELDS'] <= 2):
             has3D = False
         else:
@@ -1500,7 +1498,7 @@ def Check2Dor3D(fitsfile, filename, obspar):
         fitsfile.close()
     else: 
         has3D = False
-        if fitsfile[1].header['ORDERING'] == 'NUNIQ': 
+        if obspar.MO == True: 
             skymap = lf.read_sky_map(fitsfile, distances = False) 
             prob = skymap[0]
         else: 
@@ -1509,54 +1507,6 @@ def Check2Dor3D(fitsfile, filename, obspar):
         Nside = hp.npix2nside(npix)
     
     return prob, has3D, Nside
-
-
-def Check2Dor3D_Flat(fitsfile, filename, obspar):
-
-    distCut = obspar.distCut
-    distnorm = []
-    tdistmean = 0
-    tdiststd = 0
-    fitsfile = fits.open(filename)
-    if (fitsfile[1].header['TFIELDS'] == 4):
-        prob, distmu, distsigma, distnorm = hp.read_map(filename,
-                                                        field=range(4))
-        tdistmean = fitsfile[1].header['DISTMEAN']
-        tdiststd= fitsfile[1].header['DISTSTD']
-    else:
-        prob = hp.read_map(fitsfile, field=range(1))
-
-    has3D = True
-    if len(distnorm) == 0:
-        has3D = False
-
-    # Check if no galaxy catalog was given as has3D should be False
-    if obspar.galcatName =='False':
-        has3D = False
-    
-    # The distance fullfils the catalog cut
-    if tdistmean+2*tdiststd > distCut:
-        has3D = False
-
-    # Check if the algorithm type is declared in the config file 
-    if obspar.algorithm != None: 
-        if has3D == True:
-            if obspar.algorithm == '2D':
-                has3D = False 
-    npix = len(prob)
-    NSide = hp.npix2nside(npix)
-    if obspar.algorithm == None:  
-        MaxPix = np.argmax(prob)
-        MaxTheta, MaxPhi = hp.pix2ang(NSide, MaxPix)
-        raMax = np.rad2deg(MaxPhi)
-        decMax = np.rad2deg(0.5 * np.pi - MaxTheta)
-        c_icrs = SkyCoord(raMax, decMax, frame='fk5', unit=(u.deg, u.deg))
-
-        InsidePlane = Tools.GalacticPlaneBorder(c_icrs)
-        print('Is the hotspot in the galactic plane?',InsidePlane)
-        if InsidePlane:
-            has3D = False
-    return prob, has3D, NSide
 
 ######################################################
 
@@ -2847,16 +2797,17 @@ def GetAreaSkymap5090(filename):
     pixel_area = ah.nside_to_pixel_area(ah.level_to_nside(level))
     prob = pixel_area * skymap['PROBDENSITY']
     cumprob = np.cumsum(prob)
-    
-    i = cumprob.searchsorted(0.9)
-    area_90 = pixel_area[:i].sum()
-    area_90_deg =area_90.to_value(u.deg**2)
-    print(f"90% area: {area_90} deg2")
+
 
     j = cumprob.searchsorted(0.5)
     area_50 = pixel_area[:j].sum()
     area_50_deg = area_50.to_value(u.deg**2)
-    print(f"50% area: {area_50} deg2")
+    print(f"50% area: {area_50_deg} deg2")
+        
+    i = cumprob.searchsorted(0.9)
+    area_90 = pixel_area[:i].sum()
+    area_90_deg =area_90.to_value(u.deg**2)
+    print(f"90% area: {area_90_deg} deg2")
     
     return area_50_deg, area_90_deg
 
