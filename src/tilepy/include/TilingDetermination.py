@@ -25,7 +25,7 @@ from .PointingTools import (NightDarkObservation,
                             Tools, LoadGalaxies_SteMgal, CorrelateGalaxies_LVC_SteMass, SubstractPointings,
                             ModifyCatalogue, FulfillsRequirementGreyObservations, ComputeProbPGALIntegrateFoV,ComputeProbGalTargeted,
                             ModifyCataloguePIX, ObservationParameters, NextWindowTools,
-                            ComputeProbability2D_SelectClusters, GiveProbToGalaxy, LoadGalaxiesSimulation)
+                            ComputeProbability2D_SelectClusters, GiveProbToGalaxy, LoadGalaxiesSimulation, GetSatelliteName, GetSatelliteTime, GetSatellitePositions, OccultationCut)
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
@@ -739,7 +739,7 @@ def ObservationStartperObs(obsparameters, ObservationTime0):
     :return: obs_time, SameNight, NewActiveObs, NewActiveObsStart
     rtype: datetime, boolean, list, list
     '''
-
+    print("ObservationTime0", ObservationTime0)
 
     print("obsparameters", len(obsparameters))
     # Finding the start time for each observatory and checking if it's now
@@ -753,14 +753,18 @@ def ObservationStartperObs(obsparameters, ObservationTime0):
 
     j = 0
     for obspar1 in obsparameters:
+        if (obsparameters[j].base == "space"):
+            dark_at_start = True
+            FirstDark[j] = dark_at_start
 
-        dark_at_start = False
+        else:
+            dark_at_start = False
 
-        if obsparameters[j].useGreytime:
-            dark_at_start = Tools.CheckWindowGrey(obs_time, obsparameters[j])
-        if not obsparameters[j].useGreytime:
-            dark_at_start = Tools.CheckWindow(obs_time, obsparameters[j])
-        FirstDark[j] = dark_at_start
+            if obsparameters[j].useGreytime:
+                dark_at_start = Tools.CheckWindowGrey(obs_time, obsparameters[j])
+            if not obsparameters[j].useGreytime:
+                dark_at_start = Tools.CheckWindow(obs_time, obsparameters[j])
+            FirstDark[j] = dark_at_start
 
         # THIS WILL CREATE A DATETIME OBJECT WITH IN THE FORM XX+00:00 WITH NO DOTS
         if FirstDark[j] == True:
@@ -897,11 +901,32 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
                 ITERATION_OBS = 0
             ITERATION_OBS += 1
             
+            if obspar.base == "space":
+                SatelliteName = GetSatelliteName(obspar.name)
+                print(obspar.name)
+
             if(couter_per_obs[j] >=  maxRuns):
                 SameNight[j] = False
             if (TIME_MIN >= NewActiveObsTime[j]) & SameNight[j]:
-                ObsBool, yprob = ZenithAngleCut(prob, nside, ObservationTime, obspar.minProbcut,
-                                            obspar.maxZenith, obspar.location, obspar.minMoonSourceSeparation, obspar.useGreytime)
+
+                if obspar.base == "space":
+                    SatelliteTime  = GetSatelliteTime(SatelliteName, ObservationTime)
+                    satellite_position, obspar.location = GetSatellitePositions(SatelliteName, SatelliteTime)
+
+                    ObsBool, yprob = OccultationCut(prob, nside, ObservationTime, obspar.minProbcut,
+                                                satellite_position, obspar.location)
+                    pixlist = yprob
+                    print("hihihi")
+                    print(len(pixlist))
+                    print(len(yprob)) 
+                    print(len(prob))  
+                    print(len(highres))  
+                    print(np.max(yprob))
+                    
+                else:
+                    ObsBool, yprob = ZenithAngleCut(prob, nside, ObservationTime, obspar.minProbcut,
+                                                obspar.maxZenith, obspar.location, obspar.minMoonSourceSeparation, obspar.useGreytime)
+                    
                 if ObsBool:
                     # Round 1
                     P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(prob, highres, radecs, obspar.reducedNside, obspar.HRnside, obspar.minProbcut, ObservationTime,

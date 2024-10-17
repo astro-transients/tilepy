@@ -40,7 +40,7 @@ import pytz
 import six
 import tables
 from astropy import units as u
-from astropy.coordinates import EarthLocation, get_body
+from astropy.coordinates import EarthLocation, get_body, get_sun, get_moon
 from astropy.coordinates import SkyCoord, AltAz
 from astropy.coordinates import get_body
 from astropy.io import fits, ascii
@@ -146,6 +146,14 @@ __all__ = [
     "ReadSummaryFile",
     "ZenithAngleCut_TwoTimes",
     "ComputeProbability2D_SelectClusters",
+    "GetSatelliteName",
+    "GetSatelliteTime",
+    "GetSatellitePositions",
+    "OccultationCut",
+    "GetEarthOccultedPix",
+    "GetMoonOccultedPix",
+    "GetSunOccultedPix",
+
 ]
 
 
@@ -479,6 +487,7 @@ class ObservationParameters(object):
         self.alertType = alertType
 
 
+
     def from_configfile(self, filepath):
 
         ##################
@@ -493,6 +502,7 @@ class ObservationParameters(object):
         self.height = float(parser.get(section, 'height', fallback=0))*u.m
         self.location = EarthLocation(lat=self.lat, lon=self.lon,
                                       height=self.height)
+        self.base = str(parser.get(section, 'base', fallback=None))
 
         section = 'visibility'
         self.sunDown = int(parser.get(section, 'sundown', fallback=0))
@@ -1605,6 +1615,117 @@ def ZenithAngleCut(prob, nside, time, minProbcut, maxZenith, observatory, minMoo
         # Return a bool if there is any observable region
 
     return ObsBool, yprob
+
+
+def OccultationCut(prob, nside, time, minProbcut, satellite_position, observatory):
+    '''
+    Mask in the pixels that are occulted by Earth, Sun and Moon
+    '''
+
+    frame = co.AltAz(obstime=time, location=observatory)
+    pprob = prob
+
+    mOcc = hp.ma(pprob)
+    maskOcc = np.zeros(hp.nside2npix(nside), dtype=bool)
+
+    mEarth = GetEarthOccultedPix(nside, time, 6371, 5, satellite_position, observatory)
+    print(mEarth)
+    mSun = GetSunOccultedPix(nside, 30, time)
+    mMoon = GetMoonOccultedPix(nside, 10, time)
+    
+
+    maskOcc[mSun] = 1
+    maskOcc[mMoon] = 1
+    maskOcc[mEarth] = 1
+
+    mOcc.mask = maskOcc
+
+    yprob = ma.masked_array(pprob, mOcc.mask)
+
+
+    if np.sum(yprob) < minProbcut:
+        ObsBool = False
+    else:
+        ObsBool = True
+
+    return ObsBool, yprob
+
+def GetSunOccultedPix(nside, sun_sep, time):
+    time = Time(time)
+    #for equatorial frame
+    SunCoord_equatorial = get_body("sun", time, location = EarthLocation(0,0,0))
+    phipix_sun = np.deg2rad(SunCoord_equatorial.ra.deg)
+    thetapix_sun = 0.5 * np.pi - np.deg2rad(SunCoord_equatorial.dec.deg)
+    sun_xyzpix = hp.ang2vec(thetapix_sun, phipix_sun)
+    sun_occulted_pix = hp.query_disc(nside, sun_xyzpix, np.deg2rad(sun_sep))
+    return sun_occulted_pix
+
+def GetMoonOccultedPix(nside, moon_sep, time):
+    time = Time(time)
+    #for equatorial frame
+    MoonCoord_equatorial = get_body("moon", time, location = EarthLocation(0,0,0))
+    phipix_moon = np.deg2rad(MoonCoord_equatorial.ra.deg)
+    thetapix_moon = 0.5 * np.pi - np.deg2rad(MoonCoord_equatorial.dec.deg)
+    moon_xyzpix = hp.ang2vec(thetapix_moon, phipix_moon)
+    moon_occulted_pix = hp.query_disc(nside, moon_xyzpix, np.deg2rad(moon_sep))
+    return moon_occulted_pix
+
+def GetEarthOccultedPix(nside, time, earth_radius, earth_sep, satellite_position, satellite_location):
+    #for equatorial frame
+
+    distance_to_satellite = np.linalg.norm(satellite_position)  
+    print(satellite_position)
+    print(distance_to_satellite)
+    earth_altitude = np.arcsin(-satellite_position[2] / distance_to_satellite)  # Altitude in radians
+    earth_azimuth = np.arctan2(-satellite_position[1], -satellite_position[0])  # Azimuth in radians
+
+    angle_of_occlusion = np.arcsin(earth_radius / distance_to_satellite)
+
+    altaz_frame = AltAz(obstime=time, location=satellite_location)
+    earthCoord = SkyCoord(earth_azimuth * u.rad, earth_altitude * u.rad, frame=altaz_frame)
+    earthCoord_equatorial = earthCoord.transform_to('icrs')
+
+    earth_phipix = np.deg2rad(earthCoord_equatorial.ra.deg)
+    earth_thetapix = 0.5 * np.pi - np.deg2rad(earthCoord_equatorial.dec.deg)
+    earth_xyzpix = hp.ang2vec(earth_thetapix, earth_phipix)
+    earth_occulted_pix = hp.query_disc(nside, earth_xyzpix, np.deg2rad(np.rad2deg(angle_of_occlusion) + earth_sep))
+    return earth_occulted_pix
+
+
+
+def GetSatelliteName(satellitename):
+    stations_url = 'https://celestrak.com/NORAD/elements/science.txt'
+    satellites = load.tle_file(stations_url)
+    print('Loaded', len(satellites), 'satellites')
+    by_name = {sat.name: sat for sat in satellites}
+    satellite_name = by_name.get(satellitename)
+    return  satellite_name
+
+
+def GetSatelliteTime(satellite_name, t):
+    print(t)
+    dt = t # Get the underlying datetime object
+    year = dt.year
+    month = dt.month
+    day = dt.day
+    hour = dt.hour
+    minute = dt.minute
+    second = dt.second + dt.microsecond / 1e6  # Include microseconds
+    skyfield_time = load.timescale().utc(year, month, day, hour, minute, second)
+    return skyfield_time
+
+def GetSatellitePositions(satellite_name, t):
+    geocentric = satellite_name.at(t)
+    # Print position in latitude, longitude, altitude
+    subpoint = geocentric.subpoint()
+    print(f'Latitude: {subpoint.latitude.degrees}')
+    print(f'Longitude: {subpoint.longitude.degrees}')
+    print(f'Altitude: {subpoint.elevation.m} m')
+
+    # Get satellite's current position in astronomical units (AU)
+    satellite_position = geocentric.position.km
+    satellite_location = EarthLocation(lat=subpoint.latitude.degrees, lon=subpoint.longitude.degrees, height=subpoint.elevation.m)
+    return satellite_position, satellite_location 
 
 
 def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcut, time, observatory, maxZenith, FOV, tname, ipixlist, ipixlistHR, counter, dirName, useGreytime, plot):
