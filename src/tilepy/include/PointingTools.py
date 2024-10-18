@@ -1656,21 +1656,23 @@ def GetSunOccultedPix(nside, sun_sep, time):
     time = Time(time)
     #for equatorial frame
     SunCoord_equatorial = get_body("sun", time, location = EarthLocation(0,0,0))
+    SunCoord_equatorial = SunCoord_equatorial.transform_to('icrs')
     phipix_sun = np.deg2rad(SunCoord_equatorial.ra.deg)
     thetapix_sun = 0.5 * np.pi - np.deg2rad(SunCoord_equatorial.dec.deg)
     sun_xyzpix = hp.ang2vec(thetapix_sun, phipix_sun)
     sun_occulted_pix = hp.query_disc(nside, sun_xyzpix, np.deg2rad(sun_sep))
-    return sun_occulted_pix
+    return sun_occulted_pix, SunCoord_equatorial
 
 def GetMoonOccultedPix(nside, moon_sep, time):
     time = Time(time)
     #for equatorial frame
     MoonCoord_equatorial = get_body("moon", time, location = EarthLocation(0,0,0))
+    MoonCoord_equatorial = MoonCoord_equatorial.transform_to('icrs')
     phipix_moon = np.deg2rad(MoonCoord_equatorial.ra.deg)
     thetapix_moon = 0.5 * np.pi - np.deg2rad(MoonCoord_equatorial.dec.deg)
     moon_xyzpix = hp.ang2vec(thetapix_moon, phipix_moon)
     moon_occulted_pix = hp.query_disc(nside, moon_xyzpix, np.deg2rad(moon_sep))
-    return moon_occulted_pix
+    return moon_occulted_pix, MoonCoord_equatorial
 
 def GetEarthOccultedPix(nside, time, earth_radius, earth_sep, satellite_position, satellite_location):
     #for equatorial frame
@@ -1689,24 +1691,44 @@ def GetEarthOccultedPix(nside, time, earth_radius, earth_sep, satellite_position
     earth_thetapix = 0.5 * np.pi - np.deg2rad(earthCoord_equatorial.dec.deg)
     earth_xyzpix = hp.ang2vec(earth_thetapix, earth_phipix)
     earth_occulted_pix = hp.query_disc(nside, earth_xyzpix, np.deg2rad(np.rad2deg(angle_of_occlusion) + earth_sep))
-    return earth_occulted_pix
+    return earth_occulted_pix, earthCoord_equatorial
 
 
-def OccultationCut(prob, nside, time, minProbcut, satellite_position, observatory):
+def OccultationCut(prob, nside, time, minProbcut, satellite_position, observatory, radecs, pixlist):
     '''
     Mask in the pixels that are occulted by Earth, Sun and Moon
     '''
-    frame = co.AltAz(obstime=time, location=observatory)
+
     pprob = prob
 
     mOcc = hp.ma(pprob)
     maskOcc = np.zeros(hp.nside2npix(nside), dtype=bool)
+    mpixels = []
 
-    mEarth = GetEarthOccultedPix(nside, time, 6371, 5, satellite_position, observatory)
-    print(mEarth)
-    mSun = GetSunOccultedPix(nside, 30, time)
-    mMoon = GetMoonOccultedPix(nside, 10, time)
-    
+    mEarth, posEarth = GetEarthOccultedPix(nside, time, 6371, 5, satellite_position, observatory)
+    mpixels.extend(mEarth)
+
+    mSun, posSun= GetSunOccultedPix(nside, 30, time)
+    mpixels.extend(mSun)
+
+    mMoon, poSMoon = GetMoonOccultedPix(nside, 10, time)
+    pixlist.extend(mMoon)
+
+
+    pixlist.extend(pixlist)
+
+    '''
+    pix_ra = radecs.ra.value
+    pix_dec = radecs.dec.value
+    phipix = np.deg2rad(pix_ra)
+    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
+    ipixlist = hp.ang2pix(nside, thetapix, phipix) 
+
+    mask = np.isin(mpixels, ipixlist, invert=True)
+
+    ipixlistnew = ipixlist[mask]
+    '''
+
     maskOcc[mSun] = 1
     maskOcc[mMoon] = 1
     maskOcc[mEarth] = 1
@@ -1720,9 +1742,10 @@ def OccultationCut(prob, nside, time, minProbcut, satellite_position, observator
     else:
         ObsBool = True
 
-    return ObsBool, yprob
 
-def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcut, time, observatory, maxZenith, FOV, tname, ipixlist, ipixlistHR, counter, dirName, useGreytime, plot):
+    return ObsBool, yprob, pixlist
+
+def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcut, time, observatory, maxZenith, FOV, tname, ipixlist, ipixlistHR, counter, dirName, useGreytime, plot, ipixlistOcc = None):
     '''
     Compute probability in 2D by taking the highest probability in FoV value
     '''
@@ -1787,6 +1810,13 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
     # Mask already observed pixels
     mask = np.isin(cat_pix['PIX'], ipixlist, invert=True)
     if all(np.isin(cat_pix['PIX'], ipixlist, invert=False)):
+        maskcat_pix = cat_pix
+    else:
+        maskcat_pix = cat_pix[mask]
+        
+    # Mask occulted pixels for this round
+    mask = np.isin(cat_pix['PIX'], ipixlistOcc, invert=True)
+    if all(np.isin(cat_pix['PIX'], ipixlistOcc, invert=False)):
         maskcat_pix = cat_pix
     else:
         maskcat_pix = cat_pix[mask]

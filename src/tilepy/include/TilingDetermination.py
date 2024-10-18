@@ -910,18 +910,13 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
             if (TIME_MIN >= NewActiveObsTime[j]) & SameNight[j]:
 
                 if obspar.base == "space":
+
                     SatelliteTime  = GetSatelliteTime(SatelliteName, ObservationTime)
                     satellite_position, obspar.location = GetSatellitePositions(SatelliteName, SatelliteTime)
-
-                    ObsBool, yprob = OccultationCut(prob, nside, ObservationTime, obspar.minProbcut,
-                                                satellite_position, obspar.location)
-                    pixlist = yprob
-                    print("hihihi")
-                    print(len(pixlist))
-                    print(len(yprob)) 
-                    print(len(prob))  
-                    print(len(highres))  
-                    print(np.max(yprob))
+                    ipixlistHROcc = []
+                    ObsBool, yprob, ipixlistHROcc = OccultationCut(prob, obspar.reducedNside, ObservationTime, obspar.minProbcut,
+                                                satellite_position, obspar.location, radecs, ipixlistHROcc)
+                    
                     
                 else:
                     ObsBool, yprob = ZenithAngleCut(prob, nside, ObservationTime, obspar.minProbcut,
@@ -930,7 +925,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
                 if ObsBool:
                     # Round 1
                     P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(prob, highres, radecs, obspar.reducedNside, obspar.HRnside, obspar.minProbcut, ObservationTime,
-                                                                         obspar.location, obspar.maxZenith, obspar.FOV, name, pixlist, ipixlistHR, counter, dirName, obspar.useGreytime, obspar.doPlot)
+                                                                         obspar.location, obspar.maxZenith, obspar.FOV, name, pixlist, ipixlistHR, counter, dirName, obspar.useGreytime, obspar.doPlot, ipixlistHROcc)
                     # print(P_GW, obspar.name)
                     if ((P_GW <= obspar.minProbcut) and obspar.secondRound):
                         # Try Round 2
@@ -996,15 +991,19 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
                 # HERE WE DETERMINE IF WE ARE STILL IN THE SAME NIGHT FOR THIS OBSERVATORY
                 # if (NewActiveObsTime[j] > Tools.NextSunrise(obsstart, obspar)) | (obsstart > Tools.NextMoonrise(obsstart, obspar)):
 
-                if not obsparameters[j].useGreytime:
-                    if not Tools.CheckWindow(NewActiveObsTime[j], obspar):
-                        SameNight[j] = False
-                if obsparameters[j].useGreytime:
-                    if not Tools.CheckWindowGrey(NewActiveObsTime[j], obspar):
-                        SameNight[j] = False
-                if obspar.sunDown > 10:
+                if obspar.base == "space":
                     if NewActiveObsTime[j] > obs_time + datetime.timedelta(hours=24):
                         SameNight[j] = False
+                else:
+                    if not obsparameters[j].useGreytime:
+                        if not Tools.CheckWindow(NewActiveObsTime[j], obspar):
+                            SameNight[j] = False
+                    if obsparameters[j].useGreytime:
+                        if not Tools.CheckWindowGrey(NewActiveObsTime[j], obspar):
+                            SameNight[j] = False
+                    if obspar.sunDown > 10:
+                        if NewActiveObsTime[j] > obs_time + datetime.timedelta(hours=24):
+                            SameNight[j] = False
 
                 NUMBER_OBS[j] += 1
 
