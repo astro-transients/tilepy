@@ -915,7 +915,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
                     satellite_position, obspar.location = GetSatellitePositions(SatelliteName, SatelliteTime)
                     ipixlistHROcc = []
                     ObsBool, yprob, ipixlistHROcc = OccultationCut(prob, obspar.reducedNside, ObservationTime, obspar.minProbcut,
-                                                satellite_position, obspar.location, radecs, ipixlistHROcc)
+                                                satellite_position, obspar.location)
                     
                     
                 else:
@@ -932,7 +932,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
                         # print('The minimum probability cut being', minProbcut * 100, '% is, unfortunately, not reached.')
                         yprob1 = highres
                         P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(prob, yprob1, radecs, obspar.reducedNside, obspar.HRnside, obspar.minProbcut, ObservationTime,
-                                                                               obspar.location, obspar.maxZenith, obspar.FOV, name, pixlist1, ipixlistHR1, counter, dirName, obspar.useGreytime, obspar.doPlot)
+                                                                               obspar.location, obspar.maxZenith, obspar.FOV, name, pixlist1, ipixlistHR1, counter, dirName, obspar.useGreytime, obspar.doPlot, ipixlistHROcc)
                         if ((P_GW <= obspar.minProbcut)):
                             print('Tile Pgw= ', P_GW, ' is smaller than the minProbCut (',
                                   obspar.minProbCut, ') => skip this tile')
