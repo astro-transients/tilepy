@@ -4,11 +4,12 @@
 #  with several sites  #
 #####################################################################
 
-from tilepy.include.ObservationScheduler import getdate, GetUniversalSchedule
+from tilepy.include.ObservationScheduler import GetUniversalSchedule
 from tilepy.include.PointingTools import ObservationParameters
 import time
 import argparse
 import os
+import datetime
 
 
 start = time.time()
@@ -32,7 +33,7 @@ parser.add_argument('-tiles', metavar='tiles already observed', default= None)
 args = parser.parse_args()
 alertType = args.alertType
 skymap = args.skymap
-obsTime = getdate(args.time)
+obsTime = datetime.datetime.fromisoformat(args.time)
 datasetDir = args.i
 outDir = args.o
 cfgFile = args.cfg

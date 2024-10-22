@@ -18,36 +18,32 @@
 #                        Various plotting tools to obtain plots with the scheduling              #
 ##################################################################################################
 
-from .PointingTools import (LoadHealpixMap, TransformRADec, ObservationParameters,
-                            TableImportCTA, TableImportCTA_Time)
-from .Observatories import CTANorthObservatory, CTASouthObservatory
+import datetime
 import os
+
+import astropy.coordinates as co
 import healpy as hp
+import ligo.skymap.io.fits as lf
+import ligo.skymap.plot
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
-from astropy import units as u
-from astropy.utils import iers
-import astropy.coordinates as co
-from astropy.coordinates import SkyCoord
-import datetime
-from six.moves import configparser
-import six
-from datetime import date
-import ligo.skymap.io.fits as lf
-from astropy.coordinates import SkyCoord
-import matplotlib.patches as mpatches
 import pandas as pd
+import six
+from astropy import units as u
+from astropy.coordinates import SkyCoord
+from six.moves import configparser
+
+from .Observatories import CTANorthObservatory, CTASouthObservatory
+from .PointingTools import TransformRADec
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
 else:
     ConfigParser = configparser.ConfigParser
 
-from matplotlib import ticker, colors
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib import colors
 from matplotlib.patches import Circle
-from astropy.utils.data import download_file
-import ligo.skymap.plot
 import matplotlib.colors as mcolors
 
 # iers_url_mirror='ftp://cddis.gsfc.nasa.gov/pub/products/iers/finals2000A.all'
@@ -67,9 +63,6 @@ __all__ = [
     "PlotPointings",
     "PlotPointingsTogether",
     "PointingPlottingGWCTA",
-    "PointingPlottingGW_ZenithSteps",
-    "PlotScheduling_fromID",
-    "PlotZenithAngleLines_fromID",
     "PlotPointings_Pretty",
 ]
 
@@ -168,6 +161,7 @@ def PointingPlotting(prob, obspar, name, dirName, PointingsFile1, ObsArray, gal)
 
     PlotPointings(prob, converted_time1, Coordinates1, sum(Probarray1), nside, obspar, name, dirName, ObsArray)
     PlotPointings_Pretty(prob, name, PointingsFile1, dirName, obspar, gal)
+
 
 def PlotPointings(prob, time, targetCoord, Totalprob, nside, obspar, name, dirName, ObsArray):
     FOV = obspar.FOV
@@ -394,114 +388,6 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
 
     # dist = cat['Dist']
     # hp.visufunc.projscatter(cat['RAJ2000'][dist < 200], cat['DEJ2000'][dist < 200], lonlat=True, marker='.',color='g', linewidth=0.1, coord='C')
-
-
-def PointingPlottingGW_ZenithSteps(filename, name, dirName, FOV, InputTimeObs, ObsArray):
-
-    print()
-    print('-------------------   PLOTTING SCHEDULE   --------------------')
-    print()
-
-    UseObs = InputTimeObs['Observatory']
-    time = InputTimeObs['Time']
-
-    # Observatory
-    if UseObs == 'South':
-        print('Observed form the', UseObs)
-        observatory = CTASouthObservatory()
-    else:
-        print('Observed from the', UseObs)
-        observatory = CTANorthObservatory()
-
-    if ('G' in filename):
-        names = filename.split("_")
-        name = names[0]
-
-    print('Loading map from ', filename)
-    prob, distmu, distsigma, distnorm, detectors, fits_id, thisDistance, thisDistanceErr = LoadHealpixMap(
-        filename)
-    npix = len(prob)
-    nside = hp.npix2nside(npix)
-
-    has3D = True
-    if (len(distnorm) == 0):
-        print("Found a generic map without 3D information")
-    # flag the event for special treatment
-        has3D = False
-    else:
-        print("Found a 3D reconstruction")
-
-    print('----------   BUILDING A MAP   ----------')
-
-    try:
-        converted_time = datetime.datetime.strptime(
-            time, '%Y-%m-%d %H:%M:%S.%f')
-    except ValueError:
-        try:
-            converted_time = datetime.datetime.strptime(
-                time, '%Y-%m-%d %H:%M:%S.%f ')
-        except ValueError:
-            converted_time = datetime.datetime.strptime(
-                time, '%Y-%m-%d %H:%M:%S')
-
-    dirName = '%s/Pointing_Plotting_%s/%s' % (dirName, ObsArray, name)
-    if not os.path.exists(dirName):
-        os.makedirs(dirName)
-
-    maxZenith = 45
-    hp.mollview(prob)
-    for i in range(0, 6):
-        altcoord = np.empty(2500-200*i)
-        azcoord = np.random.rand(2500-200*i) * 360
-        altcoord.fill(maxZenith+5*i)
-        #print(maxZenith+5*i)
-        RandomCoord = co.SkyCoord(azcoord, altcoord, frame='altaz', unit=(
-            u.deg, u.deg), obstime=time, location=observatory.location)
-        RandomCoord_radec = RandomCoord.transform_to('icrs')
-        hp.visufunc.projplot(RandomCoord_radec.ra,
-                             RandomCoord_radec.dec, lonlat=True)
-    # plt.show()
-    hp.graticule()
-    plt.savefig('%s/Pointings.png' % dirName)
-
-
-def PlotScheduling_fromID(ID, InputFileName, dirName, pointingsFile, FOV):
-    j = ID
-
-    # GW file
-    # InputFileName = '../../dataset/BNS-GW_onAxis5deg.txt'
-    InputList = TableImportCTA(InputFileName)
-    GWFile = "../../dataset/skymaps/" + \
-        InputList['run'][j] + '_' + \
-        InputList['MergerID'][j] + "_skymap.fits.gz"
-    name = InputList['run'][j] + '_' + InputList['MergerID'][j]
-
-    InjectTimeFile = '../../dataset/BNS-GW-Time_onAxis5deg_postRome.txt'
-    InputTimeList = TableImportCTA_Time(InjectTimeFile)
-
-    # pointingsFile= '../../gw-follow-up-simulations-side-results/TestPointings/run0017_MergerID000261_GWOptimisation.txt'
-    # FOV= 2.0
-
-    PointingPlottingGWCTA(GWFile, name, dirName, pointingsFile,
-                          FOV, InputTimeList['Observatory'][j], ObsArray)
-
-
-def PlotZenithAngleLines_fromID(ID, InputFileName, dirName, FOV, ObsArray):
-    j = ID
-
-    # GW file
-    InputList = TableImportCTA(InputFileName)
-
-    GWFile = "../../dataset/skymaps/" + \
-        InputList['run'][j] + '_' + \
-        InputList['MergerID'][j] + "_skymap.fits.gz"
-    name = InputList['run'][j] + '_' + InputList['MergerID'][j]
-
-    InjectTimeFile = '../../dataset/BNS-GW-Time_onAxis5deg_postRome.txt'
-    InputTimeList = TableImportCTA_Time(InjectTimeFile)
-
-    PointingPlottingGW_ZenithSteps(
-        GWFile, name, dirName, FOV, InputTimeList[j], ObsArray)
 
 
 def PlotPointings_Pretty(filename, name, PointingsFile1, dirName, obspar, gal, centerMap = None, radiusMap = None, colorspar = None):
