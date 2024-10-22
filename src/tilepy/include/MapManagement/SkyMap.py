@@ -71,7 +71,7 @@ class SkyMap:
         return self.pix_id_area_cache[fraction_localisation]
 
     def getArea(self, fraction_localisation):
-        return np.sum(self.raw_map_prob_density.pixarea[self.getPixIdArea(fraction_localisation)])*u.sr
+        return np.sum(self.raw_map_prob_density.pixarea(self.getPixIdArea(fraction_localisation)))
 
     def getMap(self, mapType, nside, scheme='ring'):
         cache_entry = mapType + '_' + str(nside) + '_' + scheme

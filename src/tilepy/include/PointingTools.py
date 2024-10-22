@@ -59,7 +59,6 @@ if six.PY2:
 else:
     ConfigParser = configparser.ConfigParser
 
-
 # iers_file = os.path.join(os.path.abspath(
 #    os.path.dirname(__file__)), '../dataset/finals2000A.all')
 # iers.IERS.iers_table = iers.IERS_A.open(iers_file)
@@ -160,8 +159,8 @@ class Tools:
 
     @classmethod
     def SunAlt(cls, obsTime, obspar):
-        sun = get_body("sun",Time(obsTime, scale='utc')).transform_to(AltAz(obstime=Time(obsTime, scale='utc'),
-                                                                     location=obspar.location))
+        sun = get_body("sun", Time(obsTime, scale='utc')).transform_to(AltAz(obstime=Time(obsTime, scale='utc'),
+                                                                             location=obspar.location))
         # print(Time(obsTime),obsSite.location)
         # print(get_sun(Time(obsTime)))
         # print(sun.alt/u.deg)
@@ -188,7 +187,7 @@ class Tools:
         obs.lat = str(obspar.lat / u.deg)
         obs.elev = obspar.height / u.m
         obs.date = obsTime  # Requires time in UTC
-        #obs.horizon = obspar.horizonSun
+        # obs.horizon = obspar.horizonSun
         obs.horizon = Angle(obspar.sunDown, u.deg).to_string(unit=u.degree, sep=':')
         sun.compute(obs)
         nextSunrise = obs.next_rising(
@@ -203,7 +202,7 @@ class Tools:
         obs.lat = str(obspar.lat / u.deg)
         obs.elev = obspar.height / u.m
         obs.date = obsTime  # Requires time in UTC
-        #obs.horizon = obspar.horizonSun
+        # obs.horizon = obspar.horizonSun
         obs.horizon = Angle(obspar.sunDown, u.deg).to_string(unit=u.degree, sep=':')
         sun.compute(obs)
         previousSunrise = obs.previous_rising(
@@ -218,7 +217,7 @@ class Tools:
         obs.lat = str(obspar.lat / u.deg)
         obs.elev = obspar.height / u.m
         obs.date = obsTime  # Requires time in UTC
-        #obs.horizon = obspar.horizonSun
+        # obs.horizon = obspar.horizonSun
         obs.horizon = Angle(obspar.sunDown, u.deg).to_string(unit=u.degree, sep=':')
         sun.compute(obs)
         nextSunset = obs.next_setting(
@@ -233,7 +232,7 @@ class Tools:
         obs.lat = str(obspar.lat / u.deg)
         obs.elev = obspar.height / u.m
         obs.date = obsTime  # Requires time in UTC
-        #obs.horizon = obspar.HorizonMoon
+        # obs.horizon = obspar.HorizonMoon
         obs.horizon = Angle(obspar.moonDown, u.deg).to_string(unit=u.degree, sep=':')
         moon.compute()
         previousMoonset = obs.previous_setting(
@@ -248,7 +247,7 @@ class Tools:
         obs.lat = str(obspar.lat / u.deg)
         obs.elev = obspar.height / u.m
         obs.date = obsTime  # Requires time in UTC
-        #obs.horizon = obspar.HorizonMoon
+        # obs.horizon = obspar.HorizonMoon
         obs.horizon = Angle(obspar.moonDown, u.deg).to_string(unit=u.degree, sep=':')
         moon.compute()
         nextMoonset = obs.next_setting(
@@ -263,9 +262,11 @@ class Tools:
     def TrustingDarknessSun(cls, obsTime, obspar):
         DarkObsTime = obsTime
         referencetime = obsTime
-        while (Tools.IsDarkness(DarkObsTime, obspar) == False and ((DarkObsTime.hour >= referencetime.hour and DarkObsTime.day == referencetime.day) or (
-                DarkObsTime.hour <= Tools.NextSunrise(referencetime, obspar).hour and DarkObsTime.day == Tools.NextSunrise(
-                referencetime, obspar).day))):
+        while (Tools.IsDarkness(DarkObsTime, obspar) == False and (
+                (DarkObsTime.hour >= referencetime.hour and DarkObsTime.day == referencetime.day) or (
+                DarkObsTime.hour <= Tools.NextSunrise(referencetime,
+                                                      obspar).hour and DarkObsTime.day == Tools.NextSunrise(
+            referencetime, obspar).day))):
             DarkObsTime = DarkObsTime + datetime.timedelta(minutes=1)
         return DarkObsTime
 
@@ -273,9 +274,11 @@ class Tools:
     def TrustingGreynessSun(cls, obsTime, obspar):
         GreyObsTime = obsTime
         referencetime = obsTime
-        while (Tools.IsGreyness(GreyObsTime, obspar) == False and ((GreyObsTime.hour >= referencetime.hour and GreyObsTime.day == referencetime.day) or (
-                GreyObsTime.hour <= Tools.NextSunrise(referencetime, obspar).hour and GreyObsTime.day == Tools.NextSunrise(
-                referencetime, obspar).day))):
+        while (Tools.IsGreyness(GreyObsTime, obspar) == False and (
+                (GreyObsTime.hour >= referencetime.hour and GreyObsTime.day == referencetime.day) or (
+                GreyObsTime.hour <= Tools.NextSunrise(referencetime,
+                                                      obspar).hour and GreyObsTime.day == Tools.NextSunrise(
+            referencetime, obspar).day))):
             GreyObsTime = GreyObsTime + datetime.timedelta(minutes=1)
             # print(Tools.IsDarkness(DarkObsTime,obsSite))
         return GreyObsTime
@@ -289,7 +292,8 @@ class Tools:
     @classmethod
     def CheckWindow(cls, time, obspar):
         MinimalWindowDuration = datetime.timedelta(minutes=obspar.minDuration)
-        if (Tools.IsDarkness(time, obspar) is True) and (Tools.IsDarkness(time + MinimalWindowDuration, obspar) is True):
+        if (Tools.IsDarkness(time, obspar) is True) and (
+                Tools.IsDarkness(time + MinimalWindowDuration, obspar) is True):
             Observe = True
         else:
             Observe = False
@@ -299,7 +303,8 @@ class Tools:
     @classmethod
     def CheckWindowGrey(cls, time, obspar):
         MinimalWindowDuration = datetime.timedelta(minutes=obspar.minDuration)
-        if (Tools.IsGreyness(time, obspar) is True) and (Tools.IsGreyness(time + MinimalWindowDuration, obspar) is True):
+        if (Tools.IsGreyness(time, obspar) is True) and (
+                Tools.IsGreyness(time + MinimalWindowDuration, obspar) is True):
             Observe = True
         else:
             Observe = False
@@ -309,18 +314,18 @@ class Tools:
     def GalacticPlaneBorder(cls, coords):
         lon = coords.galactic.l.value  # x-coordinate
         lat = coords.galactic.b.value  # y-coordinate
-        #print(lon)
-        #print(lat)
+        # print(lon)
+        # print(lat)
         YouAreInside = False
         n = 20
         if (lat <= 10 and lat >= 0 and lon <= 130):
-            n = lat-(1.0/13)*lon
+            n = lat - (1.0 / 13) * lon
         elif (lat <= 10 and lat >= 0 and lon >= 240):
-            n = lat - (1.0/12) * lon + 20
+            n = lat - (1.0 / 12) * lon + 20
         elif (lat >= -10 and lat <= 0 and lon <= 130):
-            n = lat + (1.0/13) * lon
+            n = lat + (1.0 / 13) * lon
         elif (lat >= -10 and lat <= 0 and lon >= 240):
-            n = lat + (1.0/12) * lon - 20
+            n = lat + (1.0 / 12) * lon - 20
         if np.absolute(n) <= 10:
             YouAreInside = True
         return YouAreInside
@@ -336,17 +341,19 @@ class Tools:
 
 class ObservationParameters(object):
     """Stores all the parameters in the .ini file"""
+
     # Observatory
 
     def __init__(self, name=None, lat=0, lon=0, height=0, sunDown=None, moonDown=None,
                  moonGrey=None, moonPhase=None, minMoonSourceSeparation=None,
                  maxMoonSourceSeparation=None, maxZenith=None, FOV=None, maxRuns=None, maxNights=None,
                  duration=None, minDuration=None, useGreytime=None, minSlewing=None,
-                 minimumProbCutForCatalogue=None, minProbcut=None, distCut=None, doPlot=False, secondRound=None,
+                 locCut90=None, minimumProbCutForCatalogue=None, minProbcut=None, distCut=None, doPlot=False,
+                 secondRound=None,
                  zenithWeighting=None, percentageMOC=None, reducedNside=None, HRnside=None,
-                 mangrove=None, skymap=None,obsTime=None,datasetDir=None,galcatName=None,outDir=None,pointingsFile=None, countPrevious=False,
-                 alertType=None, locCut=None, MO=False, algorithm=None, strategy=None, doRank=False):
-
+                 mangrove=None, skymap=None, obsTime=None, datasetDir=None, galcatName=None, outDir=None,
+                 pointingsFile=None, countPrevious=False,
+                 alertType=None, MO=False, algorithm=None, strategy=None, doRank=False):
         self.name = name
         self.lat = lat
         self.lon = lon
@@ -373,6 +380,7 @@ class ObservationParameters(object):
         self.minSlewing = minSlewing
 
         # Tiling
+        self.locCut90 = locCut90
         self.minimumProbCutForCatalogue = minimumProbCutForCatalogue
         self.minProbcut = minProbcut
         self.distCut = distCut
@@ -389,16 +397,15 @@ class ObservationParameters(object):
         self.countPrevious = countPrevious
 
         # Parsed args
-        self.skymap = skymap 
+        self.skymap = skymap
         self.obsTime = obsTime
         self.datasetDir = datasetDir
         self.galcatName = galcatName
         self.outDir = outDir
         self.pointingsFile = pointingsFile
         self.alertType = alertType
-        self.locCut = locCut
 
-        #Characterstics of the event
+        # Characterstics of the event
         self.MO = MO
 
     def __str__(self):
@@ -415,25 +422,26 @@ class ObservationParameters(object):
         txt += 'Duration: {}\n'.format(self.duration)
         txt += 'High Resolution NSIDE: {}\n'.format(self.HRnside)
         txt += 'Low Resolution NSIDE: {}\n'.format(self.reducedNside)
-        txt += 'The strategy is ({algorithm}, {strategy}, mangrove={mangrove})\n'.format(algorithm = self.algorithm, strategy = self.strategy,mangrove = self.mangrove)
-        txt += 'The level of details is (doPlot={doPlot}, doRank = {doRank})\n'.format(doPlot = self.doPlot, doRank = self.doRank)
+        txt += 'The strategy is ({algorithm}, {strategy}, mangrove={mangrove})\n'.format(algorithm=self.algorithm,
+                                                                                         strategy=self.strategy,
+                                                                                         mangrove=self.mangrove)
+        txt += 'The level of details is (doPlot={doPlot}, doRank = {doRank})\n'.format(doPlot=self.doPlot,
+                                                                                       doRank=self.doRank)
 
         # txt += '----------------------------------------------------------------------\n'.format()
         return txt
 
-    def add_parsed_args(self, skymap,obsTime,datasetDir,galcatName,outDir,pointingsFile,alertType,locCut):
+    def add_parsed_args(self, skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, alertType):
         # Parsed args in command line
-        self.skymap = skymap 
-        self.obsTime = obsTime 
+        self.skymap = skymap
+        self.obsTime = obsTime
         self.datasetDir = datasetDir
         self.galcatName = galcatName
         self.outDir = outDir
         self.pointingsFile = pointingsFile
         self.alertType = alertType
-        self.locCut = locCut
 
     def from_configfile(self, filepath):
-
         ##################
         cfg = filepath
         parser = ConfigParser()
@@ -441,9 +449,9 @@ class ObservationParameters(object):
         parser.sections()
         section = 'observatory'
         self.name = str(parser.get(section, 'name', fallback=None))
-        self.lat = float(parser.get(section, 'lat', fallback=0))*u.deg
-        self.lon = float(parser.get(section, 'lon', fallback=0))*u.deg
-        self.height = float(parser.get(section, 'height', fallback=0))*u.m
+        self.lat = float(parser.get(section, 'lat', fallback=0)) * u.deg
+        self.lon = float(parser.get(section, 'lon', fallback=0)) * u.deg
+        self.height = float(parser.get(section, 'height', fallback=0)) * u.m
         self.location = EarthLocation(lat=self.lat, lon=self.lon,
                                       height=self.height)
 
@@ -471,6 +479,8 @@ class ObservationParameters(object):
         self.minSlewing = float(parser.get(section, 'minslewing', fallback=0))
 
         section = 'tiling'
+        self.locCut90 = float(parser.get(
+            section, 'locCut90', fallback=99999))
         self.minimumProbCutForCatalogue = float(parser.get(
             section, 'minimumprobcutforcatalogue', fallback=0))
         self.minProbcut = float(parser.get(section, 'minProbcut', fallback=0))
@@ -495,10 +505,9 @@ class ObservationParameters(object):
                   moonGrey, moonPhase, minMoonSourceSeparation,
                   maxMoonSourceSeparation, maxZenith, FOV, maxRuns, maxNights,
                   duration, minDuration, useGreytime, minSlewing,
-                  minimumProbCutForCatalogue, minProbcut,distCut, doPlot, secondRound,
+                  minimumProbCutForCatalogue, minProbcut, distCut, doPlot, secondRound,
                   zenithWeighting, percentageMOC, reducedNside, HRnside,
                   mangrove):
-
         self.name = name
         self.lat = lat * u.deg
         self.lon = lon * u.deg
@@ -667,7 +676,7 @@ class Observer:
         for i in range(min(nb_observation_night, len(set_time))):
             if set_time[i] < rise_time[i]:
                 time_interval_sun.append([set_time[i], rise_time[i]])
-            elif i < (len(set_time)-1):
+            elif i < (len(set_time) - 1):
                 time_interval_sun.append([set_time[i], rise_time[i + 1]])
             else:
                 continue
@@ -783,6 +792,7 @@ class Observer:
 
         return rise_time, set_time
 
+
 ######################################################
 
 # Functions related to the Skymap handling
@@ -790,7 +800,6 @@ class Observer:
 ######################################################
 
 def getdate(x):
-
     """
     Bottom-level function that takes a date and prints it in ISO format
     
@@ -828,7 +837,6 @@ def UNIQSkymap_toNested(skymap_fname):
 
 
 def get_lvk_uniq_maps(sky_map, Order, map_names='all'):
-
     un_inds = sky_map['UNIQ']
 
     order = (np.log2(un_inds / 4).astype(int) /
@@ -877,7 +885,7 @@ def get_lvk_uniq_maps(sky_map, Order, map_names='all'):
                 del a, a_
 
     maps['PROB'] = maps['PROB'] * \
-        (np.pi / 180) ** 2 * hp.nside2pixarea(Nside, degrees=True)
+                   (np.pi / 180) ** 2 * hp.nside2pixarea(Nside, degrees=True)
     # print('Total probability is:', maps['PROB'].sum())
     return maps
 
@@ -888,13 +896,13 @@ def NightDarkObservation(time, obspar):
 
     '''
     obs = Observer(longitude=obspar.lon.to_value(u.deg),
-                      latitude=obspar.lat.to_value(u.deg),
-                      elevation=obspar.height.to_value(u.m),
-                      run_duration=datetime.timedelta(minutes=obspar.duration),
-                      minimal_run_duration=datetime.timedelta(minutes=obspar.minDuration),
-                      max_sun_altitude=obspar.sunDown,
-                      max_moon_altitude=obspar.moonDown,
-                      max_moon_phase=-1.0)
+                   latitude=obspar.lat.to_value(u.deg),
+                   elevation=obspar.height.to_value(u.m),
+                   run_duration=datetime.timedelta(minutes=obspar.duration),
+                   minimal_run_duration=datetime.timedelta(minutes=obspar.minDuration),
+                   max_sun_altitude=obspar.sunDown,
+                   max_moon_altitude=obspar.moonDown,
+                   max_moon_phase=-1.0)
     return obs.get_time_window(start_time=time,
                                nb_observation_night=obspar.maxNights)
 
@@ -905,13 +913,13 @@ def NightDarkObservationwithGreyTime(time, obspar):
 
     '''
     obs = Observer(longitude=obspar.lon.to_value(u.deg),
-                      latitude=obspar.lat.to_value(u.deg),
-                      elevation=obspar.height.to_value(u.m),
-                      run_duration=datetime.timedelta(minutes=obspar.duration),
-                      minimal_run_duration=datetime.timedelta(minutes=obspar.minDuration),
-                      max_sun_altitude=obspar.sunDown,
-                      max_moon_altitude=obspar.moonGrey,
-                      max_moon_phase=obspar.moonPhase/100.)
+                   latitude=obspar.lat.to_value(u.deg),
+                   elevation=obspar.height.to_value(u.m),
+                   run_duration=datetime.timedelta(minutes=obspar.duration),
+                   minimal_run_duration=datetime.timedelta(minutes=obspar.minDuration),
+                   max_sun_altitude=obspar.sunDown,
+                   max_moon_altitude=obspar.moonGrey,
+                   max_moon_phase=obspar.moonPhase / 100.)
     return obs.get_time_window(start_time=time,
                                nb_observation_night=obspar.maxNights)
 
@@ -932,7 +940,7 @@ def ZenithAngleCut(prob, nside, time, minProbcut, maxZenith, observatory, minMoo
     dec = np.rad2deg(0.5 * np.pi - pixel_theta)
     targetCoord_map = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
     altaz_map = targetCoord_map.transform_to(frame)
-    maskzenith[altaz_map.alt.value < 90-maxZenith] = 1
+    maskzenith[altaz_map.alt.value < 90 - maxZenith] = 1
     mzenith.mask = maskzenith
     # hp.mollview(mzenith)
     # plt.show()
@@ -951,8 +959,8 @@ def ZenithAngleCut(prob, nside, time, minProbcut, maxZenith, observatory, minMoo
 
     if useGreytime and ObsBool:
         # Get Alt/Az of the Moon
-        moonaltazs = get_body("moon",Time(time, scale='utc')).transform_to(AltAz(obstime=Time(time, scale='utc'),
-                                                                          location=observatory))
+        moonaltazs = get_body("moon", Time(time, scale='utc')).transform_to(AltAz(obstime=Time(time, scale='utc'),
+                                                                                  location=observatory))
         separations = altaz_map.separation(moonaltazs)
         mask_moonDistance = np.zeros(hp.nside2npix(nside), dtype=bool)
         mask_moonDistance[separations < minMoonSourceSeparation * u.deg] = 1
@@ -976,7 +984,8 @@ def ZenithAngleCut(prob, nside, time, minProbcut, maxZenith, observatory, minMoo
     return ObsBool, yprob
 
 
-def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcut, time, observatory, maxZenith, FOV, tname, ipixlist, ipixlistHR, counter, dirName, useGreytime, plot):
+def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcut, time, observatory, maxZenith, FOV,
+                         tname, ipixlist, ipixlistHR, counter, dirName, useGreytime, plot):
     '''
     Compute probability in 2D by taking the highest probability in FoV value
     '''
@@ -989,14 +998,14 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
         moonaltazs = get_body("moon", Time(time, scale='utc')).transform_to(
             AltAz(obstime=Time(time, scale='utc'), location=observatory))
         # Zenith and Moon angular distance mask
-        pix_ra = radecs.ra.value[(thisaltaz.alt.value > 90-maxZenith)
-                                 & (thisaltaz.separation(moonaltazs) > (90-maxZenith) * u.deg)]
+        pix_ra = radecs.ra.value[(thisaltaz.alt.value > 90 - maxZenith)
+                                 & (thisaltaz.separation(moonaltazs) > (90 - maxZenith) * u.deg)]
         pix_dec = radecs.dec.value[(thisaltaz.alt.value > 90 - maxZenith)
-                                   & (thisaltaz.separation(moonaltazs) > (90-maxZenith) * u.deg)]
+                                   & (thisaltaz.separation(moonaltazs) > (90 - maxZenith) * u.deg)]
 
     else:
         # Zenith angle mask
-        pix_ra = radecs.ra.value[(thisaltaz.alt.value > 90-maxZenith)]
+        pix_ra = radecs.ra.value[(thisaltaz.alt.value > 90 - maxZenith)]
         pix_dec = radecs.dec.value[thisaltaz.alt.value > 90 - maxZenith]
         # pix_alt = pix_alt1[thisaltaz.alt.value > 90 - maxZenith]
 
@@ -1076,7 +1085,7 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
             # hp.mollview(highres,title="With FoV circle")
 
             hp.gnomview(prob, xsize=500, ysize=500, rot=[
-                        targetCoord.ra.deg, targetCoord.dec.deg], reso=8.0)
+                targetCoord.ra.deg, targetCoord.dec.deg], reso=8.0)
             hp.graticule()
 
             ipix_discplot = hp.query_disc(HRnside, xyz, np.deg2rad(radius))
@@ -1097,7 +1106,8 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
             tempmask = separations < (radius + 0.05 * radius) * u.deg
             tempmask2 = separations > (radius - 0.05 * radius) * u.deg
             hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask &
-                                 tempmask2].dec, 'r.', lonlat=True, coord="C", linewidth=0.1)
+                                                                             tempmask2].dec, 'r.', lonlat=True,
+                                 coord="C", linewidth=0.1)
             altcoord = np.empty(1000)
             azcoord = np.random.rand(1000) * 360
 
@@ -1115,7 +1125,6 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
 
 
 def SubstractPointings2D(tpointingFile, prob, obspar, pixlist):
-
     nside = obspar.reducedNside
     radius = obspar.FOV
 
@@ -1172,12 +1181,12 @@ def LoadGalaxies(tgalFile):
     # Load data
     h5file = tables.open_file(tgalFile, mode="r")
     tcat = Table(h5file.root.catalog.read()[
-                 ['no_GLADE', 'RA', 'Dec', 'd_L', 'B_mag']])
+                     ['no_GLADE', 'RA', 'Dec', 'd_L', 'B_mag']])
     h5file.close()
 
     # Rename column to match naming scheme
     tcat.rename_columns(['RA', 'Dec', 'd_L', 'B_mag'], [
-                        'RAJ2000', 'DEJ2000', 'Dist', 'Bmag'])
+        'RAJ2000', 'DEJ2000', 'Dist', 'Bmag'])
 
     return tcat
 
@@ -1192,12 +1201,12 @@ def LoadGalaxies_SteMgal(tgalFile):
     # Load data
     h5file = tables.open_file(tgalFile, mode="r")
     tcat = Table(h5file.root.catalog.read()[
-                 ['no_GLADE', 'RA', 'Dec', 'd_L', 'B_mag', 'mass']])
+                     ['no_GLADE', 'RA', 'Dec', 'd_L', 'B_mag', 'mass']])
     h5file.close()
 
     # Rename column to match naming scheme
     tcat.rename_columns(['RA', 'Dec', 'd_L', 'B_mag', 'mass'], [
-                        'RAJ2000', 'DEJ2000', 'Dist', 'Bmag', 'SteMgal'])
+        'RAJ2000', 'DEJ2000', 'Dist', 'Bmag', 'SteMgal'])
 
     return tcat
 
@@ -1294,11 +1303,11 @@ def VisibleAtTime(test_time, galaxies, maxz, observatory):
         return False, thisaltaz, galaxies
 
 
-def FulfillsRequirement(theseGals,obspar, UsePix):
+def FulfillsRequirement(theseGals, obspar, UsePix):
     '''
     Apply filter criteria to visible galaxy sample and compares them to get the best option of zenith angle
     '''
-    
+
     maxz = obspar.maxZenith
     FOV = obspar.FOV
     zenithWeighting = obspar.zenithWeighting
@@ -1309,9 +1318,9 @@ def FulfillsRequirement(theseGals,obspar, UsePix):
 
     alt = theseGals['Alt']
 
-    if(obspar.strategy == 'targeted'):
+    if (obspar.strategy == 'targeted'):
         testedProba = 'dp_dV'
-    if(obspar.strategy == 'integrated'):
+    if (obspar.strategy == 'integrated'):
         testedProba = 'dp_dV_FOV'
 
     for minz_aux in range(maxz, 5, -5):
@@ -1321,7 +1330,7 @@ def FulfillsRequirement(theseGals,obspar, UsePix):
 
         if (len(tmpGals[tmpmask]) > 0):
             cur_maxp = tmpGals[tmpmask][testedProba].max() / \
-                theseGals[testedProba].max()
+                       theseGals[testedProba].max()
             if (maxz == minz_aux):
                 maxp = cur_maxp
                 mask = tmpmask
@@ -1333,22 +1342,21 @@ def FulfillsRequirement(theseGals,obspar, UsePix):
                 thisminz = minz_aux + 5
                 break
     if UsePix:
-        mask = alt > 90-(thisminz+FOV)
+        mask = alt > 90 - (thisminz + FOV)
     return mask, thisminz
 
 
 def FulfillsRequirementGreyObservations(Ktime, theseGals, observatory, minMoonSourceSeparation):
-
     targetCoord = co.SkyCoord(
         theseGals['RAJ2000'], theseGals['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
     frame = co.AltAz(obstime=Ktime, location=observatory)
-    moonaltazs = get_body("moon",Time(Ktime, scale='utc')).transform_to(frame)
+    moonaltazs = get_body("moon", Time(Ktime, scale='utc')).transform_to(frame)
 
     altaz_map = targetCoord.transform_to(frame)
     separations = altaz_map.separation(moonaltazs)
 
     # Mask
-    greymask = separations > minMoonSourceSeparation*u.deg
+    greymask = separations > minMoonSourceSeparation * u.deg
     return greymask
 
 
@@ -1364,7 +1372,8 @@ def ObtainHighestProbabilityCoordinates(filename):
     return ra, dec
 
 
-def ComputeProbGalTargeted(prob, time, finalGals, visiGals, allGals, tsum_dP_dV, talreadysumipixarray, nside, thisminz,obspar,counter,dirName):
+def ComputeProbGalTargeted(prob, time, finalGals, visiGals, allGals, tsum_dP_dV, talreadysumipixarray, nside, thisminz,
+                           obspar, counter, dirName):
     '''Computes probability Pgal and Pgw in FoV but it takes into account a list of pixels to avoid recounting already observed zones.
     Returns saved circle too (is it really needed? )
     bool doPlot when  = True is used to plot the maps
@@ -1444,7 +1453,7 @@ def ComputeProbGalTargeted(prob, time, finalGals, visiGals, allGals, tsum_dP_dV,
 
         # hp.mollview(prob, title="GW prob map (Equatorial)   %s/%s/%s %s:%s UTC" % (time.day, time.month, time.year, time.hour, time.minute), xsize=2000)
         hp.gnomview(prob, xsize=500, ysize=500, rot=[
-                    targetCoord.ra.deg, targetCoord.dec.deg], reso=5.0)
+            targetCoord.ra.deg, targetCoord.dec.deg], reso=5.0)
 
         hp.graticule()
         # plt.savefig("%s/ExampleGW_%g.png" % (tname,j))
@@ -1463,7 +1472,7 @@ def ComputeProbGalTargeted(prob, time, finalGals, visiGals, allGals, tsum_dP_dV,
         # draw circle of FoV around best fit position
 
         hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask & tempmask2].dec, 'r.', lonlat=True,
-                                coord="C")
+                             coord="C")
 
         # Draw H.E.S.S. visibility
 
@@ -1476,7 +1485,7 @@ def ComputeProbGalTargeted(prob, time, finalGals, visiGals, allGals, tsum_dP_dV,
         azcoord = np.random.rand(4000) * 360
 
         RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,
-                                location=observatory)
+                               location=observatory)
 
         RandomCoord_radec = RandomCoord.transform_to('fk5')
 
@@ -1487,16 +1496,16 @@ def ComputeProbGalTargeted(prob, time, finalGals, visiGals, allGals, tsum_dP_dV,
         # hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
         # Draw MinZ area
 
-        #print('Min Zenith= ', thisminz)
+        # print('Min Zenith= ', thisminz)
 
         altcoordmin = np.empty(4000)
         altcoordmin.fill(90 - thisminz)
         azcoordmin = np.random.rand(4000) * 360
 
         RandomCoordmin = SkyCoord(azcoordmin, altcoordmin, frame='altaz', unit=(u.deg, u.deg), obstime=time,
-                                    location=observatory)
-        
-        #RandomCoordmin_radec = RandomCoordmin.transform_to('fk5')
+                                  location=observatory)
+
+        # RandomCoordmin_radec = RandomCoordmin.transform_to('fk5')
         # hp.visufunc.projplot(RandomCoordmin_radec.ra, RandomCoordmin_radec.dec, 'y.', lonlat=True, coord="C")
         plt.savefig("%s/Zoom_Pointing_%g.png" % (path, counter))
         plt.close()
@@ -1505,7 +1514,6 @@ def ComputeProbGalTargeted(prob, time, finalGals, visiGals, allGals, tsum_dP_dV,
 
 
 def SubstractPointings(tpointingFile, galaxies, talreadysumipixarray, tsum_dP_dV, prob, obspar, nside):
-
     FOV = obspar.FOV
 
     # Read PointingsFile
@@ -1543,7 +1551,6 @@ def SubstractPointings(tpointingFile, galaxies, talreadysumipixarray, tsum_dP_dV
 
 
 def SubstractGalaxiesCircle(galaux, ra, dec, talreadysumipixarray, tsum_dP_dV, FOV, prob, nside):
-
     radius = FOV
     coordinates = co.SkyCoord(ra, dec, frame='fk5', unit=(u.deg, u.deg))
 
@@ -1571,6 +1578,8 @@ def SubstractGalaxiesCircle(galaux, ra, dec, talreadysumipixarray, tsum_dP_dV, F
     newgalaxies = galaux[targetCoord.separation(coordinates).deg > radius]
 
     return newgalaxies, P_GW, P_Gal, talreadysumipixarray
+
+
 #####################################################
 
 ## Extra functions from PGalinFoVOptimised ==> 3D ##
@@ -1646,12 +1655,13 @@ def ModifyCatalogue(prob, cat, FOV, totaldPdV, nside):
     return tcat
 
 
-def ComputeProbPGALIntegrateFoV(prob, time, observatory, centerPoint, UsePix, visiGals, allGalsaftercuts, tsum_dP_dV, talreadysumipixarray, nside,
+def ComputeProbPGALIntegrateFoV(prob, time, observatory, centerPoint, UsePix, visiGals, allGalsaftercuts, tsum_dP_dV,
+                                talreadysumipixarray, nside,
                                 thisminz, obspar, counter, tname, dirName, doPlot):
     '''
         Same as ComputeProbGalTargetted but it does not return circle coordinates.
     '''
-    maxZenith = obspar.maxZenith 
+    maxZenith = obspar.maxZenith
     FOV = obspar.FOV
     if UsePix:
         targetCoord = co.SkyCoord(
@@ -1738,7 +1748,7 @@ def ComputeProbPGALIntegrateFoV(prob, time, observatory, centerPoint, UsePix, vi
 
         # hp.mollview(prob, title="GW prob map (Equatorial)   %s/%s/%s %s:%s UTC" % (time.day, time.month, time.year, time.hour, time.minute), xsize=2000)
         hp.gnomview(prob, xsize=500, ysize=500, rot=[
-                    targetCoord.ra.deg, targetCoord.dec.deg], reso=5.0)
+            targetCoord.ra.deg, targetCoord.dec.deg], reso=5.0)
 
         hp.graticule()
         # plt.savefig("%s/ExampleGW_%g.png" % (tname,j))
@@ -1781,7 +1791,7 @@ def ComputeProbPGALIntegrateFoV(prob, time, observatory, centerPoint, UsePix, vi
         # hp.visufunc.projplot(RandomCoord_radec.ra, RandomCoord_radec.dec, 'b.', lonlat=True, coord="C")
         # Draw MinZ area
 
-        #print('Min Zenith= ', thisminz)
+        # print('Min Zenith= ', thisminz)
 
         altcoordmin = np.empty(4000)
 
@@ -1811,9 +1821,8 @@ def ComputeProbPGALIntegrateFoV(prob, time, observatory, centerPoint, UsePix, vi
 ######################################################
 
 def Get90RegionPixReduced(hpxx, percentage, Nnside):
-
     nside = Nnside  # size of map used for contour determination
-    hpx = hp.ud_grade(hpxx, nside_out = nside, power=-2, order_in='Nested', order_out='Nested')
+    hpx = hp.ud_grade(hpxx, nside_out=nside, power=-2, order_in='Nested', order_out='Nested')
 
     sort = sorted(hpx, reverse=True)
     cumsum = np.cumsum(sort)
@@ -1835,7 +1844,7 @@ def Get90RegionPixReduced(hpxx, percentage, Nnside):
     # area = len(table_ipix_contour)*hp.nside2pixarea(nside, True)
     # from index to polar coordinates
     theta1, phi1 = hp.pix2ang(nside, table_ipix_contour)
-    area = len(table_ipix_contour)*hp.nside2pixarea(nside, True)
+    area = len(table_ipix_contour) * hp.nside2pixarea(nside, True)
 
     # creating an astropy.table with RA[deg] and DEC[deg] ipix positions
     # contour_ipix = Table([ra, dec], names=('RA[deg]', 'DEC[deg]'), meta={'ipix': 'ipix table'})
@@ -1856,7 +1865,6 @@ def Get90RegionPixReduced(hpxx, percentage, Nnside):
 
 
 def Get90RegionPixGal(hpxx, percentage, Nside):
-
     nside = Nside  # size of map used for contour determination
     # hpx = hp.ud_grade(hpxx, nside, power=-2)
     hpx = hpxx
@@ -1905,8 +1913,8 @@ def IsSourceInside(Pointings, Sources, FOV, nside):
             # print(txyz in ipix_disc)
             if (txyz in ipix_disc):
                 print('Found in pointing number', i)
-                #Npoiting.append(i)
-                Npoiting = Npoiting+str(i)+','
+                # Npoiting.append(i)
+                Npoiting = Npoiting + str(i) + ','
                 Found = True
         if Found == False:
             print('Source not covered!')
@@ -1925,8 +1933,8 @@ def IsSourceInside(Pointings, Sources, FOV, nside):
             print('Found in pointing number 0')
         else:
             print('Source not covered!')
-    #Reformat output
-    if Found == True: 
+    # Reformat output
+    if Found == True:
         Npoiting = Npoiting[:-1]
     return Found, Npoiting
 
@@ -1960,12 +1968,14 @@ class NextWindowTools:
         # print(cumsumWindow)
         # print(datetime.timedelta(seconds=np.float64(cumsumWindow[j])) for j in range(LastItem))
         arr = np.array([time + datetime.timedelta(seconds=np.float64(cumsumWindow[j]))
-                       for j in range(LastItem)])
+                        for j in range(LastItem)])
         return arr
 
     @classmethod
     def NextObservationWindow(cls, time, obspar):
-        if (Tools.NextSunset(time, obspar).hour >= time.hour >= Tools.PreviousSunrise(time, obspar).hour and time.day == Tools.NextSunset(time, obspar).day):
+        if (Tools.NextSunset(time, obspar).hour >= time.hour >= Tools.PreviousSunrise(time,
+                                                                                      obspar).hour and time.day == Tools.NextSunset(
+                time, obspar).day):
             time = Tools.NextSunset(time, obspar)
             time = Tools.TrustingDarknessSun(time, obspar)
         if (Tools.IsDarkness(time, obspar) is True):
@@ -1980,7 +1990,9 @@ class NextWindowTools:
 
     @classmethod
     def NextObservationWindowGrey(cls, time, obspar):
-        if (Tools.NextSunset(time, obspar).hour >= time.hour >= Tools.PreviousSunrise(time, obspar).hour and time.day == Tools.NextSunset(time, obspar).day):
+        if (Tools.NextSunset(time, obspar).hour >= time.hour >= Tools.PreviousSunrise(time,
+                                                                                      obspar).hour and time.day == Tools.NextSunset(
+                time, obspar).day):
             time = Tools.NextSunset(time, obspar)
             # print('Sunset', time)
             time = Tools.TrustingGreynessSun(time, obspar)
@@ -2004,6 +2016,7 @@ class NextWindowTools:
         return time
 
     @classmethod
-    def AddRunDuration_to_StartingTime(cls, obspar):  
-        previousTime = np.genfromtxt(obspar.pointingsFile, usecols=(0),skip_header=1, unpack=True, dtype='str')   
-        obspar.obsTime = datetime.datetime.strptime(str(previousTime), '%Y-%m-%dT%H:%M:%S')+ datetime.timedelta(minutes=np.float64(obspar.duration))
+    def AddRunDuration_to_StartingTime(cls, obspar):
+        previousTime = np.genfromtxt(obspar.pointingsFile, usecols=(0), skip_header=1, unpack=True, dtype='str')
+        obspar.obsTime = datetime.datetime.strptime(str(previousTime), '%Y-%m-%dT%H:%M:%S') + datetime.timedelta(
+            minutes=np.float64(obspar.duration))

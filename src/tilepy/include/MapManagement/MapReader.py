@@ -214,6 +214,7 @@ class MapReader:
             raw_map = mh.HealpixMap.read_map(self.skymap_filename, field=self.id_prob-self.offset_column, hdu=self.id_hdu_map, density=True)
             if not self.prob_density:
                 raw_map._data = (raw_map.data * self.unit_prob / raw_map.pixarea()).to_value(u.Unit('sr^-1'))
+                raw_map._unit = u.Unit('sr^-1')
             else:
                 raw_map._data = (raw_map.data * self.unit_prob).to_value(u.Unit('sr^-1'))
         elif mapType == 'distMean' and self.has3D:
