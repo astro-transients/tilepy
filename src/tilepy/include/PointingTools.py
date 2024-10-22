@@ -1620,14 +1620,13 @@ def ZenithAngleCut(prob, nside, time, minProbcut, maxZenith, observatory, minMoo
 def GetSatelliteName(satellitename):
     stations_url = 'https://celestrak.com/NORAD/elements/science.txt'
     satellites = load.tle_file(stations_url)
-    print('Loaded', len(satellites), 'satellites')
+    #print('Loaded', len(satellites), 'satellites')
     by_name = {sat.name: sat for sat in satellites}
     satellite_name = by_name.get(satellitename)
     return  satellite_name
 
 
 def GetSatelliteTime(satellite_name, t):
-    print(t)
     dt = t # Get the underlying datetime object
     year = dt.year
     month = dt.month
@@ -1648,7 +1647,6 @@ def GetSatellitePositions(satellite_name, t):
 
     # Get satellite's current position in astronomical units (AU)
     satellite_position = geocentric.position.km
-    print("satellite_position", satellite_position)
     satellite_location = EarthLocation(lat=subpoint.latitude.degrees, lon=subpoint.longitude.degrees, height=subpoint.elevation.m)
     return satellite_position, satellite_location 
 
@@ -1709,18 +1707,14 @@ def OccultationCut(prob, nside, time, minProbcut, satellite_position, observator
 
     mEarth, posEarth = GetEarthOccultedPix(nside, time, 6371, 1, satellite_position, observatory)
     mpixels.extend(mEarth)
-    print(len(mpixels))
 
     mSun, posSun= GetSunOccultedPix(nside, 30, time)
     mpixels.extend(mSun)
-    print(len(mpixels))
 
     mMoon, poSMoon = GetMoonOccultedPix(nside, 10, time)
     mpixels.extend(mMoon)
-    print(len(mpixels))
 
     pixlist.extend(mpixels)
-    print(len(pixlist))
 
     '''
     pix_ra = radecs.ra.value
@@ -1818,24 +1812,23 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
         maskcat_pix = cat_pix
     else:
         maskcat_pix = cat_pix[mask]
-
     # Sort table
     sortcat1 = maskcat_pix[np.flipud(np.argsort(maskcat_pix['PIXFOVPROB']))]
-    # Chose highest
-
+    
     # Mask occulted pixels for this round without affecting ipixlist and ipixlistHR
     mask2 = np.isin(sortcat1['PIX'], ipixlistOcc, invert=True)
     if all(np.isin(sortcat1['PIX'], ipixlistOcc, invert=False)):
-        sortcat = sortcat1[mask2]
+        sortcat2 = sortcat1[mask2]
     else:
-        sortcat = sortcat1[mask2]
+        sortcat2 = sortcat1[mask2]
+    # Sort table
+    sortcat = sortcat2[np.flipud(np.argsort(sortcat2['PIXFOVPROB']))]
 
+    # Chose highest
     targetCoord = co.SkyCoord(
         sortcat['PIXRA'][:1], sortcat['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
 
     P_GW = sortcat['PIXFOVPROB'][:1]
-    print("P_GW", P_GW)
-
     # Include to the list of pixels already observed
 
     if (P_GW >= minProbcut):
