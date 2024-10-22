@@ -908,16 +908,12 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
             if(couter_per_obs[j] >=  maxRuns):
                 SameNight[j] = False
             if (TIME_MIN >= NewActiveObsTime[j]) & SameNight[j]:
-
+                ipixlistHROcc = None
                 if obspar.base == "space":
-
                     SatelliteTime  = GetSatelliteTime(SatelliteName, ObservationTime)
                     satellite_position, obspar.location = GetSatellitePositions(SatelliteName, SatelliteTime)
-                    ipixlistHROcc = []
                     ObsBool, yprob, ipixlistHROcc = OccultationCut(prob, obspar.reducedNside, ObservationTime, obspar.minProbcut,
                                                 satellite_position, obspar.location)
-                    
-                    
                 else:
                     ObsBool, yprob = ZenithAngleCut(prob, nside, ObservationTime, obspar.minProbcut,
                                                 obspar.maxZenith, obspar.location, obspar.minMoonSourceSeparation, obspar.useGreytime)

@@ -1657,7 +1657,7 @@ def GetSunOccultedPix(nside, sun_sep, time):
     time = Time(time)
     #for equatorial frame
     SunCoord_equatorial = get_body("sun", time, location = EarthLocation(0,0,0))
-    SunCoord_equatorial = SunCoord_equatorial.transform_to('fk5')
+    SunCoord_equatorial = SunCoord_equatorial.transform_to('icrs')
     phipix_sun = np.deg2rad(SunCoord_equatorial.ra.deg)
     thetapix_sun = 0.5 * np.pi - np.deg2rad(SunCoord_equatorial.dec.deg)
     sun_xyzpix = hp.ang2vec(thetapix_sun, phipix_sun)
@@ -1668,7 +1668,7 @@ def GetMoonOccultedPix(nside, moon_sep, time):
     time = Time(time)
     #for equatorial frame
     MoonCoord_equatorial = get_body("moon", time, location = EarthLocation(0,0,0))
-    MoonCoord_equatorial = MoonCoord_equatorial.transform_to('fk5')
+    MoonCoord_equatorial = MoonCoord_equatorial.transform_to('icrs')
     phipix_moon = np.deg2rad(MoonCoord_equatorial.ra.deg)
     thetapix_moon = 0.5 * np.pi - np.deg2rad(MoonCoord_equatorial.dec.deg)
     moon_xyzpix = hp.ang2vec(thetapix_moon, phipix_moon)
@@ -1687,7 +1687,7 @@ def GetEarthOccultedPix(nside, time, earth_radius, earth_sep, satellite_position
 
     altaz_frame = AltAz(obstime=time, location=satellite_location)
     earthCoord = SkyCoord(earth_azimuth * u.rad, earth_altitude * u.rad, frame=altaz_frame)
-    earthCoord_equatorial = earthCoord.transform_to('fk5')
+    earthCoord_equatorial = earthCoord.transform_to('icrs')
 
     earth_phipix = np.deg2rad(earthCoord_equatorial.ra.deg)
     earth_thetapix = 0.5 * np.pi - np.deg2rad(earthCoord_equatorial.dec.deg)
@@ -1709,17 +1709,18 @@ def OccultationCut(prob, nside, time, minProbcut, satellite_position, observator
 
     mEarth, posEarth = GetEarthOccultedPix(nside, time, 6371, 1, satellite_position, observatory)
     mpixels.extend(mEarth)
-    print(len(pixlist))
+    print(len(mpixels))
 
     mSun, posSun= GetSunOccultedPix(nside, 30, time)
     mpixels.extend(mSun)
-    print(len(pixlist))
+    print(len(mpixels))
 
     mMoon, poSMoon = GetMoonOccultedPix(nside, 10, time)
     mpixels.extend(mMoon)
-    print(len(pixlist))
+    print(len(mpixels))
 
     pixlist.extend(mpixels)
+    print(len(pixlist))
 
     '''
     pix_ra = radecs.ra.value
@@ -1817,18 +1818,17 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
         maskcat_pix = cat_pix
     else:
         maskcat_pix = cat_pix[mask]
-        
-    # Mask occulted pixels for this round without affecting ipixlist and ipixlistHR
-    mask2 = np.isin(cat_pix['PIX'], ipixlistOcc, invert=True)
-    if all(np.isin(cat_pix['PIX'], ipixlistOcc, invert=False)):
-        maskcat_pix = cat_pix[mask + mask2]
-    else:
-        maskcat_pix = cat_pix[mask + mask2]
-
 
     # Sort table
-    sortcat = maskcat_pix[np.flipud(np.argsort(maskcat_pix['PIXFOVPROB']))]
+    sortcat1 = maskcat_pix[np.flipud(np.argsort(maskcat_pix['PIXFOVPROB']))]
     # Chose highest
+
+    # Mask occulted pixels for this round without affecting ipixlist and ipixlistHR
+    mask2 = np.isin(sortcat1['PIX'], ipixlistOcc, invert=True)
+    if all(np.isin(sortcat1['PIX'], ipixlistOcc, invert=False)):
+        sortcat = sortcat1[mask2]
+    else:
+        sortcat = sortcat1[mask2]
 
     targetCoord = co.SkyCoord(
         sortcat['PIXRA'][:1], sortcat['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
@@ -1884,11 +1884,17 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
             altcoord = np.empty(1000)
             azcoord = np.random.rand(1000) * 360
 
-            tt, pp = hp.pix2ang(reducedNside, ipixlistOcc)
-            ra2 = np.rad2deg(pp)
-            dec2 = np.rad2deg(0.5 * np.pi - tt)
-            skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
-            hp.visufunc.projplot(skycoord.ra.deg, skycoord.dec.deg, 'g.', lonlat=True, coord="C", linewidth=0.1)
+            if ipixlistOcc == None:
+                print("No pcculted pix")
+            else:
+                try:
+                    tt, pp = hp.pix2ang(reducedNside, ipixlistOcc)
+                    ra2 = np.rad2deg(pp)
+                    dec2 = np.rad2deg(0.5 * np.pi - tt)
+                    skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
+                    hp.visufunc.projplot(skycoord.ra.deg, skycoord.dec.deg, 'g.', lonlat=True, coord="C", linewidth=0.1)
+                except:
+                    print("No pcculted pix")
 
             plt.savefig('%s/Zoom_Pointing_%g.png' % (path, counter))
             # for i in range(0,1):
