@@ -1877,9 +1877,7 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
             altcoord = np.empty(1000)
             azcoord = np.random.rand(1000) * 360
 
-            if ipixlistOcc == None:
-                print("No pcculted pix")
-            else:
+            if ipixlistOcc != None:
                 try:
                     tt, pp = hp.pix2ang(reducedNside, ipixlistOcc)
                     ra2 = np.rad2deg(pp)
@@ -1888,6 +1886,7 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
                     hp.visufunc.projplot(skycoord.ra.deg, skycoord.dec.deg, 'g.', lonlat=True, coord="C", linewidth=0.1)
                 except:
                     print("No pcculted pix")
+                
 
             plt.savefig('%s/Zoom_Pointing_%g.png' % (path, counter))
             # for i in range(0,1):
