@@ -913,7 +913,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
                     SatelliteTime  = GetSatelliteTime(SatelliteName, ObservationTime)
                     satellite_position, obspar.location = GetSatellitePositions(SatelliteName, SatelliteTime)
                     ObsBool, yprob, ipixlistHROcc = OccultationCut(prob, obspar.reducedNside, ObservationTime, obspar.minProbcut,
-                                                satellite_position, obspar.location)
+                                                satellite_position, obspar.location, obspar.sunDown,  obspar.moonDown)
                 else:
                     ObsBool, yprob = ZenithAngleCut(prob, nside, ObservationTime, obspar.minProbcut,
                                                 obspar.maxZenith, obspar.location, obspar.minMoonSourceSeparation, obspar.useGreytime)

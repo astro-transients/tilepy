@@ -1694,7 +1694,7 @@ def GetEarthOccultedPix(nside, time, earth_radius, earth_sep, satellite_position
     return earth_occulted_pix, earthCoord_equatorial
 
 
-def OccultationCut(prob, nside, time, minProbcut, satellite_position, observatory):
+def OccultationCut(prob, nside, time, minProbcut, satellite_position, observatory, sun_sep, moon_sep):
     '''
     Mask in the pixels that are occulted by Earth, Sun and Moon
     '''
@@ -1708,10 +1708,10 @@ def OccultationCut(prob, nside, time, minProbcut, satellite_position, observator
     mEarth, posEarth = GetEarthOccultedPix(nside, time, 6371, 1, satellite_position, observatory)
     mpixels.extend(mEarth)
 
-    mSun, posSun= GetSunOccultedPix(nside, 30, time)
+    mSun, posSun= GetSunOccultedPix(nside, sun_sep, time)
     mpixels.extend(mSun)
 
-    mMoon, poSMoon = GetMoonOccultedPix(nside, 10, time)
+    mMoon, poSMoon = GetMoonOccultedPix(nside, moon_sep, time)
     mpixels.extend(mMoon)
 
     pixlist.extend(mpixels)
