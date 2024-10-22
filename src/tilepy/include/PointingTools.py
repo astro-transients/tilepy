@@ -40,7 +40,7 @@ import pytz
 import six
 import tables
 from astropy import units as u
-from astropy.coordinates import EarthLocation, get_body, get_sun, get_moon
+from astropy.coordinates import EarthLocation, get_body
 from astropy.coordinates import SkyCoord, AltAz
 from astropy.coordinates import get_body
 from astropy.io import fits, ascii
