@@ -29,3 +29,11 @@ src/tilepy/dataset/*
 src/tilepy/_version.py
 src/tilepy/_version_cache.py
 GLADE+.txt
+*.fits
+*.fit
+*.fits,*
+*.fit,*
+*.fits.*
+*.fit.*
+examples/launcher/output
+tilepy

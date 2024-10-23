@@ -5,10 +5,11 @@
 ########################################################################
 
 from tilepy.include.ObservationScheduler import GetSchedule
-from tilepy.include.PointingTools import ObservationParameters, NextWindowTools, getdate
+from tilepy.include.PointingTools import ObservationParameters, NextWindowTools
 import time
 import argparse
 import os
+import datetime
 from pathlib import Path
 
 
@@ -33,7 +34,7 @@ parser.add_argument('-tiles', metavar='tiles already observed', default= None)
 args = parser.parse_args()
 alertType = args.alertType
 url = args.url
-obsTime = getdate(args.time)
+obsTime = datetime.datetime.fromisoformat(args.time)
 datasetDir = args.i
 outDir = args.o
 cfgFile = args.cfg
