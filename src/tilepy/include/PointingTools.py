@@ -503,6 +503,7 @@ class ObservationParameters(object):
         self.location = EarthLocation(lat=self.lat, lon=self.lon,
                                       height=self.height)
         self.base = str(parser.get(section, 'base', fallback=None))
+        self.stationsurl = str(parser.get(section, 'stationsurl', fallback=None))
 
         section = 'visibility'
         self.sunDown = int(parser.get(section, 'sundown', fallback=0))
@@ -1617,8 +1618,8 @@ def ZenithAngleCut(prob, nside, time, minProbcut, maxZenith, observatory, minMoo
     return ObsBool, yprob
 
 
-def GetSatelliteName(satellitename):
-    stations_url = 'https://celestrak.com/NORAD/elements/science.txt'
+def GetSatelliteName(satellitename, stationsurl):
+    stations_url = stationsurl
     satellites = load.tle_file(stations_url)
     #print('Loaded', len(satellites), 'satellites')
     by_name = {sat.name: sat for sat in satellites}

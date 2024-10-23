@@ -902,7 +902,7 @@ def PGWinFoV_NObs(filename, ObservationTime0, PointingFile, obsparameters, dirNa
             ITERATION_OBS += 1
             
             if obspar.base == "space":
-                SatelliteName = GetSatelliteName(obspar.name)
+                SatelliteName = GetSatelliteName(obspar.name, obspar.stationsurl)
                 print(obspar.name)
 
             if(couter_per_obs[j] >=  maxRuns):
