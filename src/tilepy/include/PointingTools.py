@@ -1130,7 +1130,8 @@ def OccultationCut(prob, nside, time, minProbcut, satellite_position, observator
 
     return ObsBool, yprob, pixlist
 
-def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcut, time, observatory, maxZenith, FOV, tname, ipixlist, ipixlistHR, counter, dirName, useGreytime, plot, ipixlistOcc = None):
+def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcut, time, observatory, maxZenith, FOV,
+                         ipixlist, ipixlistHR, counter, dirName, useGreytime, plot, ipixlistOcc=None):
     '''
     Compute probability in 2D by taking the highest probability in FoV value
     '''

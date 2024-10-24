@@ -19,17 +19,6 @@
 ##################################################################################################
 
 
-from .PointingTools import (NightDarkObservation,
-                            NightDarkObservationwithGreyTime, LoadHealpixMap, LoadHealpixUNIQMap,
-                            Get90RegionPixReduced, ZenithAngleCut, ComputeProbability2D,
-                            FulfillsRequirement, VisibleAtTime, LoadGalaxies, CorrelateGalaxies_LVC, SubstractPointings2D, SimpleGWprob, ComputeProbGalTargeted,
-                            Tools, LoadGalaxies_SteMgal, CorrelateGalaxies_LVC_SteMass, SubstractPointings,
-                            ModifyCatalogue, FulfillsRequirementGreyObservations, ComputeProbPGALIntegrateFoV,ComputeProbGalTargeted,
-                            ModifyCataloguePIX, ObservationParameters, NextWindowTools,
-                            ComputeProbability2D_SelectClusters, GiveProbToGalaxy, LoadGalaxiesSimulation, GetSatelliteName, GetSatelliteTime, GetSatellitePositions, OccultationCut)
-import numpy as np
-from astropy import units as u
-from astropy.table import Table
 import datetime
 import random
 
@@ -41,13 +30,11 @@ from astropy import units as u
 from astropy.table import Table
 from six.moves import configparser
 
-from .PointingTools import (NightDarkObservation,
-                            NightDarkObservationwithGreyTime, Get90RegionPixReduced, ZenithAngleCut,
-                            ComputeProbability2D,
-                            FulfillsRequirement, VisibleAtTime, LoadGalaxies, SubstractPointings2D, Tools,
-                            LoadGalaxies_SteMgal, SubstractPointings,
-                            ModifyCatalogue, FulfillsRequirementGreyObservations, ComputeProbPGALIntegrateFoV,
-                            ComputeProbGalTargeted,
+from .PointingTools import (GetSatelliteName, GetSatelliteTime, GetSatellitePositions, OccultationCut,
+                            NightDarkObservation, NightDarkObservationwithGreyTime, Get90RegionPixReduced,
+                            ZenithAngleCut, ComputeProbability2D, FulfillsRequirement, VisibleAtTime, LoadGalaxies,
+                            SubstractPointings2D, Tools, LoadGalaxies_SteMgal, SubstractPointings, ModifyCatalogue,
+                            FulfillsRequirementGreyObservations, ComputeProbPGALIntegrateFoV, ComputeProbGalTargeted,
                             NextWindowTools, FilterGalaxies, MangroveGalaxiesProbabilities)
 
 if six.PY2:
@@ -136,7 +123,7 @@ def PGWinFoV(skymap, eventName, obspar, dirName):
             maxRuns = obspar.maxRuns - doneObs
         print("===========================================================================================")
         print()
-        print(f"{name}: Total GW probability already covered: {sumPGW}")
+        print(f": Total GW probability already covered: {sumPGW}")
         print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
         print("===========================================================================================")
@@ -159,14 +146,21 @@ def PGWinFoV(skymap, eventName, obspar, dirName):
                                             obspar.maxZenith, obspar.location, obspar.minMoonSourceSeparation, obspar.useGreytime)
             if ObsBool:
                 # Round 1
-                P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(prob, highres, radecs, obspar.reducedNside, obspar.HRnside, obspar.minProbcut, ObservationTime,
-                                                                     obspar.location, obspar.maxZenith, obspar.FOV, eventName, pixlist, ipixlistHR, counter, dirName, obspar.useGreytime, obspar.doPlot)
+                P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(prob, highres, radecs, obspar.reducedNside,
+                                                                     obspar.HRnside, obspar.minProbcut, ObservationTime,
+                                                                     obspar.location, obspar.maxZenith, obspar.FOV,
+                                                                     pixlist, ipixlistHR, counter, dirName,
+                                                                     obspar.useGreytime, obspar.doPlot)
                 if ((P_GW <= obspar.minProbcut) and obspar.secondRound):
                     # Try Round 2
                     # print('The minimum probability cut being', minProbcut * 100, '% is, unfortunately, not reached.')
                     yprob1 = highres
-                    P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(prob, yprob1, radecs, obspar.reducedNside, obspar.HRnside, obspar.minProbcut, ObservationTime,
-                                                                           obspar.location, obspar.maxZenith, obspar.FOV, eventName, pixlist1, ipixlistHR1, counter, dirName, obspar.useGreytime, obspar.doPlot)
+                    P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(prob, yprob1, radecs, obspar.reducedNside,
+                                                                           obspar.HRnside, obspar.minProbcut,
+                                                                           ObservationTime, obspar.location,
+                                                                           obspar.maxZenith, obspar.FOV, pixlist1,
+                                                                           ipixlistHR1, counter, dirName,
+                                                                           obspar.useGreytime, obspar.doPlot)
                     if ((P_GW <= obspar.minProbcut)):
                         print('Tile Pgw= ',P_GW,' is smaller than the minProbCut (',obspar.minProbcut,') => skip this tile')
                     else:
@@ -289,7 +283,7 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
             maxRuns = obspar.maxRuns - doneObs
         print("===========================================================================================")
         print()
-        print(f"{name}: Total GW probability already covered: {sumPGW}, "
+        print(f"Total GW probability already covered: {sumPGW}, "
             f"Total Gal probability already covered: {sumPGAL}")
         print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
@@ -666,7 +660,7 @@ def PGWinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obsparamete
             maxRuns = obspar.maxRuns - doneObs
         print("===========================================================================================")
         print()
-        print(f"{name}: Total GW probability already covered: {sumPGW}")
+        print(f"Total GW probability already covered: {sumPGW}")
         print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
         print("===========================================================================================")
@@ -713,15 +707,25 @@ def PGWinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obsparamete
                     
                 if ObsBool:
                     # Round 1
-                    P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(prob, highres, radecs, obspar.reducedNside, obspar.HRnside, obspar.minProbcut, ObservationTime,
-                                                                         obspar.location, obspar.maxZenith, obspar.FOV, name, pixlist, ipixlistHR, counter, dirName, obspar.useGreytime, obspar.doPlot, ipixlistHROcc)
+                    P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(prob, highres, radecs, obspar.reducedNside,
+                                                                         obspar.HRnside, obspar.minProbcut,
+                                                                         ObservationTime, obspar.location,
+                                                                         obspar.maxZenith, obspar.FOV, pixlist,
+                                                                         ipixlistHR, counter, dirName,
+                                                                         obspar.useGreytime, obspar.doPlot,
+                                                                         ipixlistHROcc)
                     # print(P_GW, obspar.name)
                     if ((P_GW <= obspar.minProbcut) and obspar.secondRound):
                         # Try Round 2
                         # print('The minimum probability cut being', minProbcut * 100, '% is, unfortunately, not reached.')
                         yprob1 = highres
-                        P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(prob, yprob1, radecs, obspar.reducedNside, obspar.HRnside, obspar.minProbcut, ObservationTime,
-                                                                               obspar.location, obspar.maxZenith, obspar.FOV, name, pixlist1, ipixlistHR1, counter, dirName, obspar.useGreytime, obspar.doPlot, ipixlistHROcc)
+                        P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(prob, yprob1, radecs,
+                                                                               obspar.reducedNside, obspar.HRnside,
+                                                                               obspar.minProbcut, ObservationTime,
+                                                                               obspar.location, obspar.maxZenith,
+                                                                               obspar.FOV, pixlist1, ipixlistHR1,
+                                                                               counter, dirName, obspar.useGreytime,
+                                                                               obspar.doPlot, ipixlistHROcc)
                         if ((P_GW <= obspar.minProbcut)):
                             print('Tile Pgw= ', P_GW, ' is smaller than the minProbCut (',
                                   obspar.minProbCut, ') => skip this tile')
@@ -886,7 +890,7 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
             maxRuns = obspar.maxRuns - doneObs
         print("===========================================================================================")
         print()
-        print(f"{name}: Total GW probability already covered: {sumPGW}, "
+        print(f"Total GW probability already covered: {sumPGW}, "
             f"Total Gal probability already covered: {sumPGAL}")
         print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
