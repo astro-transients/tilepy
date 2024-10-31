@@ -90,7 +90,22 @@ __all__ = [
     "Get90RegionPixReduced",
     "Get90RegionPixGal",
     "IsSourceInside",
+    "ProduceSummaryFileOld",
+    "FillSummary",
+    "ProduceSummaryFile",
+    "ProducePandasSummaryFile",
+    "ReadSummaryFile",
+    "ZenithAngleCut_TwoTimes",
+    "ComputeProbability2D_SelectClusters",
+    "GetSatelliteName",
+    "GetSatelliteTime",
+    "GetSatellitePositions",
+    "OccultationCut",
+    "GetEarthOccultedPix",
+    "GetMoonOccultedPix",
+    "GetSunOccultedPix",
     "FillSummary"
+
 ]
 
 
@@ -432,6 +447,7 @@ class ObservationParameters(object):
         self.outDir = outDir
         self.pointingsFile = pointingsFile
 
+        
     def from_configfile(self, filepath):
         ##################
         cfg = filepath
@@ -445,6 +461,8 @@ class ObservationParameters(object):
         self.height = float(parser.get(section, 'height', fallback=0)) * u.m
         self.location = EarthLocation(lat=self.lat, lon=self.lon,
                                       height=self.height)
+        self.base = str(parser.get(section, 'base', fallback=None))
+        self.stationsurl = str(parser.get(section, 'stationsurl', fallback=None))
 
         section = 'visibility'
         self.sunDown = int(parser.get(section, 'sundown', fallback=0))
@@ -979,8 +997,136 @@ def ZenithAngleCut(prob, nside, time, minProbcut, maxZenith, observatory, minMoo
     return ObsBool, yprob
 
 
+
+def GetSatelliteName(satellitename, stationsurl):
+    stations_url = stationsurl
+    satellites = load.tle_file(stations_url)
+    #print('Loaded', len(satellites), 'satellites')
+    by_name = {sat.name: sat for sat in satellites}
+    satellite_name = by_name.get(satellitename)
+    return  satellite_name
+
+
+def GetSatelliteTime(satellite_name, t):
+    dt = t # Get the underlying datetime object
+    year = dt.year
+    month = dt.month
+    day = dt.day
+    hour = dt.hour
+    minute = dt.minute
+    second = dt.second + dt.microsecond / 1e6  # Include microseconds
+    skyfield_time = load.timescale().utc(year, month, day, hour, minute, second)
+    return skyfield_time
+
+def GetSatellitePositions(satellite_name, t):
+    geocentric = satellite_name.at(t)
+    # Print position in latitude, longitude, altitude
+    subpoint = geocentric.subpoint()
+    print(f'Latitude: {subpoint.latitude.degrees}')
+    print(f'Longitude: {subpoint.longitude.degrees}')
+    print(f'Altitude: {subpoint.elevation.m} m')
+
+    # Get satellite's current position in astronomical units (AU)
+    satellite_position = geocentric.position.km
+    satellite_location = EarthLocation(lat=subpoint.latitude.degrees, lon=subpoint.longitude.degrees, height=subpoint.elevation.m)
+    return satellite_position, satellite_location 
+
+
+def GetSunOccultedPix(nside, sun_sep, time):
+    time = Time(time)
+    #for equatorial frame
+    SunCoord_equatorial = get_body("sun", time, location = EarthLocation(0,0,0))
+    SunCoord_equatorial = SunCoord_equatorial.transform_to('icrs')
+    phipix_sun = np.deg2rad(SunCoord_equatorial.ra.deg)
+    thetapix_sun = 0.5 * np.pi - np.deg2rad(SunCoord_equatorial.dec.deg)
+    sun_xyzpix = hp.ang2vec(thetapix_sun, phipix_sun)
+    sun_occulted_pix = hp.query_disc(nside, sun_xyzpix, np.deg2rad(sun_sep))
+    return sun_occulted_pix, SunCoord_equatorial
+
+def GetMoonOccultedPix(nside, moon_sep, time):
+    time = Time(time)
+    #for equatorial frame
+    MoonCoord_equatorial = get_body("moon", time, location = EarthLocation(0,0,0))
+    MoonCoord_equatorial = MoonCoord_equatorial.transform_to('icrs')
+    phipix_moon = np.deg2rad(MoonCoord_equatorial.ra.deg)
+    thetapix_moon = 0.5 * np.pi - np.deg2rad(MoonCoord_equatorial.dec.deg)
+    moon_xyzpix = hp.ang2vec(thetapix_moon, phipix_moon)
+    moon_occulted_pix = hp.query_disc(nside, moon_xyzpix, np.deg2rad(moon_sep))
+    return moon_occulted_pix, MoonCoord_equatorial
+
+def GetEarthOccultedPix(nside, time, earth_radius, earth_sep, satellite_position, satellite_location):
+    #for equatorial frame
+
+    distance_to_satellite = np.linalg.norm(satellite_position) 
+    print("distance_to_satellite", distance_to_satellite) 
+    earth_altitude = np.arcsin(-satellite_position[2] / distance_to_satellite)  # Altitude in radians
+    earth_azimuth = np.arctan2(-satellite_position[1], -satellite_position[0])  # Azimuth in radians
+
+    angle_of_occlusion = np.arcsin(earth_radius / distance_to_satellite)
+
+    altaz_frame = AltAz(obstime=time, location=satellite_location)
+    earthCoord = SkyCoord(earth_azimuth * u.rad, earth_altitude * u.rad, frame=altaz_frame)
+    earthCoord_equatorial = earthCoord.transform_to('icrs')
+
+    earth_phipix = np.deg2rad(earthCoord_equatorial.ra.deg)
+    earth_thetapix = 0.5 * np.pi - np.deg2rad(earthCoord_equatorial.dec.deg)
+    earth_xyzpix = hp.ang2vec(earth_thetapix, earth_phipix)
+    earth_occulted_pix = hp.query_disc(nside, earth_xyzpix, np.deg2rad(np.rad2deg(angle_of_occlusion) + earth_sep))
+    return earth_occulted_pix, earthCoord_equatorial
+
+
+def OccultationCut(prob, nside, time, minProbcut, satellite_position, observatory, sun_sep, moon_sep):
+    '''
+    Mask in the pixels that are occulted by Earth, Sun and Moon
+    '''
+    pixlist = []
+    pprob = prob
+
+    mOcc = hp.ma(pprob)
+    maskOcc = np.zeros(hp.nside2npix(nside), dtype=bool)
+    mpixels = []
+
+    mEarth, posEarth = GetEarthOccultedPix(nside, time, 6371, 1, satellite_position, observatory)
+    mpixels.extend(mEarth)
+
+    mSun, posSun= GetSunOccultedPix(nside, sun_sep, time)
+    mpixels.extend(mSun)
+
+    mMoon, poSMoon = GetMoonOccultedPix(nside, moon_sep, time)
+    mpixels.extend(mMoon)
+
+    pixlist.extend(mpixels)
+
+    '''
+    pix_ra = radecs.ra.value
+    pix_dec = radecs.dec.value
+    phipix = np.deg2rad(pix_ra)
+    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
+    ipixlist = hp.ang2pix(nside, thetapix, phipix) 
+
+    mask = np.isin(mpixels, ipixlist, invert=True)
+
+    ipixlistnew = ipixlist[mask]
+    '''
+
+    maskOcc[mSun] = 1
+    maskOcc[mMoon] = 1
+    maskOcc[mEarth] = 1
+
+    mOcc.mask = maskOcc
+
+    yprob = ma.masked_array(pprob, mOcc.mask)
+
+    if np.sum(yprob) < minProbcut:
+        ObsBool = False
+    else:
+        ObsBool = True
+
+
+    return ObsBool, yprob, pixlist
+
 def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcut, time, observatory, maxZenith, FOV,
-                         tname, ipixlist, ipixlistHR, counter, dirName, useGreytime, plot):
+                         ipixlist, ipixlistHR, counter, dirName, useGreytime, plot, ipixlistOcc=None):
     '''
     Compute probability in 2D by taking the highest probability in FoV value
     '''
@@ -1048,16 +1194,23 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
         maskcat_pix = cat_pix
     else:
         maskcat_pix = cat_pix[mask]
-
     # Sort table
-    sortcat = maskcat_pix[np.flipud(np.argsort(maskcat_pix['PIXFOVPROB']))]
-    # Chose highest
+    sortcat1 = maskcat_pix[np.flipud(np.argsort(maskcat_pix['PIXFOVPROB']))]
+    
+    # Mask occulted pixels for this round without affecting ipixlist and ipixlistHR
+    mask2 = np.isin(sortcat1['PIX'], ipixlistOcc, invert=True)
+    if all(np.isin(sortcat1['PIX'], ipixlistOcc, invert=False)):
+        sortcat2 = sortcat1[mask2]
+    else:
+        sortcat2 = sortcat1[mask2]
+    # Sort table
+    sortcat = sortcat2[np.flipud(np.argsort(sortcat2['PIXFOVPROB']))]
 
+    # Chose highest
     targetCoord = co.SkyCoord(
         sortcat['PIXRA'][:1], sortcat['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
 
     P_GW = sortcat['PIXFOVPROB'][:1]
-
     # Include to the list of pixels already observed
 
     if (P_GW >= minProbcut):
@@ -1079,8 +1232,9 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
 
             # hp.mollview(highres,title="With FoV circle")
 
-            hp.gnomview(prob, xsize=500, ysize=500, rot=[
-                targetCoord.ra.deg, targetCoord.dec.deg], reso=8.0)
+
+            hp.mollview(prob, title = str(time))
+
             hp.graticule()
 
             ipix_discplot = hp.query_disc(HRnside, xyz, np.deg2rad(radius))
@@ -1101,10 +1255,23 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
             tempmask = separations < (radius + 0.05 * radius) * u.deg
             tempmask2 = separations > (radius - 0.05 * radius) * u.deg
             hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask &
-                                                                             tempmask2].dec, 'r.', lonlat=True,
-                                 coord="C", linewidth=0.1)
+                                 tempmask2].dec, 'r.', lonlat=True, coord="C", linewidth=0.1)
+            hp.visufunc.projplot(skycoord[tempmask & tempmask2].ra, skycoord[tempmask &
+                                 tempmask2].dec, 'r.', lonlat=True, coord="C", linewidth=0.1)
+
             altcoord = np.empty(1000)
             azcoord = np.random.rand(1000) * 360
+
+            if ipixlistOcc != None:
+                try:
+                    tt, pp = hp.pix2ang(reducedNside, ipixlistOcc)
+                    ra2 = np.rad2deg(pp)
+                    dec2 = np.rad2deg(0.5 * np.pi - tt)
+                    skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
+                    hp.visufunc.projplot(skycoord.ra.deg, skycoord.dec.deg, 'g.', lonlat=True, coord="C", linewidth=0.1)
+                except:
+                    print("No pcculted pix")
+                
 
             plt.savefig('%s/Zoom_Pointing_%g.png' % (path, counter))
             # for i in range(0,1):

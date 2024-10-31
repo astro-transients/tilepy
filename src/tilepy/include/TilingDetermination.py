@@ -18,6 +18,7 @@
 #       Mid-level functions use to obtain the tiling observation scheduling          
 ##################################################################################################
 
+
 import datetime
 import random
 
@@ -29,13 +30,11 @@ from astropy import units as u
 from astropy.table import Table
 from six.moves import configparser
 
-from .PointingTools import (NightDarkObservation,
-                            NightDarkObservationwithGreyTime, Get90RegionPixReduced, ZenithAngleCut,
-                            ComputeProbability2D,
-                            FulfillsRequirement, VisibleAtTime, LoadGalaxies, SubstractPointings2D, Tools,
-                            LoadGalaxies_SteMgal, SubstractPointings,
-                            ModifyCatalogue, FulfillsRequirementGreyObservations, ComputeProbPGALIntegrateFoV,
-                            ComputeProbGalTargeted,
+from .PointingTools import (GetSatelliteName, GetSatelliteTime, GetSatellitePositions, OccultationCut,
+                            NightDarkObservation, NightDarkObservationwithGreyTime, Get90RegionPixReduced,
+                            ZenithAngleCut, ComputeProbability2D, FulfillsRequirement, VisibleAtTime, LoadGalaxies,
+                            SubstractPointings2D, Tools, LoadGalaxies_SteMgal, SubstractPointings, ModifyCatalogue,
+                            FulfillsRequirementGreyObservations, ComputeProbPGALIntegrateFoV, ComputeProbGalTargeted,
                             NextWindowTools, FilterGalaxies, MangroveGalaxiesProbabilities)
 
 if six.PY2:
@@ -124,7 +123,7 @@ def PGWinFoV(skymap, eventName, obspar, dirName):
             maxRuns = obspar.maxRuns - doneObs
         print("===========================================================================================")
         print()
-        print(f"{name}: Total GW probability already covered: {sumPGW}")
+        print(f": Total GW probability already covered: {sumPGW}")
         print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
         print("===========================================================================================")
@@ -147,14 +146,21 @@ def PGWinFoV(skymap, eventName, obspar, dirName):
                                             obspar.maxZenith, obspar.location, obspar.minMoonSourceSeparation, obspar.useGreytime)
             if ObsBool:
                 # Round 1
-                P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(prob, highres, radecs, obspar.reducedNside, obspar.HRnside, obspar.minProbcut, ObservationTime,
-                                                                     obspar.location, obspar.maxZenith, obspar.FOV, eventName, pixlist, ipixlistHR, counter, dirName, obspar.useGreytime, obspar.doPlot)
+                P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(prob, highres, radecs, obspar.reducedNside,
+                                                                     obspar.HRnside, obspar.minProbcut, ObservationTime,
+                                                                     obspar.location, obspar.maxZenith, obspar.FOV,
+                                                                     pixlist, ipixlistHR, counter, dirName,
+                                                                     obspar.useGreytime, obspar.doPlot)
                 if ((P_GW <= obspar.minProbcut) and obspar.secondRound):
                     # Try Round 2
                     # print('The minimum probability cut being', minProbcut * 100, '% is, unfortunately, not reached.')
                     yprob1 = highres
-                    P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(prob, yprob1, radecs, obspar.reducedNside, obspar.HRnside, obspar.minProbcut, ObservationTime,
-                                                                           obspar.location, obspar.maxZenith, obspar.FOV, eventName, pixlist1, ipixlistHR1, counter, dirName, obspar.useGreytime, obspar.doPlot)
+                    P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(prob, yprob1, radecs, obspar.reducedNside,
+                                                                           obspar.HRnside, obspar.minProbcut,
+                                                                           ObservationTime, obspar.location,
+                                                                           obspar.maxZenith, obspar.FOV, pixlist1,
+                                                                           ipixlistHR1, counter, dirName,
+                                                                           obspar.useGreytime, obspar.doPlot)
                     if ((P_GW <= obspar.minProbcut)):
                         print('Tile Pgw= ',P_GW,' is smaller than the minProbCut (',obspar.minProbcut,') => skip this tile')
                     else:
@@ -277,7 +283,7 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
             maxRuns = obspar.maxRuns - doneObs
         print("===========================================================================================")
         print()
-        print(f"{name}: Total GW probability already covered: {sumPGW}, "
+        print(f"Total GW probability already covered: {sumPGW}, "
             f"Total Gal probability already covered: {sumPGAL}")
         print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
@@ -518,7 +524,7 @@ def ObservationStartperObs(obsparameters, ObservationTime0):
     :return: obs_time, SameNight, NewActiveObs, NewActiveObsStart
     rtype: datetime, boolean, list, list
     '''
-
+    print("ObservationTime0", ObservationTime0)
 
     print("obsparameters", len(obsparameters))
     # Finding the start time for each observatory and checking if it's now
@@ -532,14 +538,18 @@ def ObservationStartperObs(obsparameters, ObservationTime0):
 
     j = 0
     for obspar1 in obsparameters:
+        if (obsparameters[j].base == "space"):
+            dark_at_start = True
+            FirstDark[j] = dark_at_start
 
-        dark_at_start = False
+        else:
+            dark_at_start = False
 
-        if obsparameters[j].useGreytime:
-            dark_at_start = Tools.CheckWindowGrey(obs_time, obsparameters[j])
-        if not obsparameters[j].useGreytime:
-            dark_at_start = Tools.CheckWindow(obs_time, obsparameters[j])
-        FirstDark[j] = dark_at_start
+            if obsparameters[j].useGreytime:
+                dark_at_start = Tools.CheckWindowGrey(obs_time, obsparameters[j])
+            if not obsparameters[j].useGreytime:
+                dark_at_start = Tools.CheckWindow(obs_time, obsparameters[j])
+            FirstDark[j] = dark_at_start
 
         # THIS WILL CREATE A DATETIME OBJECT WITH IN THE FORM XX+00:00 WITH NO DOTS
         if FirstDark[j] == True:
@@ -650,7 +660,7 @@ def PGWinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obsparamete
             maxRuns = obspar.maxRuns - doneObs
         print("===========================================================================================")
         print()
-        print(f"{name}: Total GW probability already covered: {sumPGW}")
+        print(f"Total GW probability already covered: {sumPGW}")
         print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
         print("===========================================================================================")
@@ -678,22 +688,44 @@ def PGWinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obsparamete
                 ITERATION_OBS = 0
             ITERATION_OBS += 1
             
+            if obspar.base == "space":
+                SatelliteName = GetSatelliteName(obspar.name, obspar.stationsurl)
+                print(obspar.name)
+
             if(couter_per_obs[j] >=  maxRuns):
                 SameNight[j] = False
             if (TIME_MIN >= NewActiveObsTime[j]) & SameNight[j]:
-                ObsBool, yprob = ZenithAngleCut(prob, nside, ObservationTime, obspar.minProbcut,
-                                            obspar.maxZenith, obspar.location, obspar.minMoonSourceSeparation, obspar.useGreytime)
+                ipixlistHROcc = None
+                if obspar.base == "space":
+                    SatelliteTime  = GetSatelliteTime(SatelliteName, ObservationTime)
+                    satellite_position, obspar.location = GetSatellitePositions(SatelliteName, SatelliteTime)
+                    ObsBool, yprob, ipixlistHROcc = OccultationCut(prob, obspar.reducedNside, ObservationTime, obspar.minProbcut,
+                                                satellite_position, obspar.location, obspar.sunDown,  obspar.moonDown)
+                else:
+                    ObsBool, yprob = ZenithAngleCut(prob, nside, ObservationTime, obspar.minProbcut,
+                                                obspar.maxZenith, obspar.location, obspar.minMoonSourceSeparation, obspar.useGreytime)
+                    
                 if ObsBool:
                     # Round 1
-                    P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(prob, highres, radecs, obspar.reducedNside, obspar.HRnside, obspar.minProbcut, ObservationTime,
-                                                                         obspar.location, obspar.maxZenith, obspar.FOV, nameEvent, pixlist, ipixlistHR, counter, dirName, obspar.useGreytime, obspar.doPlot)
+                    P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(prob, highres, radecs, obspar.reducedNside,
+                                                                         obspar.HRnside, obspar.minProbcut,
+                                                                         ObservationTime, obspar.location,
+                                                                         obspar.maxZenith, obspar.FOV, pixlist,
+                                                                         ipixlistHR, counter, dirName,
+                                                                         obspar.useGreytime, obspar.doPlot,
+                                                                         ipixlistHROcc)
                     # print(P_GW, obspar.name)
                     if ((P_GW <= obspar.minProbcut) and obspar.secondRound):
                         # Try Round 2
                         # print('The minimum probability cut being', minProbcut * 100, '% is, unfortunately, not reached.')
                         yprob1 = highres
-                        P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(prob, yprob1, radecs, obspar.reducedNside, obspar.HRnside, obspar.minProbcut, ObservationTime,
-                                                                               obspar.location, obspar.maxZenith, obspar.FOV, nameEvent, pixlist1, ipixlistHR1, counter, dirName, obspar.useGreytime, obspar.doPlot)
+                        P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(prob, yprob1, radecs,
+                                                                               obspar.reducedNside, obspar.HRnside,
+                                                                               obspar.minProbcut, ObservationTime,
+                                                                               obspar.location, obspar.maxZenith,
+                                                                               obspar.FOV, pixlist1, ipixlistHR1,
+                                                                               counter, dirName, obspar.useGreytime,
+                                                                               obspar.doPlot, ipixlistHROcc)
                         if ((P_GW <= obspar.minProbcut)):
                             print('Tile Pgw= ', P_GW, ' is smaller than the minProbCut (',
                                   obspar.minProbCut, ') => skip this tile')
@@ -752,15 +784,19 @@ def PGWinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obsparamete
                 # HERE WE DETERMINE IF WE ARE STILL IN THE SAME NIGHT FOR THIS OBSERVATORY
                 # if (NewActiveObsTime[j] > Tools.NextSunrise(obsstart, obspar)) | (obsstart > Tools.NextMoonrise(obsstart, obspar)):
 
-                if not obsparameters[j].useGreytime:
-                    if not Tools.CheckWindow(NewActiveObsTime[j], obspar):
-                        SameNight[j] = False
-                if obsparameters[j].useGreytime:
-                    if not Tools.CheckWindowGrey(NewActiveObsTime[j], obspar):
-                        SameNight[j] = False
-                if obspar.sunDown > 10:
+                if obspar.base == "space":
                     if NewActiveObsTime[j] > obs_time + datetime.timedelta(hours=24):
                         SameNight[j] = False
+                else:
+                    if not obsparameters[j].useGreytime:
+                        if not Tools.CheckWindow(NewActiveObsTime[j], obspar):
+                            SameNight[j] = False
+                    if obsparameters[j].useGreytime:
+                        if not Tools.CheckWindowGrey(NewActiveObsTime[j], obspar):
+                            SameNight[j] = False
+                    if obspar.sunDown > 10:
+                        if NewActiveObsTime[j] > obs_time + datetime.timedelta(hours=24):
+                            SameNight[j] = False
 
                 NUMBER_OBS[j] += 1
 
@@ -854,7 +890,7 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
             maxRuns = obspar.maxRuns - doneObs
         print("===========================================================================================")
         print()
-        print(f"{name}: Total GW probability already covered: {sumPGW}, "
+        print(f"Total GW probability already covered: {sumPGW}, "
             f"Total Gal probability already covered: {sumPGAL}")
         print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
