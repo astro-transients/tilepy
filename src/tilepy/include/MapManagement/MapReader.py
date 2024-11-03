@@ -165,6 +165,9 @@ class MapReader:
             name = self.fits_map[self.id_hdu_map].header['OBJECT']
         if 'SENDER' in self.fits_map[self.id_hdu_map].header and self.fits_map[self.id_hdu_map].header['SENDER'] == 'IceCube Collaboration':
             name = str(self.fits_map[self.id_hdu_map].header['RUNID']) + '_' + str(self.fits_map[self.id_hdu_map].header['EVENTID'])
+        if "LIGO/Virgo/KAGRA" in self.fits_map[self.id_hdu_map].header['ORIGIN'] and self.is_remote:
+            if "https://gracedb.ligo.org/api/superevents" in self.url:
+                name = self.url.split("/")[5]
 
         return name
 
@@ -184,7 +187,7 @@ class MapReader:
             download_max_nb_try = 1
 
         filename = self.url.split("/")[-1]
-        logger.info("The filename is {filename}")
+        logger.info(f"The filename is {filename}")
 
         file_exist = os.path.isfile(filename)
         if file_exist:
