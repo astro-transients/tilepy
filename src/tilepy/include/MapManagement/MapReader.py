@@ -165,9 +165,15 @@ class MapReader:
             name = self.fits_map[self.id_hdu_map].header['OBJECT']
         if 'SENDER' in self.fits_map[self.id_hdu_map].header and self.fits_map[self.id_hdu_map].header['SENDER'] == 'IceCube Collaboration':
             name = str(self.fits_map[self.id_hdu_map].header['RUNID']) + '_' + str(self.fits_map[self.id_hdu_map].header['EVENTID'])
-        if "LIGO/Virgo/KAGRA" in self.fits_map[self.id_hdu_map].header['ORIGIN'] and self.is_remote:
-            if "https://gracedb.ligo.org/api/superevents" in self.url:
-                name = self.url.split("/")[5]
+        # if the event if from LVK and the URL is from GraceDB, get the superevent name
+        if "ORIGIN" in self.fits_map[self.id_hdu_map].header.keys():
+            if "LIGO/Virgo/KAGRA" in self.fits_map[self.id_hdu_map].header['ORIGIN'] and self.is_remote:
+                if "https://gracedb.ligo.org/api/superevents" in self.url:
+                    name = self.url.split("/")[5]
+        # if the event if from Fermi-GBM, get the GBM name (i.e. replace GRB with bn)
+        if "TELESCOP" in self.fits_map["PRIMARY"].header.keys():
+            if self.fits_map["PRIMARY"].header["TELESCOP"] == "GLAST":
+                name = self.fits_map[self.id_hdu_map].header["OBJECT"].replace("GRB", "bn")
 
         return name
 
