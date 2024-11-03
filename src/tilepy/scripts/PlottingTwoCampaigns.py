@@ -1,6 +1,5 @@
 from tilepy.tools.VisualizationTools import Pretty_Plot
-from tilepy.include.ObservationScheduler import getdate
-from tilepy.include.PointingTools import (ObservationParameters, LoadHealpixMap)
+from tilepy.include.PointingTools import (ObservationParameters, getdate)
 from tilepy.tools.VisualizationTools import CompareTwoTilings
 import argparse
 import os
