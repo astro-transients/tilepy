@@ -135,8 +135,8 @@ def GetSchedule(obspar):
 
 def GetUniversalSchedule(obspar):
     '''
-    Top level function that is called by the user with specific arguments and creates a folder 
-    with the tiling schedules for multiple telescopes/observartories and visibility plots.  
+    Top level function that is called by the user with specific arguments and creates a folder
+    with the tiling schedules for multiple telescopes/observartories and visibility plots.
 
     :param obspar: a list of sets of parameters for each observatory needed to launch the tiling scheduler
     :type obsparameters: list of class ObservationParameters
