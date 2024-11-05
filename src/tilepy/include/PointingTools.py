@@ -511,12 +511,12 @@ class ObservationParameters(object):
         self.downloadWaitPeriodRetry = float(parser.get(section, 'downloadWaitPeriodRetry', fallback=0))
         self.event_name = parser.get(section, 'eventName', fallback=None)
 
-    def from_args(self, obs_name, event_name, lat, lon, height, sunDown, moonDown, moonGrey, moonPhase,
+    def from_args(self, obsName, eventName, lat, lon, height, sunDown, moonDown, moonGrey, moonPhase,
                   minMoonSourceSeparation, maxMoonSourceSeparation, maxZenith, FOV, maxRuns, maxNights, duration,
                   minDuration, useGreytime, minSlewing, minimumProbCutForCatalogue, minProbcut, distCut, doPlot,
                   secondRound, zenithWeighting, percentageMOC, reducedNside, HRnside, mangrove):
-        self.obs_name = obs_name
-        self.event_name = event_name
+        self.obs_name = obsName
+        self.event_name = eventName
         self.lat = lat * u.deg
         self.lon = lon * u.deg
         self.height = height * u.m
