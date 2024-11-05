@@ -19,7 +19,6 @@ start = time.time()
 ###########################
 
 parser = argparse.ArgumentParser(description='Start the LST pointing observation of a GW event')
-parser.add_argument('-alertType',metavar = 'type of followup', help = 'options: gbm, gbmpng or gw', default= 'gw')
 parser.add_argument('-skymap', metavar='skymap', default = 'https://gracedb.ligo.org/api/superevents/MS230522j/files/bayestar.fits.gz',
                     help='FITS file with the sky localization, e.g.for GW https://urlpath/Bayestar.fits.gz')
 parser.add_argument('-time', metavar='\"YYYY-MM-DD HH:MM:SS\"', default= "2023-07-27 08:30:10",
@@ -31,7 +30,6 @@ parser.add_argument('-galcatName', metavar='galaxy catalog name', default="Glade
 parser.add_argument('-tiles', metavar='tiles already observed', default= None)
 
 args = parser.parse_args()
-alertType = args.alertType
 skymap = args.skymap
 obsTime = datetime.datetime.fromisoformat(args.time)
 datasetDir = args.i
@@ -58,7 +56,7 @@ obsparameters = []
 
 for j in range(len(parameters)):
     obspar = ObservationParameters()
-    obspar.add_parsed_args(skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, alertType)
+    obspar.add_parsed_args(skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile)
     obspar.from_configfile(parameters[j])
     obsparameters.append(obspar)
 

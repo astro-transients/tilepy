@@ -1,5 +1,5 @@
 from tilepy.tools.VisualizationTools import Pretty_Plot
-from tilepy.include.PointingTools import (ObservationParameters, getdate)
+from tilepy.include.PointingTools import ObservationParameters
 from tilepy.tools.VisualizationTools import CompareTwoTilings
 import argparse
 import os
@@ -22,7 +22,6 @@ def main():
     ###########################
 
     parser = argparse.ArgumentParser(description='Start the LST pointing observation of a GW event')
-    parser.add_argument('-alertType',metavar = 'type of followup', help = 'options: gbm, gbmpng or gw', default= 'gw')
     parser.add_argument('-skymap', metavar='skymap', default = 'https://gracedb.ligo.org/api/superevents/MS230522j/files/bayestar.fits.gz',
                         help='FITS file with the sky localization, e.g.for GW https://urlpath/Bayestar.fits.gz')
     parser.add_argument('-time', metavar='\"YYYY-MM-DD HH:MM:SS\"', default= "2023-07-27 08:30:10",
@@ -39,9 +38,8 @@ def main():
     parser.add_argument('-locCut', metavar='limit on skyloc to perform a followup', help='Options are: loose or std', default=None)
 
     args = parser.parse_args()
-    alertType = args.alertType
     skymap = args.skymap
-    obsTime = getdate(args.time)
+    obsTime = args.time
     PointingsFile1 = args.file1
     PointingsFile2 = args.file2
     datasetDir = args.i
@@ -56,7 +54,7 @@ def main():
     ################################################
 
     obspar = ObservationParameters()
-    obspar.add_parsed_args(skymap,obsTime,datasetDir,galcatName,outDir,pointingsFile,alertType)
+    obspar.add_parsed_args(skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile)
     obspar.from_configfile(cfgFile)
 
     PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2)
