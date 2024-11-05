@@ -90,13 +90,7 @@ __all__ = [
     "Get90RegionPixReduced",
     "Get90RegionPixGal",
     "IsSourceInside",
-    "ProduceSummaryFileOld",
     "FillSummary",
-    "ProduceSummaryFile",
-    "ProducePandasSummaryFile",
-    "ReadSummaryFile",
-    "ZenithAngleCut_TwoTimes",
-    "ComputeProbability2D_SelectClusters",
     "GetSatelliteName",
     "GetSatelliteTime",
     "GetSatellitePositions",
@@ -351,14 +345,16 @@ class ObservationParameters(object):
 
     # Observatory
 
-    def __init__(self, name=None, lat=0, lon=0, height=0, sunDown=None, moonDown=None, moonGrey=None, moonPhase=None,
-                 minMoonSourceSeparation=None, maxMoonSourceSeparation=None, maxZenith=None, FOV=None, maxRuns=None,
-                 maxNights=None, duration=None, minDuration=None, useGreytime=None, minSlewing=None, locCut90=None,
-                 minimumProbCutForCatalogue=None, minProbcut=None, distCut=None, doPlot=False, secondRound=None,
-                 zenithWeighting=None, percentageMOC=None, reducedNside=None, HRnside=None, mangrove=None, skymap=None,
-                 obsTime=None, datasetDir=None, galcatName=None, outDir=None, pointingsFile=None, countPrevious=False,
-                 MO=False, algorithm=None, strategy=None, doRank=False, downloadMaxRetry=0, downloadWaitPeriodRetry=20):
-        self.name = name
+    def __init__(self, obs_name=None, event_name=None, lat=0, lon=0, height=0, sunDown=None, moonDown=None, moonGrey=None,
+                 moonPhase=None, minMoonSourceSeparation=None, maxMoonSourceSeparation=None, maxZenith=None, FOV=None,
+                 maxRuns=None, maxNights=None, duration=None, minDuration=None, useGreytime=None, minSlewing=None,
+                 locCut90=None, minimumProbCutForCatalogue=None, minProbcut=None, distCut=None, doPlot=False,
+                 secondRound=None, zenithWeighting=None, percentageMOC=None, reducedNside=None, HRnside=None,
+                 mangrove=None, skymap=None, obsTime=None, datasetDir=None, galcatName=None, outDir=None,
+                 pointingsFile=None, countPrevious=False, MO=False, algorithm=None, strategy=None, doRank=False,
+                 downloadMaxRetry=0, downloadWaitPeriodRetry=20):
+        self.obs_name = obs_name
+        self.event_name = event_name
         self.lat = lat
         self.lon = lon
         self.height = height
@@ -418,7 +414,7 @@ class ObservationParameters(object):
     def __str__(self):
         txt = ''
         txt += '============== Main parsed observation parameters ==============  \n'.format()
-        txt += 'Observatory Name: {}\n'.format(self.name)
+        txt += 'Observatory Name: {}\n'.format(self.obs_name)
         txt += 'Observatory: {}\n'.format(self.lat)
         txt += 'Observatory: {}\n'.format(self.lon)
         txt += 'Observatory: {}\n'.format(self.height)
@@ -455,7 +451,7 @@ class ObservationParameters(object):
         parser.read(cfg)
         parser.sections()
         section = 'observatory'
-        self.name = str(parser.get(section, 'name', fallback=None))
+        self.obs_name = str(parser.get(section, 'name', fallback=None))
         self.lat = float(parser.get(section, 'lat', fallback=0)) * u.deg
         self.lon = float(parser.get(section, 'lon', fallback=0)) * u.deg
         self.height = float(parser.get(section, 'height', fallback=0)) * u.m
@@ -511,17 +507,15 @@ class ObservationParameters(object):
         self.countPrevious = (parser.getboolean(section, 'countPrevious', fallback=None))
 
         section = 'general'
-        self.downloadMaxRetry = (parser.getboolean(section, 'downloadMaxRetry', fallback=0))
+        self.downloadMaxRetry = int(parser.getboolean(section, 'downloadMaxRetry', fallback=0))
         self.downloadWaitPeriodRetry = float(parser.get(section, 'downloadWaitPeriodRetry', fallback=0))
+        self.event_name = parser.get(section, 'eventName', fallback=None)
 
-    def from_args(self, name, lat, lon, height, sunDown, moonDown,
-                  moonGrey, moonPhase, minMoonSourceSeparation,
-                  maxMoonSourceSeparation, maxZenith, FOV, maxRuns, maxNights,
-                  duration, minDuration, useGreytime, minSlewing,
-                  minimumProbCutForCatalogue, minProbcut, distCut, doPlot, secondRound,
-                  zenithWeighting, percentageMOC, reducedNside, HRnside,
-                  mangrove):
-        self.name = name
+    def from_args(self, obs_name, event_name, lat, lon, height, sunDown, moonDown, moonGrey, moonPhase,
+                  minMoonSourceSeparation, maxMoonSourceSeparation, maxZenith, FOV, maxRuns, maxNights, duration,
+                  minDuration, useGreytime, minSlewing, minimumProbCutForCatalogue, minProbcut, distCut, doPlot,
+                  secondRound, zenithWeighting, percentageMOC, reducedNside, HRnside, mangrove):
+        self.obs_name = obs_name
         self.lat = lat * u.deg
         self.lon = lon * u.deg
         self.height = height * u.m
@@ -1002,7 +996,7 @@ def GetSatelliteName(satellitename, stationsurl):
     stations_url = stationsurl
     satellites = load.tle_file(stations_url)
     #print('Loaded', len(satellites), 'satellites')
-    by_name = {sat.name: sat for sat in satellites}
+    by_name = {sat.obs_name: sat for sat in satellites}
     satellite_name = by_name.get(satellitename)
     return  satellite_name
 

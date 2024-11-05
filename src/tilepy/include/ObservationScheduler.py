@@ -92,10 +92,10 @@ def GetSchedule(obspar):
             print(f"Resulting pointings file is {outfilename}")
             if (obspar.doRank):
                 RankingTimes(obspar.obsTime, skymap, cat, obspar, dirName,
-                             '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name)
+                             '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.obs_name)
             if (obspar.doPlot):
                 PointingPlotting(skymap.getMap('prob', obspar.HRnside), obspar, raw_map.name_event, dirName,
-                                 '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name, cat)
+                                 '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.obs_name, cat)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
@@ -124,10 +124,10 @@ def GetSchedule(obspar):
             print(f"Resulting pointings file is {outfilename}")
             if (obspar.doRank):
                 RankingTimes_2D(obspar.obsTime, skymap.getMap('prob', obspar.HRnside), obspar, dirName,
-                                '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name)
+                                '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.obs_name)
             if (obspar.doPlot):
                 PointingPlotting(skymap.getMap('prob', obspar.HRnside), obspar, raw_map.name_event, dirName,
-                                 '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name, gal)
+                                 '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.obs_name, gal)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
@@ -192,17 +192,17 @@ def GetUniversalSchedule(obspar):
         # for obspar in parameters:
         for j in range(len(obspar)):
             obspar1 = obspar[j]
-            SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.name]
+            SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.obs_name]
             print(SuggestedPointings_1)
             if (len(SuggestedPointings_1) != 0):
                 ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' %
-                            (dirName, obspar[j].name), overwrite=True, fast_writer=False)
+                            (dirName, obspar[j].obs_name), overwrite=True, fast_writer=False)
                 RankingTimes_2D(ObservationTime, skymap.getMap('prob', obspar[j].HRnside), obspar[j], dirName,
-                                '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name),
-                                obspar[j].name)
-                PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[j], obspar[j].name, dirName,
+                                '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].obs_name),
+                                obspar[j].obs_name)
+                PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[j], obspar[j].obs_name, dirName,
                                  '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
-                                     dirName, obspar[j].name), obspar[j].name, cat)
+                                     dirName, obspar[j].obs_name), obspar[j].obs_name, cat)
         PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[0], "all", dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all",
                          cat)
     else:
