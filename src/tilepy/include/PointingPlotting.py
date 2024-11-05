@@ -298,7 +298,7 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
     print('-------------------   PLOTTING SCHEDULE   --------------------')
     print()
 
-    UseObs = obspar.name
+    UseObs = obspar.obs_name
     FOV = obspar.FOV 
     # Mask table if necesary
     maskClean = (SuggestedPointings['ObsInfo'] == 'True')

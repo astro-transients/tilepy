@@ -171,7 +171,7 @@ def PGWinFoV(skymap, eventName, obspar, dirName):
                         DECarray.append(
                             float('{:3.4f}'.format(float(TC.dec.deg))))
                         ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                        ObsName.append(obspar.name)
+                        ObsName.append(obspar.obs_name)
                         Duration.append(obspar.duration)
                         Fov_obs.append(obspar.FOV)
                         counter = counter+1
@@ -181,18 +181,14 @@ def PGWinFoV(skymap, eventName, obspar, dirName):
                     RAarray.append(float('{:3.4f}'.format(float(TC.ra.deg))))
                     DECarray.append(float('{:3.4f}'.format(float(TC.dec.deg))))
                     ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                    ObsName.append(obspar.name)
+                    ObsName.append(obspar.obs_name)
                     Duration.append(obspar.duration)
                     Fov_obs.append(obspar.FOV)
                     counter = counter+1
         else:
             break
 
-    print()
-    # print("===========================================================================================")
-
-    # print()
-    print("Total GW probability covered: ", float('{:1.4f}'.format(float(sum(P_GWarray)))), "Number of runs that fulfill darkness condition  :",
+    print("\nTotal GW probability covered: ", float('{:1.4f}'.format(float(sum(P_GWarray)))), "Number of runs that fulfill darkness condition  :",
           len(NightDarkRuns), "Number of effective pointings: ", len(ObservationTimearray))
 
     # List of suggested pointings
@@ -200,30 +196,29 @@ def PGWinFoV(skymap, eventName, obspar, dirName):
                                'Time[UTC]', 'RA[deg]', 'DEC[deg]', 'PGW', 'Round', 'ObsName', 'Duration', 'FoV'])
 
 
-    print()
-    print("================================= Tiling found =============================================")
-    print(SuggestedPointings)
-    print("===========================================================================================")
-    print()
-    print('The total probability PGW: ', np.sum(P_GWarray))
+    if (len(SuggestedPointings) != 0):
+        print("\n================================= Tiling found =============================================")
+        print(SuggestedPointings)
+        print("============================================================================================\n")
+        print(f"The total probability PGW: {np.sum(P_GWarray):.4f}")
     return (SuggestedPointings, ObservationTime0)
 
 
 def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
     """
-    Mid-level function that is called by GetSchedule to compute a observation schedule based on a 3D method. 
+    Mid-level function that is called by GetSchedule to compute a observation schedule based on a 3D method.
     Depending on the user input in the configuration file and the telescope FoV the pointings use the targtet galaxy strategy or integrated galaxy probability strategy.
-    
+
     :param skymap: The object storing sky maps
     :type skymap: SkyMap
     :param nameEvent: The name of the event
     :type nameEvent: str
-    :param ObservationTime0: the desired time for scheduling to start 
+    :param ObservationTime0: the desired time for scheduling to start
     :type ObservationTime0: str
     :param PointingFile: The path to the text file containing the pointings that have already been performed before the scheduling
     :type PointingFile: str
     :param galFile: The path to the galaxy catalog
-    :type galFile: str   
+    :type galFile: str
     :param obspar: Class containing the telescope configuration parameters to be used in the scheduling
     :type obspar: Observation parameters class
     :param dirName: Path to the output directory where the schedules and plots will eb saved
@@ -233,8 +228,8 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
     """
 
     ObservationTime0 = obspar.obsTime
-    PointingFile = obspar.pointingsFile 
-    
+    PointingFile = obspar.pointingsFile
+
     # Main Parameters
     print(obspar)
 
@@ -355,7 +350,7 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
                                     finalGals2 = visiGals2[mask & maskgrey]
                                 if not obspar.useGreytime:
                                     finalGals2 = visiGals2[mask]
-                                
+
                                 p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = ComputeProbPGALIntegrateFoV(
                                     prob, ObservationTime, obspar.location, finalGals2, False, visiGals2, tGals_aux2, sum_dP_dV, alreadysumipixarray2, nside, minz,obspar, counter, nameEvent, dirName, obspar.doPlot)
 
@@ -367,12 +362,12 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
                                 P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                 P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                 ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                                ObsName.append(obspar.name)
+                                ObsName.append(obspar.obs_name)
                                 Duration.append(obspar.duration)
                                 Fov_obs.append(obspar.FOV)
                                 counter = counter + 1
 
-                            else: 
+                            else:
                                 p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbPGALIntegrateFoV(
                                     prob, ObservationTime, obspar.location, finalGals, False, visiGals, tGals_aux, sum_dP_dV, alreadysumipixarray1, nside, minz, obspar, counter, nameEvent, dirName, obspar.doPlot)
                                 RAarray.append(float('{:3.4f}'.format(
@@ -383,7 +378,7 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
                                 P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                 P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                 ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                                ObsName.append(obspar.name)
+                                ObsName.append(obspar.obs_name)
                                 Duration.append(obspar.duration)
                                 Fov_obs.append(obspar.FOV)
                                 counter = counter + 1
@@ -403,7 +398,7 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
                             P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                             P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                             ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                            ObsName.append(obspar.name)
+                            ObsName.append(obspar.obs_name)
                             Duration.append(obspar.duration)
                             Fov_obs.append(obspar.FOV)
                             counter = counter + 1
@@ -460,12 +455,12 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
                                 P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                 P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                 ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                                ObsName.append(obspar.name)
+                                ObsName.append(obspar.obs_name)
                                 Duration.append(obspar.duration)
                                 Fov_obs.append(obspar.FOV)
                                 counter = counter + 1
 
-                            else:  
+                            else:
                                 p_gal, p_gw, tGals_aux, alreadysumipixarray1 = ComputeProbGalTargeted(
                                     prob, ObservationTime, finalGals, visiGals, tGals_aux, sum_dP_dV, alreadysumipixarray1, nside, minz,obspar,counter, dirName)
                                 RAarray.append(float('{:3.4f}'.format(
@@ -476,7 +471,7 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
                                 P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                 P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                 ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                                ObsName.append(obspar.name)
+                                ObsName.append(obspar.obs_name)
                                 Duration.append(obspar.duration)
                                 Fov_obs.append(obspar.FOV)
                                 counter = counter + 1
@@ -492,7 +487,7 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
                             P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                             P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                             ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                            ObsName.append(obspar.name)
+                            ObsName.append(obspar.obs_name)
                             Duration.append(obspar.duration)
                             Fov_obs.append(obspar.FOV)
                             counter = counter + 1
@@ -502,14 +497,17 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
 
             else:
                 break
-        
+
     # List of suggested pointings
     SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, P_GALarray, Round, ObsName, Duration, Fov_obs], names=[
                                'Time[UTC]', 'RA[deg]', 'DEC[deg]', 'PGW', 'Pgal', 'Round', 'ObsName', 'Duration', 'FoV'])
-    print()
-    print()
-    print('The total probability PGal: ', np.sum(P_GALarray))
-    print('The total probability PGW: ', np.sum(P_GWarray))
+
+    if (len(SuggestedPointings) != 0):
+        print("\n================================= Tiling found =============================================")
+        print(SuggestedPointings)
+        print("============================================================================================\n")
+        print(f"The total probability PGal: {np.sum(P_GALarray):.4f}")
+        print(f"The total probability PGW: {np.sum(P_GWarray):.4f}")
     return SuggestedPointings, tGals0
 
 
@@ -689,8 +687,8 @@ def PGWinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obsparamete
             ITERATION_OBS += 1
             
             if obspar.base == "space":
-                SatelliteName = GetSatelliteName(obspar.name, obspar.stationsurl)
-                print(obspar.name)
+                SatelliteName = GetSatelliteName(obspar.obs_name, obspar.stationsurl)
+                print(obspar.obs_name)
 
             if(couter_per_obs[j] >=  maxRuns):
                 SameNight[j] = False
@@ -748,7 +746,7 @@ def PGWinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obsparamete
                                 ObservationTime = datetime.datetime.strptime(
                                     ObservationTime, '%Y-%m-%d %H:%M:%S')
                             ObservationTimearray.append(ObservationTime)
-                            ObsName.append(obspar.name)
+                            ObsName.append(obspar.obs_name)
                             counter = counter + 1
                             couter_per_obs[j] += 1
                             Duration.append(obspar.duration)
@@ -771,7 +769,7 @@ def PGWinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obsparamete
                             ObservationTime = datetime.datetime.strptime(
                                 ObservationTime, '%Y-%m-%d %H:%M:%S')
                         ObservationTimearray.append(ObservationTime)
-                        ObsName.append(obspar.name)
+                        ObsName.append(obspar.obs_name)
                         counter = counter+1
                         couter_per_obs[j] += 1
                         Duration.append(obspar.duration)
@@ -993,7 +991,7 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
                                         ObservationTime = datetime.datetime.strptime(
                                             ObservationTime, '%Y-%m-%d %H:%M:%S')
                                     ObservationTimearray.append(ObservationTime)
-                                    ObsName.append(obspar.name)
+                                    ObsName.append(obspar.obs_name)
                                     counter = counter + 1
                                     couter_per_obs[j] += 1
                                     Duration.append(obspar.duration)
@@ -1023,7 +1021,7 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
                                     ObservationTime = datetime.datetime.strptime(
                                         ObservationTime, '%Y-%m-%d %H:%M:%S')
                                 ObservationTimearray.append(ObservationTime)
-                                ObsName.append(obspar.name)
+                                ObsName.append(obspar.obs_name)
                                 counter = counter + 1
                                 couter_per_obs[j] += 1
                                 Duration.append(obspar.duration)
@@ -1080,7 +1078,7 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
                                         P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                         P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                         ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                                        ObsName.append(obspar.name)
+                                        ObsName.append(obspar.obs_name)
                                         counter = counter + 1
                                         couter_per_obs[j] += 1
                                         Duration.append(obspar.duration)
@@ -1097,7 +1095,7 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
                                         P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                         P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                         ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                                        ObsName.append(obspar.name)
+                                        ObsName.append(obspar.obs_name)
                                         counter = counter + 1
                                         couter_per_obs[j] += 1
                                         Duration.append(obspar.duration)
@@ -1114,7 +1112,7 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
                                     P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                     P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                     ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                                    ObsName.append(obspar.name)
+                                    ObsName.append(obspar.obs_name)
                                     counter = counter + 1
                                     couter_per_obs[j] += 1
                                     Duration.append(obspar.duration)

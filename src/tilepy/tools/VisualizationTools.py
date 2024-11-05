@@ -127,7 +127,7 @@ def Time_DarkTime_GreyTime(filename, cfgFile, date=datetime.datetime.now(timezon
     NightGreyRuns = NightDarkObservationwithGreyTime(time, obspar)
 
     print("-----------------------------------------------------------------")
-    print('Observatory is: ', obspar.name)
+    print('Observatory is: ', obspar.obs_name)
     print('Start of Darkness:', NightDarkRuns[0])
     print(NightDarkRuns)
     print('Last run:', NightDarkRuns[-1])
@@ -176,9 +176,9 @@ def Time_DarkTime_GreyTime(filename, cfgFile, date=datetime.datetime.now(timezon
                          'blue', lonlat=True, coord="C", linewidth=0.4)
     hp.graticule()
     plt.savefig("VisibilityTime_DarkTime_GreyTime_Overview" +
-                obspar.name + '.png')
+                obspar.obs_name + '.png')
 
-    print('Plot created for observatory : ', obspar.name)
+    print('Plot created for observatory : ', obspar.obs_name)
     print("-----------------------------------------------------------------")
 
 

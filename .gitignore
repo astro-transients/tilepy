@@ -36,4 +36,3 @@ GLADE+.txt
 *.fits.*
 *.fit.*
 examples/launcher/output
-tilepy
