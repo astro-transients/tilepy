@@ -516,6 +516,7 @@ class ObservationParameters(object):
                   minDuration, useGreytime, minSlewing, minimumProbCutForCatalogue, minProbcut, distCut, doPlot,
                   secondRound, zenithWeighting, percentageMOC, reducedNside, HRnside, mangrove):
         self.obs_name = obs_name
+        self.event_name = event_name
         self.lat = lat * u.deg
         self.lon = lon * u.deg
         self.height = height * u.m
