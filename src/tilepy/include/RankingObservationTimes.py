@@ -375,7 +375,7 @@ def PGinFOV(ra, dec, prob, radius, nside):
     return P_GW
 
 
-def Sortingby(galPointing, targetType, name, exposure):
+def Sortingby(galPointing, name, exposure):
 
     gggalPointing = galPointing[np.flipud(np.argsort(galPointing['Pgal']))]
     prioritygal = list(range(len(galPointing['Pgal'])))
@@ -413,8 +413,7 @@ def Sortingby(galPointing, targetType, name, exposure):
     gwgalPointing.remove_column('Priority')
     print(name)
 
-    target = [(targetType + '_' + name.split('/')[2] +
-               '_{0}').format(element) for element in gwgalPointing['Pointing']]
+    target = [(name.split('/')[2] + '_{0}').format(element) for element in gwgalPointing['Pointing']]
     gwgalPointing['Target'] = target
     gwgalPointing.rename_column('Pointing', 'Id')
     gwgalPointing['Duration'] = exposure
@@ -471,7 +470,7 @@ def EvolutionPlot(galPointing, tname, ObsArray):
     plt.savefig("%s/AltitudevsTime_%s.png" % (tname, ObsArray))
 
 
-def RankingTimes(ObservationTime, skymap, cat, obspar, targetType, dirName, PointingFile, ObsArray):
+def RankingTimes(ObservationTime, skymap, cat, obspar, dirName, PointingFile, ObsArray):
 
     point = load_pointingFile(PointingFile)
 
@@ -491,10 +490,10 @@ def RankingTimes(ObservationTime, skymap, cat, obspar, targetType, dirName, Poin
     point = ProbabilitiesinPointings3D(tGals, point, obspar.FOV, sum_dP_dV, prob, nside)
     point = VisibilityWindow(ObservationTime, point, obspar, dirName)
     EvolutionPlot(point, dirName, ObsArray)
-    Sortingby(point, targetType, dirName, obspar.duration)
+    Sortingby(point, dirName, obspar.duration)
 
 
-def RankingTimes_2D(ObservationTime, prob, obspar, targetType, dirName, PointingFile, ObsArray):
+def RankingTimes_2D(ObservationTime, prob, obspar, dirName, PointingFile, ObsArray):
 
     point = load_pointingFile(PointingFile)
 
@@ -512,4 +511,4 @@ def RankingTimes_2D(ObservationTime, prob, obspar, targetType, dirName, Pointing
     point = VisibilityWindow(ObservationTime, point, obspar, dirName)
 
     EvolutionPlot(point, dirName, ObsArray)
-    Sortingby(point, targetType, dirName, obspar.duration)
+    Sortingby(point, dirName, obspar.duration)

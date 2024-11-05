@@ -37,8 +37,6 @@ __all__ = [
 ]
 
 class MapReader:
-    download_max_nb_try = 20
-    time_wait_retry = 60
 
     def __init__(self, obspar):
         skymap_localisation = obspar.skymap
@@ -52,11 +50,10 @@ class MapReader:
         self.skymap_filename = skymap_localisation
         if self.is_remote:
             self.url = skymap_localisation
-            max_retry = 1
-            if 'gbm' in obspar.alertType:
-                max_retry = self.download_max_nb_try
-            self.skymap_filename = self.downloadMap(download_max_nb_try=max_retry,
-                                                    time_wait_retry=self.time_wait_retry)
+            max_retry = obspar.downloadMaxRetry
+            time_wait_retry = obspar.downloadWaitPeriodRetry
+            self.skymap_filename = self.downloadMap(download_max_nb_try=max_retry+1,
+                                                    time_wait_retry=time_wait_retry)
 
         # Check the file is available
         if not os.path.isfile(self.skymap_filename):

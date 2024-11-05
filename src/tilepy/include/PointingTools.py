@@ -19,15 +19,11 @@
 ##################################################################################################
 
 
+import datetime
 #####################################################################
 # Packages
 import os
-import time
 
-import datetime
-from pytz import timezone
-from skyfield import almanac
-from skyfield.api import wgs84, N, E, load
 import astropy.coordinates as co
 import ephem
 import healpy as hp
@@ -38,21 +34,17 @@ import pytz
 import six
 import tables
 from astropy import units as u
+from astropy.coordinates import Angle
 from astropy.coordinates import EarthLocation
 from astropy.coordinates import SkyCoord, AltAz
 from astropy.coordinates import get_body
-from astropy.io import fits, ascii
 from astropy.table import Table
 from astropy.time import Time
-from astropy.coordinates import Angle
 from gdpyc import DustMap
-from mocpy import MOC
-from scipy.stats import norm
+from pytz import timezone
 from six.moves import configparser
-import ligo.skymap.io.fits as lf
-import pandas as pd
-from astropy.table import QTable
-import astropy_healpix as ah
+from skyfield import almanac
+from skyfield.api import wgs84, N, E, load
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -359,16 +351,13 @@ class ObservationParameters(object):
 
     # Observatory
 
-    def __init__(self, name=None, lat=0, lon=0, height=0, sunDown=None, moonDown=None,
-                 moonGrey=None, moonPhase=None, minMoonSourceSeparation=None,
-                 maxMoonSourceSeparation=None, maxZenith=None, FOV=None, maxRuns=None, maxNights=None,
-                 duration=None, minDuration=None, useGreytime=None, minSlewing=None,
-                 locCut90=None, minimumProbCutForCatalogue=None, minProbcut=None, distCut=None, doPlot=False,
-                 secondRound=None,
-                 zenithWeighting=None, percentageMOC=None, reducedNside=None, HRnside=None,
-                 mangrove=None, skymap=None, obsTime=None, datasetDir=None, galcatName=None, outDir=None,
-                 pointingsFile=None, countPrevious=False,
-                 alertType=None, MO=False, algorithm=None, strategy=None, doRank=False):
+    def __init__(self, name=None, lat=0, lon=0, height=0, sunDown=None, moonDown=None, moonGrey=None, moonPhase=None,
+                 minMoonSourceSeparation=None, maxMoonSourceSeparation=None, maxZenith=None, FOV=None, maxRuns=None,
+                 maxNights=None, duration=None, minDuration=None, useGreytime=None, minSlewing=None, locCut90=None,
+                 minimumProbCutForCatalogue=None, minProbcut=None, distCut=None, doPlot=False, secondRound=None,
+                 zenithWeighting=None, percentageMOC=None, reducedNside=None, HRnside=None, mangrove=None, skymap=None,
+                 obsTime=None, datasetDir=None, galcatName=None, outDir=None, pointingsFile=None, countPrevious=False,
+                 MO=False, algorithm=None, strategy=None, doRank=False, downloadMaxRetry=0, downloadWaitPeriodRetry=20):
         self.name = name
         self.lat = lat
         self.lon = lon
@@ -418,7 +407,10 @@ class ObservationParameters(object):
         self.galcatName = galcatName
         self.outDir = outDir
         self.pointingsFile = pointingsFile
-        self.alertType = alertType
+
+        # Download arguments
+        self.downloadMaxRetry = downloadMaxRetry
+        self.downloadWaitPeriodRetry = downloadWaitPeriodRetry
 
         # Characterstics of the event
         self.MO = MO
@@ -446,7 +438,7 @@ class ObservationParameters(object):
         # txt += '----------------------------------------------------------------------\n'.format()
         return txt
 
-    def add_parsed_args(self, skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, alertType):
+    def add_parsed_args(self, skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile):
         # Parsed args in command line
         self.skymap = skymap
         self.obsTime = obsTime
@@ -454,7 +446,6 @@ class ObservationParameters(object):
         self.galcatName = galcatName
         self.outDir = outDir
         self.pointingsFile = pointingsFile
-        self.alertType = alertType
 
         
     def from_configfile(self, filepath):
@@ -518,6 +509,10 @@ class ObservationParameters(object):
         self.strategy = str(parser.get(section, 'strategy', fallback=None))
         self.doRank = (parser.getboolean(section, 'doRank', fallback=None))
         self.countPrevious = (parser.getboolean(section, 'countPrevious', fallback=None))
+
+        section = 'general'
+        self.downloadMaxRetry = (parser.getboolean(section, 'downloadMaxRetry', fallback=0))
+        self.downloadWaitPeriodRetry = float(parser.get(section, 'downloadWaitPeriodRetry', fallback=0))
 
     def from_args(self, name, lat, lon, height, sunDown, moonDown,
                   moonGrey, moonPhase, minMoonSourceSeparation,
