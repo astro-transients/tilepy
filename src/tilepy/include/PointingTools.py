@@ -104,6 +104,9 @@ __all__ = [
     "GetEarthOccultedPix",
     "GetMoonOccultedPix",
     "GetSunOccultedPix",
+    "SAA_Times",
+    "is_in_saa",
+    "GetBestSpacePos",
     "FillSummary"
 
 ]
@@ -344,6 +347,19 @@ class Tools:
             coords, dustmap='SFD', filters='SDSS_r')
         # GasMap.plot_map('HI4PI')
         return extinction
+    
+    @classmethod
+    def is_in_saa(cls, latitude, longitude):
+        saa_lat_min = -40.0   # Minimum latitude for the SAA
+        saa_lat_max = 0.0     # Maximum latitude for the SAA
+        saa_lon_min = -50.0   # Minimum longitude for the SAA
+        saa_lon_max = -30.0   # Maximum longitude for the SAA
+        
+        # Check if the satellite's position falls within the SAA region
+        if (saa_lat_min <= latitude <= saa_lat_max) and (saa_lon_min <= longitude <= saa_lon_max):
+            return True
+        else:
+            return False
 
 
 class ObservationParameters(object):
@@ -1097,18 +1113,6 @@ def OccultationCut(prob, nside, time, minProbcut, satellite_position, observator
 
     pixlist.extend(mpixels)
 
-    '''
-    pix_ra = radecs.ra.value
-    pix_dec = radecs.dec.value
-    phipix = np.deg2rad(pix_ra)
-    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
-    ipixlist = hp.ang2pix(nside, thetapix, phipix) 
-
-    mask = np.isin(mpixels, ipixlist, invert=True)
-
-    ipixlistnew = ipixlist[mask]
-    '''
-
     maskOcc[mSun] = 1
     maskOcc[mMoon] = 1
     maskOcc[mEarth] = 1
@@ -1122,8 +1126,26 @@ def OccultationCut(prob, nside, time, minProbcut, satellite_position, observator
     else:
         ObsBool = True
 
-
     return ObsBool, yprob, pixlist
+
+def SAA_Times(duration, start_time, current_time, SatelliteName, saa, SatTimes, step):
+    SatTimes = []
+    i = 0
+    while current_time <= start_time + datetime.timedelta(minutes = duration):
+        SatelliteTime  = GetSatelliteTime(SatelliteName, current_time)
+        satellite_position, satellite_location = GetSatellitePositions(SatelliteName, SatelliteTime)
+        
+        if Tools.is_in_saa(satellite_location.lat.deg, satellite_location.lon.deg):
+            saa[i] = True
+        else:
+            saa[i] = False
+
+        SatTimes.append(current_time)
+        
+        current_time += step
+        i += 1
+        return SatTimes, saa
+    
 
 def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcut, time, observatory, maxZenith, FOV,
                          ipixlist, ipixlistHR, counter, dirName, useGreytime, plot, ipixlistOcc=None):
@@ -1285,6 +1307,55 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
 
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
+
+def GetBestSpacePos(prob, highres, HRnside, reducedNside, newpix, radius, maxRuns, Occultedpixels, doPlot):
+
+    xyzpix1 = hp.pix2vec(reducedNside, newpix)
+    xyzpix = np.column_stack(xyzpix1) 
+
+    dp_dV_FOV = []
+
+    for i in range(0, len(newpix)):
+        ipix_discfull = hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
+        HRprob = highres[ipix_discfull].sum()
+        dp_dV_FOV.append(HRprob)
+
+    theta, phi  = hp.pix2ang(reducedNside, newpix)
+    ra = np.degrees(phi)  # RA in degrees
+    dec = 90 - np.degrees(theta) 
+
+    cat_pix = Table([newpix, ra, dec, dp_dV_FOV],
+                    names=('PIX', 'PIXRA', 'PIXDEC', 'PIXFOVPROB'))
+
+    cat_pix['PIXFOVPROB'] = dp_dV_FOV
+    print(cat_pix)
+
+    sortcat1 = cat_pix[np.flipud(np.argsort(cat_pix['PIXFOVPROB']))]
+    first_values = sortcat1[:maxRuns]
+    print(first_values)
+
+    #mapsize = 200
+    #centerRA = 314
+    #centerDEC = 10
+    
+    if doPlot:
+        #mpl.rcParams.update({'font.size':14})
+        hp.mollview(prob)
+        hp.graticule()
+        try:
+            tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
+            ra2 = np.rad2deg(pp)
+            dec2 = np.rad2deg(0.5 * np.pi - tt)
+            skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
+            hp.visufunc.projplot(skycoord.ra.deg, skycoord.dec.deg, 'g.', lonlat=True, coord="C", linewidth=0.1)
+        except:
+            print("No pcculted pix")
+
+        hp.visufunc.projplot(first_values['PIXRA'], first_values['PIXDEC'], 'b.', lonlat=True, coord="C", linewidth=0.1)
+
+        plt.show()
+    
+    return first_values
 
 def SubstractPointings2D(tpointingFile, prob, obspar, pixlist):
     nside = obspar.reducedNside

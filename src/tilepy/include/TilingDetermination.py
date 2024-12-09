@@ -30,12 +30,18 @@ from astropy import units as u
 from astropy.table import Table
 from six.moves import configparser
 
+import matplotlib.pyplot as plt
+import numpy as np
+import healpy as hp
+
+import numpy.ma as ma
+
 from .PointingTools import (GetSatelliteName, GetSatelliteTime, GetSatellitePositions, OccultationCut,
                             NightDarkObservation, NightDarkObservationwithGreyTime, Get90RegionPixReduced,
                             ZenithAngleCut, ComputeProbability2D, FulfillsRequirement, VisibleAtTime, LoadGalaxies,
                             SubstractPointings2D, Tools, LoadGalaxies_SteMgal, SubstractPointings, ModifyCatalogue,
                             FulfillsRequirementGreyObservations, ComputeProbPGALIntegrateFoV, ComputeProbGalTargeted,
-                            NextWindowTools, FilterGalaxies, MangroveGalaxiesProbabilities)
+                            NextWindowTools, FilterGalaxies, MangroveGalaxiesProbabilities, SAA_Times, GetBestSpacePos)
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -56,6 +62,7 @@ __all__ = [
     "ObservationStartperObs",
     "PGWinFoV_NObs",
     "PGalinFoV_NObs",
+    "PGWinFoV_Space_NObs",
 ]
 
 
@@ -1156,3 +1163,251 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
     print('The total probability PGal: ', np.sum(P_GALarray))
     print('The total probability PGW: ', np.sum(P_GWarray))
     return SuggestedPointings, tGals0, obsparameters
+
+
+
+def query_square(nside, center, side_length_rad):
+    # Convert side length to radians
+
+    # Calculate corner offsets from the center point (assuming a small angle approximation)
+    dx = side_length_rad / np.sqrt(2)
+    
+    # Get four corners in the form of xyz offsets
+    corners = [
+        center + np.array([ dx,  dx, 0]),
+        center + np.array([-dx,  dx, 0]),
+        center + np.array([ dx, -dx, 0]),
+        center + np.array([-dx, -dx, 0])
+    ]
+
+    # Query discs at each corner point
+    pixels = set()
+    for corner in corners:
+        pix_ids = hp.query_disc(nside, corner, side_length_rad, inclusive=True)
+        pixels.update(pix_ids)
+    
+    return list(pixels)
+
+def hexagon_vertices(center, radius):
+    """Calculate hexagon vertices around a center point on the sphere."""
+    theta_c, phi_c = center
+    vertices = []
+    
+    # Angle step for each vertex (60 degrees apart)
+    angle_step = 2 * np.pi / 6
+    
+    for i in range(6):
+        angle = i * angle_step
+        theta_v = theta_c + radius * np.cos(angle)
+        phi_v = phi_c + radius * np.sin(angle)
+        vertices.append((theta_v, phi_v))
+        
+    return vertices
+
+
+
+def PGWinFoV_Space_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obsparameters, dirName):
+    random.seed()
+    RAarray = []
+    DECarray = []
+    pixlist = []
+    ipixlistHR = []
+    pixlist1 = []
+    ipixlistHR1 = []
+    P_GWarray = []
+    ObservationTimearray = []
+    Round = []
+    ObsName = []
+    Duration = []
+    Fov_obs = []
+    Occultedpixels = []
+#################################################################################################################################################
+    obspar = obsparameters[0]
+
+    # Retrieve maps
+    nside = obspar.reducedNside
+    prob = skymap.getMap('prob', obspar.reducedNside)
+    highres = skymap.getMap('prob', obspar.HRnside)
+
+    # Create table for 2D probability at 90% containment
+    rapix, decpix, areapix = Get90RegionPixReduced(
+        prob, obspar.percentageMOC, obspar.reducedNside)
+    radecs = co.SkyCoord(rapix, decpix, frame='icrs', unit=(u.deg, u.deg))
+    maxRuns = obspar.maxRuns
+    reducedNside = obspar.reducedNside
+    HRnside = obspar.HRnside
+    radius = obspar.FOV
+    doPlot = obspar.doPlot
+
+    # Add observed pixels to pixlist
+    if (PointingFile != None):
+        print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
+        pixlist, sumPGW, doneObs = SubstractPointings2D(PointingFile, prob, obspar, pixlist)
+
+        if obspar.countPrevious:
+            maxRuns = obspar.maxRuns - doneObs
+        print("===========================================================================================")
+        print()
+        print(f"Total GW probability already covered: {sumPGW}")
+        print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
+            f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
+        print("===========================================================================================")
+
+    pix_ra = radecs.ra.deg
+    pix_dec = radecs.dec.deg
+    phipix = np.deg2rad(pix_ra)
+    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
+    ipix = hp.ang2pix(reducedNside, thetapix, phipix)
+
+    #Computing the satellite name 
+    SatelliteName = GetSatelliteName(obspar.name, obspar.stationsurl)
+
+    saa = np.empty(obspar.maxRuns+1, dtype=bool)
+    SatTimes = np.empty(obspar.maxRuns+1, dtype=bool)
+
+    # Iterate through time steps within the specified duration
+    current_time = ObservationTime0
+    start_time = ObservationTime0
+    step = int(obspar.duration / obspar.maxRuns)
+    step = datetime.timedelta(minutes = step) 
+
+    duration = obspar.duration
+
+    SatTimes, saa = SAA_Times(duration, start_time, current_time, SatelliteName, saa, SatTimes, step)
+
+    i = 0
+    current_time = ObservationTime0
+    start_time = ObservationTime0
+    while current_time <= start_time + datetime.timedelta(minutes = duration):
+        #Need to get a list of highest pixels
+        SatelliteTime  = GetSatelliteTime(SatelliteName, current_time)
+        satellite_position, satellite_location = GetSatellitePositions(SatelliteName, SatelliteTime)
+        ObsBool, yprob, ipixlistRROcc = OccultationCut(prob, reducedNside, current_time, obspar.minProbcut,
+                                                satellite_position, satellite_location, obspar.sunDown,  obspar.moonDown)
+        
+        #WE COULD GET THE LIST OF OBSEEVABLE PIXELS AT THIS SPECIFIC TIME
+        Occultedpixels.append(ipixlistRROcc)
+        current_time += step
+        i += 1
+        
+    #WE CAN GET THE LIST OF PIXELS AVAILABLE AT ALL TIMES
+    Occultedpixels = [item for sublist in Occultedpixels for item in sublist]
+    OldPix = ipix
+    searchpix = np.isin(OldPix, Occultedpixels, invert=True)
+    newpix = OldPix[searchpix]
+
+    first_values = GetBestSpacePos(prob, highres, HRnside, reducedNside, newpix, radius, maxRuns, Occultedpixels, doPlot)
+
+    print(first_values)
+    return first_values, SatTimes, saa
+
+        
+        #plt.savefig('Occultation_Pointing.png')
+        #plt.close()
+
+
+
+'''
+    for i in range(0, len(cat_pix)):
+        # Pixels associated for HR NSIDE
+        #ipix_square = query_square(HRnside,  xyzpix[i], np.deg2rad(radius))
+        #query_disc = hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
+        hex_center = (0.5 * np.pi - np.deg2rad(pix_dec[i]),  np.deg2rad(pix_ra[i]))
+        print("hex_center", hex_center)
+        vertices_spherical = hexagon_vertices(hex_center, hex_radius)
+        print("vertices_spherical", vertices_spherical)
+        vertices_cartesian = [hp.ang2vec(theta, phi) for theta, phi in vertices_spherical]
+        ipix_polygon = hp.query_polygon(HRnside, vertices_cartesian)
+
+        ra1, dec1 = hp.pix2ang(HRnside, ipix_polygon)
+        ra2 = np.rad2deg(dec1)
+        dec2 = np.rad2deg(0.5 * np.pi - ra1)
+        print(ra2,dec2)
+        for j in range(0,len(ra2)):
+            hp.visufunc.projscatter(ra2, dec2, lonlat=True, marker='.')
+
+        ipix_discfull =  ipix_polygon #hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
+        if len(ipixlistHR) == 0:
+            # No mask needed
+            HRprob = highres[ipix_discfull].sum()
+
+        else:
+            # Mask the ipix_discfull with the pixels that are already observed. I think the problem is here
+            maskComputeProb = np.isin(ipix_discfull, ipixlistHR, invert=True)
+            # Obtain list of pixel ID after the mask what has been observed already
+            m_ipix_discfull = ma.compressed(ma.masked_array(
+                ipix_discfull, mask=np.logical_not(maskComputeProb)))
+            HRprob = highres[m_ipix_discfull].sum()
+            # HRprob = 0
+            # for j in ipix_discfullNotCovered:
+            #    HRprob = HRprob+highres[j]
+            # print('Length of list of pixels:', m_ipix_discfull, 'vs', ipix_discfull, 'vs', ipixlistHR)
+            # print('Comparison to see if mask is considered: ',HRprob, 'vs',highres[ipix_discfull].sum())
+        dp_dV_FOV.append(HRprob)
+    cat_pix['PIXFOVPROB'] = dp_dV_FOV
+    plt.show()
+    plt.savefig("PGW_1.png", bbox_inches = 'tight',
+            pad_inches = 0.1)
+
+    print(cat_pix)
+
+    #SatelliteName = GetSatelliteName(obspar.name, obspar.stationsurl)
+    #SatelliteTime  = GetSatelliteTime(SatelliteName, ObservationTime)
+    #satellite_position, obspar.location = GetSatellitePositions(SatelliteName, SatelliteTime)
+    #ObsBool, yprob, ipixlistHROcc = OccultationCut(prob, obspar.reducedNside, ObservationTime, obspar.minProbcut,
+    #                                            satellite_position, obspar.location, obspar.sunDown,  obspar.moonDown)
+    
+  '''  
+
+
+
+'''
+def PGalinFoV_Space_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, obsparameters, dirName):
+    obspar = obsparameters[0]
+
+    nside = obspar.HRnside
+    prob = skymap.getMap('prob', obspar.HRnside)
+
+    # load galaxy catalogue
+    if not obspar.mangrove:
+        cat = LoadGalaxies(galFile)
+    else:
+        cat = LoadGalaxies_SteMgal(galFile)
+
+    # correlate GW map with galaxy catalog, retrieve ordered list
+    if not obspar.mangrove:
+        cat = skymap.computeGalaxyProbability(cat)
+        tGals0 = FilterGalaxies(cat, obspar.minimumProbCutForCatalogue)
+        sum_dP_dV = cat['dp_dV'].sum()
+    else:
+        cat = skymap.computeGalaxyProbability(cat)
+        tGals0 = FilterGalaxies(cat, obspar.minimumProbCutForCatalogue)
+        tGals0 = MangroveGalaxiesProbabilities(tGals0)
+        sum_dP_dV = cat['dp_dV'].sum()
+
+    # Add observed pixels to pixlist
+    maxRuns = obspar.maxRuns
+    if (PointingFile == None):
+        tGals = tGals0
+        print('No pointings were given to be substracted')
+    else:
+        # tGals_aux = tGals
+        ra, dec, tGals, AlreadyObservedPgw, AlreadyObservedPgal, alreadysumipixarray1, doneObs= SubstractPointings(
+            PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, prob, obspar, nside)
+        maxRuns = obspar.maxRuns - len(ra)
+        sumPGW = sum(AlreadyObservedPgw)
+        sumPGAL = sum(AlreadyObservedPgal)
+        if obspar.countPrevious:
+            maxRuns = obspar.maxRuns - doneObs
+        print("===========================================================================================")
+        print()
+        print(f"Total GW probability already covered: {sumPGW}, "
+            f"Total Gal probability already covered: {sumPGAL}")
+        print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
+            f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
+        print("===========================================================================================")
+
+    tGals_aux = tGals
+    tGals_aux2 = tGals
+    return SuggestedPointings, obsparameters
+'''

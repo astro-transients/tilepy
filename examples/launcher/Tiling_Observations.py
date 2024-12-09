@@ -31,7 +31,7 @@ parser.add_argument('-cfg',metavar = 'config file', help='Config file for the ti
 parser.add_argument('-galcatName', metavar='galaxy catalog name', default="Gladeplus.h5")
 parser.add_argument('-tiles', metavar='tiles already observed', default= None)
 args = parser.parse_args()
-url = args.url
+url = args.skymap
 obsTime = datetime.datetime.fromisoformat(args.time)
 datasetDir = args.i
 outDir = args.o

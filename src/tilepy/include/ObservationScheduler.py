@@ -31,6 +31,7 @@ from .PointingPlotting import PointingPlotting
 from .RankingObservationTimes import RankingTimes, RankingTimes_2D
 from .TilingDetermination import PGWinFoV, PGalinFoV
 from .TilingDetermination import PGWinFoV_NObs, PGalinFoV_NObs
+from .TilingDetermination import PGWinFoV_Space_NObs
 
 __all__ = [
     "GetSchedule",
@@ -144,6 +145,8 @@ def GetUniversalSchedule(obspar):
 
     raw_map = MapReader(obspar[0])
     skymap = SkyMap(obspar[0], raw_map)
+    base = obspar[0].base
+    print("base base ", base)
 
     print("===========================================================================================")
     ObservationTime = obspar[0].obsTime
@@ -151,7 +154,23 @@ def GetUniversalSchedule(obspar):
     galaxies = obspar[0].datasetDir + obspar[0].galcatName
     cat = None
 
-    if skymap.is3D:
+
+    if base == "space":
+        print("===========================================================================================")
+        print("Starting the 2D pointing calculation with the following parameters\n")
+        print("Filename: ", raw_map.name_event)
+        print("Date: ", obspar[0].obsTime)
+        print("Dataset: ", obspar[0].datasetDir)
+        print("Output: ", outputDir)
+        print("===========================================================================================")
+        print()
+        dirName = '%s/PGWinFoV_Space_NObs' % outputDir
+        if not os.path.exists(dirName):
+            os.makedirs(dirName)
+        SuggestedPointings, SatTimes, SAA = PGWinFoV_Space_NObs(
+            skymap, raw_map.name_event, ObservationTime, obspar[0].pointingsFile, obspar, dirName)
+
+    elif skymap.is3D:
         print("===========================================================================================")
         print("Starting the 3D pointing calculation with the following parameters\n")
         print("Filename: ", raw_map.name_event)
@@ -181,6 +200,8 @@ def GetUniversalSchedule(obspar):
             os.makedirs(dirName)
         SuggestedPointings, obspar = PGWinFoV_NObs(
             skymap, raw_map.name_event, ObservationTime, obspar[0].pointingsFile, obspar, dirName)
+        
+        
     if (len(SuggestedPointings) != 0):
         print(SuggestedPointings)
         FOLLOWUP = True
@@ -189,6 +210,8 @@ def GetUniversalSchedule(obspar):
                     overwrite=True, fast_writer=False)
         print()
         print(f"Resulting pointings file is {outfilename}")
+
+        
         # for obspar in parameters:
         for j in range(len(obspar)):
             obspar1 = obspar[j]
