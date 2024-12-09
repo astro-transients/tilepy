@@ -1232,7 +1232,7 @@ def PGWinFoV_Space_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obspa
 
     duration = obspar.duration
 
-    SatTimes, saa = SAA_Times(duration, start_time, current_time, SatelliteName, saa, SatTimes, step)
+    SatTimes, saa = SAA_Times(duration, start_time, current_time, SatelliteName, saa, SatTimes, step, doPlot, dirName)
 
     i = 0
     current_time = ObservationTime0
@@ -1257,5 +1257,12 @@ def PGWinFoV_Space_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obspa
 
     first_values = GetBestSpacePos(prob, highres, HRnside, reducedNside, newpix, radius, maxRuns, Occultedpixels, doPlot, dirName)
 
-    print(first_values)
-    return first_values, SatTimes, saa
+    ObsName = [obspar.name for j in range(len(first_values))]
+    RAarray = [row["PIXRA"] for row in first_values]
+    DECarray = [row["PIXDEC"] for row in first_values]
+    P_GWarray = [row["PIXFOVPROB"] for row in first_values]
+
+    SuggestedPointings = Table([ObsName, RAarray, DECarray, P_GWarray], names=[
+                               'ObsName', 'RA(deg)', 'DEC(deg)', 'PGW'])
+
+    return SuggestedPointings, SatTimes, saa

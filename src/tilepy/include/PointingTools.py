@@ -1163,7 +1163,7 @@ def OccultationCut(prob, nside, time, minProbcut, satellite_position, observator
 
     return ObsBool, yprob, pixlist
 
-def SAA_Times(duration, start_time, current_time, SatelliteName, saa, SatTimes, step):
+def SAA_Times(duration, start_time, current_time, SatelliteName, saa, SatTimes, step, doPlot, dirName):
     SatTimes = []
     i = 0
     while current_time <= start_time + datetime.timedelta(minutes = duration):
@@ -1179,7 +1179,23 @@ def SAA_Times(duration, start_time, current_time, SatelliteName, saa, SatTimes, 
         
         current_time += step
         i += 1
-        return SatTimes, saa
+
+    saa_numeric = [1 if value else 0 for value in saa]
+    # Plot
+    if doPlot:
+        path = dirName + '/SAAPlot'
+        if not os.path.exists(path):
+            os.mkdir(path, 493)
+        plt.figure(figsize=(12, 6))
+        plt.plot(SatTimes, saa_numeric, drawstyle="steps-post", label="SAA (True=1, False=0)")
+        plt.title("SAA Times")
+        plt.xlabel("Time")
+        plt.ylabel("SAA Status")
+        plt.ylim(-0.1, 1.1)  # Set limits to make binary values clear
+        plt.legend()
+        plt.grid(True)
+        plt.savefig('%s/SAA_Times.png' % (path))
+    return SatTimes, saa
     
 
 def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcut, time, observatory, maxZenith, FOV,
@@ -1375,7 +1391,7 @@ def GetBestSpacePos(prob, highres, HRnside, reducedNside, newpix, radius, maxRun
         path = dirName + '/OcculationPlot'
         if not os.path.exists(path):
             os.mkdir(path, 493)
-            
+
         #mpl.rcParams.update({'font.size':14})
         hp.mollview(prob)
         hp.graticule()

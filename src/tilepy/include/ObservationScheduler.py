@@ -154,7 +154,7 @@ def GetUniversalSchedule(obspar):
     galaxies = obspar[0].datasetDir + obspar[0].galcatName
     cat = None
 
-
+    #SPACE
     if base == "space":
         print("===========================================================================================")
         print("Starting the 2D pointing calculation with the following parameters\n")
@@ -170,6 +170,7 @@ def GetUniversalSchedule(obspar):
         SuggestedPointings, SatTimes, SAA = PGWinFoV_Space_NObs(
             skymap, raw_map.name_event, ObservationTime, obspar[0].pointingsFile, obspar, dirName)
 
+    #GROUND
     elif skymap.is3D:
         print("===========================================================================================")
         print("Starting the 3D pointing calculation with the following parameters\n")
@@ -211,23 +212,34 @@ def GetUniversalSchedule(obspar):
         print()
         print(f"Resulting pointings file is {outfilename}")
 
-        
-        # for obspar in parameters:
-        for j in range(len(obspar)):
-            obspar1 = obspar[j]
-            SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.name]
-            print(SuggestedPointings_1)
-            if (len(SuggestedPointings_1) != 0):
-                ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' %
-                            (dirName, obspar[j].name), overwrite=True, fast_writer=False)
-                RankingTimes_2D(ObservationTime, skymap.getMap('prob', obspar[j].HRnside), obspar[j], dirName,
-                                '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name),
-                                obspar[j].name)
-                PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[j], obspar[j].name, dirName,
-                                 '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
-                                     dirName, obspar[j].name), obspar[j].name, cat)
-        PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[0], "all", dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all",
-                         cat)
+        if base != "space":
+            # for obspar in parameters:
+            for j in range(len(obspar)):
+                obspar1 = obspar[j]
+                SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.name]
+                print(SuggestedPointings_1)
+                if (len(SuggestedPointings_1) != 0):
+                    ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' %
+                                (dirName, obspar[j].name), overwrite=True, fast_writer=False)
+                    RankingTimes_2D(ObservationTime, skymap.getMap('prob', obspar[j].HRnside), obspar[j], dirName,
+                                    '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name),
+                                    obspar[j].name)
+                    PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[j], obspar[j].name, dirName,
+                                    '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
+                                        dirName, obspar[j].name), obspar[j].name, cat)
+            PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[0], "all", dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all",
+                            cat)
+        else:
+            for j in range(len(obspar)):
+                obspar1 = obspar[j]
+                SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.name]
+                print(SuggestedPointings_1)
+                if (len(SuggestedPointings_1) != 0):
+                    ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' %
+                                (dirName, obspar[j].name), overwrite=True, fast_writer=False)
+            #NOW USE REGRESSION TO GET BEST SCHEDULE
+                    
+            
     else:
         FOLLOWUP = False
         print('No observations are scheduled')
