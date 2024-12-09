@@ -361,6 +361,45 @@ class Tools:
         else:
             return False
 
+    @classmethod
+    def query_square(nside, center, side_length_rad):
+        # Convert side length to radians
+
+        # Calculate corner offsets from the center point (assuming a small angle approximation)
+        dx = side_length_rad / np.sqrt(2)
+        
+        # Get four corners in the form of xyz offsets
+        corners = [
+            center + np.array([ dx,  dx, 0]),
+            center + np.array([-dx,  dx, 0]),
+            center + np.array([ dx, -dx, 0]),
+            center + np.array([-dx, -dx, 0])
+        ]
+
+        # Query discs at each corner point
+        pixels = set()
+        for corner in corners:
+            pix_ids = hp.query_disc(nside, corner, side_length_rad, inclusive=True)
+            pixels.update(pix_ids)
+        
+        return list(pixels)
+    
+    @classmethod
+    def hexagon_vertices(center, radius):
+        """Calculate hexagon vertices around a center point on the sphere."""
+        theta_c, phi_c = center
+        vertices = []
+        
+        # Angle step for each vertex (60 degrees apart)
+        angle_step = 2 * np.pi / 6
+        
+        for i in range(6):
+            angle = i * angle_step
+            theta_v = theta_c + radius * np.cos(angle)
+            phi_v = phi_c + radius * np.sin(angle)
+            vertices.append((theta_v, phi_v))
+            
+        return vertices
 
 class ObservationParameters(object):
     """Stores all the parameters in the .ini file"""
@@ -1038,9 +1077,6 @@ def GetSatellitePositions(satellite_name, t):
     geocentric = satellite_name.at(t)
     # Print position in latitude, longitude, altitude
     subpoint = geocentric.subpoint()
-    print(f'Latitude: {subpoint.latitude.degrees}')
-    print(f'Longitude: {subpoint.longitude.degrees}')
-    print(f'Altitude: {subpoint.elevation.m} m')
 
     # Get satellite's current position in astronomical units (AU)
     satellite_position = geocentric.position.km
@@ -1074,7 +1110,6 @@ def GetEarthOccultedPix(nside, time, earth_radius, earth_sep, satellite_position
     #for equatorial frame
 
     distance_to_satellite = np.linalg.norm(satellite_position) 
-    print("distance_to_satellite", distance_to_satellite) 
     earth_altitude = np.arcsin(-satellite_position[2] / distance_to_satellite)  # Altitude in radians
     earth_azimuth = np.arctan2(-satellite_position[1], -satellite_position[0])  # Azimuth in radians
 
@@ -1308,7 +1343,7 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
 
-def GetBestSpacePos(prob, highres, HRnside, reducedNside, newpix, radius, maxRuns, Occultedpixels, doPlot):
+def GetBestSpacePos(prob, highres, HRnside, reducedNside, newpix, radius, maxRuns, Occultedpixels, doPlot, dirName):
 
     xyzpix1 = hp.pix2vec(reducedNside, newpix)
     xyzpix = np.column_stack(xyzpix1) 
@@ -1328,17 +1363,19 @@ def GetBestSpacePos(prob, highres, HRnside, reducedNside, newpix, radius, maxRun
                     names=('PIX', 'PIXRA', 'PIXDEC', 'PIXFOVPROB'))
 
     cat_pix['PIXFOVPROB'] = dp_dV_FOV
-    print(cat_pix)
 
     sortcat1 = cat_pix[np.flipud(np.argsort(cat_pix['PIXFOVPROB']))]
     first_values = sortcat1[:maxRuns]
-    print(first_values)
 
     #mapsize = 200
     #centerRA = 314
     #centerDEC = 10
     
     if doPlot:
+        path = dirName + '/OcculationPlot'
+        if not os.path.exists(path):
+            os.mkdir(path, 493)
+            
         #mpl.rcParams.update({'font.size':14})
         hp.mollview(prob)
         hp.graticule()
@@ -1352,8 +1389,8 @@ def GetBestSpacePos(prob, highres, HRnside, reducedNside, newpix, radius, maxRun
             print("No pcculted pix")
 
         hp.visufunc.projplot(first_values['PIXRA'], first_values['PIXDEC'], 'b.', lonlat=True, coord="C", linewidth=0.1)
-
-        plt.show()
+        plt.savefig('%s/Occ_Pointing.png' % (path))
+        plt.close()
     
     return first_values
 
