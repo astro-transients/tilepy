@@ -434,7 +434,7 @@ class ObservationParameters(object):
         # txt += '----------------------------------------------------------------------\n'.format()
         return txt
 
-    def add_parsed_args(self, skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile):
+    def add_parsed_args(self, skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, eventName=None):
         # Parsed args in command line
         self.skymap = skymap
         self.obsTime = obsTime
@@ -442,6 +442,7 @@ class ObservationParameters(object):
         self.galcatName = galcatName
         self.outDir = outDir
         self.pointingsFile = pointingsFile
+        self.event_name = self.event_name if eventName is None else eventName
 
         
     def from_configfile(self, filepath):
