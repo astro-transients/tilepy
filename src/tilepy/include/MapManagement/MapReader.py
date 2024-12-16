@@ -65,6 +65,8 @@ class MapReader:
         self.fits_map = fits.open(self.skymap_filename)
         self.id_hdu_map = self.getMapHDUId()
         self.name_event = self.getSourceName()
+        if obspar.event_name is not None:
+            self.name_event = obspar.event_name
         self.identifyColumns()
 
     def getMapHDUId(self):

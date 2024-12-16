@@ -27,7 +27,8 @@ parser.add_argument('-i',metavar = 'input path', help='Path to the input dataset
 parser.add_argument('-o',metavar = 'output path', help='Path to the output folder',default='./output')
 parser.add_argument('-cfg',metavar = 'config file', help='Config file for the tiling scheduling',default='../config/FollowupParameters.ini')
 parser.add_argument('-galcatName', metavar='galaxy catalog name', default="Gladeplus.h5")
-parser.add_argument('-tiles', metavar='tiles already observed', default= None)
+parser.add_argument('-tiles', metavar='tiles already observed', default=None)
+parser.add_argument('-eventName', metavar='Name of the observed event', default=None)
 #parser.add_argument('-base', metavar='ground or space', default= "ground")
 
 args = parser.parse_args()
@@ -39,6 +40,7 @@ outDir = args.o
 cfgFile = args.cfg
 galcatName = args.galcatName
 pointingsFile = args.tiles
+eventName = args.eventName
 
 if not os.path.exists(outDir):
     os.makedirs(outDir)
@@ -58,7 +60,7 @@ obsparameters = []
 
 for j in range(len(parameters)):
     obspar = ObservationParameters()
-    obspar.add_parsed_args(skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, alertType)
+    obspar.add_parsed_args(skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, alertType, eventName)
     obspar.from_configfile(parameters[j])
     obsparameters.append(obspar)
     print("obsparameters.base",obsparameters[0].base)
