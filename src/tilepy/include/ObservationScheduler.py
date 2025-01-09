@@ -208,3 +208,86 @@ def GetUniversalSchedule(obspar):
     else:
         FOLLOWUP = False
         print('No observations are scheduled')
+
+
+def GetObservationCoordinates(obspar):
+    """
+    Top level function that is called by the user with specific arguments and creates a folder 
+    with potentially observable coordinates (generally speaking, not linked to any telescope)  
+
+    :param obspar: the set of parameters needed to launch the tiling scheduler
+    :type obspar: class ObservationParameters
+    """
+
+    raw_map = MapReader(obspar)
+    skymap = SkyMap(obspar, raw_map)
+
+    if obspar.locCut90 != None:
+        area_90 = skymap.getArea(0.9).to_value(u.deg*u.deg)
+        if obspar.locCut90 < area_90:
+            print('The 90% area (' + str(area_90) + ' deg^2) is larger than the maximum allowed in the configuration (' + str(obspar.locCut90) + ' deg^2)')
+            return
+
+    print("===========================================================================================")
+
+    outputDir = "%s/%s" % (obspar.outDir, raw_map.name_event)
+
+    if skymap.is3D:
+        dirName = f"{outputDir}/PGalRank{obspar.strategy}"
+        galaxies = obspar.datasetDir + obspar.galcatName
+    else:
+        dirName = f"{outputDir}/PGRank"
+
+    if not os.path.exists(dirName):
+        os.makedirs(dirName)
+
+    if skymap.is3D:
+        print("===========================================================================================")
+        print("Starting the identification of the most probable coordinates the following parameters\n")
+        print("Filename: ", raw_map.name_event)
+        print("Catalog: ", galaxies)
+        print("Dataset: ", obspar.datasetDir)
+        print("Output: ", outputDir)
+        print("===========================================================================================")
+        print()
+
+        SuggestedCoordinate, cat = ObtainMostProbableCoordinatesGal(skymap, raw_map.name_event, galaxies, obspar, dirName)
+
+        if (len(SuggestedCoordinates) != 0):
+            outfilename = '%s/SuggestedCoordinates_GalProbOptimisation.txt' % dirName
+            ascii.write(SuggestedCoordinates, outfilename,
+                        overwrite=True, fast_writer=False)
+            print()
+            print(f"Resulting pointings file is {outfilename}")
+
+            if (obspar.doPlot):
+                PointingPlotting(skymap.getMap('prob', obspar.HRnside), obspar, raw_map.name_event, dirName,
+                                 '%s/SuggestedCoordinates_GalProbOptimisation.txt' % dirName, obspar.obs_name, cat)
+        else:
+            print('No observations are scheduled')
+
+    else:
+
+        print("===========================================================================================")
+        print("Starting the 2D pointing calculation with the following parameters\n")
+        print("Filename: ", raw_map.name_event)
+        print("Dataset: ", obspar.datasetDir)
+        print("Output: ", outputDir)
+        print("===========================================================================================")
+        print()
+
+        SuggestedCoordinates = ObtainMostProbableCoordinates(skymap, raw_map.name_event, obspar, dirName)
+
+        if (len(SuggestedCoordinates) != 0):
+            gal = []
+            outfilename = '%s/SuggestedCoordinates_GWProbOptimisation.txt' % dirName
+            ascii.write(SuggestedCoordinates, outfilename,
+                        overwrite=True, fast_writer=False)
+            print()
+            print(f"Resulting pointings file is {outfilename}")
+
+            if (obspar.doPlot):
+                PointingPlotting(skymap.getMap('prob', obspar.HRnside), obspar, raw_map.name_event, dirName,
+                                 '%s/SuggestedCoordinates_GWProbOptimisation.txt' % dirName, obspar.obs_name, gal)
+        else:
+            print('No observations are scheduled')

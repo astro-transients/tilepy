@@ -1156,3 +1156,79 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
     print('The total probability PGal: ', np.sum(P_GALarray))
     print('The total probability PGW: ', np.sum(P_GWarray))
     return SuggestedPointings, tGals0, obsparameters
+
+
+def ObtainMostProbableCoordinates(skymap, eventName, obspar, dirName):
+    """
+    Mid-level function that is called by GetObservationCoordinates to compute most probable coordinates based on a 2D method.  
+    
+    :param skymap: The object containing the skympas
+    :type skymap: SkyMap
+    :param eventName: The name of the event
+    :type eventName: str
+    :param obspar: Class containing the telescope configuration parameters to be used in the scheduling
+    :type obspar: Observation parameters class
+    :param dirName: Path to the output directory where the schedules and plots will eb saved
+    :type dirName: str
+    :return: SuggestedCoordinates
+    rtype: ascii table
+    """
+
+    # Main parameters
+    print(obspar)
+
+    random.seed()
+
+    RAarray = []
+    DECarray = []
+    pixlist = []
+    ipixlistHR = []
+    pixlist1 = []
+    ipixlistHR1 = []
+    P_GWarray = []
+    Fov_obs = []
+    ObsName = []
+
+
+    print()
+    print('-------------------   NEW EVENT   --------------------')
+    print()
+
+    # Retrieve maps
+    nside = obspar.reducedNside
+    prob = skymap.getMap('prob', obspar.reducedNside)
+    highres = skymap.getMap('prob', obspar.HRnside)
+
+    # Create table for 2D probability at 90% containment
+    rapix, decpix, areapix = Get90RegionPixReduced(
+        prob, obspar.percentageMOC, obspar.reducedNside)
+    radecs = co.SkyCoord(rapix, decpix, frame='icrs', unit=(u.deg, u.deg))
+
+    # Add observed pixels to pixlist
+    maxRuns = obspar.maxRuns
+
+    #######################################################
+
+    print('----------   COORDINATE IDENTIFICATION  ----------')
+
+
+    P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(prob, highres, radecs, obspar.reducedNside,
+                                                                     obspar.HRnside, obspar.minProbcut, ObservationTime,
+                                                                     obspar.location, obspar.maxZenith, obspar.FOV,
+                                                                     pixlist, ipixlistHR, counter, dirName,
+                                                                     obspar.useGreytime, obspar.doPlot)
+
+    print("\nTotal GW probability covered: ", float('{:1.4f}'.format(float(sum(P_GWarray)))), "Number of runs that fulfill darkness condition  :",
+          len(NightDarkRuns), "Number of effective pointings: ", len(ObservationTimearray))
+
+    # List of suggested pointings
+    SuggestedPointings = Table([ObservationTimearray, RAarray, DECarray, P_GWarray, Round, ObsName, Duration, Fov_obs], names=[
+                               'Time[UTC]', 'RA[deg]', 'DEC[deg]', 'PGW', 'Round', 'ObsName', 'Duration', 'FoV'])
+
+
+    if (len(SuggestedPointings) != 0):
+        print("\n================================= Tiling found =============================================")
+        print(SuggestedPointings)
+        print("============================================================================================\n")
+        print(f"The total probability PGW: {np.sum(P_GWarray):.4f}")
+    return (SuggestedPointings, ObservationTime0)
