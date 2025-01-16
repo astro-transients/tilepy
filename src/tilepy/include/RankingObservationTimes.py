@@ -34,7 +34,7 @@ from astropy.table import Table
 from astropy.time import Time
 from six.moves import configparser
 import pandas as pd
-#from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import AgglomerativeClustering
 
 from .PointingTools import (Tools, FilterGalaxies)
 
@@ -569,11 +569,12 @@ def Ranking_Space_2D(dirName, PointingFile):
 
 def Ranking_Sapce_2D_AI(dirName, PointingFile):
     # Convert to DataFrame for easier handling
-    data = pd.read_csv(PointingFile, delim_whitespace=True)
+    file_path = f"{PointingFile}"
+    data = pd.read_csv(file_path, delim_whitespace=True)
     df = pd.DataFrame(data)
 
     # Extract RA and DEC for clustering
-    coordinates = df[['RA', 'DEC']].to_numpy()
+    coordinates = df[['RA(deg)', 'DEC(deg)']].to_numpy()
 
     # Clustering with Agglomerative Clustering
     clustering = AgglomerativeClustering(n_clusters=None, distance_threshold=1.0)  # Distance can be adjusted
@@ -590,4 +591,9 @@ def Ranking_Sapce_2D_AI(dirName, PointingFile):
 
     # Output the ranked list
     for idx, row in final_ranked.iterrows():
-        print(f"Rank {idx + 1}: ObsName={row['ObsName']}, RA={row['RA']}, DEC={row['DEC']}, PGW={row['PGW']}")
+        print(f"Rank {idx + 1}: ObsName={row['ObsName']}, RA={row['RA(deg)']}, DEC={row['DEC(deg)']}, PGW={row['PGW']}")
+
+    # Save the ranked list to a file
+    output_file = '%s/RankingObservations2D_AI_Space.txt' % dirName
+    pd.DataFrame(final_ranked).to_csv(output_file, index=False, sep='\t')
+    print(f"Ranked file saved to {output_file}")
