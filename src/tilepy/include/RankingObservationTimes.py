@@ -33,6 +33,8 @@ from astropy.io import ascii
 from astropy.table import Table
 from astropy.time import Time
 from six.moves import configparser
+import pandas as pd
+#from sklearn.cluster import AgglomerativeClustering
 
 from .PointingTools import (Tools, FilterGalaxies)
 
@@ -512,3 +514,80 @@ def RankingTimes_2D(ObservationTime, prob, obspar, dirName, PointingFile, ObsArr
 
     EvolutionPlot(point, dirName, ObsArray)
     Sortingby(point, dirName, obspar.duration)
+
+
+import pandas as pd
+import numpy as np
+
+# Function to compute 2D distance between two rows
+def distance(entry1, entry2):
+    ra1, dec1 = entry1['RA(deg)'], entry1['DEC(deg)']
+    ra2, dec2 = entry2['RA(deg)'], entry2['DEC(deg)']
+    
+    # Handle circular distance for RA
+    delta_ra = min(abs(ra1 - ra2), 360 - abs(ra1 - ra2))
+    delta_dec = abs(dec1 - dec2)
+    
+    # Euclidean distance in 2D
+    return np.sqrt(delta_ra**2 + delta_dec**2)
+
+# Ranking function
+def Ranking_Space_2D(dirName, PointingFile):
+    # Read the data from the pointing file
+    file_path = f"{PointingFile}"
+    data = pd.read_csv(file_path, delim_whitespace=True)
+
+    # Sort by PGW in descending order
+    data = data.sort_values(by='PGW', ascending=False).reset_index(drop=True)
+
+    # Initialize ranked list with the first (highest PGW) entry
+    ranked = [data.iloc[0]]
+    data = data.iloc[1:].reset_index(drop=True)  # Exclude the first entry
+
+    # Iteratively find the closest entry
+    while not data.empty:
+        last_entry = ranked[-1]
+        # Compute distances to the last entry
+        data['distance'] = data.apply(lambda row: distance(last_entry, row), axis=1)
+        # Find the closest entry
+        closest_idx = data['distance'].idxmin()
+        closest_entry = data.loc[closest_idx]
+        ranked.append(closest_entry)
+        # Remove the closest entry from the dataset
+        data = data.drop(index=closest_idx).reset_index(drop=True)
+
+    # Output the ranked list
+    print("Ranked List:")
+    for idx, entry in enumerate(ranked, start=1):
+        print(f"Rank {idx}: {entry.to_dict()}")
+
+    # Save the ranked list to a file
+    output_file = '%s/RankingObservations2D_Space.txt' % dirName
+    pd.DataFrame(ranked).to_csv(output_file, index=False, sep='\t')
+    print(f"Ranked file saved to {output_file}")
+
+
+def Ranking_Sapce_2D_AI(dirName, PointingFile):
+    # Convert to DataFrame for easier handling
+    data = pd.read_csv(PointingFile, delim_whitespace=True)
+    df = pd.DataFrame(data)
+
+    # Extract RA and DEC for clustering
+    coordinates = df[['RA', 'DEC']].to_numpy()
+
+    # Clustering with Agglomerative Clustering
+    clustering = AgglomerativeClustering(n_clusters=None, distance_threshold=1.0)  # Distance can be adjusted
+    df['Cluster'] = clustering.fit_predict(coordinates)
+
+    # Sort within each cluster by PGW
+    ranked_data = []
+    for cluster_id in sorted(df['Cluster'].unique()):
+        cluster_data = df[df['Cluster'] == cluster_id].sort_values(by='PGW', ascending=False)
+        ranked_data.append(cluster_data)
+
+    # Combine ranked clusters
+    final_ranked = pd.concat(ranked_data)
+
+    # Output the ranked list
+    for idx, row in final_ranked.iterrows():
+        print(f"Rank {idx + 1}: ObsName={row['ObsName']}, RA={row['RA']}, DEC={row['DEC']}, PGW={row['PGW']}")
