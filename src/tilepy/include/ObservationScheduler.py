@@ -24,11 +24,12 @@ import os
 
 import astropy.units as u
 from astropy.io import ascii
+from astropy.table import Table
 
 from .MapManagement import MapReader
 from .MapManagement import SkyMap
 from .PointingPlotting import PointingPlotting
-from .RankingObservationTimes import RankingTimes, RankingTimes_2D
+from .RankingObservationTimes import RankingTimes, RankingTimes_2D, Ranking_Space_2D, Ranking_Sapce_2D_AI
 from .TilingDetermination import PGWinFoV, PGalinFoV
 from .TilingDetermination import PGWinFoV_NObs, PGalinFoV_NObs
 from .TilingDetermination import PGWinFoV_Space_NObs
@@ -169,6 +170,8 @@ def GetUniversalSchedule(obspar):
             os.makedirs(dirName)
         SuggestedPointings, SatTimes, SAA = PGWinFoV_Space_NObs(
             skymap, raw_map.name_event, ObservationTime, obspar[0].pointingsFile, obspar, dirName)
+        print(SatTimes, SAA)
+    
 
     #GROUND
     elif skymap.is3D:
@@ -234,12 +237,16 @@ def GetUniversalSchedule(obspar):
                 obspar1 = obspar[j]
                 SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.name]
                 print(SuggestedPointings_1)
+                time_table = Table([SatTimes, SAA], names=('SatTimes', 'SAA'))
+                ascii.write(time_table, '%s/SAA_Times_%s.txt' %
+                                (dirName, obspar[j].name), overwrite=True, fast_writer=False)
                 if (len(SuggestedPointings_1) != 0):
                     ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' %
                                 (dirName, obspar[j].name), overwrite=True, fast_writer=False)
-            #NOW USE REGRESSION TO GET BEST SCHEDULE
+                    Ranking_Space_2D(dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name))
+                    Ranking_Sapce_2D_AI(dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name))
+
                     
-            
     else:
         FOLLOWUP = False
         print('No observations are scheduled')
