@@ -98,6 +98,10 @@ __all__ = [
     "GetEarthOccultedPix",
     "GetMoonOccultedPix",
     "GetSunOccultedPix",
+    "SAA_Times",
+    "is_in_saa",
+    "GetBestSpacePos2D",
+    "GetBestSpacePos3D",
     "FillSummary"
 
 ]
@@ -338,7 +342,59 @@ class Tools:
             coords, dustmap='SFD', filters='SDSS_r')
         # GasMap.plot_map('HI4PI')
         return extinction
+    
+    @classmethod
+    def is_in_saa(cls, latitude, longitude):
+        saa_lat_min = -40.0   # Minimum latitude for the SAA
+        saa_lat_max = 0.0     # Maximum latitude for the SAA
+        saa_lon_min = -50.0   # Minimum longitude for the SAA
+        saa_lon_max = -30.0   # Maximum longitude for the SAA
+        
+        # Check if the satellite's position falls within the SAA region
+        if (saa_lat_min <= latitude <= saa_lat_max) and (saa_lon_min <= longitude <= saa_lon_max):
+            return True
+        else:
+            return False
 
+    @classmethod
+    def query_square(nside, center, side_length_rad):
+        # Convert side length to radians
+
+        # Calculate corner offsets from the center point (assuming a small angle approximation)
+        dx = side_length_rad / np.sqrt(2)
+        
+        # Get four corners in the form of xyz offsets
+        corners = [
+            center + np.array([ dx,  dx, 0]),
+            center + np.array([-dx,  dx, 0]),
+            center + np.array([ dx, -dx, 0]),
+            center + np.array([-dx, -dx, 0])
+        ]
+
+        # Query discs at each corner point
+        pixels = set()
+        for corner in corners:
+            pix_ids = hp.query_disc(nside, corner, side_length_rad, inclusive=True)
+            pixels.update(pix_ids)
+        
+        return list(pixels)
+    
+    @classmethod
+    def hexagon_vertices(center, radius):
+        """Calculate hexagon vertices around a center point on the sphere."""
+        theta_c, phi_c = center
+        vertices = []
+        
+        # Angle step for each vertex (60 degrees apart)
+        angle_step = 2 * np.pi / 6
+        
+        for i in range(6):
+            angle = i * angle_step
+            theta_v = theta_c + radius * np.cos(angle)
+            phi_v = phi_c + radius * np.sin(angle)
+            vertices.append((theta_v, phi_v))
+            
+        return vertices
 
 class ObservationParameters(object):
     """Stores all the parameters in the .ini file"""
@@ -1018,9 +1074,6 @@ def GetSatellitePositions(satellite_name, t):
     geocentric = satellite_name.at(t)
     # Print position in latitude, longitude, altitude
     subpoint = geocentric.subpoint()
-    print(f'Latitude: {subpoint.latitude.degrees}')
-    print(f'Longitude: {subpoint.longitude.degrees}')
-    print(f'Altitude: {subpoint.elevation.m} m')
 
     # Get satellite's current position in astronomical units (AU)
     satellite_position = geocentric.position.km
@@ -1054,7 +1107,6 @@ def GetEarthOccultedPix(nside, time, earth_radius, earth_sep, satellite_position
     #for equatorial frame
 
     distance_to_satellite = np.linalg.norm(satellite_position) 
-    print("distance_to_satellite", distance_to_satellite) 
     earth_altitude = np.arcsin(-satellite_position[2] / distance_to_satellite)  # Altitude in radians
     earth_azimuth = np.arctan2(-satellite_position[1], -satellite_position[0])  # Azimuth in radians
 
@@ -1093,18 +1145,6 @@ def OccultationCut(prob, nside, time, minProbcut, satellite_position, observator
 
     pixlist.extend(mpixels)
 
-    '''
-    pix_ra = radecs.ra.value
-    pix_dec = radecs.dec.value
-    phipix = np.deg2rad(pix_ra)
-    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
-    ipixlist = hp.ang2pix(nside, thetapix, phipix) 
-
-    mask = np.isin(mpixels, ipixlist, invert=True)
-
-    ipixlistnew = ipixlist[mask]
-    '''
-
     maskOcc[mSun] = 1
     maskOcc[mMoon] = 1
     maskOcc[mEarth] = 1
@@ -1118,8 +1158,42 @@ def OccultationCut(prob, nside, time, minProbcut, satellite_position, observator
     else:
         ObsBool = True
 
-
     return ObsBool, yprob, pixlist
+
+def SAA_Times(duration, start_time, current_time, SatelliteName, saa, SatTimes, step, doPlot, dirName):
+    SatTimes = []
+    i = 0
+    while current_time <= start_time + datetime.timedelta(minutes = duration):
+        SatelliteTime  = GetSatelliteTime(SatelliteName, current_time)
+        satellite_position, satellite_location = GetSatellitePositions(SatelliteName, SatelliteTime)
+        
+        if Tools.is_in_saa(satellite_location.lat.deg, satellite_location.lon.deg):
+            saa[i] = True
+        else:
+            saa[i] = False
+
+        SatTimes.append(current_time)
+        
+        current_time += step
+        i += 1
+
+    saa_numeric = [1 if value else 0 for value in saa]
+    # Plot
+    if doPlot:
+        path = dirName + '/SAAPlot'
+        if not os.path.exists(path):
+            os.mkdir(path, 493)
+        plt.figure(figsize=(12, 6))
+        plt.plot(SatTimes, saa_numeric, drawstyle="steps-post", label="SAA (True=1, False=0)")
+        plt.title("SAA Times")
+        plt.xlabel("Time")
+        plt.ylabel("SAA Status")
+        plt.ylim(-0.1, 1.1)  # Set limits to make binary values clear
+        plt.legend()
+        plt.grid(True)
+        plt.savefig('%s/SAA_Times.png' % (path))
+    return SatTimes, saa
+    
 
 def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcut, time, observatory, maxZenith, FOV,
                          ipixlist, ipixlistHR, counter, dirName, useGreytime, plot, ipixlistOcc=None):
@@ -1281,6 +1355,103 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
 
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
+
+def GetBestSpacePos2D(prob, highres, HRnside, reducedNside, newpix, radius, maxRuns, Occultedpixels, doPlot, dirName):
+
+    xyzpix1 = hp.pix2vec(reducedNside, newpix)
+    xyzpix = np.column_stack(xyzpix1) 
+
+    dp_dV_FOV = []
+
+    for i in range(0, len(newpix)):
+        ipix_discfull = hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
+        HRprob = highres[ipix_discfull].sum()
+        dp_dV_FOV.append(HRprob)
+
+    theta, phi  = hp.pix2ang(reducedNside, newpix)
+    ra = np.degrees(phi)  # RA in degrees
+    dec = 90 - np.degrees(theta) 
+
+    cat_pix = Table([newpix, ra, dec, dp_dV_FOV],
+                    names=('PIX', 'PIXRA', 'PIXDEC', 'PIXFOVPROB'))
+
+    cat_pix['PIXFOVPROB'] = dp_dV_FOV
+
+    sortcat1 = cat_pix[np.flipud(np.argsort(cat_pix['PIXFOVPROB']))]
+    first_values = sortcat1[:maxRuns]
+
+    #mapsize = 200
+    #centerRA = 314
+    #centerDEC = 10
+    
+    if doPlot:
+        path = dirName + '/OccultationPlot'
+        if not os.path.exists(path):
+            os.mkdir(path, 493)
+
+        #mpl.rcParams.update({'font.size':14})
+        hp.mollview(prob)
+        hp.graticule()
+        try:
+            tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
+            ra2 = np.rad2deg(pp)
+            dec2 = np.rad2deg(0.5 * np.pi - tt)
+            skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
+            hp.visufunc.projplot(skycoord.ra.deg, skycoord.dec.deg, 'g.', lonlat=True, coord="C", linewidth=0.1)
+        except:
+            print("No pcculted pix")
+
+        hp.visufunc.projplot(first_values['PIXRA'], first_values['PIXDEC'], 'b.', lonlat=True, coord="C", linewidth=0.1)
+        plt.savefig('%s/Occ_Pointing.png' % (path))
+        plt.close()
+    
+    return first_values
+
+def GetBestSpacePos3D(prob, cat, galpix, newpix, FOV, totaldPdV, HRnside, UsePix, maxRuns, doPlot, dirName, reducedNside, Occultedpixels):    
+    lengthSG = 100
+    SelectedGals = galpix
+    dp_dV_FOV = []
+    for l in range(0, len(SelectedGals)):
+        if (l < len(SelectedGals)):
+            dp_dV_FOV.append(ComputePGalinFOV(
+                prob, cat, SelectedGals[l], FOV, totaldPdV, reducedNside, UsePix= True))
+        else:
+            dp_dV_FOV.append(0)
+
+
+    print("Length of SelectedGals:", len(SelectedGals))
+    print("Length of dp_dV_FOV[:lengthSG]:", len(dp_dV_FOV))
+
+
+    cat_pix = Table([SelectedGals.ra.deg, SelectedGals.dec.deg, dp_dV_FOV],
+                    names=('PIXRA', 'PIXDEC', 'PIXFOVPROB'))
+
+
+    sortcat = cat_pix[np.flipud(np.argsort(cat_pix['PIXFOVPROB']))]
+    first_values = sortcat[:maxRuns]
+
+    if doPlot:
+        path = dirName + '/OccultationPlot'
+        if not os.path.exists(path):
+            os.mkdir(path, 493)
+
+        #mpl.rcParams.update({'font.size':14})
+        hp.mollview(prob)
+        hp.graticule()
+        try:
+            tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
+            ra2 = np.rad2deg(pp)
+            dec2 = np.rad2deg(0.5 * np.pi - tt)
+            skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
+            hp.visufunc.projplot(skycoord.ra.deg, skycoord.dec.deg, 'g.', lonlat=True, coord="C", linewidth=0.1)
+        except:
+            print("No pcculted pix")
+
+        hp.visufunc.projplot(first_values['PIXRA'], first_values['PIXDEC'], 'b.', lonlat=True, coord="C", linewidth=0.1)
+        plt.savefig('%s/Occ_Pointing.png' % (path))
+        plt.close()
+    
+    return first_values
 
 def SubstractPointings2D(tpointingFile, prob, obspar, pixlist):
     nside = obspar.reducedNside
@@ -1750,8 +1921,11 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, nside, UsePix):
         Computes probability Pgal in FoV
     '''
     if UsePix:
-        targetCoord = co.SkyCoord(
-            galpix['PIXRA'], galpix['PIXDEC'], frame='fk5', unit=(u.deg, u.deg))
+        try:
+            targetCoord = co.SkyCoord(
+                galpix['PIXRA'], galpix['PIXDEC'], frame='fk5', unit=(u.deg, u.deg))
+        except: 
+            targetCoord = galpix
     else:
         targetCoord = co.SkyCoord(
             galpix['RAJ2000'], galpix['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
@@ -1822,8 +1996,11 @@ def ComputeProbPGALIntegrateFoV(prob, time, observatory, centerPoint, UsePix, vi
     maxZenith = obspar.maxZenith
     FOV = obspar.FOV
     if UsePix:
-        targetCoord = co.SkyCoord(
-            centerPoint['PIXRA'][:1], centerPoint['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
+        try:
+            targetCoord = co.SkyCoord(
+                centerPoint['PIXRA'][:1], centerPoint['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
+        except:
+            targetCoord = centerPoint
 
     else:
         targetCoord = co.SkyCoord(

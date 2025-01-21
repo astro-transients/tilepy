@@ -24,13 +24,15 @@ import os
 
 import astropy.units as u
 from astropy.io import ascii
+from astropy.table import Table
 
 from .MapManagement import MapReader
 from .MapManagement import SkyMap
 from .PointingPlotting import PointingPlotting
-from .RankingObservationTimes import RankingTimes, RankingTimes_2D
+from .RankingObservationTimes import RankingTimes, RankingTimes_2D, Ranking_Space, Ranking_Space_AI
 from .TilingDetermination import PGWinFoV, PGalinFoV
 from .TilingDetermination import PGWinFoV_NObs, PGalinFoV_NObs
+from .TilingDetermination import PGWinFoV_Space_NObs, PGalinFoV_Space_NObs
 
 __all__ = [
     "GetSchedule",
@@ -144,6 +146,8 @@ def GetUniversalSchedule(obspar):
 
     raw_map = MapReader(obspar[0])
     skymap = SkyMap(obspar[0], raw_map)
+    base = obspar[0].base
+    print("base base ", base)
 
     print("===========================================================================================")
     ObservationTime = obspar[0].obsTime
@@ -151,36 +155,75 @@ def GetUniversalSchedule(obspar):
     galaxies = obspar[0].datasetDir + obspar[0].galcatName
     cat = None
 
-    if skymap.is3D:
-        print("===========================================================================================")
-        print("Starting the 3D pointing calculation with the following parameters\n")
-        print("Filename: ", raw_map.name_event)
-        print("Date: ", obspar[0].obsTime)
-        print("Catalog: ", obspar[0].galcatName)
-        print("Dataset: ", obspar[0].datasetDir)
-        print("Output: ", outputDir)
-        print("===========================================================================================")
-        print()
-        dirName = '%s/PGalinFoV_NObs' % outputDir
-        galaxies = obspar[0].datasetDir + obspar[0].galcatName
-        if not os.path.exists(dirName):
-            os.makedirs(dirName)
-        SuggestedPointings, cat, obspar = PGalinFoV_NObs(
-            skymap, raw_map.name_event, ObservationTime, obspar[0].pointingsFile, galaxies, obspar, dirName)
+    #SPACE
+    if base == "space":
+        if skymap.is3D:
+            print("===========================================================================================")
+            print("Starting the 3D pointing calculation with the following parameters\n")
+            print("Filename: ", raw_map.name_event)
+            print("Date: ", obspar[0].obsTime)
+            print("Catalog: ", obspar[0].galcatName)
+            print("Dataset: ", obspar[0].datasetDir)
+            print("Output: ", outputDir)
+            print("===========================================================================================")
+            print()
+            dirName = '%s/PGalinFoV_NObs_Space' % outputDir
+            if not os.path.exists(dirName):
+                os.makedirs(dirName)
+            galaxies = obspar[0].datasetDir + obspar[0].galcatName
+            SuggestedPointings, SatTimes, SAA = PGalinFoV_Space_NObs(skymap, raw_map.name_event, ObservationTime, obspar[0].pointingsFile, galaxies, obspar, dirName)
+            print(SatTimes, SAA)
+
+        else:
+            print("===========================================================================================")
+            print("Starting the 2D pointing calculation with the following parameters\n")
+            print("Filename: ", raw_map.name_event)
+            print("Date: ", obspar[0].obsTime)
+            print("Dataset: ", obspar[0].datasetDir)
+            print("Output: ", outputDir)
+            print("===========================================================================================")
+            print()
+            dirName = '%s/PGWinFoV_Space_NObs' % outputDir
+            if not os.path.exists(dirName):
+                os.makedirs(dirName)
+            SuggestedPointings, SatTimes, SAA = PGWinFoV_Space_NObs(
+                skymap, raw_map.name_event, ObservationTime, obspar[0].pointingsFile, obspar, dirName)
+
+    
     else:
-        print("===========================================================================================")
-        print("Starting the 2D pointing calculation with the following parameters\n")
-        print("Filename: ", raw_map.name_event)
-        print("Date: ", obspar[0].obsTime)
-        print("Dataset: ", obspar[0].datasetDir)
-        print("Output: ", outputDir)
-        print("===========================================================================================")
-        print()
-        dirName = '%s/PGWinFoV_NObs' % outputDir
-        if not os.path.exists(dirName):
-            os.makedirs(dirName)
-        SuggestedPointings, obspar = PGWinFoV_NObs(
-            skymap, raw_map.name_event, ObservationTime, obspar[0].pointingsFile, obspar, dirName)
+        #GROUND
+        if skymap.is3D:
+            print("===========================================================================================")
+            print("Starting the 3D pointing calculation with the following parameters\n")
+            print("Filename: ", raw_map.name_event)
+            print("Date: ", obspar[0].obsTime)
+            print("Catalog: ", obspar[0].galcatName)
+            print("Dataset: ", obspar[0].datasetDir)
+            print("Output: ", outputDir)
+            print("===========================================================================================")
+            print()
+            dirName = '%s/PGalinFoV_NObs' % outputDir
+            galaxies = obspar[0].datasetDir + obspar[0].galcatName
+            if not os.path.exists(dirName):
+                os.makedirs(dirName)
+            SuggestedPointings, cat, obspar = PGalinFoV_NObs(
+                skymap, raw_map.name_event, ObservationTime, obspar[0].pointingsFile, galaxies, obspar, dirName)
+        else:
+            print("===========================================================================================")
+            print("Starting the 2D pointing calculation with the following parameters\n")
+            print("Filename: ", raw_map.name_event)
+            print("Date: ", obspar[0].obsTime)
+            print("Dataset: ", obspar[0].datasetDir)
+            print("Output: ", outputDir)
+            print("===========================================================================================")
+            print()
+            dirName = '%s/PGWinFoV_NObs' % outputDir
+            if not os.path.exists(dirName):
+                os.makedirs(dirName)
+            SuggestedPointings, obspar = PGWinFoV_NObs(
+                skymap, raw_map.name_event, ObservationTime, obspar[0].pointingsFile, obspar, dirName)
+        
+        
     if (len(SuggestedPointings) != 0):
         print(SuggestedPointings)
         FOLLOWUP = True
@@ -189,22 +232,38 @@ def GetUniversalSchedule(obspar):
                     overwrite=True, fast_writer=False)
         print()
         print(f"Resulting pointings file is {outfilename}")
-        # for obspar in parameters:
-        for j in range(len(obspar)):
-            obspar1 = obspar[j]
-            SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.obs_name]
-            print(SuggestedPointings_1)
-            if (len(SuggestedPointings_1) != 0):
-                ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' %
-                            (dirName, obspar[j].obs_name), overwrite=True, fast_writer=False)
-                RankingTimes_2D(ObservationTime, skymap.getMap('prob', obspar[j].HRnside), obspar[j], dirName,
-                                '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].obs_name),
-                                obspar[j].obs_name)
-                PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[j], obspar[j].obs_name, dirName,
-                                 '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
-                                     dirName, obspar[j].obs_name), obspar[j].obs_name, cat)
-        PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[0], "all", dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all",
-                         cat)
+
+        if base != "space":
+            # for obspar in parameters:
+            for j in range(len(obspar)):
+                obspar1 = obspar[j]
+                SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.name]
+                print(SuggestedPointings_1)
+                if (len(SuggestedPointings_1) != 0):
+                    ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' %
+                                (dirName, obspar[j].name), overwrite=True, fast_writer=False)
+                    RankingTimes_2D(ObservationTime, skymap.getMap('prob', obspar[j].HRnside), obspar[j], dirName,
+                                    '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name),
+                                    obspar[j].name)
+                    PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[j], obspar[j].name, dirName,
+                                    '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
+                                        dirName, obspar[j].name), obspar[j].name, cat)
+            PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[0], "all", dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all",
+                            cat)
+        else:
+            for j in range(len(obspar)):
+                obspar1 = obspar[j]
+                SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.name]
+                print(SuggestedPointings_1)
+                time_table = Table([SatTimes, SAA], names=('SatTimes', 'SAA'))
+                ascii.write(time_table, '%s/SAA_Times_%s.txt' %
+                                (dirName, obspar[j].name), overwrite=True, fast_writer=False)
+                if (len(SuggestedPointings_1) != 0):
+                    ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' %
+                                (dirName, obspar[j].name), overwrite=True, fast_writer=False)
+                    Ranking_Space(dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name))
+                    Ranking_Space_AI(dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name))
+
     else:
         FOLLOWUP = False
         print('No observations are scheduled')

@@ -32,7 +32,7 @@ parser.add_argument('-galcatName', metavar='galaxy catalog name', default="Glade
 parser.add_argument('-tiles', metavar='tiles already observed', default=None)
 parser.add_argument('-eventName', metavar='Name of the observed event', default=None)
 args = parser.parse_args()
-url = args.url
+url = args.skymap
 obsTime = datetime.datetime.fromisoformat(args.time)
 datasetDir = args.i
 outDir = args.o

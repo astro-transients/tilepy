@@ -47,7 +47,7 @@ if not os.path.exists(outDir):
 
 skymap = 'https://gracedb.ligo.org/api/superevents/S190728q/files/GW190728_064510_PublicationSamples_flattened.fits.gz,0'
 
-ObsArray = ['HESS', 'LST']
+ObsArray = ['HESS']
 parameters = []
 
 for i in ObsArray:
