@@ -36,6 +36,7 @@ def main():
     parser.add_argument('-galcatName', metavar='galaxy catalog name', default="Gladeplus.h5")
     parser.add_argument('-tiles', metavar='tiles already observed', default= None)
     parser.add_argument('-locCut', metavar='limit on skyloc to perform a followup', help='Options are: loose or std', default=None)
+    parser.add_argument('-eventName', metavar='Name of the observed event', default=None)
 
     args = parser.parse_args()
     skymap = args.skymap
@@ -47,6 +48,7 @@ def main():
     cfgFile = args.cfg
     galcatName = args.galcatName
     pointingsFile = args.tiles
+    eventName = args.eventName
 
     if not os.path.exists(outDir):
         os.makedirs(outDir)
@@ -54,7 +56,7 @@ def main():
     ################################################
 
     obspar = ObservationParameters()
-    obspar.add_parsed_args(skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile)
+    obspar.add_parsed_args(skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, eventName)
     obspar.from_configfile(cfgFile)
 
     PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2)

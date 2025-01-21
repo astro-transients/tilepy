@@ -30,6 +30,7 @@ parser.add_argument('-cfg',metavar = 'config file', help='Config file for the ti
 parser.add_argument('-galcatName', metavar='galaxy catalog name', default="Gladeplus.h5")
 parser.add_argument('-tiles', metavar='tiles already observed', default= None)
 
+
 args = parser.parse_args()
 alertType = args.alertType
 skymap = args.skymap
@@ -39,6 +40,7 @@ outDir = args.o
 cfgFile = args.cfg
 galcatName = args.galcatName
 pointingsFile = args.tiles
+eventName = args.eventName
 
 if not os.path.exists(outDir):
     os.makedirs(outDir)

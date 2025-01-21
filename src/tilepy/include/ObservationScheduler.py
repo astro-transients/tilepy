@@ -94,10 +94,10 @@ def GetSchedule(obspar):
             print(f"Resulting pointings file is {outfilename}")
             if (obspar.doRank):
                 RankingTimes(obspar.obsTime, skymap, cat, obspar, dirName,
-                             '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name)
+                             '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.obs_name)
             if (obspar.doPlot):
                 PointingPlotting(skymap.getMap('prob', obspar.HRnside), obspar, raw_map.name_event, dirName,
-                                 '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.name, cat)
+                                 '%s/SuggestedPointings_GalProbOptimisation.txt' % dirName, obspar.obs_name, cat)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
@@ -126,10 +126,10 @@ def GetSchedule(obspar):
             print(f"Resulting pointings file is {outfilename}")
             if (obspar.doRank):
                 RankingTimes_2D(obspar.obsTime, skymap.getMap('prob', obspar.HRnside), obspar, dirName,
-                                '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name)
+                                '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.obs_name)
             if (obspar.doPlot):
                 PointingPlotting(skymap.getMap('prob', obspar.HRnside), obspar, raw_map.name_event, dirName,
-                                 '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.name, gal)
+                                 '%s/SuggestedPointings_2DProbOptimisation.txt' % dirName, obspar.obs_name, gal)
         else:
             FOLLOWUP = False
             print('No observations are scheduled')
@@ -264,7 +264,6 @@ def GetUniversalSchedule(obspar):
                     Ranking_Space(dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name))
                     Ranking_Space_AI(dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name))
 
-                    
     else:
         FOLLOWUP = False
         print('No observations are scheduled')

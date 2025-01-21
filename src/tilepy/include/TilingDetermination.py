@@ -178,7 +178,7 @@ def PGWinFoV(skymap, eventName, obspar, dirName):
                         DECarray.append(
                             float('{:3.4f}'.format(float(TC.dec.deg))))
                         ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                        ObsName.append(obspar.name)
+                        ObsName.append(obspar.obs_name)
                         Duration.append(obspar.duration)
                         Fov_obs.append(obspar.FOV)
                         counter = counter+1
@@ -188,7 +188,7 @@ def PGWinFoV(skymap, eventName, obspar, dirName):
                     RAarray.append(float('{:3.4f}'.format(float(TC.ra.deg))))
                     DECarray.append(float('{:3.4f}'.format(float(TC.dec.deg))))
                     ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                    ObsName.append(obspar.name)
+                    ObsName.append(obspar.obs_name)
                     Duration.append(obspar.duration)
                     Fov_obs.append(obspar.FOV)
                     counter = counter+1
@@ -369,7 +369,7 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
                                 P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                 P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                 ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                                ObsName.append(obspar.name)
+                                ObsName.append(obspar.obs_name)
                                 Duration.append(obspar.duration)
                                 Fov_obs.append(obspar.FOV)
                                 counter = counter + 1
@@ -385,7 +385,7 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
                                 P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                 P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                 ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                                ObsName.append(obspar.name)
+                                ObsName.append(obspar.obs_name)
                                 Duration.append(obspar.duration)
                                 Fov_obs.append(obspar.FOV)
                                 counter = counter + 1
@@ -405,7 +405,7 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
                             P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                             P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                             ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                            ObsName.append(obspar.name)
+                            ObsName.append(obspar.obs_name)
                             Duration.append(obspar.duration)
                             Fov_obs.append(obspar.FOV)
                             counter = counter + 1
@@ -462,7 +462,7 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
                                 P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                 P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                 ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                                ObsName.append(obspar.name)
+                                ObsName.append(obspar.obs_name)
                                 Duration.append(obspar.duration)
                                 Fov_obs.append(obspar.FOV)
                                 counter = counter + 1
@@ -478,7 +478,7 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
                                 P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                 P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                 ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                                ObsName.append(obspar.name)
+                                ObsName.append(obspar.obs_name)
                                 Duration.append(obspar.duration)
                                 Fov_obs.append(obspar.FOV)
                                 counter = counter + 1
@@ -494,7 +494,7 @@ def PGalinFoV(skymap, nameEvent, galFile,obspar,dirName):
                             P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                             P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                             ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                            ObsName.append(obspar.name)
+                            ObsName.append(obspar.obs_name)
                             Duration.append(obspar.duration)
                             Fov_obs.append(obspar.FOV)
                             counter = counter + 1
@@ -694,8 +694,8 @@ def PGWinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obsparamete
             ITERATION_OBS += 1
             
             if obspar.base == "space":
-                SatelliteName = GetSatelliteName(obspar.name, obspar.stationsurl)
-                print(obspar.name)
+                SatelliteName = GetSatelliteName(obspar.obs_name, obspar.stationsurl)
+                print(obspar.obs_name)
 
             if(couter_per_obs[j] >=  maxRuns):
                 SameNight[j] = False
@@ -753,7 +753,7 @@ def PGWinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obsparamete
                                 ObservationTime = datetime.datetime.strptime(
                                     ObservationTime, '%Y-%m-%d %H:%M:%S')
                             ObservationTimearray.append(ObservationTime)
-                            ObsName.append(obspar.name)
+                            ObsName.append(obspar.obs_name)
                             counter = counter + 1
                             couter_per_obs[j] += 1
                             Duration.append(obspar.duration)
@@ -776,7 +776,7 @@ def PGWinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obsparamete
                             ObservationTime = datetime.datetime.strptime(
                                 ObservationTime, '%Y-%m-%d %H:%M:%S')
                         ObservationTimearray.append(ObservationTime)
-                        ObsName.append(obspar.name)
+                        ObsName.append(obspar.obs_name)
                         counter = counter+1
                         couter_per_obs[j] += 1
                         Duration.append(obspar.duration)
@@ -998,7 +998,7 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
                                         ObservationTime = datetime.datetime.strptime(
                                             ObservationTime, '%Y-%m-%d %H:%M:%S')
                                     ObservationTimearray.append(ObservationTime)
-                                    ObsName.append(obspar.name)
+                                    ObsName.append(obspar.obs_name)
                                     counter = counter + 1
                                     couter_per_obs[j] += 1
                                     Duration.append(obspar.duration)
@@ -1028,7 +1028,7 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
                                     ObservationTime = datetime.datetime.strptime(
                                         ObservationTime, '%Y-%m-%d %H:%M:%S')
                                 ObservationTimearray.append(ObservationTime)
-                                ObsName.append(obspar.name)
+                                ObsName.append(obspar.obs_name)
                                 counter = counter + 1
                                 couter_per_obs[j] += 1
                                 Duration.append(obspar.duration)
@@ -1085,7 +1085,7 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
                                         P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                         P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                         ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                                        ObsName.append(obspar.name)
+                                        ObsName.append(obspar.obs_name)
                                         counter = counter + 1
                                         couter_per_obs[j] += 1
                                         Duration.append(obspar.duration)
@@ -1102,7 +1102,7 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
                                         P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                         P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                         ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                                        ObsName.append(obspar.name)
+                                        ObsName.append(obspar.obs_name)
                                         counter = counter + 1
                                         couter_per_obs[j] += 1
                                         Duration.append(obspar.duration)
@@ -1119,7 +1119,7 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
                                     P_GALarray.append(float('{:1.4f}'.format(p_gal)))
                                     P_GWarray.append(float('{:1.4f}'.format(p_gw)))
                                     ObservationTimearray.append(ObservationTime.strftime("%Y-%m-%d %H:%M:%S"))
-                                    ObsName.append(obspar.name)
+                                    ObsName.append(obspar.obs_name)
                                     counter = counter + 1
                                     couter_per_obs[j] += 1
                                     Duration.append(obspar.duration)
