@@ -532,13 +532,16 @@ def distance(entry1, entry2):
     return np.sqrt(delta_ra**2 + delta_dec**2)
 
 # Ranking function
-def Ranking_Space_2D(dirName, PointingFile):
+def Ranking_Space(dirName, PointingFile):
     # Read the data from the pointing file
     file_path = f"{PointingFile}"
     data = pd.read_csv(file_path, delim_whitespace=True)
 
     # Sort by PGW in descending order
-    data = data.sort_values(by='PGW', ascending=False).reset_index(drop=True)
+    try:
+        data = data.sort_values(by='PGW', ascending=False).reset_index(drop=True)
+    except:
+        data = data.sort_values(by='PGal', ascending=False).reset_index(drop=True)
 
     # Initialize ranked list with the first (highest PGW) entry
     ranked = [data.iloc[0]]
@@ -562,12 +565,12 @@ def Ranking_Space_2D(dirName, PointingFile):
         print(f"Rank {idx}: {entry.to_dict()}")
 
     # Save the ranked list to a file
-    output_file = '%s/RankingObservations2D_Space.txt' % dirName
+    output_file = '%s/RankingObservations_Space.txt' % dirName
     pd.DataFrame(ranked).to_csv(output_file, index=False, sep='\t')
     print(f"Ranked file saved to {output_file}")
 
 
-def Ranking_Sapce_2D_AI(dirName, PointingFile):
+def Ranking_Space_AI(dirName, PointingFile):
     # Convert to DataFrame for easier handling
     file_path = f"{PointingFile}"
     data = pd.read_csv(file_path, delim_whitespace=True)
@@ -583,17 +586,16 @@ def Ranking_Sapce_2D_AI(dirName, PointingFile):
     # Sort within each cluster by PGW
     ranked_data = []
     for cluster_id in sorted(df['Cluster'].unique()):
-        cluster_data = df[df['Cluster'] == cluster_id].sort_values(by='PGW', ascending=False)
+        try:
+            cluster_data = df[df['Cluster'] == cluster_id].sort_values(by='PGW', ascending=False)
+        except:
+            cluster_data = df[df['Cluster'] == cluster_id].sort_values(by='PGal', ascending=False)
         ranked_data.append(cluster_data)
 
     # Combine ranked clusters
     final_ranked = pd.concat(ranked_data)
 
-    # Output the ranked list
-    for idx, row in final_ranked.iterrows():
-        print(f"Rank {idx + 1}: ObsName={row['ObsName']}, RA={row['RA(deg)']}, DEC={row['DEC(deg)']}, PGW={row['PGW']}")
-
     # Save the ranked list to a file
-    output_file = '%s/RankingObservations2D_AI_Space.txt' % dirName
+    output_file = '%s/RankingObservations_AI_Space.txt' % dirName
     pd.DataFrame(final_ranked).to_csv(output_file, index=False, sep='\t')
     print(f"Ranked file saved to {output_file}")

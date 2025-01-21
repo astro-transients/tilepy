@@ -110,3 +110,4 @@ class SkyMap:
             galaxyCatalog['dp_dV'] = self.raw_map_prob_density[pix_id] * self.raw_map_prob_density.pixarea(pix_id)
 
         return galaxyCatalog
+    

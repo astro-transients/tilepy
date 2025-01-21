@@ -106,7 +106,8 @@ __all__ = [
     "GetSunOccultedPix",
     "SAA_Times",
     "is_in_saa",
-    "GetBestSpacePos",
+    "GetBestSpacePos2D",
+    "GetBestSpacePos3D",
     "FillSummary"
 
 ]
@@ -1359,7 +1360,7 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
 
-def GetBestSpacePos(prob, highres, HRnside, reducedNside, newpix, radius, maxRuns, Occultedpixels, doPlot, dirName):
+def GetBestSpacePos2D(prob, highres, HRnside, reducedNside, newpix, radius, maxRuns, Occultedpixels, doPlot, dirName):
 
     xyzpix1 = hp.pix2vec(reducedNside, newpix)
     xyzpix = np.column_stack(xyzpix1) 
@@ -1388,7 +1389,53 @@ def GetBestSpacePos(prob, highres, HRnside, reducedNside, newpix, radius, maxRun
     #centerDEC = 10
     
     if doPlot:
-        path = dirName + '/OcculationPlot'
+        path = dirName + '/OccultationPlot'
+        if not os.path.exists(path):
+            os.mkdir(path, 493)
+
+        #mpl.rcParams.update({'font.size':14})
+        hp.mollview(prob)
+        hp.graticule()
+        try:
+            tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
+            ra2 = np.rad2deg(pp)
+            dec2 = np.rad2deg(0.5 * np.pi - tt)
+            skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
+            hp.visufunc.projplot(skycoord.ra.deg, skycoord.dec.deg, 'g.', lonlat=True, coord="C", linewidth=0.1)
+        except:
+            print("No pcculted pix")
+
+        hp.visufunc.projplot(first_values['PIXRA'], first_values['PIXDEC'], 'b.', lonlat=True, coord="C", linewidth=0.1)
+        plt.savefig('%s/Occ_Pointing.png' % (path))
+        plt.close()
+    
+    return first_values
+
+def GetBestSpacePos3D(prob, cat, galpix, newpix, FOV, totaldPdV, HRnside, UsePix, maxRuns, doPlot, dirName, reducedNside, Occultedpixels):    
+    lengthSG = 100
+    SelectedGals = galpix
+    dp_dV_FOV = []
+    for l in range(0, len(SelectedGals)):
+        if (l < len(SelectedGals)):
+            dp_dV_FOV.append(ComputePGalinFOV(
+                prob, cat, SelectedGals[l], FOV, totaldPdV, reducedNside, UsePix= True))
+        else:
+            dp_dV_FOV.append(0)
+
+
+    print("Length of SelectedGals:", len(SelectedGals))
+    print("Length of dp_dV_FOV[:lengthSG]:", len(dp_dV_FOV))
+
+
+    cat_pix = Table([SelectedGals.ra.deg, SelectedGals.dec.deg, dp_dV_FOV],
+                    names=('PIXRA', 'PIXDEC', 'PIXFOVPROB'))
+
+
+    sortcat = cat_pix[np.flipud(np.argsort(cat_pix['PIXFOVPROB']))]
+    first_values = sortcat[:maxRuns]
+
+    if doPlot:
+        path = dirName + '/OccultationPlot'
         if not os.path.exists(path):
             os.mkdir(path, 493)
 
@@ -1878,8 +1925,11 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, nside, UsePix):
         Computes probability Pgal in FoV
     '''
     if UsePix:
-        targetCoord = co.SkyCoord(
-            galpix['PIXRA'], galpix['PIXDEC'], frame='fk5', unit=(u.deg, u.deg))
+        try:
+            targetCoord = co.SkyCoord(
+                galpix['PIXRA'], galpix['PIXDEC'], frame='fk5', unit=(u.deg, u.deg))
+        except: 
+            targetCoord = galpix
     else:
         targetCoord = co.SkyCoord(
             galpix['RAJ2000'], galpix['DEJ2000'], frame='fk5', unit=(u.deg, u.deg))
@@ -1950,8 +2000,11 @@ def ComputeProbPGALIntegrateFoV(prob, time, observatory, centerPoint, UsePix, vi
     maxZenith = obspar.maxZenith
     FOV = obspar.FOV
     if UsePix:
-        targetCoord = co.SkyCoord(
-            centerPoint['PIXRA'][:1], centerPoint['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
+        try:
+            targetCoord = co.SkyCoord(
+                centerPoint['PIXRA'][:1], centerPoint['PIXDEC'][:1], frame='fk5', unit=(u.deg, u.deg))
+        except:
+            targetCoord = centerPoint
 
     else:
         targetCoord = co.SkyCoord(
