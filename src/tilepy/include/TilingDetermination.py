@@ -1165,6 +1165,140 @@ def PGalinFoV_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galFile, o
     return SuggestedPointings, tGals0, obsparameters
 
 
+def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
+    random.seed()
+    RAarray = []
+    DECarray = []
+    P_GWarray = []
+    ObsName = []
+    Occultedpixels = []
+    obspar = obsparameters[0]
+
+    # Retrieve maps
+    prob = skymap.getMap('prob', obspar.reducedNside)
+    highres = skymap.getMap('prob', obspar.HRnside)
+
+    # Create table for 2D probability at 90% containment
+    rapix, decpix, areapix = Get90RegionPixReduced(
+        prob, obspar.percentageMOC, obspar.reducedNside)
+    radecs = co.SkyCoord(rapix, decpix, frame='icrs', unit=(u.deg, u.deg))
+    maxRuns = obspar.maxRuns
+    reducedNside = obspar.reducedNside
+    HRnside = obspar.HRnside
+    radius = obspar.FOV
+    doPlot = obspar.doPlot
+
+    # Add observed pixels to pixlist
+    if (PointingFile != None):
+        print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
+        pixlist, sumPGW, doneObs = SubstractPointings2D(PointingFile, prob, obspar, pixlist)
+
+        if obspar.countPrevious:
+            maxRuns = obspar.maxRuns - doneObs
+        print("===========================================================================================")
+        print()
+        print(f"Total GW probability already covered: {sumPGW}")
+        print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
+            f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
+        print("===========================================================================================")
+
+    pix_ra = radecs.ra.deg
+    pix_dec = radecs.dec.deg
+    phipix = np.deg2rad(pix_ra)
+    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
+    ipix = hp.ang2pix(reducedNside, thetapix, phipix)
+
+    newpix = ipix
+
+
+    first_values = GetBestSpacePos2D(prob, highres, HRnside, reducedNside, newpix, radius, maxRuns, Occultedpixels, doPlot, dirName)
+
+    ObsName = [obspar.name for j in range(len(first_values))]
+    RAarray = [row["PIXRA"] for row in first_values]
+    DECarray = [row["PIXDEC"] for row in first_values]
+    P_GWarray = [row["PIXFOVPROB"] for row in first_values]
+
+    SuggestedPointings = Table([ObsName, RAarray, DECarray, P_GWarray], names=[
+                               'ObsName', 'RA(deg)', 'DEC(deg)', 'PGW'])
+
+    return SuggestedPointings
+
+def GetBestTiles3D(skymap, nameEvent, ObservationTime0, PointingFile, galFile, obsparameters, dirName):
+    random.seed()
+    RAarray = []
+    DECarray = []
+    pixlist = []
+    ObsName = []
+    Occultedpixels = []
+
+    obspar = obsparameters[0]
+    maxRuns = obspar.maxRuns
+
+    # Retrieve maps
+    prob = skymap.getMap('prob', obspar.reducedNside)
+
+    # Create table for 2D probability at 90% containment
+    rapix, decpix, areapix = Get90RegionPixReduced(
+        prob, obspar.percentageMOC, obspar.reducedNside)
+
+    # load galaxy catalogue
+    if not obspar.mangrove:
+        cat = LoadGalaxies(galFile)
+    else:
+        cat = LoadGalaxies_SteMgal(galFile)
+
+    # correlate GW map with galaxy catalog, retrieve ordered list
+    if not obspar.mangrove:
+        cat = skymap.computeGalaxyProbability(cat)
+        tGals0 = FilterGalaxies(cat, obspar.minimumProbCutForCatalogue)
+        sum_dP_dV = cat['dp_dV'].sum()
+    else:
+        cat = skymap.computeGalaxyProbability(cat)
+        tGals0 = FilterGalaxies(cat, obspar.minimumProbCutForCatalogue)
+        tGals0 = MangroveGalaxiesProbabilities(tGals0)
+        sum_dP_dV = cat['dp_dV'].sum()
+
+
+    # Add observed pixels to pixlist
+    if (PointingFile != None):
+        print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
+        pixlist, sumPGW, doneObs = SubstractPointings2D(PointingFile, prob, obspar, pixlist)
+
+        if obspar.countPrevious:
+            maxRuns = obspar.maxRuns - doneObs
+        print("===========================================================================================")
+        print()
+        print(f"Total GW probability already covered: {sumPGW}")
+        print(f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
+            f"Max Runs was {obspar.maxRuns}, now is {maxRuns}")
+        print("========")
+
+    pix_ra = radecs.ra.deg
+    pix_dec = radecs.dec.deg
+    phipix = np.deg2rad(pix_ra)
+    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
+    ipix = hp.ang2pix(reducedNside, thetapix, phipix)
+    newpix = ipix
+
+    #CONVERTING newpix to angles on the coordinate grid
+    tt, pp = hp.pix2ang(reducedNside, newpix)
+    ra2 = np.rad2deg(pp)
+    dec2 = np.rad2deg(0.5 * np.pi - tt)
+    pixradec = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
+
+    first_values = GetBestSpacePos3D(prob, tGals0, pixradec, newpix, obspar.FOV, sum_dP_dV, obspar.HRnside, True, obspar.maxRuns, obspar.doPlot, dirName, obspar.reducedNside, Occultedpixels)
+
+    ObsName = [obspar.name for j in range(len(first_values))]
+    RAarray = [row["PIXRA"] for row in first_values]
+    DECarray = [row["PIXDEC"] for row in first_values]
+    P_Galarray = [row["PIXFOVPROB"] for row in first_values]
+
+    SuggestedPointings = Table([ObsName, RAarray, DECarray, P_Galarray], names=[
+                               'ObsName', 'RA(deg)', 'DEC(deg)', 'PGal'])
+    return SuggestedPointings
+
+
+
 def PGWinFoV_Space_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obsparameters, dirName):
     random.seed()
     RAarray = []
