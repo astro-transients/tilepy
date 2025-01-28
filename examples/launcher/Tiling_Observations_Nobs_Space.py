@@ -29,6 +29,7 @@ parser.add_argument('-o',metavar = 'output path', help='Path to the output folde
 parser.add_argument('-cfg',metavar = 'config file', help='Config file for the tiling scheduling',default='../config/FollowupParameters.ini')
 parser.add_argument('-galcatName', metavar='galaxy catalog name', default="Gladeplus.h5")
 parser.add_argument('-tiles', metavar='tiles already observed', default= None)
+parser.add_argument('-eventName', metavar='event name', default= "undefined")
 
 
 args = parser.parse_args()
