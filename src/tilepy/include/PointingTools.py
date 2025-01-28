@@ -102,6 +102,7 @@ __all__ = [
     "is_in_saa",
     "GetBestSpacePos2D",
     "GetBestSpacePos3D",
+    "PlotSpaceOcc",
     "FillSummary"
 
 ]
@@ -1054,7 +1055,7 @@ def GetSatelliteName(satellitename, stationsurl):
     stations_url = stationsurl
     satellites = load.tle_file(stations_url)
     #print('Loaded', len(satellites), 'satellites')
-    by_name = {sat.obs_name: sat for sat in satellites}
+    by_name = {sat.name: sat for sat in satellites}
     satellite_name = by_name.get(satellitename)
     return  satellite_name
 
@@ -1163,14 +1164,15 @@ def OccultationCut(prob, nside, time, minProbcut, satellite_position, observator
 def SAA_Times(duration, start_time, current_time, SatelliteName, saa, SatTimes, step, doPlot, dirName):
     SatTimes = []
     i = 0
+    saa = []
     while current_time <= start_time + datetime.timedelta(minutes = duration):
         SatelliteTime  = GetSatelliteTime(SatelliteName, current_time)
         satellite_position, satellite_location = GetSatellitePositions(SatelliteName, SatelliteTime)
         
         if Tools.is_in_saa(satellite_location.lat.deg, satellite_location.lon.deg):
-            saa[i] = True
+            saa.append(True)
         else:
-            saa[i] = False
+            saa.append(False)
 
         SatTimes.append(current_time)
         
@@ -1356,7 +1358,7 @@ def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcu
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
 
-def GetBestSpacePos2D(prob, highres, HRnside, reducedNside, newpix, radius, maxRuns, Occultedpixels, doPlot, dirName):
+def GetBestGridPos2D(prob, highres, HRnside, reducedNside, newpix, radius, maxRuns, Occultedpixels, doPlot, dirName):
 
     xyzpix1 = hp.pix2vec(reducedNside, newpix)
     xyzpix = np.column_stack(xyzpix1) 
@@ -1385,7 +1387,7 @@ def GetBestSpacePos2D(prob, highres, HRnside, reducedNside, newpix, radius, maxR
     #centerDEC = 10
     
     if doPlot:
-        path = dirName + '/OccultationPlot'
+        path = dirName + '/GridPlot'
         if not os.path.exists(path):
             os.mkdir(path, 493)
 
@@ -1407,7 +1409,7 @@ def GetBestSpacePos2D(prob, highres, HRnside, reducedNside, newpix, radius, maxR
     
     return first_values
 
-def GetBestSpacePos3D(prob, cat, galpix, newpix, FOV, totaldPdV, HRnside, UsePix, maxRuns, doPlot, dirName, reducedNside, Occultedpixels):    
+def GetBestGridPos3D(prob, cat, galpix, newpix, FOV, totaldPdV, HRnside, UsePix, maxRuns, doPlot, dirName, reducedNside, Occultedpixels):    
     lengthSG = 100
     SelectedGals = galpix
     dp_dV_FOV = []
@@ -1431,7 +1433,7 @@ def GetBestSpacePos3D(prob, cat, galpix, newpix, FOV, totaldPdV, HRnside, UsePix
     first_values = sortcat[:maxRuns]
 
     if doPlot:
-        path = dirName + '/OccultationPlot'
+        path = dirName + '/GridPlot'
         if not os.path.exists(path):
             os.mkdir(path, 493)
 
@@ -1445,13 +1447,34 @@ def GetBestSpacePos3D(prob, cat, galpix, newpix, FOV, totaldPdV, HRnside, UsePix
             skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
             hp.visufunc.projplot(skycoord.ra.deg, skycoord.dec.deg, 'g.', lonlat=True, coord="C", linewidth=0.1)
         except:
-            print("No pcculted pix")
+            print("No occulted pix")
 
         hp.visufunc.projplot(first_values['PIXRA'], first_values['PIXDEC'], 'b.', lonlat=True, coord="C", linewidth=0.1)
         plt.savefig('%s/Occ_Pointing.png' % (path))
         plt.close()
     
     return first_values
+
+def PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values):
+    path = dirName + '/Occ_Space_Obs'
+    if not os.path.exists(path):
+        os.mkdir(path, 493)
+
+    #mpl.rcParams.update({'font.size':14})
+    hp.mollview(prob)
+    hp.graticule()
+    try:
+        tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
+        ra2 = np.rad2deg(pp)
+        dec2 = np.rad2deg(0.5 * np.pi - tt)
+        skycoord = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
+        hp.visufunc.projplot(skycoord.ra.deg, skycoord.dec.deg, 'g.', lonlat=True, coord="C", linewidth=0.1)
+    except:
+        print("No pcculted pix")
+
+    hp.visufunc.projplot(first_values['PIXRA'], first_values['PIXDEC'], 'b.', lonlat=True, coord="C", linewidth=0.1)
+    plt.savefig('%s/Occ_Pointing.png' % (path))
+    plt.close()
 
 def SubstractPointings2D(tpointingFile, prob, obspar, pixlist):
     nside = obspar.reducedNside

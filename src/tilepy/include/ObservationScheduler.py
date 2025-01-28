@@ -32,7 +32,7 @@ from .PointingPlotting import PointingPlotting
 from .RankingObservationTimes import RankingTimes, RankingTimes_2D, Ranking_Space, Ranking_Space_AI
 from .TilingDetermination import PGWinFoV, PGalinFoV
 from .TilingDetermination import PGWinFoV_NObs, PGalinFoV_NObs
-from .TilingDetermination import PGWinFoV_Space_NObs, PGalinFoV_Space_NObs
+from .TilingDetermination import PGWinFoV_Space_NObs, PGalinFoV_Space_NObs, GetBestTiles2D, GetBestTiles3D
 
 __all__ = [
     "GetSchedule",
@@ -155,6 +155,23 @@ def GetUniversalSchedule(obspar):
     galaxies = obspar[0].datasetDir + obspar[0].galcatName
     cat = None
 
+    ########################    ########################
+
+    if base == "grid":
+        if skymap.is3D:
+            dirName = '%s/GetBestTiles3D' % outputDir
+            if not os.path.exists(dirName):
+                os.makedirs(dirName)
+            SuggestedPointings = GetBestTiles3D(skymap, raw_map.name_event, obspar[0].pointingsFile, galaxies, obspar, dirName)
+            #print(SuggestedPointings)
+        else:
+            dirName = '%s/GetBestTiles2D' % outputDir
+            if not os.path.exists(dirName):
+                os.makedirs(dirName)
+            SuggestedPointings = GetBestTiles2D(skymap, raw_map.name_event, obspar[0].pointingsFile, obspar, dirName)
+            #print(SuggestedPointings)
+        ########################    ########################
+
     #SPACE
     if base == "space":
         if skymap.is3D:
@@ -233,36 +250,38 @@ def GetUniversalSchedule(obspar):
         print()
         print(f"Resulting pointings file is {outfilename}")
 
-        if base != "space":
+        if base  in ["space", "grid"]:
+            for j in range(len(obspar)):
+                obspar1 = obspar[j]
+                SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.obs_name]
+                print(SuggestedPointings_1)
+                if base == "space":
+                    time_table = Table([SatTimes, SAA], names=('SatTimes', 'SAA'))
+                    ascii.write(time_table, '%s/SAA_Times_%s.txt' %
+                                    (dirName, obspar[j].obs_name), overwrite=True, fast_writer=False)
+                if (len(SuggestedPointings_1) != 0):
+                    ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' %
+                                (dirName, obspar[j].obs_name), overwrite=True, fast_writer=False)
+                    Ranking_Space(dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].obs_name))
+                    Ranking_Space_AI(dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].obs_name))
+
+        else:
             # for obspar in parameters:
             for j in range(len(obspar)):
                 obspar1 = obspar[j]
-                SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.name]
+                SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.obs_name]
                 print(SuggestedPointings_1)
                 if (len(SuggestedPointings_1) != 0):
                     ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' %
-                                (dirName, obspar[j].name), overwrite=True, fast_writer=False)
+                                (dirName, obspar[j].obs_name), overwrite=True, fast_writer=False)
                     RankingTimes_2D(ObservationTime, skymap.getMap('prob', obspar[j].HRnside), obspar[j], dirName,
-                                    '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name),
-                                    obspar[j].name)
-                    PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[j], obspar[j].name, dirName,
+                                    '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].obs_name),
+                                    obspar[j].obs_name)
+                    PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[j], obspar[j].obs_name, dirName,
                                     '%s/SuggestedPointings_GWOptimisation_%s.txt' % (
-                                        dirName, obspar[j].name), obspar[j].name, cat)
+                                        dirName, obspar[j].obs_name), obspar[j].obs_name, cat)
             PointingPlotting(skymap.getMap('prob', obspar[j].HRnside), obspar[0], "all", dirName, '%s/SuggestedPointings_GWOptimisation.txt' % dirName, "all",
                             cat)
-        else:
-            for j in range(len(obspar)):
-                obspar1 = obspar[j]
-                SuggestedPointings_1 = SuggestedPointings[SuggestedPointings['ObsName'] == obspar1.name]
-                print(SuggestedPointings_1)
-                time_table = Table([SatTimes, SAA], names=('SatTimes', 'SAA'))
-                ascii.write(time_table, '%s/SAA_Times_%s.txt' %
-                                (dirName, obspar[j].name), overwrite=True, fast_writer=False)
-                if (len(SuggestedPointings_1) != 0):
-                    ascii.write(SuggestedPointings_1, '%s/SuggestedPointings_GWOptimisation_%s.txt' %
-                                (dirName, obspar[j].name), overwrite=True, fast_writer=False)
-                    Ranking_Space(dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name))
-                    Ranking_Space_AI(dirName, '%s/SuggestedPointings_GWOptimisation_%s.txt' % (dirName, obspar[j].name))
 
     else:
         FOLLOWUP = False
