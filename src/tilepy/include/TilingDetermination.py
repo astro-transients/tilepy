@@ -41,7 +41,7 @@ from .PointingTools import (GetSatelliteName, GetSatelliteTime, GetSatellitePosi
                             ZenithAngleCut, ComputeProbability2D, FulfillsRequirement, VisibleAtTime, LoadGalaxies,
                             SubstractPointings2D, Tools, LoadGalaxies_SteMgal, SubstractPointings, ModifyCatalogue,
                             FulfillsRequirementGreyObservations, ComputeProbPGALIntegrateFoV, ComputeProbGalTargeted,
-                            NextWindowTools, FilterGalaxies, MangroveGalaxiesProbabilities, SAA_Times, GetBestGridPos2D, GetBestGridPos3D, PlotSpaceOcc)
+                            NextWindowTools, FilterGalaxies, MangroveGalaxiesProbabilities, SAA_Times, GetBestGridPos2D, GetBestGridPos3D, PlotSpaceOcc, GetBestNSIDE)
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -1174,18 +1174,19 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
     Occultedpixels = []
     obspar = obsparameters[0]
 
+    radius = obspar.FOV
+    HRnside, reducedNside = GetBestNSIDE(obspar.reducedNside, obspar.HRnside, radius)
+
     # Retrieve maps
-    prob = skymap.getMap('prob', obspar.reducedNside)
-    highres = skymap.getMap('prob', obspar.HRnside)
+    prob = skymap.getMap('prob', reducedNside)
+    highres = skymap.getMap('prob', HRnside)
 
     # Create table for 2D probability at 90% containment
     rapix, decpix, areapix = Get90RegionPixReduced(
-        prob, obspar.percentageMOC, obspar.reducedNside)
+        prob, obspar.percentageMOC, reducedNside)
     radecs = co.SkyCoord(rapix, decpix, frame='icrs', unit=(u.deg, u.deg))
     maxRuns = obspar.maxRuns
-    reducedNside = obspar.reducedNside
-    HRnside = obspar.HRnside
-    radius = obspar.FOV
+
     doPlot = obspar.doPlot
 
     # Add observed pixels to pixlist
@@ -1231,19 +1232,20 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
     Occultedpixels = []
 
     obspar = obsparameters[0]
+    radius = obspar.FOV
+    HRnside, reducedNside = GetBestNSIDE(obspar.reducedNside, obspar.HRnside, radius)
+
     maxRuns = obspar.maxRuns
 
     # Retrieve maps
-    prob = skymap.getMap('prob', obspar.reducedNside)
+    prob = skymap.getMap('prob', reducedNside)
 
     # Create table for 2D probability at 90% containment
     rapix, decpix, areapix = Get90RegionPixReduced(
-        prob, obspar.percentageMOC, obspar.reducedNside)
+        prob, obspar.percentageMOC, reducedNside)
     radecs = co.SkyCoord(rapix, decpix, frame='icrs', unit=(u.deg, u.deg))
     maxRuns = obspar.maxRuns
-    reducedNside = obspar.reducedNside
-    HRnside = obspar.HRnside
-    radius = obspar.FOV
+
     doPlot = obspar.doPlot
 
     # load galaxy catalogue
@@ -1291,7 +1293,7 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
     dec2 = np.rad2deg(0.5 * np.pi - tt)
     pixradec = co.SkyCoord(ra2, dec2, frame='fk5', unit=(u.deg, u.deg))
 
-    first_values = GetBestGridPos3D(prob, tGals0, pixradec, newpix, obspar.FOV, sum_dP_dV, obspar.HRnside, True, obspar.maxRuns, obspar.doPlot, dirName, obspar.reducedNside, Occultedpixels)
+    first_values = GetBestGridPos3D(prob, tGals0, pixradec, newpix, radius, sum_dP_dV, HRnside, True, maxRuns, doPlot, dirName, reducedNside, Occultedpixels)
 
     ObsName = [obspar.obs_name for j in range(len(first_values))]
     RAarray = [row["PIXRA"] for row in first_values]
@@ -1312,22 +1314,23 @@ def PGWinFoV_Space_NObs(skymap, nameEvent, ObservationTime0, PointingFile, obspa
     P_GWarray = []
     ObsName = []
     Occultedpixels = []
-#################################################################################################################################################
+
     obspar = obsparameters[0]
+    radius = obspar.FOV
+    HRnside, reducedNside = GetBestNSIDE(obspar.reducedNside, obspar.HRnside, radius)
+#################################################################################################################################################
+    
 
     # Retrieve maps
-    nside = obspar.reducedNside
-    prob = skymap.getMap('prob', obspar.reducedNside)
-    highres = skymap.getMap('prob', obspar.HRnside)
+    prob = skymap.getMap('prob', reducedNside)
+    highres = skymap.getMap('prob', HRnside)
 
     # Create table for 2D probability at 90% containment
     rapix, decpix, areapix = Get90RegionPixReduced(
-        prob, obspar.percentageMOC, obspar.reducedNside)
+        prob, obspar.percentageMOC, reducedNside)
     radecs = co.SkyCoord(rapix, decpix, frame='icrs', unit=(u.deg, u.deg))
     maxRuns = obspar.maxRuns
-    reducedNside = obspar.reducedNside
-    HRnside = obspar.HRnside
-    radius = obspar.FOV
+
     doPlot = obspar.doPlot
 
     # Add observed pixels to pixlist
@@ -1420,22 +1423,21 @@ def PGalinFoV_Space_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galF
     pixlist = []
     ObsName = []
     Occultedpixels = []
-#################################################################################################################################################
+
     obspar = obsparameters[0]
+    radius = obspar.FOV
+    HRnside, reducedNside = GetBestNSIDE(obspar.reducedNside, obspar.HRnside, radius)
+#################################################################################################################################################
 
     # Retrieve maps
-    nside = obspar.reducedNside
-    prob = skymap.getMap('prob', obspar.reducedNside)
-    highres = skymap.getMap('prob', obspar.HRnside)
+    prob = skymap.getMap('prob', reducedNside)
 
     # Create table for 2D probability at 90% containment
     rapix, decpix, areapix = Get90RegionPixReduced(
-        prob, obspar.percentageMOC, obspar.reducedNside)
+        prob, obspar.percentageMOC, reducedNside)
     radecs = co.SkyCoord(rapix, decpix, frame='icrs', unit=(u.deg, u.deg))
     maxRuns = obspar.maxRuns
-    reducedNside = obspar.reducedNside
-    HRnside = obspar.HRnside
-    radius = obspar.FOV
+
     doPlot = obspar.doPlot
 
 
@@ -1459,7 +1461,7 @@ def PGalinFoV_Space_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galF
 
     # Add observed pixels to pixlist
     if (PointingFile != None):
-        print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
+        print(PointingFile, prob, reducedNside, radius, pixlist)
         pixlist, sumPGW, doneObs = SubstractPointings2D(PointingFile, prob, obspar, pixlist)
 
         if obspar.countPrevious:
@@ -1480,7 +1482,7 @@ def PGalinFoV_Space_NObs(skymap, nameEvent, ObservationTime0, PointingFile, galF
     newpix = ipix
     pixradec = radecs
 
-    first_values1 = GetBestGridPos3D(prob, tGals0, pixradec, newpix, obspar.FOV, sum_dP_dV, obspar.HRnside, True, obspar.maxRuns, obspar.doPlot, dirName, obspar.reducedNside, Occultedpixels)
+    first_values1 = GetBestGridPos3D(prob, tGals0, pixradec, newpix, radecs, sum_dP_dV, HRnside, True, maxRuns, doPlot, dirName, reducedNside, Occultedpixels)
 
     #FOR SPACE ######################################################
     #Computing the satellite name 

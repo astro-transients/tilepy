@@ -103,6 +103,7 @@ __all__ = [
     "GetBestSpacePos2D",
     "GetBestSpacePos3D",
     "PlotSpaceOcc",
+    "GetBestNSIDE",
     "FillSummary"
 
 ]
@@ -555,9 +556,17 @@ class ObservationParameters(object):
             section, 'zenithWeighting', fallback=0))
         self.percentageMOC = float(parser.get(
             section, 'percentageMOC', fallback=0))
-        self.reducedNside = int(parser.get(
-            section, 'reducedNside', fallback=0))
-        self.HRnside = int(parser.get(section, 'hrnside', fallback=0))
+        try:
+            self.reducedNside = int(parser.get(
+                section, 'reducedNside', fallback=0))
+        except:
+            self.reducedNside = (parser.getboolean(section, 'reducedNside', fallback=None))
+
+        try:
+            self.HRnside = int(parser.get(
+                section, 'hrnside', fallback=0))
+        except:
+            self.HRnside = (parser.getboolean(section, 'hrnside', fallback=None)) 
         self.mangrove = (parser.getboolean(section, 'mangrove', fallback=None))
         self.algorithm = str(parser.get(section, 'algorithm', fallback=None))
         self.strategy = str(parser.get(section, 'strategy', fallback=None))
@@ -1196,6 +1205,34 @@ def SAA_Times(duration, start_time, current_time, SatelliteName, saa, SatTimes, 
         plt.savefig('%s/SAA_Times.png' % (path))
     return SatTimes, saa
     
+
+def GetBestNSIDE(ReducedNSIDE, HRnside, fov):
+
+    if isinstance(HRnside, int) and HRnside > 0 and (HRnside & (HRnside - 1)) == 0:
+        max_nside = HRnside
+    else:
+        max_nside =  512
+
+    if isinstance(ReducedNSIDE, int) and ReducedNSIDE > 0 and (ReducedNSIDE & (ReducedNSIDE - 1)) == 0:
+        best_nside = ReducedNSIDE
+        print("The NSIDE is already given. No optimization...")
+        
+    else:
+        nside_values = [2**i for i in range(1, 13)]  # From NSIDE=2 to NSIDE=4096
+        nside_values = [nside for nside in nside_values if  nside <= max_nside]
+        pixel_sizes = {nside: (180.0 / (np.sqrt(3) * nside)) for nside in nside_values}
+        valid_nsides = [nside for nside, size in pixel_sizes.items() if size <= fov]
+
+        if not valid_nsides:
+            best_nside = max_nside  # Default to max_nside if no valid NSIDE is found
+        else:
+            best_nside = max(valid_nsides)  # Choose the best NSIDE in range
+
+        print("NO REDUCED NSIDE GIVEN. Optimizing...")
+        print(f"Best NSIDE for FoV of {fov}° (Min NSIDE {ReducedNSIDE}, Max NSIDE {max_nside}): {best_nside} (Pixel Size ≈ {pixel_sizes[best_nside]:.3f}°)")
+        
+    print("best_nside", best_nside)
+    return max_nside, best_nside
 
 def ComputeProbability2D(prob, highres, radecs, reducedNside, HRnside, minProbcut, time, observatory, maxZenith, FOV,
                          ipixlist, ipixlistHR, counter, dirName, useGreytime, plot, ipixlistOcc=None):
