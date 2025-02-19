@@ -67,6 +67,8 @@ class MapReader:
         self.name_event = self.getSourceName()
         if obspar.event_name is not None:
             self.name_event = obspar.event_name
+        if obspar.event_name is None: 
+            obspar.event_name = self.name_event
         self.identifyColumns()
 
     def getMapHDUId(self):
@@ -199,11 +201,14 @@ class MapReader:
             logger.warning('The file is already existing, it will be re-downloaded')
 
         for i in range(download_max_nb_try):
+            if 'png' in self.url: #Change Fermi-GBM url(if png) to fit format
+                self.url = self.url.replace("png", "fit")
             try:
                 urlretrieve(self.url, filename)
                 break
 
             except Exception as e:
+
                 if i == (download_max_nb_try - 1) or str(e) != 'HTTP Error 404: Not Found':
                     logger.error('Issue to download map from url')
                     traceback.print_exc()

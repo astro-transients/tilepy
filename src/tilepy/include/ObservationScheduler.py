@@ -147,7 +147,6 @@ def GetUniversalSchedule(obspar):
     raw_map = MapReader(obspar[0])
     skymap = SkyMap(obspar[0], raw_map)
     base = obspar[0].base
-    print("base base ", base)
 
     print("===========================================================================================")
     ObservationTime = obspar[0].obsTime

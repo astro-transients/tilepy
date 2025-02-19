@@ -66,7 +66,7 @@ __all__ = [
 ]
 
 
-def PGWinFoV(skymap, eventName, obspar, dirName):
+def PGWinFoV(skymap, nameEvent, obspar, dirName):
     """
     Mid-level function that is called by GetSchedule to compute a observation schedule based on a 2D method.  
     

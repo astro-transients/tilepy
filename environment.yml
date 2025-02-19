@@ -26,3 +26,4 @@ dependencies:
   - pytest-runner
   - pip:
     - mhealpy>=0.3.0,<0.4
+    - scikit-learn

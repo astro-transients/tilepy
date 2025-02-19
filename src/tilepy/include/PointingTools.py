@@ -473,6 +473,7 @@ class ObservationParameters(object):
         txt = ''
         txt += '============== Main parsed observation parameters ==============  \n'.format()
         txt += 'Observatory Name: {}\n'.format(self.obs_name)
+        txt += 'Event Name: {}\n'.format(self.event_name)
         txt += 'Observatory: {}\n'.format(self.lat)
         txt += 'Observatory: {}\n'.format(self.lon)
         txt += 'Observatory: {}\n'.format(self.height)
@@ -575,8 +576,9 @@ class ObservationParameters(object):
 
         section = 'general'
         self.downloadMaxRetry = int(parser.getboolean(section, 'downloadMaxRetry', fallback=0))
-        self.downloadWaitPeriodRetry = float(parser.get(section, 'downloadWaitPeriodRetry', fallback=0))
-        self.event_name = parser.get(section, 'eventName', fallback=None)
+        self.downloadWaitPeriodRetry = float(parser.get(section, 'downloadWaitPeriodRetry', fallback=0))    
+        if parser.has_option(section, 'eventName'):
+            self.event_name = parser.get(section, 'eventName')
 
     def from_args(self, obsName, eventName, lat, lon, height, sunDown, moonDown, moonGrey, moonPhase,
                   minMoonSourceSeparation, maxMoonSourceSeparation, maxZenith, FOV, maxRuns, maxNights, duration,
