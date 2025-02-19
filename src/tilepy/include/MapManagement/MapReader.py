@@ -67,6 +67,8 @@ class MapReader:
         self.name_event = self.getSourceName()
         if obspar.event_name is not None:
             self.name_event = obspar.event_name
+        if obspar.event_name is None: 
+            obspar.event_name = self.name_event
         self.identifyColumns()
 
     def getMapHDUId(self):
