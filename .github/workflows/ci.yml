@@ -1,0 +1,27 @@
+name: CI for tilepy
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest nbmake
+
+      - name: Run unit tests
+        run: pytest tests/
+
+      - name: Run notebook tests
+        run: pytest --nbmake examples/launcher/
