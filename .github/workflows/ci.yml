@@ -42,4 +42,4 @@ jobs:
         run: pytest tests/
 
       - name: Run notebook tests
-        run: pytest --nbmake examples/launcher/
+        run: pytest --nbmake examples/launcher/*.ipynb
