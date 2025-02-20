@@ -18,7 +18,25 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest nbmake
+
+      - name: Restore Cached BSP File
+        id: cache-bsp
+        uses: actions/cache@v3
+        with:
+          path: ~/.skyfield/
+          key: bsp-${{ runner.os }}-de440s
+          restore-keys: |
+            bsp-${{ runner.os }}-
+
+      - name: Ensure BSP File is Available
+        run: |
+          mkdir -p ~/.skyfield
+          if [ ! -f ~/.skyfield/de440s.bsp ]; then
+            echo "Downloading BSP file..."
+            wget -q https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de440s.bsp -O ~/.skyfield/de440s.bsp
+          else
+            echo "BSP file found in cache!"
+          fi
 
       - name: Run unit tests
         run: pytest tests/

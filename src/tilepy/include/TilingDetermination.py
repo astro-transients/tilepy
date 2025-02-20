@@ -33,7 +33,6 @@ from six.moves import configparser
 import matplotlib.pyplot as plt
 import numpy as np
 import healpy as hp
-
 import numpy.ma as ma
 
 from .PointingTools import (GetSatelliteName, GetSatelliteTime, GetSatellitePositions, OccultationCut,
@@ -117,8 +116,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     highres = skymap.getMap('prob', obspar.HRnside)
 
     # Create table for 2D probability at 90% containment
-    rapix, decpix, areapix = Get90RegionPixReduced(
-        prob, obspar.percentageMOC, obspar.reducedNside)
+    rapix, decpix, areapix = Get90RegionPixReduced(prob, obspar.percentageMOC, obspar.reducedNside)
     radecs = co.SkyCoord(rapix, decpix, frame='icrs', unit=(u.deg, u.deg))
 
     # Add observed pixels to pixlist
@@ -138,10 +136,9 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     #######################################################
 
     print('----------   NEW FOLLOW-UP ATTEMPT   ----------')
+    
     if (obspar.useGreytime):
-        NightDarkRuns = NightDarkObservationwithGreyTime(
-            ObservationTime0, obspar)
-
+        NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0, obspar)
     else:
         NightDarkRuns = NightDarkObservation(ObservationTime0, obspar)
 
