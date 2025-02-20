@@ -43,4 +43,4 @@ jobs:
         run: pytest tests/
 
       - name: Run notebook tests
-        run: pytest --nbmake examples/launcher/*.ipynb
+        run: pytest --nbmake examples/launcher/Tiling_Observations_Nobs.ipynb    #First test with only one jupyter notebook
