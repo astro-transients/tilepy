@@ -15,11 +15,6 @@ def all_cases():
     """Fixture that provides all test cases as a list."""
     return load_test_cases()
 
-@pytest.fixture(scope="module", autouse=True)
-def set_astropy_data_path():
-    # Set the ASTROPY_DATA_PATH environment variable
-    os.environ['ASTROPY_DATA_PATH'] = 'example/launcher/'
-
 @pytest.fixture(scope="module", params=load_test_cases())
 def parsed_obs_parameters(request):
     """
