@@ -1,0 +1,20 @@
+[
+    {
+        "cfgFile": "examples/config/FollowupParameters_LST.ini",
+        "skymap": "https://gracedb.ligo.org/api/superevents/S240915b/files/bayestar.multiorder.fits,1",
+        "obsTime": "2024-09-15 00:15:14",
+        "datasetDir": "../dataset/",
+        "galcatName": "Gladeplus.h5",
+        "outDir": "tests/output/",
+        "pointingsFile": null
+    },
+    {
+        "cfgFile": "examples/config/FollowupParameters_CTAOS.ini",
+        "skymap": "https://heasarc.gsfc.nasa.gov/FTP/fermi/data/gbm/triggers/2024/bn240612503/current/glg_healpix_all_bn240612503_v00.fit",
+        "obsTime": "2023-06-10 14:51:47",
+        "datasetDir": "../dataset/",
+        "galcatName": null,
+        "outDir": "tests/output/",
+        "pointingsFile": "tests/data/bn240612505_SuggestedPointings_2DProbOptimisation_first2.txt"
+    }
+]

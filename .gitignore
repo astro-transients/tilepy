@@ -14,7 +14,8 @@ tools/analysisResults
 .DS_Store
 submit_arrayjob.sh
 CTA_simu_job.sh
-test*
+tests/output/
+tests/__pycache__/
 __pycache__
 .idea
 .ipynb_checkpoints
