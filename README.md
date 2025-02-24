@@ -26,14 +26,14 @@ pip3 install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-Requirements of the installation: 
+Requirements of the installation:
 
-- The current version of the package **only** runs with `python>=3.9`. Python 3.9 is recommended. Be careful as well with the versions of matplotlib and healpy, they should be the ones explicitly given in the requirements.yml, otherwise conflicts between them when plotting skymaps will arise.  
+- The current version of the package **only** runs with `python>=3.9`. Python 3.9 is recommended. Be careful as well with the versions of matplotlib and healpy, they should be the ones explicitly given in the requirements.yml, otherwise conflicts between them when plotting skymaps will arise.
 - Note that by creating the env from the environment.yml, the libraries and versions needed will be installed automatically.
-- Note that every time we made changes to the package, you should update the installation of the package doing ```pip install .``` in the folder where the setup.py is located. The changes will be only applied to the env in which you are working. 
+- Note that every time we made changes to the package, you should update the installation of the package doing ```pip install .``` in the folder where the setup.py is located. The changes will be only applied to the env in which you are working.
 - The package relies on 'curl' to download the localisation map of the multi-messenger events.
 
-In the case you are working in CC-Lyon, the easiest solution is to do```ccenv conda ``` and then follow the instructions given above. 
+In the case you are working in CC-Lyon, the easiest solution is to do```ccenv conda ``` and then follow the instructions given above.
 
 If you have any problem with the installation of the package, please drop an email to `astro.tilepy@gmail.com` or join the discussion forum at `https://forum.astro-colibri.science/c/instrumentation-and-tools/tilepy`
 
@@ -50,23 +50,23 @@ python ConvertGalaxyCatalog.py --input GLADE+.txt --output Gladeplus.h5 --max-lu
 
 ## Description
 
-Package including functions to perform GW follow-up scheduling and simulations in IACTS. The package can be found in the folder tilepy, which contains the following folders: 
- 
+Package including functions to perform GW follow-up scheduling and simulations in IACTS. The package can be found in the folder tilepy, which contains the following folders:
+
 - tilepy: Folder including the package
-    - tilepy.tools: Includes several scripts that have been used so far for different aims related to visualization and catalog cleaning 
+    - tilepy.tools: Includes several scripts that have been used so far for different aims related to visualization and catalog cleaning
     - tilepy.include: The main functions used by the two main scripts are in this folder. It includes the Pointing Tools specifically for CTA (the others are in GWHESSPointing tool which is imported by GWCTAPointingTools), the CTA observation scheduler, simulation tools and analysis tools (both using gammapy)
-    - tilepy.dataset: This is a folder where we recommend to put files as finals2000.all. You will see it empty. 
+    - tilepy.dataset: This is a folder where we recommend to put files as finals2000.all. You will see it empty.
 
 - relics: Old scripts that may be useful in the future
 
 - examples: Examples on how to use tilepy, see dedicated <a href="examples/README.md">README</a>
-    - launcher: Jupyter notebooks and .py scripts to run observation schedules for various use-cases. We recommend to use the Jupyter notebooks as these are more comprehensive, specially with the inputs given. 
-    - config: three examples of configuration files, used in the notebooks to run the scripts. The format is the following: 
+    - launcher: Jupyter notebooks and .py scripts to run observation schedules for various use-cases. We recommend to use the Jupyter notebooks as these are more comprehensive, specially with the inputs given.
+    - config: three examples of configuration files, used in the notebooks to run the scripts. The format is the following:
        - [observatory]
-          - name: name of the observatory (it is not critical, you can use any name) 
-          - lat: lat coordinates of the observatory 
-          - lon: lon coordinates of the observatory 
-          - height: height of the observatory 
+          - name: name of the observatory (it is not critical, you can use any name)
+          - lat: lat coordinates of the observatory
+          - lon: lon coordinates of the observatory
+          - height: height of the observatory
 
         - [visibility]
           - sunDown: altitude of the Sun in deg to define darkness conditions (for astronomic darkness sunDown= -18)
@@ -86,12 +86,12 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - useGreytime: flag to schedule greyness observations in addition to darkness
 
         - [tiling]
-    
+
           - minimumProbCutforCatalogue: only galaxies that have probabilities higher than 'minimumProbCutforCatalogue x (GW x galaxy)_max' participate in the scheduling calculation
           - minProbcut:  minimal probability covered per tile to schedule observation
           - distCut: distance cut to define the mandatory use of 2D strategy (coming from galaxy catalogue completeness)
           - doPlot: produce detailed plots of the scheduling
-          - secondRound: consider two maps for scheduling 
+          - secondRound: consider two maps for scheduling
           - zenithWeighting: weight on probability that would be applied to prioritize coordinates that have lower zenith angle values. Step size is 5 deg in zenith (0.75 is a reasonable value)
           - percentageMOC: percentage of the sky localization region that will be considered to compute the MOC
           - reducedNside: nside of the low-resolution skymap used as a grid to speed up the computation
