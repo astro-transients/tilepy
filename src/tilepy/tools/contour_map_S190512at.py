@@ -1,25 +1,22 @@
 # Imports
 from math import log
-from astropy.table import Table
-from astropy.utils.data import download_file
-from astropy import units as u
-import astropy_healpix as ah
-import numpy as np
-from mocpy import MOC, World2ScreenMPL
-from astropy.coordinates import Angle, SkyCoord
+
 import astropy.coordinates as co
 import healpy as hp
 import matplotlib.pyplot as plt
+import numpy as np
+from astropy import units as u
+from astropy.coordinates import Angle, SkyCoord
+from astropy.table import Table
+from astropy.utils.data import download_file
 from matplotlib.patches import Circle
-from astropy.io import fits
-from astropy.wcs import WCS
-from astropy.utils.data import get_pkg_data_filename
+from mocpy import MOC, World2ScreenMPL
 
 fig = plt.figure(111, figsize=(5, 5))
 percentage = 0.9
 
 # Download and read sky map Initial S190512at.
-url = 'https://gracedb.ligo.org/api/superevents/S190512at/files/LALInference.fits.gz,0'
+url = "https://gracedb.ligo.org/api/superevents/S190512at/files/LALInference.fits.gz,0"
 filename = download_file(url, cache=True)
 
 
@@ -51,12 +48,13 @@ theta, phi = hp.pix2ang(nside, table_ipix_contour)
 ra = np.rad2deg(phi)
 dec = np.rad2deg(0.5 * np.pi - theta)
 
-radecs = co.SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
+radecs = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
 
 
 # creating an astropy.table with RA[deg] and DEC[deg] ipix positions
-contour_ipix = Table([ra, dec], names=(
-    'RA[deg]', 'DEC[deg]'), meta={'ipix': 'ipix table'})
+contour_ipix = Table(
+    [ra, dec], names=("RA[deg]", "DEC[deg]"), meta={"ipix": "ipix table"}
+)
 
 # setting MOC order
 moc_order = int(log(nside, 2))
@@ -97,12 +95,13 @@ theta, phi = hp.pix2ang(nside, table_ipix_contour)
 ra = np.rad2deg(phi)
 dec = np.rad2deg(0.5 * np.pi - theta)
 
-radecs = co.SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
+radecs = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
 
 
 # creating an astropy.table with RA[deg] and DEC[deg] ipix positions
-contour_ipix = Table([ra, dec], names=(
-    'RA[deg]', 'DEC[deg]'), meta={'ipix': 'ipix table'})
+contour_ipix = Table(
+    [ra, dec], names=("RA[deg]", "DEC[deg]"), meta={"ipix": "ipix table"}
+)
 
 # setting MOC order
 moc_order = int(log(nside, 2))
@@ -113,7 +112,7 @@ moc2 = MOC.from_lonlat(radecs.ra, radecs.dec, max_norder=moc_order)
 
 # Download and read sky map Update S190512at.
 percentage = 0.9
-url = 'https://gracedb.ligo.org/api/superevents/S190512at/files/GW190512_180714_PublicationSamples_flattened.fits.gz,0'
+url = "https://gracedb.ligo.org/api/superevents/S190512at/files/GW190512_180714_PublicationSamples_flattened.fits.gz,0"
 filename = download_file(url, cache=True)
 hpx = hp.read_map(filename, verbose=False)
 npix = len(hpx)
@@ -143,12 +142,13 @@ theta, phi = hp.pix2ang(nside, table_ipix_contour)
 ra = np.rad2deg(phi)
 dec = np.rad2deg(0.5 * np.pi - theta)
 
-radecs = co.SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
+radecs = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
 
 
 # creating an astropy.table with RA[deg] and DEC[deg] ipix positions
-contour_ipix = Table([ra, dec], names=(
-    'RA[deg]', 'DEC[deg]'), meta={'ipix': 'ipix table'})
+contour_ipix = Table(
+    [ra, dec], names=("RA[deg]", "DEC[deg]"), meta={"ipix": "ipix table"}
+)
 
 # setting MOC order
 moc_order = int(log(nside, 2))
@@ -186,12 +186,13 @@ theta, phi = hp.pix2ang(nside, table_ipix_contour)
 ra = np.rad2deg(phi)
 dec = np.rad2deg(0.5 * np.pi - theta)
 
-radecs = co.SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
+radecs = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
 
 
 # creating an astropy.table with RA[deg] and DEC[deg] ipix positions
-contour_ipix = Table([ra, dec], names=(
-    'RA[deg]', 'DEC[deg]'), meta={'ipix': 'ipix table'})
+contour_ipix = Table(
+    [ra, dec], names=("RA[deg]", "DEC[deg]"), meta={"ipix": "ipix table"}
+)
 
 # setting MOC order
 moc_order = int(log(nside, 2))
@@ -200,22 +201,24 @@ moc4 = MOC.from_lonlat(radecs.ra, radecs.dec, max_norder=moc_order)
 
 
 #########################################################################################################
-'''
+"""
 #add the pointings and cinstruct the figure
 
 RA_OBS = [312.8027, 313.09, 317.109, 314.385, 312.979, 318.691, 316.143]
 DEC_OBS = [7.0304, 8.16, 15.018, 10.807, 5.679, 17.192, 12.941]
 RADIUS_OBS = [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5]
 #RADECS_OBS = co.SkyCoord(RA_OBS, DEC_OBS, frame='icrs', unit=(u.deg, u.deg))
-'''
+"""
 
 # construct the figure
-with World2ScreenMPL(fig,
-                     fov=20 * u.deg,
-                     center=SkyCoord(252.5, -27.5, unit='deg', frame='icrs'),
-                     coordsys="icrs",
-                     rotation=Angle(0, u.degree),
-                     projection="AIT") as wcs:
+with World2ScreenMPL(
+    fig,
+    fov=20 * u.deg,
+    center=SkyCoord(252.5, -27.5, unit="deg", frame="icrs"),
+    coordsys="icrs",
+    rotation=Angle(0, u.degree),
+    projection="AIT",
+) as wcs:
 
     # add the moc contours
     ax = fig.add_subplot(1, 1, 1, projection=wcs)
@@ -242,40 +245,88 @@ with World2ScreenMPL(fig,
     ax = fig.add_subplot(1, 1, 1, projection=wcs)
 
     # add the schedule FoVs
-    c = Circle((251.72, -25.28), 1.5, edgecolor='grey',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=0.8)
+    c = Circle(
+        (251.72, -25.28),
+        1.5,
+        edgecolor="grey",
+        facecolor="none",
+        transform=ax.get_transform("icrs"),
+        alpha=0.8,
+    )
     ax.add_patch(c)
-    c = Circle((248.91, -27.95), 1.5, edgecolor='grey',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=0.8)
+    c = Circle(
+        (248.91, -27.95),
+        1.5,
+        edgecolor="grey",
+        facecolor="none",
+        transform=ax.get_transform("icrs"),
+        alpha=0.8,
+    )
     ax.add_patch(c)
-    c = Circle((253.12, -26.61), 1.5, edgecolor='grey',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=0.8)
+    c = Circle(
+        (253.12, -26.61),
+        1.5,
+        edgecolor="grey",
+        facecolor="none",
+        transform=ax.get_transform("icrs"),
+        alpha=0.8,
+    )
     ax.add_patch(c)
-    c = Circle((255.94, -29.31), 1.5, edgecolor='grey',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=0.8)
+    c = Circle(
+        (255.94, -29.31),
+        1.5,
+        edgecolor="grey",
+        facecolor="none",
+        transform=ax.get_transform("icrs"),
+        alpha=0.8,
+    )
     ax.add_patch(c)
 
     # add the observed FoVs
-    c = Circle((250.313, -26.61), 1.5, edgecolor='black',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=15)
+    c = Circle(
+        (250.313, -26.61),
+        1.5,
+        edgecolor="black",
+        facecolor="none",
+        transform=ax.get_transform("icrs"),
+        alpha=15,
+    )
     ax.add_patch(c)
-    ax.text(250.313, -26.61, "1", transform=ax.get_transform('icrs'))
-    c = Circle((251.719, -27.953), 1.5, edgecolor='black',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=15)
+    ax.text(250.313, -26.61, "1", transform=ax.get_transform("icrs"))
+    c = Circle(
+        (251.719, -27.953),
+        1.5,
+        edgecolor="black",
+        facecolor="none",
+        transform=ax.get_transform("icrs"),
+        alpha=15,
+    )
     ax.add_patch(c)
-    ax.text(251.719, -27.953, "2", transform=ax.get_transform('icrs'))
-    c = Circle((248.906, -25.283), 1.5, edgecolor='black',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=15)
+    ax.text(251.719, -27.953, "2", transform=ax.get_transform("icrs"))
+    c = Circle(
+        (248.906, -25.283),
+        1.5,
+        edgecolor="black",
+        facecolor="none",
+        transform=ax.get_transform("icrs"),
+        alpha=15,
+    )
     ax.add_patch(c)
-    ax.text(248.906, -25.283, "3", transform=ax.get_transform('icrs'))
-    c = Circle((254.531, -27.953), 1.5, edgecolor='black',
-               facecolor='none', transform=ax.get_transform('icrs'), alpha=15)
+    ax.text(248.906, -25.283, "3", transform=ax.get_transform("icrs"))
+    c = Circle(
+        (254.531, -27.953),
+        1.5,
+        edgecolor="black",
+        facecolor="none",
+        transform=ax.get_transform("icrs"),
+        alpha=15,
+    )
     ax.add_patch(c)
-    ax.text(254.531, -27.953, "4", transform=ax.get_transform('icrs'))
+    ax.text(254.531, -27.953, "4", transform=ax.get_transform("icrs"))
     ###########################
 
-plt.xlabel('Right ascension')
-plt.ylabel('Declination')
-plt.title('H.E.S.S. coverage of S190512at GW event')
+plt.xlabel("Right ascension")
+plt.ylabel("Declination")
+plt.title("H.E.S.S. coverage of S190512at GW event")
 plt.grid(color="black", linestyle="dotted")
 plt.show()

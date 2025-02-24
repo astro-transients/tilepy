@@ -2,7 +2,7 @@
    :synopsis: Documentation for the TilingDetermination module.
    :noindex:
 
-TilingDetermination 
+TilingDetermination
 ===================
 
 This is the documentation for the TilingDetermination module.

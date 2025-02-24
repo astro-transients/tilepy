@@ -293,8 +293,6 @@ def CompareTwoTilings(
 
     skymap_OD = lf.read_sky_map(filename)
     prob = skymap_OD[0]
-    npix = len(prob)
-    nside = hp.npix2nside(npix)
 
     if (PointingsFile1 == "False") or (PointingsFile2 == "False"):
         print("At least one of the pointings has not been given, try again")
@@ -345,10 +343,6 @@ def CompareTwoTilings(
             "==========================================================================================="
         )
 
-        name1 = "File1"
-        name2 = "File2"
-        ObservationTimearray1 = df1["Time[UTC]"]
-
         Coordinates1 = co.SkyCoord(
             df1["RA(deg)"].tolist(),
             df1["DEC(deg)"].tolist(),
@@ -363,12 +357,8 @@ def CompareTwoTilings(
         )
         PlotPointingsTogether(
             prob,
-            ObservationTimearray1,
             Coordinates1,
-            name1,
             Coordinates2,
-            name2,
-            nside,
             FOV,
             plotType,
             doPlot=True,
