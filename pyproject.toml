@@ -55,6 +55,7 @@ tests = [
     "pytest >= 7.0",
     "pytest-cov",
     "tomli",
+    "nbmake>=1.5.5",
 ]
 
 dev = [

@@ -24,7 +24,6 @@ import os
 import astropy.coordinates as co
 import healpy as hp
 import ligo.skymap.io.fits as lf
-import ligo.skymap.plot  # noqa: F401
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -612,6 +611,8 @@ def PlotPointings_Pretty(
         radius = radiusMap
 
     center_str = "%fd %fd" % (center.ra.deg, center.dec.deg)
+
+    import ligo.skymap.plot  # noqa: F401
 
     # start preparing figure and inset figure
     fig = plt.figure(figsize=(9, 6))
