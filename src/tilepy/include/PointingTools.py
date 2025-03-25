@@ -1852,8 +1852,14 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist):
     ra = np.atleast_1d(ra)
     dec = np.atleast_1d(dec)
 
-    ra = np.unique(ra)
-    dec = np.unique(dec)
+    # only selecting unique pairs of ra-dec
+    # otherwise, if one applies np.unique directly to ra
+    # and dec, one may end up with different lengths
+    # because it may happen that there are pointings e.g.
+    # with the same ra but different dec
+    ra_dec_stacked = np.vstack((ra, dec)).T
+    ra = np.unique(ra_dec_stacked, axis=0)[:, 0]
+    dec = np.unique(ra_dec_stacked, axis=0)[:, 1]
 
     coordinates = TransformRADec(ra, dec)
     P_GW = []
@@ -2286,8 +2292,14 @@ def SubstractPointings(
     rap = np.atleast_1d(ra)
     decP = np.atleast_1d(dec)
 
-    rap = np.unique(rap)
-    decP = np.unique(decP)
+    # only selecting unique pairs of ra-dec
+    # otherwise, if one applies np.unique directly to ra
+    # and dec, one may end up with different lengths
+    # because it may happen that there are pointings e.g.
+    # with the same ra but different dec
+    ra_dec_stacked = np.vstack((rap, decP)).T
+    rap = np.unique(ra_dec_stacked, axis=0)[:, 0]
+    decP = np.unique(ra_dec_stacked, axis=0)[:, 1]
 
     coordinates = TransformRADec(rap, decP)
 
