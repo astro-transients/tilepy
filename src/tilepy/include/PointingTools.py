@@ -2291,8 +2291,8 @@ def SubstractPointings(
         unpack=True,
     )  # ra, dec in degrees
 
-    rap = np.atleast_1d(ra)
-    decP = np.atleast_1d(dec)
+    rap = np.atleast_1d(rap)
+    decP = np.atleast_1d(decP)
 
     # only selecting unique pairs of ra-dec
     # otherwise, if one applies np.unique directly to ra
