@@ -1848,8 +1848,12 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist):
         delimiter=" ",
         unpack=True,
     )  # ra, dec in degrees
+
     ra = np.atleast_1d(ra)
     dec = np.atleast_1d(dec)
+
+    ra = np.unique(ra)
+    dec = np.unique(dec)
 
     coordinates = TransformRADec(ra, dec)
     P_GW = []
@@ -2279,19 +2283,29 @@ def SubstractPointings(
         unpack=True,
     )  # ra, dec in degrees
 
+    rap = np.atleast_1d(ra)
+    decP = np.atleast_1d(dec)
+
+    rap = np.unique(rap)
+    decP = np.unique(decP)
+
     coordinates = TransformRADec(rap, decP)
+
     ra = coordinates.ra.deg
     dec = coordinates.dec.deg
 
     PGW = []
     PGAL = []
     updatedGalaxies = galaxies
-    if np.isscalar(ra):
+
+    for i, coord in enumerate(coordinates):
+        ral = coord.ra.deg
+        decl = coord.dec.deg
         updatedGalaxies, pgwcircle, pgalcircle, talreadysumipixarray = (
             SubstractGalaxiesCircle(
                 updatedGalaxies,
-                ra,
-                dec,
+                ral,
+                decl,
                 talreadysumipixarray,
                 tsum_dP_dV,
                 FOV,
@@ -2302,36 +2316,15 @@ def SubstractPointings(
         PGW.append(pgwcircle)
         PGAL.append(pgalcircle)
         print(
-            "Coordinates ra:", ra, "dec:", dec, "Pgw:", pgwcircle, "PGAL:", pgalcircle
+            "Coordinates ra:",
+            ral,
+            "dec:",
+            decl,
+            "Pgw:",
+            pgwcircle,
+            "PGAL:",
+            pgalcircle,
         )
-    else:
-        for i, coord in enumerate(coordinates):
-            ra = coord.ra.deg
-            dec = coord.dec.deg
-            updatedGalaxies, pgwcircle, pgalcircle, talreadysumipixarray = (
-                SubstractGalaxiesCircle(
-                    updatedGalaxies,
-                    ra,
-                    dec,
-                    talreadysumipixarray,
-                    tsum_dP_dV,
-                    FOV,
-                    prob,
-                    nside,
-                )
-            )
-            PGW.append(pgwcircle)
-            PGAL.append(pgalcircle)
-            print(
-                "Coordinates ra:",
-                ra,
-                "dec:",
-                dec,
-                "Pgw:",
-                pgwcircle,
-                "PGAL:",
-                pgalcircle,
-            )
     return (
         ra,
         dec,
