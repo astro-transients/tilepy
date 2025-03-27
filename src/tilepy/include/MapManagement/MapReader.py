@@ -38,13 +38,29 @@ __all__ = ["MapReader"]
 class MapReader:
 
     def __init__(self, obspar):
-        skymap_localisation = obspar.skymap
+        self.mode = getattr(obspar, "mode", "file")
+        self.name_event = "undefined"
+        self.has3D = False
+        self.prob_density = False
 
-        # Check if the provided localisation is a url or a path
+        if self.mode == "gaussian":
+            '''
+            For this type of map to work we need obspar object to contain:
+            
+            obspar.mode = "gaussian"
+            obspar.ra = 180.0
+            obspar.dec = 30.0
+            obspar.sigma_deg = 2.5
+            obspar.nside = 128
+            obspar.event_name = "test_gauss"
+            '''
+            self._generate_gaussian_map(obspar)
+            return
+
+        skymap_localisation = obspar.skymap
         parsed_localisation = urlparse(skymap_localisation)
         self.is_remote = parsed_localisation.scheme != ""
 
-        # Download map if necessary
         self.url = None
         self.skymap_filename = skymap_localisation
         if self.is_remote:
@@ -55,14 +71,11 @@ class MapReader:
                 download_max_nb_try=max_retry + 1, time_wait_retry=time_wait_retry
             )
 
-        # Check the file is available
         if not os.path.isfile(self.skymap_filename):
             if self.is_remote:
                 raise Exception("Issue with downloaded file, not existing anymore")
             else:
-                raise Exception(
-                    "Issue with file input, the file doesn't exist and is not an url"
-                )
+                raise Exception("Issue with file input, the file doesn't exist and is not an url")
 
         self.fits_map = fits.open(self.skymap_filename)
         self.id_hdu_map = self.getMapHDUId()
@@ -72,6 +85,33 @@ class MapReader:
         if obspar.event_name is None:
             obspar.event_name = self.name_event
         self.identifyColumns()
+
+    def _generate_gaussian_map(self, obspar):
+        """
+        Generate an in-memory HEALPix Gaussian map centered at RA/Dec
+        """
+        ra = obspar.ra
+        dec = obspar.dec
+        sigma_deg = getattr(obspar, "sigma_deg", 5.0)
+        self.nside = getattr(obspar, "nside", 64)
+
+        npix = hp.nside2npix(self.nside)
+        center = SkyCoord(ra=ra * u.deg, dec=dec * u.deg)
+        center_vec = hp.ang2vec(90 - center.dec.deg, center.ra.deg, lonlat=True)
+        pix_dirs = hp.pix2vec(self.nside, np.arange(npix))
+        ang_dist_rad = np.arccos(np.clip(np.dot(center_vec, pix_dirs), -1.0, 1.0))
+        ang_dist_deg = np.degrees(ang_dist_rad)
+        prob_map = np.exp(-0.5 * (ang_dist_deg / sigma_deg) ** 2)
+        prob_map /= prob_map.sum()
+
+        # Simulate HealpixMap object interface for compatibility with getMap
+        import mocpy.healpix as mh
+        self.simulated_map = mh.HealpixMap(data=prob_map, nside=self.nside, unit=u.dimensionless_unscaled)
+        self.name_event = f"Gaussian_RA{ra}_Dec{dec}"
+        self.prob_density = False
+        self.has3D = False
+
+
 
     def getMapHDUId(self):
         id_hdu_map = -1
@@ -264,6 +304,11 @@ class MapReader:
         return filename
 
     def getMap(self, mapType):
+        if self.mode == "gaussian":
+            if mapType != "prob":
+                raise Exception("Only 'prob' map type supported in gaussian mode.")
+            return self.simulated_map
+            
         if mapType == "prob":
             raw_map = mh.HealpixMap.read_map(
                 self.skymap_filename,
