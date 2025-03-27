@@ -25,7 +25,9 @@ from urllib.request import urlretrieve
 import astropy.units as u
 import mhealpy as mh
 from astropy.io import fits
-
+import healpy as hp
+from astropy.coordinates import SkyCoord
+import numpy as np
 ##################################################################################################
 #                        Read Healpix map from fits file                                         #
 ##################################################################################################
@@ -33,6 +35,30 @@ from astropy.io import fits
 logger = logging.getLogger(__name__)
 
 __all__ = ["MapReader"]
+
+# helper class to make the Gaussian map work for the rest of stuff
+class SimpleHealpixMap:
+    def __init__(self, data, nside, ordering = "nested"):
+        self.data = data
+        self.nside = nside
+        self.unit = u.Unit("sr^-1")
+        self.ordering = ordering
+
+    def pixarea(self, pix_ids):
+        area_sr = hp.nside2pixarea(self.nside)
+        return np.full_like(pix_ids, area_sr, dtype=float)
+
+    def __getitem__(self, key):
+        return self.data[key]
+
+    def rasterize(self, nside, scheme="NESTED"):
+            downgraded_data = hp.ud_grade(
+                self.data,
+                nside_out=nside,
+                order_in="NESTED",
+                order_out=scheme.upper()
+            )
+            return SimpleHealpixMap(downgraded_data, nside, ordering=scheme)
 
 
 class MapReader:
@@ -87,29 +113,44 @@ class MapReader:
         self.identifyColumns()
 
     def _generate_gaussian_map(self, obspar):
-        """
-        Generate an in-memory HEALPix Gaussian map centered at RA/Dec
-        """
-        ra = obspar.ra
-        dec = obspar.dec
-        sigma_deg = getattr(obspar, "sigma_deg", 5.0)
-        self.nside = getattr(obspar, "nside", 64)
+
+
+        ra_deg = float(obspar.ra)
+        dec_deg = float(obspar.dec)
+        sigma_deg = float(getattr(obspar, "sigma_deg", 5.0))
+        self.nside = int(getattr(obspar, "nside", 64))
 
         npix = hp.nside2npix(self.nside)
-        center = SkyCoord(ra=ra * u.deg, dec=dec * u.deg)
-        center_vec = hp.ang2vec(90 - center.dec.deg, center.ra.deg, lonlat=True)
-        pix_dirs = hp.pix2vec(self.nside, np.arange(npix))
-        ang_dist_rad = np.arccos(np.clip(np.dot(center_vec, pix_dirs), -1.0, 1.0))
-        ang_dist_deg = np.degrees(ang_dist_rad)
-        prob_map = np.exp(-0.5 * (ang_dist_deg / sigma_deg) ** 2)
-        prob_map /= prob_map.sum()
 
-        # Simulate HealpixMap object interface for compatibility with getMap
-        import mocpy.healpix as mh
-        self.simulated_map = mh.HealpixMap(data=prob_map, nside=self.nside, unit=u.dimensionless_unscaled)
-        self.name_event = f"Gaussian_RA{ra}_Dec{dec}"
-        self.prob_density = False
+        # Convert center to unit vector
+        theta_c = np.radians(90.0 - dec_deg)
+        phi_c = np.radians(ra_deg)
+        center_vec = np.array([
+            np.sin(theta_c) * np.cos(phi_c),
+            np.sin(theta_c) * np.sin(phi_c),
+            np.cos(theta_c)
+        ])
+
+        # Compute angular distance to each pixel center
+        pix_vecs = np.array(hp.pix2vec(self.nside, np.arange(npix), nest=True))
+        dots = np.dot(center_vec, pix_vecs)
+        ang_dist_rad = np.arccos(np.clip(dots, -1.0, 1.0))
+        ang_dist_deg = np.degrees(ang_dist_rad)
+
+        # Build Gaussian profile (not normalized yet)
+        prob_unnorm = np.exp(-0.5 * (ang_dist_deg / sigma_deg) ** 2)
+
+        # Normalize to make it a **density**: total int(p,domega) = 1
+        pixarea_sr = hp.nside2pixarea(self.nside)  # steradians
+        norm_factor = np.sum(prob_unnorm * pixarea_sr)
+        prob_density = prob_unnorm / norm_factor  # unit: sr⁻¹
+
+
+        self.simulated_map = SimpleHealpixMap(prob_density, self.nside, ordering = "nested")
+        self.name_event = f"Gaussian_RA{ra_deg}_Dec{dec_deg}"
+        self.prob_density = True   
         self.has3D = False
+
 
 
 
