@@ -6,5 +6,3 @@
 
    ./source/ObservationScheduler
    ./source/TilingDetermination
-
-

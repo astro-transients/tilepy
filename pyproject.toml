@@ -47,6 +47,7 @@ dependencies = [
           'skyfield',
           'mhealpy>=0.3.0,<0.4',
           'ligo.skymap>=2.0.0',
+          "scikit-learn>=1.6.1",
 ]
 
 [project.optional-dependencies]
@@ -54,15 +55,18 @@ tests = [
     "pytest >= 7.0",
     "pytest-cov",
     "tomli",
+    "nbmake>=1.5.5",
 ]
 
 dev = [
     "setuptools_scm[toml]",
+    "pre-commit>=4.1.0",
+    "flake8>=7.1.2",
 ]
 
 all = [
     # self-reference with all extras to simplify
-    "tilepy[tests,docs,dev]",
+    "tilepy[tests,dev]",
 ]
 
 [project.scripts]

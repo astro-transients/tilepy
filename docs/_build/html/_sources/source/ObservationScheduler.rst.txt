@@ -2,7 +2,7 @@
    :synopsis: Documentation for the ObservationScheduler module.
    :noindex:
 
-ObservationScheduler 
+ObservationScheduler
 ====================
 
 This is the documentation for the ObservationScheduler module.
