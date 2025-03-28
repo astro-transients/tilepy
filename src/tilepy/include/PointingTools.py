@@ -404,10 +404,6 @@ def set_gaussian_source(obspar, ra, dec, sigma, name="gaussian_event"):
     """
     Configure an ObservationParameters instance to use a simulated Gaussian probability map.
 
-    This function sets the source localization mode to "gaussian", and defines the source
-    coordinates and angular uncertainty (sigma). This is used to generate a synthetic HEALPix
-    map centered at the specified RA/Dec using a 2D Gaussian distribution.
-
     Parameters
     ----------
     obspar : ObservationParameters
@@ -434,7 +430,7 @@ def set_gaussian_source(obspar, ra, dec, sigma, name="gaussian_event"):
     obspar.mode = "gaussian"
     if not hasattr(obspar, "event_name") or obspar.event_name is None:
         obspar.event_name = name
-        
+
 class ObservationParameters(object):
     """Stores all the parameters in the .ini file"""
 
