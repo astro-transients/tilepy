@@ -28,6 +28,8 @@ from astropy.io import fits
 import healpy as hp
 from astropy.coordinates import SkyCoord
 import numpy as np
+from astropy.wcs import WCS
+
 ##################################################################################################
 #                        Read Healpix map from fits file                                         #
 ##################################################################################################
@@ -46,7 +48,7 @@ class SimpleHealpixMap:
 
     def pixarea(self, pix_ids):
         area_sr = hp.nside2pixarea(self.nside)
-        return np.full_like(pix_ids, area_sr, dtype=float)
+        return np.full_like(pix_ids, area_sr, dtype=float) * u.sr
 
     def __getitem__(self, key):
         return self.data[key]
@@ -62,27 +64,29 @@ class SimpleHealpixMap:
 
 
 class MapReader:
-
     def __init__(self, obspar):
         self.mode = getattr(obspar, "mode", "file")
         self.name_event = "undefined"
         self.has3D = False
         self.prob_density = False
 
+        # -------------------------
+        # 1. GAUSSIAN MODE
+        # -------------------------
         if self.mode == "gaussian":
-            '''
-            For this type of map to work we need obspar object to contain:
-            
-            obspar.mode = "gaussian"
-            obspar.ra = 180.0
-            obspar.dec = 30.0
-            obspar.sigma_deg = 2.5
-            obspar.nside = 128
-            obspar.event_name = "test_gauss"
-            '''
+            """
+            Required obspar fields:
+            - ra, dec (degrees)
+            - sigma_deg
+            - nside
+            """
             self._generate_gaussian_map(obspar)
+            self.name_event = obspar.event_name or "gaussian_event"
             return
 
+        # -------------------------
+        # 2. locprob FIT MODE
+        # -------------------------
         skymap_localisation = obspar.skymap
         parsed_localisation = urlparse(skymap_localisation)
         self.is_remote = parsed_localisation.scheme != ""
@@ -98,11 +102,21 @@ class MapReader:
             )
 
         if not os.path.isfile(self.skymap_filename):
-            if self.is_remote:
-                raise Exception("Issue with downloaded file, not existing anymore")
-            else:
-                raise Exception("Issue with file input, the file doesn't exist and is not an url")
+            raise Exception("Map file not found: " + self.skymap_filename)
 
+        # Early GBM format — convert to HEALPix
+        #its important to have this before the healpix fits map mode, 
+        #because it will be bypassing the normal healpix map reading
+        if "glg_locprob_all" in os.path.basename(self.skymap_filename):
+            self.simulated_map = self._convert_locprob_to_healpix(self.skymap_filename, nside=128)
+            self.name_event = obspar.event_name or "gbm_locprob"
+            self.prob_density = True
+            self.has3D = False
+            return
+
+        # -------------------------
+        # 3. HEALPix FITS MAP MODE
+        # -------------------------
         self.fits_map = fits.open(self.skymap_filename)
         self.id_hdu_map = self.getMapHDUId()
         self.name_event = self.getSourceName()
@@ -111,6 +125,58 @@ class MapReader:
         if obspar.event_name is None:
             obspar.event_name = self.name_event
         self.identifyColumns()
+
+    def _convert_locprob_to_healpix(self, filename, nside=128):
+        """
+        Convert a GBM glg_locprob_all_*.fit 2D probability grid to a HEALPix map.
+        """
+        hdulist = fits.open(filename)
+        hdu = hdulist[1] if hdulist[1].data is not None else hdulist[0]
+
+        data = hdu.data.astype(float)
+        wcs = WCS(hdu.header)
+
+        # Clean invalid entries
+        data[np.isnan(data)] = 0.0
+        data[data < 0] = 0.0
+
+        # Normalize (assuming flat prior)
+        total = np.sum(data)
+        if total > 0:
+            data /= total
+
+        ny, nx = data.shape
+
+        # Generate all pixel grid coordinates
+        y_indices, x_indices = np.mgrid[0:ny, 0:nx]
+        flat_x = x_indices.flatten()
+        flat_y = y_indices.flatten()
+        flat_p = data.flatten()
+
+        # Remove zero entries early
+        mask = flat_p > 0
+        flat_x = flat_x[mask]
+        flat_y = flat_y[mask]
+        flat_p = flat_p[mask]
+
+        # Convert all to sky coordinates at once
+        sky_coords = wcs.pixel_to_world(flat_x, flat_y)
+        ra = sky_coords.ra.deg
+        dec = sky_coords.dec.deg
+
+        theta = np.radians(90 - dec)
+        phi = np.radians(ra)
+        pix = hp.ang2pix(nside, theta, phi, nest=True)
+
+        # Accumulate into HEALPix map
+        healpix_map = np.bincount(pix, weights=flat_p, minlength=hp.nside2npix(nside))
+
+        # Normalize as probability density
+        pixarea = hp.nside2pixarea(nside)
+        norm = np.sum(healpix_map) * pixarea
+        healpix_map /= norm
+
+        return SimpleHealpixMap(healpix_map, nside, ordering="nested")
 
     def _generate_gaussian_map(self, obspar):
 
@@ -345,6 +411,12 @@ class MapReader:
         return filename
 
     def getMap(self, mapType):
+        if hasattr(self, "simulated_map"):
+            if mapType == "prob":
+                return self.simulated_map
+            else:
+                raise Exception(f"Map type '{mapType}' not available in simulated map mode")
+            
         if self.mode == "gaussian":
             if mapType != "prob":
                 raise Exception("Only 'prob' map type supported in gaussian mode.")
