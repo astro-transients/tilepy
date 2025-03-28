@@ -38,6 +38,12 @@ logger = logging.getLogger(__name__)
 
 __all__ = ["MapReader"]
 
+def validate_source_params(obspar):
+    if obspar.mode == "gaussian":
+        for attr in ["raSource", "decSource", "sigmaSource"]:
+            if getattr(obspar, attr, None) is None:
+                raise ValueError(f"{attr} must be defined in 'gaussian' mode")
+            
 # helper class to make the Gaussian map work for the rest of stuff
 class SimpleHealpixMap:
     def __init__(self, data, nside, ordering = "nested"):
@@ -70,6 +76,9 @@ class MapReader:
         self.has3D = False
         self.prob_density = False
 
+        # Validate the the parameters early so to fail if something is not properly configured:
+        validate_source_params(obspar)
+   
         # -------------------------
         # 1. GAUSSIAN MODE
         # -------------------------
@@ -80,7 +89,7 @@ class MapReader:
             - sigma_deg
             - nside
             """
-            self._generate_gaussian_map(obspar)
+            self.generate_gaussian_map(obspar)
             self.name_event = obspar.event_name or "gaussian_event"
             return
 
@@ -108,7 +117,7 @@ class MapReader:
         #its important to have this before the healpix fits map mode, 
         #because it will be bypassing the normal healpix map reading
         if "glg_locprob_all" in os.path.basename(self.skymap_filename):
-            self.simulated_map = self._convert_locprob_to_healpix(self.skymap_filename, nside=128)
+            self.simulated_map = self.convert_locprob_to_healpix(self.skymap_filename, nside=128)
             self.name_event = obspar.event_name or "gbm_locprob"
             self.prob_density = True
             self.has3D = False
@@ -126,7 +135,7 @@ class MapReader:
             obspar.event_name = self.name_event
         self.identifyColumns()
 
-    def _convert_locprob_to_healpix(self, filename, nside=128):
+    def convert_locprob_to_healpix(self, filename, nside=128):
         """
         Convert a GBM glg_locprob_all_*.fit 2D probability grid to a HEALPix map.
         """
@@ -178,12 +187,12 @@ class MapReader:
 
         return SimpleHealpixMap(healpix_map, nside, ordering="nested")
 
-    def _generate_gaussian_map(self, obspar):
+    def generate_gaussian_map(self, obspar):
 
+        ra_deg = float(obspar.raSource)
+        dec_deg = float(obspar.decSource)
+        sigma_deg = float(obspar.sigmaSource)
 
-        ra_deg = float(obspar.ra)
-        dec_deg = float(obspar.dec)
-        sigma_deg = float(getattr(obspar, "sigma_deg", 5.0))
         self.nside = int(getattr(obspar, "nside", 64))
 
         npix = hp.nside2npix(self.nside)
