@@ -144,17 +144,16 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     # Add observed pixels to pixlist
     maxRuns = obspar.maxRuns
     if PointingFile is not None:
-        pixlist, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist
-        )
-
-        if obspar.countPrevious:
-            maxRuns = obspar.maxRuns - doneObs
         print(
             "==========================================================================================="
         )
-        print()
-        print(f": Total GW probability already covered: {sumPGW}")
+        pixlist, sumPGW, doneObs = SubstractPointings2D(
+            PointingFile, prob, obspar, pixlist
+        )
+        if obspar.countPrevious:
+            maxRuns = obspar.maxRuns - doneObs
+
+        print(f"Total GW probability already covered: {sumPGW}")
         print(
             f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}"
@@ -189,44 +188,30 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
             if ObsBool:
                 # Round 1
                 P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(
+                    obspar,
                     prob,
                     highres,
                     radecs,
-                    obspar.reducedNside,
-                    obspar.HRnside,
-                    obspar.minProbcut,
                     ObservationTime,
-                    obspar.location,
-                    obspar.maxZenith,
-                    obspar.FOV,
                     pixlist,
                     ipixlistHR,
                     counter,
-                    dirName,
-                    obspar.useGreytime,
-                    obspar.doPlot,
+                    dirName
                 )
                 if (P_GW <= obspar.minProbcut) and obspar.secondRound:
                     # Try Round 2
                     # print('The minimum probability cut being', minProbcut * 100, '% is, unfortunately, not reached.')
                     yprob1 = highres
                     P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(
+                        obspar,
                         prob,
                         yprob1,
                         radecs,
-                        obspar.reducedNside,
-                        obspar.HRnside,
-                        obspar.minProbcut,
                         ObservationTime,
-                        obspar.location,
-                        obspar.maxZenith,
-                        obspar.FOV,
                         pixlist1,
                         ipixlistHR1,
                         counter,
-                        dirName,
-                        obspar.useGreytime,
-                        obspar.doPlot,
+                        dirName
                     )
                     if P_GW <= obspar.minProbcut:
                         print(
@@ -1083,22 +1068,15 @@ def PGWinFoV_NObs(
                 if ObsBool:
                     # Round 1
                     P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(
+                        obspar,
                         prob,
                         highres,
                         radecs,
-                        obspar.reducedNside,
-                        obspar.HRnside,
-                        obspar.minProbcut,
                         ObservationTime,
-                        obspar.location,
-                        obspar.maxZenith,
-                        obspar.FOV,
                         pixlist,
                         ipixlistHR,
                         counter,
                         dirName,
-                        obspar.useGreytime,
-                        obspar.doPlot,
                         ipixlistHROcc,
                     )
                     # print(P_GW, obspar.name)
@@ -1110,19 +1088,11 @@ def PGWinFoV_NObs(
                             prob,
                             yprob1,
                             radecs,
-                            obspar.reducedNside,
-                            obspar.HRnside,
-                            obspar.minProbcut,
                             ObservationTime,
-                            obspar.location,
-                            obspar.maxZenith,
-                            obspar.FOV,
                             pixlist1,
                             ipixlistHR1,
                             counter,
                             dirName,
-                            obspar.useGreytime,
-                            obspar.doPlot,
                             ipixlistHROcc,
                         )
                         if P_GW <= obspar.minProbcut:
