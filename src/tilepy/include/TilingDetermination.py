@@ -196,7 +196,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
                     pixlist,
                     pixlistHR,
                     counter,
-                    dirName
+                    dirName,
                 )
                 if (P_GW <= obspar.minProbcut) and obspar.secondRound:
                     # Try Round 2
@@ -211,7 +211,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
                         pixlist1,
                         pixlistHR1,
                         counter,
-                        dirName
+                        dirName,
                     )
                     if P_GW <= obspar.minProbcut:
                         print(
@@ -332,9 +332,9 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
     prob = skymap.getMap("prob", obspar.HRnside)
 
     if skymap.is3D:
-        print("Found a generic map without 3D information")
+        print("Skymap is 3D")
     else:
-        print("Found a 3D reconstruction")
+        print("Skymap is 2D")
 
     # correlate GW map with galaxy catalog, retrieve ordered list
     if not obspar.mangrove:
@@ -989,7 +989,7 @@ def PGWinFoV_NObs(
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
         pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist,pixlistHR
+            PointingFile, prob, obspar, pixlist, pixlistHR
         )
 
         if obspar.countPrevious:
@@ -1972,6 +1972,7 @@ def PGWinFoV_Space_NObs(
     RAarray = []
     DECarray = []
     pixlist = []
+    pixlistHR = []
     P_GWarray = []
     ObsName = []
     Occultedpixels = []
@@ -1997,7 +1998,7 @@ def PGWinFoV_Space_NObs(
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        pixlist,pixlistHR,  sumPGW, doneObs = SubstractPointings2D(
+        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
             PointingFile, prob, obspar, pixlist, pixlistHR
         )
 
@@ -2124,6 +2125,7 @@ def PGalinFoV_Space_NObs(
     RAarray = []
     DECarray = []
     pixlist = []
+    pixlistHR = []
     ObsName = []
     Occultedpixels = []
 
@@ -2165,7 +2167,7 @@ def PGalinFoV_Space_NObs(
     if PointingFile is not None:
         print(PointingFile, prob, reducedNside, radius, pixlist)
         pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist,pixlistHR
+            PointingFile, prob, obspar, pixlist, pixlistHR
         )
 
         if obspar.countPrevious:
