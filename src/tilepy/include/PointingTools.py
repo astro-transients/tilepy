@@ -1474,7 +1474,6 @@ def ComputeProbability2D(obspar,
         # Zenith angle mask
         pix_ra = radecs.ra.value[(thisaltaz.alt.value > 90 - maxZenith)]
         pix_dec = radecs.dec.value[thisaltaz.alt.value > 90 - maxZenith]
-        # pix_alt = pix_alt1[thisaltaz.alt.value > 90 - maxZenith]
 
     phipix = np.deg2rad(pix_ra)
     thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
@@ -1832,7 +1831,7 @@ def PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values):
     plt.close()
 
 
-def SubstractPointings2D(tpointingFile, prob, obspar, pixlist):
+def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
     nside = obspar.reducedNside
     radius = obspar.FOV
 
@@ -1858,7 +1857,7 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist):
         ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
         effectiveipix_disc = []
         for j, valuej in enumerate(ipix_disc):
-            if not (valuej in pixlist):
+            if valuej not in pixlist:
                 effectiveipix_disc.append(valuej)
             pixlist.append(valuej)
         P_GW.append(prob[effectiveipix_disc].sum())
@@ -1873,8 +1872,13 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist):
             "vs",
             prob[ipix_disc].sum(),
         )
+        # Save the ipixels in HR
+        ipix_discHR = hp.query_disc(obspar.HRnside, xyz, np.deg2rad(radius))
+        for k, valuek in enumerate(ipix_discHR):
+            if valuek not in pixlistHR:
+                pixlistHR.append(valuek)
 
-    return pixlist, np.sum(P_GW), len(raPointing)
+    return pixlist, pixlistHR, np.sum(P_GW), len(raPointing)
 
 
 def TransformRADec(vra, vdec):
