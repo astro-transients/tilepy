@@ -2,6 +2,13 @@
 # Packages
 from astropy import units as u
 from astropy.coordinates import EarthLocation
+from six.moves import configparser
+import six
+
+if six.PY2:
+    ConfigParser = configparser.SafeConfigParser
+else:
+    ConfigParser = configparser.ConfigParser
 
 
 __all__ = ["ObservationParameters"]

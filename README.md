@@ -2,7 +2,7 @@
 
 ## Installation
 
-We clone the repo, create an environment to work, activate the environment and install the package.
+We clone the repo, create an environment to work, activate the environment and install the package. You can use conda or mamba for this. 
 
 ```python
 git clone git@github.com:astro-transients/tilepy.git
