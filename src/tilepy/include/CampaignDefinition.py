@@ -123,31 +123,36 @@ class ObservationParameters(object):
         self.MO = MO
 
     def __str__(self):
-        txt = ""
-        txt += "============== Main parsed observation parameters ==============  \n".format()
-        txt += "Observatory Name: {}\n".format(self.obs_name)
-        txt += "Event Name: {}\n".format(self.event_name)
-        txt += "Observatory: {}\n".format(self.lat)
-        txt += "Observatory: {}\n".format(self.lon)
-        txt += "Observatory: {}\n".format(self.height)
-        txt += "Max zenith: {}\n".format(self.maxZenith)
-        txt += "Using Greytime is: {}\n".format(self.useGreytime)
-        txt += "FOV: {}\n".format(self.FOV)
-        txt += "Max runs: {}\n".format(self.maxRuns)
-        txt += "Duration: {}\n".format(self.duration)
-        txt += "High Resolution NSIDE: {}\n".format(self.HRnside)
-        txt += "Low Resolution NSIDE: {}\n".format(self.reducedNside)
-        txt += (
-            "The strategy is ({algorithm}, {strategy}, mangrove={mangrove})\n".format(
-                algorithm=self.algorithm, strategy=self.strategy, mangrove=self.mangrove
-            )
+        return "\n".join(
+            [
+                "============== Observation Parameters ======================",
+                f"Observatory Name: {self.obs_name}",
+                f"Event Name: {self.event_name}",
+                f"obsTime: {self.obsTime}",
+                "---------------------- Strategy ----------------------",
+                f"Algorithm = {self.algorithm}, Strategy = {self.strategy},  Mangrove = {self.mangrove}",
+                f"Do Plot = {self.doPlot}, Do Rank = {self.doRank}, Count Previous= {self.countPrevious}, Second Round= {self.secondRound}, Use Grey Time= {self.useGreytime}",
+                "--------------------- Observatory ---------------------",
+                f"Observatory Location: {self.lat}, {self.lon}, {self.height}",
+                f"FOV: {self.FOV}, Duration: {self.duration}, Min Duration: {self.minDuration}",
+                f"Max Runs: {self.maxRuns}, Max Nights: {self.maxNights}",
+                f"Visibility: {self.sunDown}, {self.moonDown}, {self.moonGrey}, {self.moonPhase}",
+                f"Min Moon Source Separation: {self.minMoonSourceSeparation}",
+                f"Max Moon Source Separation: {self.maxMoonSourceSeparation}",
+                f"Max Zenith: {self.maxZenith}, Zenith Weighting: {self.zenithWeighting}",
+                "--------------------- Skymap considerations ----------------",
+                f"Skymap: {self.skymap}",
+                f"Cuts: MinProbcut {self.minProbcut}, Dist Cut: {self.distCut}, Minimum Prob Cut for Catalogue: {self.minimumProbCutForCatalogue}",
+                f"Percentage MOC: {self.percentageMOC}",
+                f"NSIDE: HR = {self.HRnside}, reduced = {self.reducedNside}",
+                "--------------------- Directories and files ----------------",
+                f"DatasetDir: {self.datasetDir}",
+                f"Galaxy Catalog Name: {self.galcatName}",
+                f"Output Directory: {self.outDir}",
+                f"Pointings File: {self.pointingsFile}",
+                "============================================================",
+            ]
         )
-        txt += "The level of details is (doPlot={doPlot}, doRank = {doRank})\n".format(
-            doPlot=self.doPlot, doRank=self.doRank
-        )
-
-        # txt += '----------------------------------------------------------------------\n'.format()
-        return txt
 
     def add_parsed_args(
         self,
