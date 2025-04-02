@@ -1866,6 +1866,7 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
     RAarray = []
     DECarray = []
     pixlist = []
+    pixlistHR = []
     ObsName = []
     Occultedpixels = []
 

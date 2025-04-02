@@ -33,7 +33,6 @@ from .PointingTools import (
     NextWindowTools,
     NightDarkObservation,
     NightDarkObservationwithGreyTime,
-    ObservationParameters,
     Observer,
     ObtainHighestProbabilityCoordinates,
     SubstractGalaxiesCircle,
@@ -67,6 +66,10 @@ from .TilingDetermination import (
     PGalinFoV_NObs,
     PGWinFoV,
     PGWinFoV_NObs,
+)
+
+from .CampaignDefinition import (
+    ObservationParameters,
 )
 
 __all__ = [

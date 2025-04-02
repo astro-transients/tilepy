@@ -62,10 +62,9 @@ def GetSchedule(obspar):
 
     raw_map = MapReader(obspar)
     skymap = SkyMap(obspar, raw_map)
-    
+
     area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
     area_50 = skymap.getArea(0.5).to_value(u.deg * u.deg)
-  
 
     if obspar.locCut90 is not None:
         area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
@@ -210,9 +209,7 @@ def GetUniversalSchedule(obspar):
     area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
     area_50 = skymap.getArea(0.5).to_value(u.deg * u.deg)
 
-
     base = obspar[0].base
-
 
     ObservationTime = obspar[0].obsTime
     outputDir = "%s/%s" % (obspar[0].outDir, raw_map.name_event)

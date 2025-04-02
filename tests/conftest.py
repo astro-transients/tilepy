@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from tilepy.include.PointingTools import ObservationParameters
+from tilepy.include.CampaignDefinition import ObservationParameters
 
 
 def load_test_cases():

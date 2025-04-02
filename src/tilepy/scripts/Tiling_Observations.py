@@ -9,7 +9,9 @@ import os
 import time
 
 from tilepy.include.ObservationScheduler import GetSchedule
-from tilepy.include.PointingTools import ObservationParameters, getdate
+from tilepy.include.PointingTools import getdate
+from tilepy.include.CampaignDefinition import ObservationParameters
+
 
 __all__ = ["Tiling_Observations"]
 
