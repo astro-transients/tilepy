@@ -1,4 +1,4 @@
-from .MapManagement import MapReader, SkyMap
+from .MapManagement import MapReader, SkyMap, create_map_reader
 from .ObservationScheduler import GetSchedule, GetUniversalSchedule
 from .Observatories import (
     LST,
@@ -71,6 +71,7 @@ from .TilingDetermination import (
 
 __all__ = [
     "MapReader",
+    "create_map_reader",
     "SkyMap",
     "GetSchedule",
     "GetUniversalSchedule",

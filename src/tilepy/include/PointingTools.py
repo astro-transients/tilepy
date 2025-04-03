@@ -540,7 +540,7 @@ class ObservationParameters(object):
         # Characterstics of the event
         self.MO = MO
 
-        self.mode = mode or "file"
+        self.mode = mode or None
 
         # Source localization parameters (used in "gaussian" mode)
         self.raSource = None

@@ -26,7 +26,7 @@ import astropy.units as u
 from astropy.io import ascii
 from astropy.table import Table
 
-from .MapManagement import MapReader, SkyMap
+from .MapManagement import create_map_reader, SkyMap
 from .PointingPlotting import PointingPlotting
 from .RankingObservationTimes import (
     Ranking_Space,
@@ -60,7 +60,7 @@ def GetSchedule(obspar):
     :type obspar: class ObservationParameters
     """
 
-    raw_map = MapReader(obspar)
+    raw_map = create_map_reader(obspar)
     skymap = SkyMap(obspar, raw_map)
 
     if obspar.locCut90 is not None:
