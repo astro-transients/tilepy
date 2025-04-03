@@ -400,6 +400,7 @@ class Tools:
 
         return vertices
 
+
 def set_gaussian_source(obspar, ra, dec, sigma, name="gaussian_event"):
     """
     Configure an ObservationParameters instance to use a simulated Gaussian probability map.
@@ -430,6 +431,7 @@ def set_gaussian_source(obspar, ra, dec, sigma, name="gaussian_event"):
     obspar.mode = "gaussian"
     if not hasattr(obspar, "event_name") or obspar.event_name is None:
         obspar.event_name = name
+
 
 class ObservationParameters(object):
     """Stores all the parameters in the .ini file"""

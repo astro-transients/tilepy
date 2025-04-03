@@ -19,17 +19,16 @@ import logging
 import os
 import time
 import traceback
+from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 
 import astropy.units as u
-import mhealpy as mh
-from astropy.io import fits
 import healpy as hp
-from astropy.coordinates import SkyCoord
+import mhealpy as mh
 import numpy as np
+from astropy.io import fits
 from astropy.wcs import WCS
-from abc import ABC, abstractmethod
 
 ##################################################################################################
 #                        Read Healpix map from fits file                                         #
@@ -37,17 +36,18 @@ from abc import ABC, abstractmethod
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["MapReader","create_map_reader"]
+__all__ = ["MapReader", "create_map_reader"]
+
 
 def validate_source_params(obspar):
     if obspar.mode == "gaussian":
         for attr in ["raSource", "decSource", "sigmaSource"]:
             if getattr(obspar, attr, None) is None:
                 raise ValueError(f"{attr} must be defined in 'gaussian' mode")
-            
+
 
 class SimpleHealpixMap:
-    def __init__(self, data, nside, ordering = "nested"):
+    def __init__(self, data, nside, ordering="nested"):
         self.data = data
         self.nside = nside
         self.unit = u.Unit("sr^-1")
@@ -62,11 +62,8 @@ class SimpleHealpixMap:
 
     def rasterize(self, nside, scheme="NESTED"):
         downgraded_data = hp.ud_grade(
-                self.data,
-                nside_out=nside,
-                order_in="NESTED",
-                order_out=scheme.upper()
-            )
+            self.data, nside_out=nside, order_in="NESTED", order_out=scheme.upper()
+        )
         return SimpleHealpixMap(downgraded_data, nside, ordering=scheme)
 
 
@@ -115,7 +112,6 @@ def create_map_reader(obspar):
     )
 
 
-
 class MapReader(ABC):
     def __init__(self, obspar):
         self.obspar = obspar
@@ -129,7 +125,8 @@ class MapReader(ABC):
 
     def getDistance(self):
         raise NotImplementedError("This reader does not support 3D distance.")
-    
+
+
 class GaussianMapReader(MapReader):
     def __init__(self, obspar):
         self.mode = "gaussian"
@@ -149,11 +146,13 @@ class GaussianMapReader(MapReader):
 
         theta_c = np.radians(90.0 - dec_deg)
         phi_c = np.radians(ra_deg)
-        center_vec = np.array([
-            np.sin(theta_c) * np.cos(phi_c),
-            np.sin(theta_c) * np.sin(phi_c),
-            np.cos(theta_c)
-        ])
+        center_vec = np.array(
+            [
+                np.sin(theta_c) * np.cos(phi_c),
+                np.sin(theta_c) * np.sin(phi_c),
+                np.cos(theta_c),
+            ]
+        )
 
         pix_vecs = np.array(hp.pix2vec(self.nside, np.arange(npix), nest=True))
         dots = np.dot(center_vec, pix_vecs)
@@ -166,7 +165,9 @@ class GaussianMapReader(MapReader):
         norm_factor = np.sum(prob_unnorm * pixarea_sr)
         prob_density = prob_unnorm / norm_factor
 
-        self.simulated_map = SimpleHealpixMap(prob_density, self.nside, ordering="nested")
+        self.simulated_map = SimpleHealpixMap(
+            prob_density, self.nside, ordering="nested"
+        )
 
     def getMap(self, mapType):
         if mapType != "prob":
@@ -174,13 +175,20 @@ class GaussianMapReader(MapReader):
         return self.simulated_map
 
     def validate_source_params(self, obspar):
-        if not hasattr(obspar, "raSource") or not hasattr(obspar, "decSource") or not hasattr(obspar, "sigmaSource"):
-            raise ValueError("Gaussian mode requires 'raSource', 'decSource', and 'sigmaSource' in obspar.")
+        if (
+            not hasattr(obspar, "raSource")
+            or not hasattr(obspar, "decSource")
+            or not hasattr(obspar, "sigmaSource")
+        ):
+            raise ValueError(
+                "Gaussian mode requires 'raSource', 'decSource', and 'sigmaSource' in obspar."
+            )
+
 
 class LocProbMapReader(MapReader):
     def __init__(self, obspar):
         self.mode = "locprob"
-        obspar.mode = self.mode 
+        obspar.mode = self.mode
         self.name_event = getattr(obspar, "event_name", "locprob_event")
         self.has3D = False
         self.prob_density = True
@@ -238,10 +246,11 @@ class LocProbMapReader(MapReader):
 
         return SimpleHealpixMap(healpix_map, nside, ordering="nested")
 
+
 class HealpixMapReader(MapReader):
     def __init__(self, obspar):
         self.mode = "healpix"
-        obspar.mode = self.mode 
+        obspar.mode = self.mode
         self.name_event = getattr(obspar, "event_name", "undefined")
         self.has3D = False
         self.prob_density = False
@@ -273,7 +282,7 @@ class HealpixMapReader(MapReader):
         for i in range(self.offset_column, nb_column + self.offset_column):
             colname = header.get(f"TTYPE{i}")
             unit = header.get(f"TUNIT{i}")
-            
+
             if colname in ["PROB", "T", "PROBABILITY", "PROBDENSITY"]:
                 self.id_prob = i
                 self.unit_prob = u.Unit(unit) if unit else u.dimensionless_unscaled
@@ -301,8 +310,18 @@ class HealpixMapReader(MapReader):
         field_map = {
             "prob": (self.id_prob, self.unit_prob, self.prob_density, u.Unit("sr^-1")),
             "distMean": (self.id_dist_mean, self.unit_dist_mean, False, u.Unit("Mpc")),
-            "distSigma": (self.id_dist_sigma, self.unit_dist_sigma, False, u.Unit("Mpc")),
-            "distNorm": (self.id_dist_norm, self.unit_dist_norm, False, u.Unit("Mpc^-2"))
+            "distSigma": (
+                self.id_dist_sigma,
+                self.unit_dist_sigma,
+                False,
+                u.Unit("Mpc"),
+            ),
+            "distNorm": (
+                self.id_dist_norm,
+                self.unit_dist_norm,
+                False,
+                u.Unit("Mpc^-2"),
+            ),
         }
 
         if mapType not in field_map:
@@ -323,7 +342,9 @@ class HealpixMapReader(MapReader):
         quantity = raw_map.data * unit
         if not unit.is_equivalent(target_unit):
             # If unit is dimensionless but we're expecting density, compute manually
-            if unit.is_equivalent(u.dimensionless_unscaled) and target_unit == u.Unit("1/sr"):
+            if unit.is_equivalent(u.dimensionless_unscaled) and target_unit == u.Unit(
+                "1/sr"
+            ):
                 pixarea = raw_map.pixarea()
                 quantity = quantity / pixarea  # Convert to density manually
         raw_map._data = quantity.to_value(target_unit)
@@ -344,6 +365,7 @@ class HealpixMapReader(MapReader):
                 return i
         raise Exception("No valid BINTABLE HDU found for HEALPix map")
 
+
 class MapReaderLegacy:
     def __init__(self, obspar):
         self.mode = getattr(obspar, "mode", "file")
@@ -353,7 +375,7 @@ class MapReaderLegacy:
 
         # Validate the the parameters early so to fail if something is not properly configured:
         validate_source_params(obspar)
-   
+
         # -------------------------
         # 1. GAUSSIAN MODE
         # -------------------------
@@ -389,10 +411,12 @@ class MapReaderLegacy:
             raise Exception("Map file not found: " + self.skymap_filename)
 
         # Early GBM format — convert to HEALPix
-        #its important to have this before the healpix fits map mode, 
-        #because it will be bypassing the normal healpix map reading
+        # its important to have this before the healpix fits map mode,
+        # because it will be bypassing the normal healpix map reading
         if "glg_locprob_all" in os.path.basename(self.skymap_filename):
-            self.simulated_map = self.convert_locprob_to_healpix(self.skymap_filename, nside=128)
+            self.simulated_map = self.convert_locprob_to_healpix(
+                self.skymap_filename, nside=128
+            )
             self.name_event = obspar.event_name or "gbm_locprob"
             self.prob_density = True
             self.has3D = False
@@ -475,11 +499,13 @@ class MapReaderLegacy:
         # Convert center to unit vector
         theta_c = np.radians(90.0 - dec_deg)
         phi_c = np.radians(ra_deg)
-        center_vec = np.array([
-            np.sin(theta_c) * np.cos(phi_c),
-            np.sin(theta_c) * np.sin(phi_c),
-            np.cos(theta_c)
-        ])
+        center_vec = np.array(
+            [
+                np.sin(theta_c) * np.cos(phi_c),
+                np.sin(theta_c) * np.sin(phi_c),
+                np.cos(theta_c),
+            ]
+        )
 
         # Compute angular distance to each pixel center
         pix_vecs = np.array(hp.pix2vec(self.nside, np.arange(npix), nest=True))
@@ -495,14 +521,12 @@ class MapReaderLegacy:
         norm_factor = np.sum(prob_unnorm * pixarea_sr)
         prob_density = prob_unnorm / norm_factor  # unit: sr⁻¹
 
-
-        self.simulated_map = SimpleHealpixMap(prob_density, self.nside, ordering = "nested")
+        self.simulated_map = SimpleHealpixMap(
+            prob_density, self.nside, ordering="nested"
+        )
         self.name_event = f"Gaussian_RA{ra_deg}_Dec{dec_deg}"
-        self.prob_density = True   
+        self.prob_density = True
         self.has3D = False
-
-
-
 
     def getMapHDUId(self):
         id_hdu_map = -1
@@ -699,13 +723,15 @@ class MapReaderLegacy:
             if mapType == "prob":
                 return self.simulated_map
             else:
-                raise Exception(f"Map type '{mapType}' not available in simulated map mode")
-            
+                raise Exception(
+                    f"Map type '{mapType}' not available in simulated map mode"
+                )
+
         if self.mode == "gaussian":
             if mapType != "prob":
                 raise Exception("Only 'prob' map type supported in gaussian mode.")
             return self.simulated_map
-            
+
         if mapType == "prob":
             raw_map = mh.HealpixMap.read_map(
                 self.skymap_filename,

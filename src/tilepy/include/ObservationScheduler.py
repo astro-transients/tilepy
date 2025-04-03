@@ -26,7 +26,7 @@ import astropy.units as u
 from astropy.io import ascii
 from astropy.table import Table
 
-from .MapManagement import create_map_reader, SkyMap
+from .MapManagement import SkyMap, create_map_reader
 from .PointingPlotting import PointingPlotting
 from .RankingObservationTimes import (
     Ranking_Space,
@@ -198,7 +198,7 @@ def GetUniversalSchedule(obspar):
     :type obsparameters: list of class ObservationParameters
     """
 
-    raw_map = MapReader(obspar[0])
+    raw_map = create_map_reader(obspar[0])
     skymap = SkyMap(obspar[0], raw_map)
     base = obspar[0].base
 
