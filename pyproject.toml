@@ -62,6 +62,7 @@ dev = [
     "setuptools_scm[toml]",
     "pre-commit>=4.1.0",
     "flake8>=7.1.2",
+    "black>=25.1.0",
 ]
 
 all = [

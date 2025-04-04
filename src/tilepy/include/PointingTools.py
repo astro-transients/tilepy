@@ -51,7 +51,6 @@ else:
 
 __all__ = [
     "Tools",
-    "ObservationParameters",
     "Observer",
     "NextWindowTools",
     "getdate",
@@ -741,7 +740,6 @@ class ObservationParameters(object):
         self.reducedNside = reducedNside
         self.HRnside = HRnside
         self.mangrove = mangrove
-
 
 class Observer:
     """Class to store information and handle operation related to the observatory used for the observations."""
@@ -1470,31 +1468,32 @@ def GetBestNSIDE(ReducedNSIDE, HRnside, fov):
 
 
 def ComputeProbability2D(
+    obspar,
     prob,
     highres,
     radecs,
-    reducedNside,
-    HRnside,
-    minProbcut,
     time,
-    observatory,
-    maxZenith,
-    FOV,
     ipixlist,
     ipixlistHR,
     counter,
     dirName,
-    useGreytime,
-    plot,
     ipixlistOcc=None,
 ):
     """
     Compute probability in 2D by taking the highest probability in FoV value
     """
-    radius = FOV
+
+    reducedNside = obspar.reducedNside
+    HRnside = obspar.HRnside
+    minProbcut = obspar.minProbcut
+    observatory = obspar.location
+    maxZenith = obspar.maxZenith
+    radius = obspar.FOV
+    useGreytime = obspar.useGreytime
+    plot = obspar.doPlot
+
     frame = co.AltAz(obstime=time, location=observatory)
     thisaltaz = radecs.transform_to(frame)
-    # pix_alt1 = thisaltaz.alt.value
 
     if useGreytime:
         moonaltazs = get_body("moon", Time(time, scale="utc")).transform_to(
@@ -1514,7 +1513,6 @@ def ComputeProbability2D(
         # Zenith angle mask
         pix_ra = radecs.ra.value[(thisaltaz.alt.value > 90 - maxZenith)]
         pix_dec = radecs.dec.value[thisaltaz.alt.value > 90 - maxZenith]
-        # pix_alt = pix_alt1[thisaltaz.alt.value > 90 - maxZenith]
 
     phipix = np.deg2rad(pix_ra)
     thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
@@ -1529,12 +1527,10 @@ def ComputeProbability2D(
     )
 
     dp_dV_FOV = []
-    # dp_dV_FOV = np.zero(len(dp_Pix_Fov))
 
     xyzpix = hp.ang2vec(thetapix, phipix)
 
     # Grid-scheme and the connection between HR and LR
-
     for i in range(0, len(cat_pix)):
         # Pixels associated to a disk of radius centered in xyzpix[i] for HR NSIDE
         ipix_discfull = hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
@@ -1581,7 +1577,6 @@ def ComputeProbability2D(
     )
 
     P_GW = sortcat["PIXFOVPROB"][:1]
-    # Include to the list of pixels already observed
 
     if P_GW >= minProbcut:
         phip = float(np.deg2rad(targetCoord.ra.deg))
@@ -1664,7 +1659,7 @@ def ComputeProbability2D(
                         linewidth=0.1,
                     )
                 except Exception:
-                    print("No pcculted pix")
+                    print("No occulted pixel")
 
             plt.savefig("%s/Zoom_Pointing_%g.png" % (path, counter))
             # for i in range(0,1):
@@ -1875,12 +1870,12 @@ def PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values):
     plt.close()
 
 
-def SubstractPointings2D(tpointingFile, prob, obspar, pixlist):
+def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
     nside = obspar.reducedNside
     radius = obspar.FOV
 
     print("Subtracting pointings from " + tpointingFile)
-    ra, dec = np.genfromtxt(
+    raPointing, decPointing = np.genfromtxt(
         tpointingFile,
         usecols=(2, 3),
         dtype="str",
@@ -1888,33 +1883,41 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist):
         delimiter=" ",
         unpack=True,
     )  # ra, dec in degrees
-    ra = np.atleast_1d(ra)
-    dec = np.atleast_1d(dec)
+    raPointing = np.atleast_1d(raPointing)
+    decPointing = np.atleast_1d(decPointing)
 
-    coordinates = TransformRADec(ra, dec)
+    coordinates = TransformRADec(raPointing, decPointing)
     P_GW = []
-    for i in range(0, len(ra)):
+    for i, valuei in enumerate(raPointing):
         t = 0.5 * np.pi - coordinates[i].dec.rad
         p = coordinates[i].ra.rad
+        # Get the pixels for the ipix_disc (low res)
         xyz = hp.ang2vec(t, p)
         ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
         effectiveipix_disc = []
-        for j in range(0, len(ipix_disc)):
-            if not (ipix_disc[j] in pixlist):
-                effectiveipix_disc.append(ipix_disc[j])
-            pixlist.append(ipix_disc[j])
+        for j, valuej in enumerate(ipix_disc):
+            if valuej not in pixlist:
+                effectiveipix_disc.append(valuej)
+            pixlist.append(valuej)
         P_GW.append(prob[effectiveipix_disc].sum())
+
         print(
             "Coordinates ra:",
-            ra[i],
+            raPointing[i],
             "dec:",
-            dec[i],
+            decPointing[i],
             "Pgw:",
             P_GW[i],
             "vs",
             prob[ipix_disc].sum(),
         )
-    return pixlist, np.sum(P_GW), len(ra)
+        # Save the ipixels in HR
+        ipix_discHR = hp.query_disc(obspar.HRnside, xyz, np.deg2rad(radius))
+        for k, valuek in enumerate(ipix_discHR):
+            if valuek not in pixlistHR:
+                pixlistHR.append(valuek)
+
+    return pixlist, pixlistHR, np.sum(P_GW), len(raPointing)
 
 
 def TransformRADec(vra, vdec):

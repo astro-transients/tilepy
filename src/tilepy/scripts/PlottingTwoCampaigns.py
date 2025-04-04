@@ -2,7 +2,8 @@ import argparse
 import os
 import time
 
-from tilepy.include.PointingTools import ObservationParameters
+from tilepy.include.CampaignDefinition import ObservationParameters
+
 from tilepy.tools.VisualizationTools import CompareTwoTilings
 
 __all__ = ["PlottingTwoCampaigns"]

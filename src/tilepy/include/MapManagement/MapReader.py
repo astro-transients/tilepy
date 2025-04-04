@@ -689,7 +689,7 @@ class MapReaderLegacy:
 
         file_exist = os.path.isfile(filename)
         if file_exist:
-            logger.warning("The file is already existing, it will be re-downloaded")
+            logger.warning("The file exists, it will be re-downloaded")
 
         for i in range(download_max_nb_try):
             if "png" in self.url:  # Change Fermi-GBM url(if png) to fit format
@@ -709,7 +709,7 @@ class MapReaderLegacy:
                     if not file_exist:
                         raise e
                     else:
-                        logger.warning("The already existing file will be used")
+                        logger.warning("The existing file will be used")
                 else:
                     logger.info(
                         f"Map not available, waiting for {time_wait_retry} before a new attempt"

@@ -63,6 +63,9 @@ def GetSchedule(obspar):
     raw_map = create_map_reader(obspar)
     skymap = SkyMap(obspar, raw_map)
 
+    area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
+    area_50 = skymap.getArea(0.5).to_value(u.deg * u.deg)
+
     if obspar.locCut90 is not None:
         area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
         if obspar.locCut90 < area_90:
@@ -101,6 +104,7 @@ def GetSchedule(obspar):
         print("Catalog: ", galaxies)
         print("Dataset: ", obspar.datasetDir)
         print("Output: ", outputDir)
+        print(f"90% area = {area_90}. 50% area = {area_50}")
         print(
             "==========================================================================================="
         )
@@ -151,6 +155,7 @@ def GetSchedule(obspar):
         print("Previous pointings: ", obspar.pointingsFile)
         print("Dataset: ", obspar.datasetDir)
         print("Output: ", outputDir)
+        print(f"90% area = {area_90}. 50% area = {area_50}")
         print(
             "==========================================================================================="
         )
@@ -200,11 +205,12 @@ def GetUniversalSchedule(obspar):
 
     raw_map = create_map_reader(obspar[0])
     skymap = SkyMap(obspar[0], raw_map)
+
+    area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
+    area_50 = skymap.getArea(0.5).to_value(u.deg * u.deg)
+
     base = obspar[0].base
 
-    print(
-        "==========================================================================================="
-    )
     ObservationTime = obspar[0].obsTime
     outputDir = "%s/%s" % (obspar[0].outDir, raw_map.name_event)
     galaxies = obspar[0].datasetDir + obspar[0].galcatName
@@ -246,6 +252,7 @@ def GetUniversalSchedule(obspar):
             print("Catalog: ", obspar[0].galcatName)
             print("Dataset: ", obspar[0].datasetDir)
             print("Output: ", outputDir)
+            print(f"90% area = {area_90}. 50% area = {area_50}")
             print(
                 "==========================================================================================="
             )
@@ -276,6 +283,7 @@ def GetUniversalSchedule(obspar):
             print("Date: ", obspar[0].obsTime)
             print("Dataset: ", obspar[0].datasetDir)
             print("Output: ", outputDir)
+            print(f"90% area = {area_90}. 50% area = {area_50}")
             print(
                 "==========================================================================================="
             )
@@ -306,6 +314,7 @@ def GetUniversalSchedule(obspar):
             print("Catalog: ", obspar[0].galcatName)
             print("Dataset: ", obspar[0].datasetDir)
             print("Output: ", outputDir)
+            print(f"90% area = {area_90}. 50% area = {area_50}")
             print(
                 "==========================================================================================="
             )
@@ -334,6 +343,7 @@ def GetUniversalSchedule(obspar):
             print("Date: ", obspar[0].obsTime)
             print("Dataset: ", obspar[0].datasetDir)
             print("Output: ", outputDir)
+            print(f"90% area = {area_90}. 50% area = {area_50}")
             print(
                 "==========================================================================================="
             )

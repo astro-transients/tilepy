@@ -116,9 +116,9 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     RAarray = []
     DECarray = []
     pixlist = []
-    ipixlistHR = []
+    pixlistHR = []
     pixlist1 = []
-    ipixlistHR1 = []
+    pixlistHR1 = []
     P_GWarray = []
     ObservationTimearray = []
     Round = []
@@ -144,17 +144,16 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     # Add observed pixels to pixlist
     maxRuns = obspar.maxRuns
     if PointingFile is not None:
-        pixlist, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist
-        )
-
-        if obspar.countPrevious:
-            maxRuns = obspar.maxRuns - doneObs
         print(
             "==========================================================================================="
         )
-        print()
-        print(f": Total GW probability already covered: {sumPGW}")
+        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+            PointingFile, prob, obspar, pixlist, pixlistHR
+        )
+        if obspar.countPrevious:
+            maxRuns = obspar.maxRuns - doneObs
+
+        print(f"Total GW probability already covered: {sumPGW}")
         print(
             f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}"
@@ -188,45 +187,31 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
             )
             if ObsBool:
                 # Round 1
-                P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(
+                P_GW, TC, pixlist, pixlistHR = ComputeProbability2D(
+                    obspar,
                     prob,
                     highres,
                     radecs,
-                    obspar.reducedNside,
-                    obspar.HRnside,
-                    obspar.minProbcut,
                     ObservationTime,
-                    obspar.location,
-                    obspar.maxZenith,
-                    obspar.FOV,
                     pixlist,
-                    ipixlistHR,
+                    pixlistHR,
                     counter,
                     dirName,
-                    obspar.useGreytime,
-                    obspar.doPlot,
                 )
                 if (P_GW <= obspar.minProbcut) and obspar.secondRound:
                     # Try Round 2
                     # print('The minimum probability cut being', minProbcut * 100, '% is, unfortunately, not reached.')
                     yprob1 = highres
-                    P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(
+                    P_GW, TC, pixlist1, pixlistHR1 = ComputeProbability2D(
+                        obspar,
                         prob,
                         yprob1,
                         radecs,
-                        obspar.reducedNside,
-                        obspar.HRnside,
-                        obspar.minProbcut,
                         ObservationTime,
-                        obspar.location,
-                        obspar.maxZenith,
-                        obspar.FOV,
                         pixlist1,
-                        ipixlistHR1,
+                        pixlistHR1,
                         counter,
                         dirName,
-                        obspar.useGreytime,
-                        obspar.doPlot,
                     )
                     if P_GW <= obspar.minProbcut:
                         print(
@@ -347,9 +332,9 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
     prob = skymap.getMap("prob", obspar.HRnside)
 
     if skymap.is3D:
-        print("Found a generic map without 3D information")
+        print("Skymap is 3D")
     else:
-        print("Found a 3D reconstruction")
+        print("Skymap is 2D")
 
     # correlate GW map with galaxy catalog, retrieve ordered list
     if not obspar.mangrove:
@@ -977,9 +962,9 @@ def PGWinFoV_NObs(
     RAarray = []
     DECarray = []
     pixlist = []
-    ipixlistHR = []
+    pixlistHR = []
     pixlist1 = []
-    ipixlistHR1 = []
+    pixlistHR1 = []
     P_GWarray = []
     ObservationTimearray = []
     Round = []
@@ -1003,8 +988,8 @@ def PGWinFoV_NObs(
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        pixlist, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist
+        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+            PointingFile, prob, obspar, pixlist, pixlistHR
         )
 
         if obspar.countPrevious:
@@ -1052,13 +1037,13 @@ def PGWinFoV_NObs(
             if couter_per_obs[j] >= maxRuns:
                 SameNight[j] = False
             if (TIME_MIN >= NewActiveObsTime[j]) & SameNight[j]:
-                ipixlistHROcc = None
+                pixlistHROcc = None
                 if obspar.base == "space":
                     SatelliteTime = GetSatelliteTime(SatelliteName, ObservationTime)
                     satellite_position, obspar.location = GetSatellitePositions(
                         SatelliteName, SatelliteTime
                     )
-                    ObsBool, yprob, ipixlistHROcc = OccultationCut(
+                    ObsBool, yprob, pixlistHROcc = OccultationCut(
                         prob,
                         obspar.reducedNside,
                         ObservationTime,
@@ -1082,48 +1067,33 @@ def PGWinFoV_NObs(
 
                 if ObsBool:
                     # Round 1
-                    P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(
+                    P_GW, TC, pixlist, pixlistHR = ComputeProbability2D(
+                        obspar,
                         prob,
                         highres,
                         radecs,
-                        obspar.reducedNside,
-                        obspar.HRnside,
-                        obspar.minProbcut,
                         ObservationTime,
-                        obspar.location,
-                        obspar.maxZenith,
-                        obspar.FOV,
                         pixlist,
-                        ipixlistHR,
+                        pixlistHR,
                         counter,
                         dirName,
-                        obspar.useGreytime,
-                        obspar.doPlot,
-                        ipixlistHROcc,
+                        pixlistHROcc,
                     )
                     # print(P_GW, obspar.name)
                     if (P_GW <= obspar.minProbcut) and obspar.secondRound:
                         # Try Round 2
                         # print('The minimum probability cut being', minProbcut * 100, '% is, unfortunately, not reached.')
                         yprob1 = highres
-                        P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(
+                        P_GW, TC, pixlist1, pixlistHR1 = ComputeProbability2D(
                             prob,
                             yprob1,
                             radecs,
-                            obspar.reducedNside,
-                            obspar.HRnside,
-                            obspar.minProbcut,
                             ObservationTime,
-                            obspar.location,
-                            obspar.maxZenith,
-                            obspar.FOV,
                             pixlist1,
-                            ipixlistHR1,
+                            pixlistHR1,
                             counter,
                             dirName,
-                            obspar.useGreytime,
-                            obspar.doPlot,
-                            ipixlistHROcc,
+                            pixlistHROcc,
                         )
                         if P_GW <= obspar.minProbcut:
                             print(
@@ -1839,8 +1809,8 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
         print(
             PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist  # noqa: F821
         )
-        pixlist, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist  # noqa: F821
+        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+            PointingFile, prob, obspar, pixlist, pixlistHR  # noqa: F821
         )
 
         if obspar.countPrevious:
@@ -1896,6 +1866,7 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
     RAarray = []
     DECarray = []
     pixlist = []
+    pixlistHR = []
     ObsName = []
     Occultedpixels = []
 
@@ -1937,8 +1908,8 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        pixlist, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist
+        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+            PointingFile, prob, obspar, pixlist, pixlistHR
         )
 
         if obspar.countPrevious:
@@ -2002,6 +1973,7 @@ def PGWinFoV_Space_NObs(
     RAarray = []
     DECarray = []
     pixlist = []
+    pixlistHR = []
     P_GWarray = []
     ObsName = []
     Occultedpixels = []
@@ -2027,8 +1999,8 @@ def PGWinFoV_Space_NObs(
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        pixlist, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist
+        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+            PointingFile, prob, obspar, pixlist, pixlistHR
         )
 
         if obspar.countPrevious:
@@ -2102,7 +2074,7 @@ def PGWinFoV_Space_NObs(
         satellite_position, satellite_location = GetSatellitePositions(
             SatelliteName, SatelliteTime
         )
-        ObsBool, yprob, ipixlistRROcc = OccultationCut(
+        ObsBool, yprob, pixlistRROcc = OccultationCut(
             prob,
             reducedNside,
             current_time,
@@ -2114,7 +2086,7 @@ def PGWinFoV_Space_NObs(
         )
 
         # WE COULD GET THE LIST OF OBSEEVABLE PIXELS AT THIS SPECIFIC TIME
-        Occultedpixels.append(ipixlistRROcc)
+        Occultedpixels.append(pixlistRROcc)
         current_time += step
         i += 1
 
@@ -2154,6 +2126,7 @@ def PGalinFoV_Space_NObs(
     RAarray = []
     DECarray = []
     pixlist = []
+    pixlistHR = []
     ObsName = []
     Occultedpixels = []
 
@@ -2194,8 +2167,8 @@ def PGalinFoV_Space_NObs(
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, reducedNside, radius, pixlist)
-        pixlist, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist
+        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+            PointingFile, prob, obspar, pixlist, pixlistHR
         )
 
         if obspar.countPrevious:
@@ -2274,7 +2247,7 @@ def PGalinFoV_Space_NObs(
         satellite_position, satellite_location = GetSatellitePositions(
             SatelliteName, SatelliteTime
         )
-        ObsBool, yprob, ipixlistRROcc = OccultationCut(
+        ObsBool, yprob, pixlistRROcc = OccultationCut(
             prob,
             reducedNside,
             current_time,
@@ -2286,7 +2259,7 @@ def PGalinFoV_Space_NObs(
         )
 
         # WE COULD GET THE LIST OF OBSEEVABLE PIXELS AT THIS SPECIFIC TIME
-        Occultedpixels.append(ipixlistRROcc)
+        Occultedpixels.append(pixlistRROcc)
         current_time += step
         i += 1
 
