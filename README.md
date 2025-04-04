@@ -1,16 +1,18 @@
 <p align="center">
   <a href="" rel="noopener">
- <img style="width: 200px; height: 200px; max-width: 100%;" src="image/tilepy_logo.png" src="image/tilepy_logo.png" alt="GW Toy logo"
+ <img style="width: 400px; height: 200px; max-width: 100%;" src="image/tilepy_logo.png" src="image/tilepy_logo.png" alt="tilepy logo"
  ></a>
 </p>
 
-<h3 align="center">tilepy</h3>
-
 <div align="center">
+
+  
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12190543.svg)](https://doi.org/10.5281/zenodo.12190543)
 [![Latest release](http://img.shields.io/pypi/v/tilepy.svg?text=version)](https://pypi.org/project/tilepy/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/astro-transients/tilepy/blob/master/LICENSE.rst)
 [![ApJS Published](https://img.shields.io/badge/ApJS-Published-Green.svg)](https://doi.org/10.3847/1538-4365/ad5bde)
+
+</div>
 
 ## Installation
 
