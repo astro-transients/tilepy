@@ -69,6 +69,7 @@ from .TilingDetermination import (
 )
 
 from .CampaignDefinition import (
+    set_gaussian_source,
     ObservationParameters,
 )
 
@@ -91,7 +92,6 @@ __all__ = [
     "PointingPlottingGWCTA",
     "PlotPointings_Pretty",
     "Tools",
-    "ObservationParameters",
     "Observer",
     "NextWindowTools",
     "getdate",
@@ -136,4 +136,6 @@ __all__ = [
     "ObservationStartperObs",
     "PGWinFoV_NObs",
     "PGalinFoV_NObs",
+    "set_gaussian_source",
+    "ObservationParameters",
 ]
