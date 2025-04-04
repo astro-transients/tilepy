@@ -4,8 +4,6 @@
  ></a>
 </p>
 
-<h3 align="center">tilepy</h3>
-
 <div align="center">
 
   
@@ -13,6 +11,8 @@
 [![Latest release](http://img.shields.io/pypi/v/tilepy.svg?text=version)](https://pypi.org/project/tilepy/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/astro-transients/tilepy/blob/master/LICENSE.rst)
 [![ApJS Published](https://img.shields.io/badge/ApJS-Published-Green.svg)](https://doi.org/10.3847/1538-4365/ad5bde)
+
+</div>
 
 ## Installation
 
