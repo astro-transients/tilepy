@@ -30,6 +30,7 @@ class SkyMap:
     def __init__(self, obspar, mapReader):
         self.raw_map_prob_density = mapReader.getMap("prob")
         self.is3D = self.determine3D(obspar, mapReader)
+        self.mode = getattr(obspar, "mode", None)
 
         if self.is3D:
             self.raw_map_dist_mean = mapReader.getMap("distMean")
@@ -62,9 +63,10 @@ class SkyMap:
             return self.pix_id_area_cache[fraction_localisation]
 
         sorted_pixel_id = np.flipud(np.argsort(self.raw_map_prob_density.data))
-        prob = self.raw_map_prob_density[
-            sorted_pixel_id
-        ] * self.raw_map_prob_density.pixarea(sorted_pixel_id)
+        prob = (
+            self.raw_map_prob_density[sorted_pixel_id]
+            * self.raw_map_prob_density.pixarea(sorted_pixel_id)
+        ).value
         summed_probability = np.cumsum(prob)
 
         self.pix_id_area_cache[fraction_localisation] = sorted_pixel_id[
@@ -74,11 +76,13 @@ class SkyMap:
         return self.pix_id_area_cache[fraction_localisation]
 
     def getArea(self, fraction_localisation):
-        return np.sum(
-            self.raw_map_prob_density.pixarea(self.getPixIdArea(fraction_localisation))
+        area_vals = self.raw_map_prob_density.pixarea(
+            self.getPixIdArea(fraction_localisation)
         )
+        return np.sum(area_vals.to(u.deg * u.deg))
 
     def getMap(self, mapType, nside, scheme="ring"):
+
         cache_entry = mapType + "_" + str(nside) + "_" + scheme
         if cache_entry in self.rasterized_map_cache.keys():
             return self.rasterized_map_cache[cache_entry]
