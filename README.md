@@ -1,6 +1,6 @@
 <p align="center">
   <a href="" rel="noopener">
- <img style="width: 200px; height: 200px; max-width: 100%;" src="image/tilepy_logo.png" src="image/tilepy_logo.png" alt="GW Toy logo"
+ <img style="width: 400px; height: 200px; max-width: 100%;" src="image/tilepy_logo.png" src="image/tilepy_logo.png" alt="tilepy logo"
  ></a>
 </p>
 
