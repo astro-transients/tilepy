@@ -11,7 +11,39 @@ else:
     ConfigParser = configparser.ConfigParser
 
 
-__all__ = ["ObservationParameters"]
+__all__ = ["ObservationParameters", "set_gaussian_source"]
+
+
+def set_gaussian_source(obspar, ra, dec, sigma, name="gaussian_event"):
+    """
+    Configure an ObservationParameters instance to use a simulated Gaussian probability map.
+
+    Parameters
+    ----------
+    obspar : ObservationParameters
+        The instance to configure.
+    ra : float
+        Right Ascension of the source in degrees.
+    dec : float
+        Declination of the source in degrees.
+    sigma : float
+        Standard deviation (1-sigma) of the Gaussian in degrees.
+    name : str, optional
+        Event name to assign if not already set (default is "gaussian_event").
+
+    Example
+    -------
+    >>> obspar = ObservationParameters()
+    >>> set_gaussian_source(obspar, ra=180.0, dec=30.0, sigma=2.5)
+    >>> print(obspar.mode)
+    gaussian
+    """
+    obspar.raSource = ra
+    obspar.decSource = dec
+    obspar.sigmaSource = sigma
+    obspar.mode = "gaussian"
+    if not hasattr(obspar, "event_name") or obspar.event_name is None:
+        obspar.event_name = name
 
 
 class ObservationParameters(object):
@@ -52,6 +84,7 @@ class ObservationParameters(object):
         HRnside=None,
         mangrove=None,
         skymap=None,
+        mode=None,
         obsTime=None,
         datasetDir=None,
         galcatName=None,
@@ -121,6 +154,13 @@ class ObservationParameters(object):
 
         # Characterstics of the event
         self.MO = MO
+
+        self.mode = mode or None
+
+        # Source localization parameters (used in "gaussian" mode)
+        self.raSource = None
+        self.decSource = None
+        self.sigmaSource = None
 
     def __str__(self):
         return "\n".join(
