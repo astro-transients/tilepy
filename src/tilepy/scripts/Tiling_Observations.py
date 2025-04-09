@@ -7,6 +7,7 @@
 import argparse
 import os
 import time
+from astropy.time import Time
 
 from tilepy.include.ObservationScheduler import GetSchedule
 from tilepy.include.PointingTools import getdate
@@ -25,19 +26,53 @@ def main():
 
     start = time.time()
 
+    time_now = Time.now()
+    time_now_str = time_now.datetime.strftime("%Y-%m-%d %H:%M:%S")
+
     parser = argparse.ArgumentParser(
-        description="Start the LST pointing observation of a GW event"
+        description="Start the pointing observation of a GW event"
     )
     parser.add_argument(
         "-skymap",
         metavar="skymap",
-        default="https://gracedb.ligo.org/api/superevents/MS230522j/files/bayestar.fits.gz",
+        default=None,
         help="FITS file with the sky localization, e.g.for GW https://urlpath/Bayestar.fits.gz",
+    )
+    parser.add_argument(
+        "-mode",
+        metavar="mode",
+        default="healpix",
+        choices=["gaussian", "locprob", "healpix"],
+        help="Mode for reading maps.",
+    )
+    parser.add_argument(
+        "-ra",
+        metavar="ra",
+        default=None,
+        help="Right ascension of the target, in degrees.",
+    )
+    parser.add_argument(
+        "-dec",
+        metavar="dec",
+        default=None,
+        help="Declination of the target, in degrees",
+    )
+    parser.add_argument(
+        "-sigma",
+        metavar="sigma",
+        default=None,
+        help="Sigma for the creation of the gaussian map, in degrees",
+    )
+    parser.add_argument(
+        "-nside",
+        metavar="nside",
+        default=None,
+        help="Nside for the creation of the gaussian map.",
     )
     parser.add_argument(
         "-time",
         metavar='"YYYY-MM-DD HH:MM:SS"',
-        default="2023-07-27 08:30:10",
+        default=time_now_str,
         help="optional: date and time of the event (default: NOW, i.e. %(default)s)",
     )
     parser.add_argument(
@@ -68,6 +103,11 @@ def main():
 
     args = parser.parse_args()
     skymap = args.skymap
+    mode = args.mode
+    ra = args.ra
+    dec = args.dec
+    sigma = args.sigma
+    nside = args.nside
     obsTime = getdate(args.time)
     datasetDir = args.i
     outDir = args.o
@@ -79,11 +119,38 @@ def main():
     if not os.path.exists(outDir):
         os.makedirs(outDir)
 
+    if skymap is None and mode not in ["gaussian"]:
+        raise ValueError(
+            f"The skymap argument is mandatory when setting mode to {mode}."
+        )
+
+    attr_list_gaussian = ["ra", "dec", "sigma", "nside"]
+    if mode == "gaussian":
+        for i, attr in enumerate([ra, dec, sigma, nside]):
+            if attr is None:
+                raise ValueError(
+                    f'"{attr_list_gaussian[i]}" must be defined in "gaussian" mode.'
+                )
+
+        if skymap is not None:
+            raise ValueError(f'Cannot specify a skymap URL when mode is "gaussian".')
+
     ################################################
 
     obspar = ObservationParameters()
     obspar.add_parsed_args(
-        skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, eventName
+        skymap,
+        obsTime,
+        datasetDir,
+        galcatName,
+        outDir,
+        pointingsFile,
+        eventName,
+        mode,
+        ra,
+        dec,
+        sigma,
+        nside,
     )
     obspar.from_configfile(cfgFile)
 
