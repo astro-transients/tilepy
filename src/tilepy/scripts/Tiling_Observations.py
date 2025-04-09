@@ -133,7 +133,7 @@ def main():
                 )
 
         if skymap is not None:
-            raise ValueError(f'Cannot specify a skymap URL when mode is "gaussian".')
+            raise ValueError('Cannot specify a skymap URL when mode is "gaussian".')
 
     ################################################
 
