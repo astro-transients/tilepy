@@ -203,6 +203,11 @@ class ObservationParameters(object):
         outDir,
         pointingsFile,
         eventName=None,
+        mode="healpix",
+        ra=None,
+        dec=None,
+        sigma=None,
+        nside=None
     ):
         # Parsed args in command line
         self.skymap = skymap
@@ -212,6 +217,11 @@ class ObservationParameters(object):
         self.outDir = outDir
         self.pointingsFile = pointingsFile
         self.event_name = self.event_name if eventName is None else eventName
+        self.mode = mode
+        self.raSource = ra
+        self.decSource = dec
+        self.sigmaSource = sigma
+        self.nside = nside
 
     def from_configfile(self, filepath):
         ##################
