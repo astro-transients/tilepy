@@ -207,7 +207,7 @@ class ObservationParameters(object):
         ra=None,
         dec=None,
         sigma=None,
-        nside=None
+        nside=None,
     ):
         # Parsed args in command line
         self.skymap = skymap
