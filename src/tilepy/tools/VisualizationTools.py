@@ -23,6 +23,10 @@ from tilepy.include.PointingTools import (
     getdate,
 )
 
+from tilepy.include.CampaignDefinition import (
+    ObservationParameters
+)
+
 
 def LocateSource(filename, ra, dec, PercentCov=90):
 
