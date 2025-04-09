@@ -19,7 +19,6 @@ from tilepy.include.PointingTools import (
     Get90RegionPixReduced,
     NightDarkObservation,
     NightDarkObservationwithGreyTime,
-    ObservationParameters,
     TransformRADec,
     getdate,
 )
