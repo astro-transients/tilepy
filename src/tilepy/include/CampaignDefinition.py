@@ -293,7 +293,7 @@ class ObservationParameters(object):
 
         section = "general"
         self.downloadMaxRetry = int(
-            parser.getboolean(section, "downloadMaxRetry", fallback=0)
+            parser.get(section, "downloadMaxRetry", fallback=0)
         )
         self.downloadWaitPeriodRetry = float(
             parser.get(section, "downloadWaitPeriodRetry", fallback=0)
