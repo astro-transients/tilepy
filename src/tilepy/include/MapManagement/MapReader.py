@@ -156,14 +156,14 @@ class MapReader(ABC):
                 urlretrieve(self.url, filename)
                 break
 
-            except HTTPError as e:
+            except HTTPError:
 
                 if i == (download_max_nb_try - 1):
                     logger.error("Issue to download map from url")
 
                 logger.info(
-                        f"Map not available, waiting for {time_wait_retry}s before a new attempt"
-                    )
+                    f"Map not available, waiting for {time_wait_retry}s before a new attempt"
+                )
                 time.sleep(time_wait_retry)
 
             except Exception as e:
