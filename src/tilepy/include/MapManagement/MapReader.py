@@ -22,6 +22,7 @@ import traceback
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
+from urllib.error import HTTPError
 
 import astropy.units as u
 import healpy as hp
@@ -35,6 +36,8 @@ from astropy.wcs import WCS
 ##################################################################################################
 
 logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 __all__ = ["MapReader", "create_map_reader"]
 
@@ -126,6 +129,58 @@ class MapReader(ABC):
     def getDistance(self):
         raise NotImplementedError("This reader does not support 3D distance.")
 
+    def downloadMap(self, download_max_nb_try=1, time_wait_retry=60):
+        """
+        Download the map from a url
+
+        :param download_max_nb_try: If more than 1, will attempt multiple time to download the file in case of error the first time
+        :type download_max_nb_try: int
+        :param time_wait_retry: the time to wait between each attempt at downloading the file
+        :type time_wait_retry: int
+
+        :return: filename
+        """
+
+        if download_max_nb_try < 1:
+            download_max_nb_try = 1
+
+        filename = self.url.split("/")[-1]
+        logger.info(f"The filename is {filename}")
+
+        file_exist = os.path.isfile(filename)
+        if file_exist:
+            logger.warning("The file exists, it will be re-downloaded")
+
+        for i in range(download_max_nb_try):
+            if "png" in self.url:  # Change Fermi-GBM url(if png) to fit format
+                self.url = self.url.replace("png", "fit")
+            try:
+                urlretrieve(self.url, filename)
+                break
+
+            except HTTPError:
+
+                if i == (download_max_nb_try - 1):
+                    logger.error("Issue to download map from url")
+
+                logger.info(
+                    f"Map not available, waiting for {time_wait_retry}s before a new attempt"
+                )
+                time.sleep(time_wait_retry)
+
+            except Exception as e:
+
+                if i == (download_max_nb_try - 1):
+                    logger.error("Issue to download map from url")
+
+                traceback.print_exc()
+                if not file_exist:
+                    raise e
+                else:
+                    logger.warning("The existing file will be used")
+
+        return filename
+
 
 class GaussianMapReader(MapReader):
     def __init__(self, obspar):
@@ -193,10 +248,28 @@ class LocProbMapReader(MapReader):
         self.has3D = False
         self.prob_density = True
 
-        self.filename = obspar.skymap
         self.nside = getattr(obspar, "nside", 128)
 
-        self.simulated_map = self._convert_locprob_to_healpix(self.filename, self.nside)
+        skymap_localisation = obspar.skymap
+        parsed_localisation = urlparse(skymap_localisation)
+        self.is_remote = parsed_localisation.scheme != ""
+
+        self.url = None
+        self.skymap_filename = skymap_localisation
+        if self.is_remote:
+            self.url = skymap_localisation
+            max_retry = obspar.downloadMaxRetry
+            time_wait_retry = obspar.downloadWaitPeriodRetry
+            self.skymap_filename = self.downloadMap(
+                download_max_nb_try=max_retry + 1, time_wait_retry=time_wait_retry
+            )
+
+        if not os.path.isfile(self.skymap_filename):
+            raise Exception("Map file not found: " + self.skymap_filename)
+
+        self.simulated_map = self._convert_locprob_to_healpix(
+            self.skymap_filename, self.nside
+        )
 
     def getMap(self, mapType):
         if mapType != "prob":
@@ -255,7 +328,23 @@ class HealpixMapReader(MapReader):
         self.has3D = False
         self.prob_density = False
 
-        self.skymap_filename = obspar.skymap
+        skymap_localisation = obspar.skymap
+        parsed_localisation = urlparse(skymap_localisation)
+        self.is_remote = parsed_localisation.scheme != ""
+
+        self.url = None
+        self.skymap_filename = skymap_localisation
+        if self.is_remote:
+            self.url = skymap_localisation
+            max_retry = obspar.downloadMaxRetry
+            time_wait_retry = obspar.downloadWaitPeriodRetry
+            self.skymap_filename = self.downloadMap(
+                download_max_nb_try=max_retry + 1, time_wait_retry=time_wait_retry
+            )
+
+        if not os.path.isfile(self.skymap_filename):
+            raise Exception("Map file not found: " + self.skymap_filename)
+
         self.fits_map = fits.open(self.skymap_filename)
         self.id_hdu_map = self.getMapHDUId()
         self.identifyColumns()
@@ -700,6 +789,7 @@ class MapReaderLegacy:
 
             except Exception as e:
 
+                print(f"Exception {e == HTTPError}")
                 if (
                     i == (download_max_nb_try - 1)
                     or str(e) != "HTTP Error 404: Not Found"
