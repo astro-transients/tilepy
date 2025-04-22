@@ -29,7 +29,10 @@ class SkyMap:
 
     def __init__(self, obspar, mapReader):
         self.raw_map_prob_density = mapReader.getMap("prob")
-        self.is3D = self.determine3D(obspar, mapReader)
+        if obspar.algorithm == "2D":
+            self.is3D = False
+        else:
+            self.is3D = self.determine3D(obspar, mapReader)
         self.mode = getattr(obspar, "mode", None)
 
         if self.is3D:
