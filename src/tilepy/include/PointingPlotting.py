@@ -182,7 +182,7 @@ def LoadPointingsGW(tpointingFile):
         skip_header=1,
         delimiter=" ",
         unpack=True,
-    )  # ra, dec in degrees
+    )
 
     time1 = np.atleast_1d(time1)
     time2 = np.atleast_1d(time2)
@@ -196,10 +196,10 @@ def LoadPointingsGW(tpointingFile):
     ra = ra.astype(float)
     dec = dec.astype(float)
     coordinates = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
-    # pgw = Pgw.astype(float)
     pgw = np.genfromtxt(
         tpointingFile, usecols=4, skip_header=1, delimiter=" ", unpack=True
     )
+    pgw = np.atleast_1d(pgw)
     return time, coordinates, pgw
 
 
