@@ -71,7 +71,7 @@ class ObservationParameters(object):
         duration=None,
         minDuration=None,
         useGreytime=None,
-        minSlewing=None,
+        minSlewing=0,
         locCut90=None,
         minimumProbCutForCatalogue=None,
         minProbcut=None,
@@ -174,7 +174,7 @@ class ObservationParameters(object):
                 f"Do Plot = {self.doPlot}, Do Rank = {self.doRank}, Count Previous= {self.countPrevious}, Second Round= {self.secondRound}, Use Grey Time= {self.useGreytime}",
                 "--------------------- Observatory ---------------------",
                 f"Observatory Location: {self.lat}, {self.lon}, {self.height}",
-                f"FOV: {self.FOV}, Duration: {self.duration}, Min Duration: {self.minDuration}",
+                f"FOV: {self.FOV}, Duration: {self.duration}, Min Duration: {self.minDuration}, Min Slewing: {self.minSlewing}",
                 f"Max Runs: {self.maxRuns}, Max Nights: {self.maxNights}",
                 f"Visibility: {self.sunDown}, {self.moonDown}, {self.moonGrey}, {self.moonPhase}",
                 f"Min Moon Source Separation: {self.minMoonSourceSeparation}",
@@ -258,10 +258,10 @@ class ObservationParameters(object):
         self.FOV = float(parser.get(section, "fov", fallback=0))
         self.maxRuns = int(parser.get(section, "maxRuns", fallback=0))
         self.maxNights = int(parser.get(section, "maxNights", fallback=0))
-        self.duration = int(parser.get(section, "duration", fallback=0))
-        self.minDuration = int(parser.get(section, "minduration", fallback=0))
+        self.duration = float(parser.get(section, "duration", fallback=0))
+        self.minDuration = float(parser.get(section, "minduration", fallback=0))
         self.useGreytime = parser.getboolean(section, "useGreytime", fallback=0)
-        self.minSlewing = float(parser.get(section, "minslewing", fallback=0))
+        self.minSlewing = float(parser.get(section, "minSlewing", fallback=0))
 
         section = "tiling"
         self.locCut90 = float(parser.get(section, "locCut90", fallback=99999))
