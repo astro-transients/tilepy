@@ -54,6 +54,7 @@ from .PointingTools import (
     NightDarkObservationwithGreyTime,
     OccultationCut,
     PlotSpaceOcc,
+    PlotSpaceOccTime,
     SAA_Times,
     SubstractPointings,
     SubstractPointings2D,
@@ -2045,7 +2046,7 @@ def PGWinFoV_Space_NObs(
     saa = np.empty(obspar.maxRuns + 1, dtype=bool)
     SatTimes = np.empty(obspar.maxRuns + 1, dtype=bool)
 
-    # Iterate through time steps within the specified duration
+    # Iterate through time steps within the specified duration -> to be modified
     current_time = ObservationTime0
     start_time = ObservationTime0
     step = int(obspar.duration / obspar.maxRuns)
@@ -2068,6 +2069,9 @@ def PGWinFoV_Space_NObs(
     i = 0
     current_time = ObservationTime0
     start_time = ObservationTime0
+    AvailablePixPerTime= [] 
+    TestTime = []
+    RadecsVsTimes = []
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         # Need to get a list of highest pixels
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
@@ -2084,6 +2088,17 @@ def PGWinFoV_Space_NObs(
             obspar.sunDown,
             obspar.moonDown,
         )
+        #Let's get the list of pixels available at each iteration
+        OldPix = ipix
+        searchpix = np.isin(OldPix, pixlistRROcc, invert=True)
+        AvailablePixPerTime.append(OldPix[searchpix])
+        TestTime.append(current_time)
+
+        theta, phi = hp.pix2ang(reducedNside, OldPix[searchpix])
+        ra = np.rad2deg(phi)
+        dec = np.rad2deg(0.5 * np.pi - theta)
+        radec = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+        RadecsVsTimes.append(radec)
 
         # WE COULD GET THE LIST OF OBSEEVABLE PIXELS AT THIS SPECIFIC TIME
         Occultedpixels.append(pixlistRROcc)
@@ -2105,6 +2120,8 @@ def PGWinFoV_Space_NObs(
 
     if obspar.doPlot:
         PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
+        PlotSpaceOccTime(dirName, AvailablePixPerTime, TestTime)
+        #plot_pixel_availability_healpix(dirName, AvailablePixPerTime, TestTime, reducedNside)
 
     ObsName = [obspar.obs_name for j in range(len(first_values))]
     RAarray = [row["PIXRA"] for row in first_values]
@@ -2116,7 +2133,7 @@ def PGWinFoV_Space_NObs(
         names=["ObsName", "RA(deg)", "DEC(deg)", "PGW"],
     )
 
-    return SuggestedPointings, SatTimes, saa
+    return SuggestedPointings, SatTimes, saa, RadecsVsTimes, TestTime
 
 
 def PGalinFoV_Space_NObs(
@@ -2241,6 +2258,9 @@ def PGalinFoV_Space_NObs(
     i = 0
     current_time = ObservationTime0
     start_time = ObservationTime0
+    AvailablePixPerTime = []
+    TestTime = []
+    RadecsVsTimes = []
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         # Need to get a list of highest pixels
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
@@ -2257,6 +2277,18 @@ def PGalinFoV_Space_NObs(
             obspar.sunDown,
             obspar.moonDown,
         )
+
+        #Let's get the list of pixels available at each iteration
+        OldPix = ipix
+        searchpix = np.isin(OldPix, pixlistRROcc, invert=True)
+        AvailablePixPerTime.append(OldPix[searchpix])
+        TestTime.append(current_time)
+
+        theta, phi = hp.pix2ang(reducedNside, OldPix[searchpix])
+        ra = np.rad2deg(phi)
+        dec = np.rad2deg(0.5 * np.pi - theta)
+        radec = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+        RadecsVsTimes.append(radec)
 
         # WE COULD GET THE LIST OF OBSEEVABLE PIXELS AT THIS SPECIFIC TIME
         Occultedpixels.append(pixlistRROcc)
@@ -2294,6 +2326,7 @@ def PGalinFoV_Space_NObs(
 
     if obspar.doPlot:
         PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
+        PlotSpaceOccTime(dirName, AvailablePixPerTime, TestTime)
 
     # FOR TARGETED HERE TRY TO FIND OUT WHICH GALAXIES ARE IN THE VISIBLE PART. Then choose the highest 10 betwee nthem
 
@@ -2306,4 +2339,4 @@ def PGalinFoV_Space_NObs(
         [ObsName, RAarray, DECarray, P_Galarray],
         names=["ObsName", "RA(deg)", "DEC(deg)", "PGal"],
     )
-    return SuggestedPointings, SatTimes, saa
+    return SuggestedPointings, SatTimes, saa, RadecsVsTimes, TestTime

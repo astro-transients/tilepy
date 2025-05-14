@@ -43,6 +43,7 @@ from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
 from skyfield.api import E, N, load, wgs84
+import matplotlib.dates as mdates
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -87,6 +88,8 @@ __all__ = [
     "GetSunOccultedPix",
     "SAA_Times",
     "PlotSpaceOcc",
+    "PlotSpaceOccTime",
+    "plot_pixel_availability_healpix",
     "GetBestNSIDE",
     "FillSummary",
 ]
@@ -1528,6 +1531,38 @@ def PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values):
     plt.savefig("%s/Occ_Pointing.png" % (path))
     plt.close()
 
+
+def map_pixel_availability(pixels_by_time, times):
+    pixel_availability = {}
+
+    for time, pixel_list in zip(times, pixels_by_time):
+        for pixel in pixel_list:
+            if pixel not in pixel_availability:
+                pixel_availability[pixel] = []
+            pixel_availability[pixel].append(time)
+
+    return pixel_availability
+
+
+def PlotSpaceOccTime(dirName, pixels_by_time, times):
+    path = dirName + "/Occ_Space_Obs"
+    if not os.path.exists(path):
+        os.mkdir(path, 493)
+
+    pixel_availability = map_pixel_availability(pixels_by_time, times)
+
+    plt.figure(figsize=(10, 6))
+
+    for idx, (pixel, available_times) in enumerate(pixel_availability.items()):
+        plt.scatter(available_times, [pixel]*len(available_times), label=f'Pixel {pixel}')
+
+    plt.xlabel('Time')
+    plt.ylabel('Pixel')
+    plt.title('Pixel Availability Over Time')
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig("%s/Occ_Pointing_Times.png" % (path))
+    plt.close()
 
 def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
     nside = obspar.reducedNside
