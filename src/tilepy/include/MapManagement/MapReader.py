@@ -70,7 +70,7 @@ class SimpleHealpixMap:
         return SimpleHealpixMap(downgraded_data, nside, ordering=scheme)
 
 
-def create_map_reader(obspar):
+def create_map_readerc(obspar):
     """
     Factory function to create the appropriate MapReader subclass based on the observation parameters.
 
@@ -436,6 +436,7 @@ class HealpixMapReader(MapReader):
             ):
                 pixarea = raw_map.pixarea()
                 quantity = quantity / pixarea  # Convert to density manually
+                raw_map._density = True
         raw_map._data = quantity.to_value(target_unit)
         raw_map._unit = target_unit
 
