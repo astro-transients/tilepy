@@ -436,6 +436,7 @@ class HealpixMapReader(MapReader):
             ):
                 pixarea = raw_map.pixarea()
                 quantity = quantity / pixarea  # Convert to density manually
+                raw_map._density = True
         raw_map._data = quantity.to_value(target_unit)
         raw_map._unit = target_unit
 
