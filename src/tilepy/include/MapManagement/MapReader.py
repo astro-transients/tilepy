@@ -70,7 +70,7 @@ class SimpleHealpixMap:
         return SimpleHealpixMap(downgraded_data, nside, ordering=scheme)
 
 
-def create_map_readerc(obspar):
+def create_map_reader(obspar):
     """
     Factory function to create the appropriate MapReader subclass based on the observation parameters.
 
