@@ -89,6 +89,7 @@ __all__ = [
     "SAA_Times",
     "PlotSpaceOcc",
     "PlotSpaceOccTime",
+    "PlotSpaceOccTimeRadec",
     "plot_pixel_availability_healpix",
     "GetBestNSIDE",
     "FillSummary",
@@ -1562,6 +1563,42 @@ def PlotSpaceOccTime(dirName, pixels_by_time, times):
     plt.grid(True)
     plt.tight_layout()
     plt.savefig("%s/Occ_Pointing_Times.png" % (path))
+    plt.close()
+
+
+def PlotSpaceOccTimeRadec(dirName, pixels_by_time, times, NSIDE):
+    path = os.path.join(dirName, "Occ_Space_Obs")
+    os.makedirs(path, mode=0o755, exist_ok=True)
+
+    pixel_availability = map_pixel_availability(pixels_by_time, times)
+
+    num_pixels = len(pixel_availability)
+    fig_height = max(6, num_pixels * 0.2)  # Scale height dynamically
+
+    plt.figure(figsize=(12, fig_height))
+
+    yticks = []
+    yticklabels = []
+
+    for idx, (pixel, available_times) in enumerate(pixel_availability.items()):
+        theta, phi = hp.pix2ang(NSIDE, pixel, nest=False)
+        ra = np.degrees(phi)
+        dec = 90 - np.degrees(theta)
+
+        yval = idx  # Unique Y value per pixel
+        plt.scatter(available_times, [yval] * len(available_times), label=f'Pixel {pixel}', s=10)
+
+        yticks.append(yval)
+        yticklabels.append(f"RA={ra:.1f}°, Dec={dec:.1f}°")
+
+    plt.xlabel('Time')
+    plt.ylabel('Sky Coordinates (RA, Dec)')
+    plt.yticks(yticks, yticklabels, fontsize=8)
+    plt.title('Pixel Availability Over Time')
+    plt.grid(True)
+    plt.tight_layout()
+
+    plt.savefig(os.path.join(path, "Occ_Pointing_Times_Radec.png"))
     plt.close()
 
 def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
