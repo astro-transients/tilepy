@@ -60,23 +60,33 @@ class SkyMap:
             is3D = False
         return is3D
 
-    def getPixIdArea(self, fraction_localisation):
+    def getPixIdArea(self, fraction_localisation, nside=None, scheme="ring"):
 
-        if fraction_localisation in self.pix_id_area_cache.keys():
-            return self.pix_id_area_cache[fraction_localisation]
+        cache_line = (
+            f"{fraction_localisation}_raw"
+            if nside is None
+            else f"{fraction_localisation}_{nside}_{scheme}"
+        )
+        if cache_line in self.pix_id_area_cache.keys():
+            return self.pix_id_area_cache[cache_line]
 
-        sorted_pixel_id = np.flipud(np.argsort(self.raw_map_prob_density.data))
-        prob = (
-            self.raw_map_prob_density[sorted_pixel_id]
-            * self.raw_map_prob_density.pixarea(sorted_pixel_id)
-        ).value
-        summed_probability = np.cumsum(prob)
+        if nside is None:
+            sorted_pixel_id = np.flipud(np.argsort(self.raw_map_prob_density.data))
+            prob_sorted = (
+                self.raw_map_prob_density[sorted_pixel_id]
+                * self.raw_map_prob_density.pixarea(sorted_pixel_id)
+            ).value
+        else:
+            prob = self.getMap("prob", nside=nside, scheme=scheme)
+            sorted_pixel_id = np.flipud(np.argsort(prob))
+            prob_sorted = prob[sorted_pixel_id]
+        summed_probability = np.cumsum(prob_sorted)
 
-        self.pix_id_area_cache[fraction_localisation] = sorted_pixel_id[
+        self.pix_id_area_cache[cache_line] = sorted_pixel_id[
             summed_probability <= fraction_localisation
         ]
 
-        return self.pix_id_area_cache[fraction_localisation]
+        return self.pix_id_area_cache[cache_line]
 
     def getArea(self, fraction_localisation):
         area_vals = self.raw_map_prob_density.pixarea(
