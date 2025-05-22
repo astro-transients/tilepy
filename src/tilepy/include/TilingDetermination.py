@@ -2217,7 +2217,7 @@ def PGalinFoV_Space_NObs(
         tGals0,
         pixradec,
         newpix,
-        radecs,
+        radius,
         sum_dP_dV,
         HRnside,
         True,
