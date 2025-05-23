@@ -402,7 +402,41 @@ class Tools:
             vertices.append((theta_v, phi_v))
 
         return vertices
+    
 
+    def findmatchingcoords(option, radec1, radec2, reducedNside):
+
+        if option == 1:
+            firstvalue1_coords = co.SkyCoord(
+                ra=radec1['PIXRA'] * u.deg,
+                dec=radec1['PIXDEC'] * u.deg
+                )
+            
+            theta, phi = hp.pix2ang(reducedNside, radec2)
+            ra = np.rad2deg(phi)
+            dec = np.rad2deg(0.5 * np.pi - theta)
+            radec = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+
+            # Match each radec coordinate to closest in firstvalue1
+            idx, sep2d, _ = radec.match_to_catalog_sky(firstvalue1_coords)
+
+            # Define a small tolerance for "common" (e.g. 1 arcsec)
+            tolerance = 1.0 * u.arcsec
+            mask = sep2d < tolerance
+
+            # Get matching rows
+            matching_rows = radec1[idx[mask]]
+
+        if option == 2:
+            idx, sep2d, _ = radec2.match_to_catalog_sky(radec1)
+            # Define a small tolerance for "common" (e.g. 1 arcsec)
+            tolerance = 1.0 * u.arcsec
+            mask = sep2d < tolerance
+
+            # Get matching rows
+            matching_rows = radec1[idx[mask]]
+
+        return matching_rows
 
 class Observer:
     """Class to store information and handle operation related to the observatory used for the observations."""
@@ -1503,7 +1537,7 @@ def PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values):
         os.mkdir(path, 493)
 
     # mpl.rcParams.update({'font.size':14})
-    hp.mollview(prob)
+    hp.gnomview(prob, rot=(143, 10), xsize=500, ysize=500)
     hp.graticule()
     try:
         tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
@@ -1541,7 +1575,6 @@ def map_pixel_availability(pixels_by_time, times):
             if pixel not in pixel_availability:
                 pixel_availability[pixel] = []
             pixel_availability[pixel].append(time)
-
     return pixel_availability
 
 

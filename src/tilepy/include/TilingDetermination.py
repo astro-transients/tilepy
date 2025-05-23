@@ -2073,6 +2073,7 @@ def PGWinFoV_Space_NObs(
     AvailablePixPerTime= [] 
     TestTime = []
     RadecsVsTimes = []
+    matching_tables = []
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         # Need to get a list of highest pixels
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
@@ -2089,19 +2090,27 @@ def PGWinFoV_Space_NObs(
             obspar.sunDown,
             obspar.moonDown,
         )
+
         #Let's get the list of pixels available at each iteration
-        OldPix = ipix
-        searchpix = np.isin(OldPix, pixlistRROcc, invert=True)
-        AvailablePixPerTime.append(OldPix[searchpix])
+        firstvalue1 = first_values1 
+
+        matching_rows1 = Tools.findmatchingcoords(1, firstvalue1, pixlistRROcc, reducedNside)
+        matching_tables.append(matching_rows1)
+        print(matching_tables)
+
+        radectime = co.SkyCoord(
+            ra=matching_rows1['PIXRA'] * u.deg,
+            dec=matching_rows1['PIXDEC'] * u.deg
+            )
+        theta = np.radians(90.0 - matching_rows1["PIXDEC"])
+        phi = np.radians(matching_rows1["PIXRA"])            # phi = longitude
+        pix_idx = hp.ang2pix(reducedNside, theta, phi, nest=False)
+
+        RadecsVsTimes.append(radectime)
+        AvailablePixPerTime.append(pix_idx)
         TestTime.append(current_time)
 
-        theta, phi = hp.pix2ang(reducedNside, OldPix[searchpix])
-        ra = np.rad2deg(phi)
-        dec = np.rad2deg(0.5 * np.pi - theta)
-        radec = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
-        RadecsVsTimes.append(radec)
-
-        # WE COULD GET THE LIST OF OBSEEVABLE PIXELS AT THIS SPECIFIC TIME
+        # List of all cculted pixels
         Occultedpixels.append(pixlistRROcc)
         current_time += step
         i += 1
@@ -2134,7 +2143,7 @@ def PGWinFoV_Space_NObs(
         names=["ObsName", "RA(deg)", "DEC(deg)", "PGW"],
     )
 
-    return SuggestedPointings, SatTimes, saa, RadecsVsTimes, TestTime
+    return SuggestedPointings, SatTimes, saa, matching_tables, TestTime
 
 
 def PGalinFoV_Space_NObs(
@@ -2262,6 +2271,7 @@ def PGalinFoV_Space_NObs(
     AvailablePixPerTime = []
     TestTime = []
     RadecsVsTimes = []
+    matching_tables = []
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         # Need to get a list of highest pixels
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
@@ -2280,18 +2290,25 @@ def PGalinFoV_Space_NObs(
         )
 
         #Let's get the list of pixels available at each iteration
-        OldPix = ipix
-        searchpix = np.isin(OldPix, pixlistRROcc, invert=True)
-        AvailablePixPerTime.append(OldPix[searchpix])
+        firstvalue1 = first_values1 
+
+        matching_rows1 = Tools.findmatchingcoords(1, firstvalue1, pixlistRROcc, reducedNside)
+        matching_tables.append(matching_rows1)
+
+        radectime = co.SkyCoord(
+            ra=matching_rows1['PIXRA'] * u.deg,
+            dec=matching_rows1['PIXDEC'] * u.deg
+            )
+        theta = np.radians(90.0 - matching_rows1["PIXDEC"])
+        phi = np.radians(matching_rows1["PIXRA"])            # phi = longitude
+        pix_idx = hp.ang2pix(reducedNside, theta, phi, nest=False)
+
+
+        RadecsVsTimes.append(radectime)
+        AvailablePixPerTime.append(pix_idx)
         TestTime.append(current_time)
 
-        theta, phi = hp.pix2ang(reducedNside, OldPix[searchpix])
-        ra = np.rad2deg(phi)
-        dec = np.rad2deg(0.5 * np.pi - theta)
-        radec = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
-        RadecsVsTimes.append(radec)
-
-        # WE COULD GET THE LIST OF OBSEEVABLE PIXELS AT THIS SPECIFIC TIME
+        # List of all cculted pixels
         Occultedpixels.append(pixlistRROcc)
         current_time += step
         i += 1
@@ -2308,7 +2325,7 @@ def PGalinFoV_Space_NObs(
     dec2 = np.rad2deg(0.5 * np.pi - tt)
     pixradec = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
 
-    # Finding the common radec betweem vosoble pixels and the grid
+    # Finding the common radec betweem visible pixels and the grid
     first_values_coords = co.SkyCoord(
         ra=first_values1["PIXRA"], dec=first_values1["PIXDEC"], unit="deg"
     )
@@ -2341,4 +2358,4 @@ def PGalinFoV_Space_NObs(
         [ObsName, RAarray, DECarray, P_Galarray],
         names=["ObsName", "RA(deg)", "DEC(deg)", "PGal"],
     )
-    return SuggestedPointings, SatTimes, saa, RadecsVsTimes, TestTime
+    return SuggestedPointings, SatTimes, saa, matching_tables, TestTime
