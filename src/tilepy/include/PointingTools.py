@@ -418,14 +418,14 @@ class Tools:
             radec = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
 
             # Match each radec coordinate to closest in firstvalue1
-            idx, sep2d, _ = radec.match_to_catalog_sky(firstvalue1_coords)
+            idx, sep2d, _ = firstvalue1_coords.match_to_catalog_sky(radec)
 
             # Define a small tolerance for "common" (e.g. 1 arcsec)
             tolerance = 1.0 * u.arcsec
-            mask = sep2d < tolerance
+            mask_no_match = sep2d > tolerance
 
             # Get matching rows
-            matching_rows = radec1[idx[mask]]
+            unmatched_rows = radec1[mask_no_match]
 
         if option == 2:
             idx, sep2d, _ = radec2.match_to_catalog_sky(radec1)
@@ -434,9 +434,9 @@ class Tools:
             mask = sep2d < tolerance
 
             # Get matching rows
-            matching_rows = radec1[idx[mask]]
+            unmatched_rows = radec1[idx[mask]]
 
-        return matching_rows
+        return unmatched_rows
 
 class Observer:
     """Class to store information and handle operation related to the observatory used for the observations."""
@@ -1417,7 +1417,7 @@ def GetBestGridPos2D(
             os.mkdir(path, 493)
 
         # mpl.rcParams.update({'font.size':14})
-        hp.mollview(prob)
+        hp.gnomview(prob, rot=(143, 10), xsize=1000, ysize=1000)
         hp.graticule()
         try:
             tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
@@ -1499,8 +1499,30 @@ def GetBestGridPos3D(
             os.mkdir(path, 493)
 
         # mpl.rcParams.update({'font.size':14})
-        hp.mollview(prob)
+        hp.gnomview(prob, rot=(143, 10), xsize=500, ysize=500)
         hp.graticule()
+
+        # Filter out rows with NaN in dp_dV
+        mask = ~np.isnan(cat['dp_dV'])
+        cat_clean = cat[mask]
+
+        # Sort descending by dp_dV
+        cat_sorted = cat_clean.copy()
+        cat_sorted.sort('dp_dV', reverse=True)
+        # Select top 100 galaxies with highest dp_dV
+        top100 = cat_sorted[:200]
+        print(top100)
+
+        # Plot with projplot
+        hp.visufunc.projplot(
+            top100["RAJ2000"],
+            top100["DEJ2000"],
+            "r.",
+            lonlat=True,
+            coord="C",
+            linewidth=0.1,
+        )
+
         try:
             tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
             ra2 = np.rad2deg(pp)
@@ -1514,6 +1536,7 @@ def GetBestGridPos3D(
                 coord="C",
                 linewidth=0.1,
             )
+
         except Exception:
             print("No occulted pix")
 
@@ -1537,7 +1560,7 @@ def PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values):
         os.mkdir(path, 493)
 
     # mpl.rcParams.update({'font.size':14})
-    hp.gnomview(prob, rot=(143, 10), xsize=500, ysize=500)
+    hp.gnomview(prob, rot=(143, 10), xsize=1000, ysize=1000)
     hp.graticule()
     try:
         tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
