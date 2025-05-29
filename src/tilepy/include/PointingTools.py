@@ -44,6 +44,7 @@ from six.moves import configparser
 from skyfield import almanac
 from skyfield.api import E, N, load, wgs84
 import matplotlib.dates as mdates
+from matplotlib.path import Path
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -403,8 +404,8 @@ class Tools:
 
         return vertices
     
-
-    def findmatchingcoords(option, radec1, radec2, reducedNside):
+    @classmethod
+    def findmatchingcoords(cls, option, radec1, radec2, reducedNside):
 
         if option == 1:
             firstvalue1_coords = co.SkyCoord(
@@ -437,6 +438,31 @@ class Tools:
             unmatched_rows = radec1[idx[mask]]
 
         return unmatched_rows
+
+    @classmethod
+    def get_regular_polygon_vertices(cls, ra_center, dec_center, radius_deg, n_sides, rotation_deg):
+        """
+        Generate a regular polygon's vertices on the celestial sphere.
+
+        Parameters:
+        - ra_center, dec_center: center in degrees
+        - radius_deg: angular radius from center to each vertex
+        - n_sides: number of polygon sides
+        - rotation_deg: optional rotation angle (degrees)
+
+        Returns:
+        - vertices (np.ndarray): (N, 3) array of unit vectors
+        """
+        angles = np.linspace(0, 360, n_sides, endpoint=False) + rotation_deg
+        ra_offsets = radius_deg * np.cos(np.radians(angles))
+        dec_offsets = radius_deg * np.sin(np.radians(angles))
+
+        ra_vertices = [(ra_center + d_ra + 360) % 360 for d_ra in ra_offsets]
+        dec_vertices = [dec_center + d_dec for d_dec in dec_offsets]
+
+        coords = SkyCoord(ra=ra_vertices*u.deg, dec=dec_vertices*u.deg)
+        return np.array([coord.cartesian.xyz.value for coord in coords])
+
 
 class Observer:
     """Class to store information and handle operation related to the observatory used for the observations."""
@@ -1384,15 +1410,42 @@ def GetBestGridPos2D(
     dirName,
 ):
 
-    xyzpix1 = hp.pix2vec(reducedNside, newpix)
-    xyzpix = np.column_stack(xyzpix1)
-
     dp_dV_FOV = []
 
+    hp.mollview(prob, title="Polygon vertices", cbar=False)  # optional background
+
+    shape = 'circle'
     for i in range(0, len(newpix)):
-        ipix_discfull = hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
+        if shape == 'circle':
+            xyzpix1 = hp.pix2vec(reducedNside, newpix[i])
+            xyzpix = np.column_stack(xyzpix1)
+            ipix_discfull = hp.query_disc(HRnside, xyzpix, np.deg2rad(radius))
+        elif shape == 'polygon':
+            theta, phi = hp.pix2ang(reducedNside, newpix[i])
+            ra_center = np.rad2deg(phi)
+            dec_center = 90 - np.rad2deg(theta)
+            vertices = Tools.get_regular_polygon_vertices(ra_center, dec_center, radius, 4, 0)
+            ipix_discfull = hp.query_polygon(HRnside, vertices, inclusive=True)
+            '''
+            # Convert vertices to theta/phi for plotting
+            xyz = np.array(vertices)  # shape (N, 3)
+            x, y, z = xyz[:, 0], xyz[:, 1], xyz[:, 2]
+            theta_v, phi_v = hp.vec2ang(np.vstack((x, y, z)).T)
+
+            # Plot polygon vertices on top of the map
+            hp.projscatter(theta_v, phi_v, lonlat=False, marker='o', color='red', s=10, label='Polygon Vertices')
+
+            # Optional: connect vertices with lines
+            theta_v = np.append(theta_v, theta_v[0])
+            phi_v = np.append(phi_v, phi_v[0])
+            hp.projplot(theta_v, phi_v, lonlat=False, color='red')
+            '''
+        else:
+            raise ValueError("Shape must be 'circle' or 'polygon'.")
+
         HRprob = highres[ipix_discfull].sum()
         dp_dV_FOV.append(HRprob)
+    #plt.show()
 
     theta, phi = hp.pix2ang(reducedNside, newpix)
     ra = np.degrees(phi)  # RA in degrees
@@ -1406,7 +1459,18 @@ def GetBestGridPos2D(
 
     sortcat1 = cat_pix[np.flipud(np.argsort(cat_pix["PIXFOVPROB"]))]
     first_values = sortcat1[:maxRuns]
+    '''
+    for i in range(0, len(first_values)):
+        vertices = Tools.get_regular_polygon_vertices(first_values["PIXRA"][i], first_values["PIXDEC"][i], radius, 4, 0)
+        xyz = np.array(vertices)  # shape (N, 3)
+        x, y, z = xyz[:, 0], xyz[:, 1], xyz[:, 2]
+        theta_v, phi_v = hp.vec2ang(np.vstack((x, y, z)).T)
 
+        # Plot polygon vertices on top of the map
+        hp.projscatter(theta_v, phi_v, lonlat=False, marker='o', color='red', s=10, label='Polygon Vertices')
+
+    plt.show()
+    '''
     # mapsize = 200
     # centerRA = 314
     # centerDEC = 10
@@ -2233,11 +2297,38 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, nside, UsePix):
 
     radius = FOV
 
+    shape = 'circle'
     # translate pixel indices to coordinates
+    if shape == 'circle':
+        Pgal_inFoV = (
+            dp_dV[targetCoord2.separation(targetCoord).deg <= radius].sum() / totaldPdV
+        )
+    elif shape == 'polygone':
+            vertices_xyz = Tools.get_regular_polygon_vertices(targetCoord.ra.deg, targetCoord.dec.deg, radius, 4, 0)
 
-    Pgal_inFoV = (
-        dp_dV[targetCoord2.separation(targetCoord).deg <= radius].sum() / totaldPdV
-    )
+            # 2. Convert the vertices from Cartesian to RA/Dec degrees
+            coords = SkyCoord(x=vertices_xyz[:,0], y=vertices_xyz[:,1], z=vertices_xyz[:,2], representation_type='cartesian')
+
+            # Convert to spherical representation (ICRS or default frame) explicitly
+            coords = coords.represent_as('spherical')
+
+            ra_vertices = coords.lon.deg  # .lon is RA equivalent
+            dec_vertices = coords.lat.deg  # .lat is Dec equivalent
+
+            # 3. Build the polygon path in RA/Dec
+            polygon_path = Path(np.column_stack((ra_vertices, dec_vertices)))
+
+            # 4. Prepare your galaxies' RA, Dec arrays (in degrees)
+            galaxy_positions = np.column_stack((targetCoord2.ra.deg, targetCoord2.dec.deg))  # Replace galaxy_ra, galaxy_dec with your arrays
+
+            # 5. Check which galaxies fall inside the polygon
+            inside_mask = polygon_path.contains_points(galaxy_positions)
+
+            # 6. Calculate fraction inside FoV
+            Pgal_inFoV = dp_dV[inside_mask].sum() / totaldPdV
+    else:
+        raise ValueError("Shape must be 'circle' or 'polygon'.")
+
 
     return Pgal_inFoV
 
