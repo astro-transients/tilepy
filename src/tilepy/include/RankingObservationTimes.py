@@ -107,7 +107,6 @@ def load_pointingFile(tpointingFile):
 
 
 def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
-
     source = SkyCoord(
         Pointing["RAJ2000"], Pointing["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
@@ -128,7 +127,7 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
             auxtime = datetime.datetime.strptime(Pointing["Time"][0], "%Y-%m-%d %H:%M")
 
     # frame = co.AltAz(obstime=auxtime, location=observatory)
-    timeInitial = auxtime - datetime.timedelta(minutes=30)
+    timeInitial = auxtime - datetime.timedelta(minutes=obspar.duration)
     for i in range(0, len(source)):
         NonValidwindow, Stepzenith = GetVisibility(
             Pointing["Time"], source[i], obspar.maxZenith, obspar.location
@@ -163,7 +162,6 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
 
 
 def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlot):
-
     AltitudeCut = 90 - obspar.maxZenith
     nights = obspar.maxNights
     useGreytime = obspar.useGreytime
@@ -288,7 +286,6 @@ def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlo
 
 
 def GetVisibility(time, radecs, maxZenith, obsLoc):
-
     visibility = []
     altitude = []
 
@@ -329,7 +326,6 @@ def GetVisibility(time, radecs, maxZenith, obsLoc):
 
 
 def ProbabilitiesinPointings3D(cat, galPointing, FOV, totaldPdV, prob, nside):
-
     ra = galPointing["RAJ2000"]
     dec = galPointing["DEJ2000"]
     PGW = []
@@ -350,7 +346,6 @@ def ProbabilitiesinPointings3D(cat, galPointing, FOV, totaldPdV, prob, nside):
 
 
 def PGGPGalinFOV(cat, ra, dec, prob, totaldPdV, FOV, nside):
-
     targetCoordcat = co.SkyCoord(
         cat["RAJ2000"], cat["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
@@ -377,7 +372,6 @@ def PGGPGalinFOV(cat, ra, dec, prob, totaldPdV, FOV, nside):
 
 
 def ProbabilitiesinPointings2D(Pointing, FOV, prob, nside):
-
     ra = Pointing["RAJ2000"]
     dec = Pointing["DEJ2000"]
     PGW = []
@@ -394,7 +388,6 @@ def ProbabilitiesinPointings2D(Pointing, FOV, prob, nside):
 
 
 def PGinFOV(ra, dec, prob, radius, nside):
-
     targetCoordpointing = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
 
     # Array of indices of pixels inside circle of FoV
@@ -412,7 +405,6 @@ def PGinFOV(ra, dec, prob, radius, nside):
 
 
 def Sortingby(galPointing, name, exposure):
-
     gggalPointing = galPointing[np.flipud(np.argsort(galPointing["Pgal"]))]
     prioritygal = list(range(len(galPointing["Pgal"])))
     ra = gggalPointing["RAJ2000"]
@@ -477,7 +469,6 @@ def Sortingby(galPointing, name, exposure):
 
 
 def EvolutionPlot(galPointing, tname, ObsArray):
-
     fig = plt.figure(figsize=(18, 10))
     ax = fig.add_axes([0.1, 0.1, 0.6, 0.8])
     ra = galPointing["RAJ2000"]
@@ -524,7 +515,6 @@ def EvolutionPlot(galPointing, tname, ObsArray):
 
 
 def RankingTimes(ObservationTime, skymap, cat, obspar, dirName, PointingFile, ObsArray):
-
     point = load_pointingFile(PointingFile)
 
     ################################################################
@@ -549,7 +539,6 @@ def RankingTimes(ObservationTime, skymap, cat, obspar, dirName, PointingFile, Ob
 
 
 def RankingTimes_2D(ObservationTime, prob, obspar, dirName, PointingFile, ObsArray):
-
     point = load_pointingFile(PointingFile)
 
     ################################################################
