@@ -1408,23 +1408,24 @@ def GetBestGridPos2D(
     Occultedpixels,
     doPlot,
     dirName,
+    n_sides
 ):
 
     dp_dV_FOV = []
 
-    hp.mollview(prob, title="Polygon vertices", cbar=False)  # optional background
+    #hp.mollview(prob, title="Polygon vertices", cbar=False)  # optional background
 
-    shape = 'circle'
+    #shape = 'circle'
     for i in range(0, len(newpix)):
-        if shape == 'circle':
-            xyzpix1 = hp.pix2vec(reducedNside, newpix[i])
-            xyzpix = np.column_stack(xyzpix1)
+        if n_sides == 0:
+            xyzpix = hp.pix2vec(reducedNside, newpix[i])
+            #xyzpix = np.column_stack(xyzpix1)
             ipix_discfull = hp.query_disc(HRnside, xyzpix, np.deg2rad(radius))
-        elif shape == 'polygon':
+        elif n_sides > 0:
             theta, phi = hp.pix2ang(reducedNside, newpix[i])
             ra_center = np.rad2deg(phi)
             dec_center = 90 - np.rad2deg(theta)
-            vertices = Tools.get_regular_polygon_vertices(ra_center, dec_center, radius, 4, 0)
+            vertices = Tools.get_regular_polygon_vertices(ra_center, dec_center, radius, n_sides, 0)
             ipix_discfull = hp.query_polygon(HRnside, vertices, inclusive=True)
             '''
             # Convert vertices to theta/phi for plotting
@@ -1521,13 +1522,14 @@ def GetBestGridPos3D(
     FOV,
     totaldPdV,
     HRnside,
-    UsePix,
+    n_sides,
     maxRuns,
     doPlot,
     dirName,
     reducedNside,
     Occultedpixels,
 ):
+
     SelectedGals = galpix
     dp_dV_FOV = []
     for element in range(0, len(SelectedGals)):
@@ -1539,7 +1541,7 @@ def GetBestGridPos3D(
                     SelectedGals[element],
                     FOV,
                     totaldPdV,
-                    reducedNside,
+                    n_sides,
                     UsePix=True,
                 )
             )
@@ -2271,7 +2273,7 @@ def SubstractGalaxiesCircle(
     return newgalaxies, P_GW, P_Gal, talreadysumipixarray
 
 
-def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, nside, UsePix):
+def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, n_sides, UsePix):
     """
     Computes probability Pgal in FoV
     """
@@ -2297,13 +2299,12 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, nside, UsePix):
 
     radius = FOV
 
-    shape = 'circle'
     # translate pixel indices to coordinates
-    if shape == 'circle':
+    if n_sides == 0:
         Pgal_inFoV = (
             dp_dV[targetCoord2.separation(targetCoord).deg <= radius].sum() / totaldPdV
         )
-    elif shape == 'polygone':
+    elif n_sides > 0:
             vertices_xyz = Tools.get_regular_polygon_vertices(targetCoord.ra.deg, targetCoord.dec.deg, radius, 4, 0)
 
             # 2. Convert the vertices from Cartesian to RA/Dec degrees

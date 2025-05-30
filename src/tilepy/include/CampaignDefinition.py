@@ -97,6 +97,8 @@ class ObservationParameters(object):
         doRank=False,
         downloadMaxRetry=0,
         downloadWaitPeriodRetry=20,
+        shape = None,
+        n_sides = None,
     ):
         self.obs_name = obs_name
         self.event_name = event_name
@@ -122,6 +124,8 @@ class ObservationParameters(object):
         self.minDuration = minDuration
         self.useGreytime = useGreytime
         self.minSlewing = minSlewing
+        self.shape = shape,
+        self.n_sides = n_sides,
 
         # Tiling
         self.locCut90 = locCut90
@@ -180,6 +184,7 @@ class ObservationParameters(object):
                 f"Min Moon Source Separation: {self.minMoonSourceSeparation}",
                 f"Max Moon Source Separation: {self.maxMoonSourceSeparation}",
                 f"Max Zenith: {self.maxZenith}, Zenith Weighting: {self.zenithWeighting}",
+                f"FoV shape: {self.shape}, FoV number of sides: {self.n_sidese}",
                 "--------------------- Skymap considerations ----------------",
                 f"Skymap: {self.skymap}",
                 f"Cuts: MinProbcut {self.minProbcut}, Dist Cut: {self.distCut}, Minimum Prob Cut for Catalogue: {self.minimumProbCutForCatalogue}",
@@ -262,6 +267,8 @@ class ObservationParameters(object):
         self.minDuration = float(parser.get(section, "minduration", fallback=0))
         self.useGreytime = parser.getboolean(section, "useGreytime", fallback=0)
         self.minSlewing = float(parser.get(section, "minSlewing", fallback=0))
+        self.shape = str(parser.get(section, "shape", fallback=None))
+        self.n_sides = int(parser.get(section, "n_sides", fallback=0))
 
         section = "tiling"
         self.locCut90 = float(parser.get(section, "locCut90", fallback=99999))
