@@ -1849,7 +1849,7 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
         Occultedpixels,
         doPlot,
         dirName,
-        obspar.n_sides
+        obspar.numberSides
     )
 
     # ObsName = [obspar.name for j in range(len(first_values))]
@@ -1949,7 +1949,7 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
         radius,
         sum_dP_dV,
         HRnside,
-        obspar.n_sides,
+        obspar.numberSides,
         maxRuns,
         doPlot,
         dirName,
@@ -2039,7 +2039,7 @@ def PGWinFoV_Space_NObs(
         Occultedpixels,
         doPlot,
         dirName,
-        obspar.n_sides
+        obspar.numberSides
     )
 
     # FOR SPACE ########################################################
@@ -2231,7 +2231,7 @@ def PGalinFoV_Space_NObs(
         radius,
         sum_dP_dV,
         HRnside,
-        obspar.n_sides,
+        obspar.numberSides,
         maxRuns,
         doPlot,
         dirName,
