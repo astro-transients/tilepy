@@ -94,9 +94,9 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-# # html_theme = "sphinx_rtd_theme"
 html_theme = "alabaster"
 html_static_path = ["_static"]
+
 
 # Documentation site title (optional; defaults to "<project> v<release> documentation")
 html_title = "TilePy"
@@ -110,7 +110,6 @@ html_theme_options = {
     "github_url": "https://github.com/weizmannk/tilepy",
     "use_edit_page_button": True,
 }
-
 
 html_context = {
     "default_mode": "light",
