@@ -33,11 +33,11 @@ requires-python = ">=3.9"
 dependencies = [
           'astropy',
           'scipy<1.14.0',
+          'numpy',
           'healpy==1.16.2',
           'ipython',
           'matplotlib<3.9.0',
           'MOCpy',
-          'numpy',
           'pandas',
           'pytz',
           'ephem',
@@ -60,6 +60,7 @@ tests = [
 docs = [
     "sphinx",
     "sphinxcontrib-bibtex",
+    "sphinx_rtd_theme",
 ]
 
 dev = [
