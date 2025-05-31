@@ -134,4 +134,4 @@ autodoc_typehints = "description"  # Show type hints in the API documentation (o
 
 # -- BibTeX for scientific references ----------------------------------------
 bibtex_bibfiles = ["refs.bib"]  # For bibliography
-bibtex_default_style = "author_year"
+bibtex_default_style = "plain"
