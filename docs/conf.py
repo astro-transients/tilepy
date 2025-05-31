@@ -61,7 +61,7 @@ copyright = f"2023, {author}"
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-# html_title = "TilePy"
+html_title = "TilePy"
 
 extensions = [
     "sphinx.ext.autodoc",
