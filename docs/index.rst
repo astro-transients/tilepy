@@ -2,9 +2,8 @@
 |TilePy|: Tiling for Transients
 ############################
 
-.. figure:: ../image/tilepy_logo.png
+.. image:: _static/tilepy_logo.png
    :alt: |TilePy| logo
-   :width: 400px
    :align: center
 
 
