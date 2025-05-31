@@ -69,7 +69,7 @@ extensions = [
     "sphinx.ext.intersphinx",  # Cross-references to the docs of other projects
     "sphinx.ext.todo",  # Use .. todo:: directives in your docs
     "sphinx.ext.viewcode",  # Add links to highlighted source code in the API docs
-    "sphinxcontrib.bibtex",  # Scientific references (for citations)
+    # "sphinxcontrib.bibtex",  # Scientific references (for citations)
     # other extensions...
 ]
 
