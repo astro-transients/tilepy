@@ -57,6 +57,10 @@ tests = [
     "tomli",
     "nbmake>=1.5.5",
 ]
+docs = [
+    "sphinx",
+    "sphinxcontrib-bibtex",
+]
 
 dev = [
     "setuptools_scm[toml]",
@@ -89,3 +93,16 @@ exclude = [
 
 [tool.setuptools_scm]
 write_to = "src/tilepy/_version.py"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tilepy",
+    "docs",
+]
+norecursedirs = [
+    "_build",
+]
+addopts = [
+    "--doctest-rst",
+    "--ignore=docs/_build",
+]
