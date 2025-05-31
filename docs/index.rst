@@ -37,8 +37,7 @@ Table of Contents
 *****************
 
 .. toctree::
-   :maxdepth: 3
-   :caption: Contents
+   :maxdepth: 2
 
    install/index
 
