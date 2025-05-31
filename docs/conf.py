@@ -63,13 +63,19 @@ copyright = f"2023, {author}"
 # "<project> v<release> documentation".
 html_title = "TilePy"
 
+rst_epilog = r"""
+.. |TilePy| replace:: *Tilepy*
+.. |TilepyGitHub| replace:: `tilepy <https://github.com/astro-transients/tilepy>`__
+.. |TilepyDocs| replace:: `tilepy documentation <https://readthedocs.org/projects/tilepy/badge/?version=implement-readthedocs>`__
+"""
+
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",  # Support for Google-style and NumPy-style docstrings
     "sphinx.ext.intersphinx",  # Cross-references to the docs of other projects
     "sphinx.ext.todo",  # Use .. todo:: directives in your docs
     "sphinx.ext.viewcode",  # Add links to highlighted source code in the API docs
-    # "sphinxcontrib.bibtex",  # Scientific references (for citations)
+    "sphinxcontrib.bibtex",  # Scientific references (for citations)
     # other extensions...
 ]
 
@@ -126,5 +132,5 @@ edit_on_github_doc_root = "docs"
 # -- API documentation options -----------------------------------------------
 autodoc_typehints = "description"  # Show type hints in the API documentation (optional)
 
-# # -- BibTeX for scientific references ----------------------------------------
-# bibtex_bibfiles = ["refs.bib"]  # For bibliography
+# -- BibTeX for scientific references ----------------------------------------
+bibtex_bibfiles = ["refs.bib"]  # For bibliography
