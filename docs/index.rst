@@ -21,7 +21,7 @@ How to Cite
 
 If you use **tilepy** in your research, please cite:
 
-:cite:`2024ApJS..274....1S`
+:footcite:`2024ApJS..274....1S`
 
 References
 ----------
