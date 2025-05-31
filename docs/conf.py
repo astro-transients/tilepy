@@ -1,5 +1,11 @@
 import os
+import re
 import sys
+from importlib import import_module
+
+DEFAULT_PROJECT = "tilepy"
+DEFAULT_AUTHOR = "Halim, Monica, Fabian"
+DEFAULT_RELEASE = "1.0"
 
 sys.path.insert(0, os.path.abspath("../tilepy/include"))
 
@@ -11,10 +17,44 @@ sys.path.insert(0, os.path.abspath("../tilepy/include"))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "tilepy"
-copyright = "2023, Halim, Monica, Fabian"
-author = "Halim, Monica, Fabian"
-release = "1.0"
+try:
+    try:
+        import tomllib  # Python 3.11+
+    except ImportError:
+        import tomli as tomllib  # pip install tomli for <3.11
+
+    pyproject_path = os.path.join(os.path.dirname("__file__"), "pyproject.toml")
+    with open(pyproject_path, "rb") as f:
+        meta = tomllib.load(f).get("project", {})
+
+    project = meta.get("name", DEFAULT_PROJECT)
+    authors = meta.get("authors", [{"name": DEFAULT_AUTHOR}])
+    author = authors[0].get("name", DEFAULT_AUTHOR) if authors else DEFAULT_AUTHOR
+
+except Exception:
+    project = DEFAULT_PROJECT
+    author = DEFAULT_AUTHOR
+
+# Try to get the version from the installed package (setuptools_scm)
+
+try:
+    import_module(project)
+    package = sys.modules[project]
+    release = package.__version__
+
+    # Use a regex to extract just the short X.Y version. X.Y.Z part (e.g., 2.7.6)
+    match = re.match(r"^(\d+\.\d+\.\d+)", release)
+    version = match.group(1) if match else release
+
+except Exception:
+    release = DEFAULT_RELEASE
+    version = DEFAULT_RELEASE
+
+# Only include dev docs in dev version.
+dev = "dev" in release
+
+copyright = f"2023, {author}"
+
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -53,10 +93,38 @@ html_static_path = ["_static"]
 
 
 # Documentation site title (optional; defaults to "<project> v<release> documentation")
-html_title = "tilepy Documentation"
+html_title = "TilePy"
+
+htmlhelp_basename = project + "doc"
+
+# Prefixes that are ignored for sorting the Python module index
+modindex_common_prefix = ["tilepy."]
+
+html_theme_options = {
+    "github_url": "https://github.com/weizmannk/tilepy",
+    "use_edit_page_button": True,
+}
+
+html_context = {
+    "default_mode": "light",
+    "to_be_indexed": ["stable", "latest"],
+    "is_development": dev,
+    "github_user": "weizmannk",
+    "github_repo": "tilepy",
+    "github_version": "implement-readthedocs",
+    "doc_path": "docs",
+}
+
+# -- Options for the edit_on_github extension ---------------------------------
+edit_on_github_project = "weizmannk/tilepy"
+edit_on_github_branch = "implement-readthedocs"
+
+edit_on_github_source_root = ""
+edit_on_github_doc_root = "docs"
+
 
 # -- API documentation options -----------------------------------------------
 autodoc_typehints = "description"  # Show type hints in the API documentation (optional)
 
-# -- BibTeX for scientific references ----------------------------------------
-bibtex_bibfiles = ["refs.bib"]  # To bibliography
+# # -- BibTeX for scientific references ----------------------------------------
+# bibtex_bibfiles = ["refs.bib"]  # For bibliography
