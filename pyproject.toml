@@ -63,6 +63,7 @@ docs = [
     "sphinx-astropy[confv2]",
     "sphinxcontrib-typer",
     "sphinxcontrib-bibtex",
+    "sphinxcontrib-bibtex-style",
     "astropy-sphinx-theme @ git+https://github.com/astropy/sphinx-astropy-theme.git",
     "sphinx-automodapi @ git+https://github.com/astropy/sphinx-automodapi",
 ]
