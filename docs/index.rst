@@ -14,15 +14,14 @@ It supports automated scheduling for both space-based and ground-based telescope
 How to Cite
 ***********
 
-To cite |TilePy| in your research, please cite this :cite:`Seglar-Arroyo_2024` or see :footcite:`Seglar-Arroyo_2024`.
+To cite |TilePy| in your research, please cite this :cite:p:`Seglar-Arroyo_2024` or see :footcite:p:`Seglar-Arroyo_2024`.
 
 References
 ----------
 .. footbibliography::
-   :style: author_year
 
 .. bibliography::
-   :style: author_year
+   :style: unsrt
 
 *****************
 Table of Contents
