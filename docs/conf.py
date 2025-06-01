@@ -9,6 +9,8 @@ import re
 import sys
 from importlib import import_module
 
+import astropy_sphinx_theme  # required for theme detection by Sphinx, even if unused  # noqa
+
 DEFAULT_PROJECT = "tilepy"
 DEFAULT_AUTHOR = "Halim, Monica, Fabian"
 DEFAULT_RELEASE = "1.0"
@@ -75,6 +77,7 @@ rst_epilog = r"""
 .. |TilepyDocs| replace:: `tilepy documentation <https://readthedocs.org/projects/tilepy/badge/?version=implement-readthedocs>`__
 """
 
+# Extensions for Sphinx
 extensions = [
     "sphinx.ext.autodoc",  # Automatic documentation for Python objects (functions, classes, etc.)
     "sphinx.ext.napoleon",  # Support for Google-style and NumPy-style docstrings
@@ -99,10 +102,10 @@ extensions = [
 
 todo_include_todos = True  # Show TODO items in the built documentation
 
-templates_path = ["_templates"]
-
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
+templates_path = ["_templates"]
+
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
@@ -110,19 +113,16 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
+# Theme and Customizations
 # html_theme = "alabaster"
-# html_static_path = ["_static"]
-
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes. To override the custom theme, set this to the
-# name of a builtin theme or the name of a custom theme in html_theme_path.
-# html_theme = None
-
-# html_theme = "sphinx_rtd_theme"
+html_theme = "bootstrap-astropy"
 html_static_path = ["_static"]
-# html_css_files = [
-#     "css/risk_table.css",
-# ]
+
+html_theme_options = {
+    "github_url": "https://github.com/weizmannk/tilepy",
+    "use_edit_page_button": True,
+}
+
 
 # Documentation site title (optional; defaults to "<project> v<release> documentation")
 html_title = "TilePy"
@@ -132,10 +132,6 @@ htmlhelp_basename = project + "doc"
 # Prefixes that are ignored for sorting the Python module index
 modindex_common_prefix = ["tilepy."]
 
-html_theme_options = {
-    "github_url": "https://github.com/weizmannk/tilepy",
-    "use_edit_page_button": True,
-}
 
 html_context = {
     "default_mode": "light",
@@ -147,12 +143,21 @@ html_context = {
     "doc_path": "docs",
 }
 
+# -- Options for plot_directive -----------------------------------------------
+plot_include_source = True
+plot_formats = [("svg", 300), ("pdf", 300)]
+plot_html_show_formats = False
+
+
 # -- Options for the edit_on_github extension ---------------------------------
 edit_on_github_project = "weizmannk/tilepy"
 edit_on_github_branch = "implement-readthedocs"
 
 edit_on_github_source_root = ""
 edit_on_github_doc_root = "docs"
+
+# Generate the URL for editing on GitHub
+edit_on_github_url = f"https://github.com/{edit_on_github_project}/edit/{edit_on_github_branch}/"  # Link to GitHub editor
 
 
 # -- API documentation options -----------------------------------------------
