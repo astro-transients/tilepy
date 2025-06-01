@@ -1,11 +1,13 @@
 .. highlight:: sh
 
-Installation
-============
+TilePy Installation Guide
+==========================
 
-## This is the process to install end to end TilePy
+## Introduction
+
+This is the process to install end to end TilePy.
 
 .. toctree::
    :maxdepth: 2
 
-   installation
+   tilepy
