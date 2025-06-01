@@ -61,7 +61,7 @@ docs = [
     "sphinx>=1.6",
     "sphinxcontrib-bibtex",
     "sphinx_rtd_theme",
-     "git+https://github.com/astropy/sphinx-astropy-theme.git",
+    "astropy-sphinx-theme @ git+https://github.com/astropy/sphinx-astropy-theme.git",
 ]
 
 dev = [
