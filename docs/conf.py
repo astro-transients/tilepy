@@ -90,14 +90,15 @@ extensions = [
     "sphinx.ext.coverage",  # Display code coverage information in the documentation
     "sphinx.ext.inheritance_diagram",  # Generate inheritance diagrams for classes
     "sphinx.ext.graphviz",  # Integrate Graphviz diagrams and graphs into the documentation
+    "sphinx_automodapi.automodapi",
     # other extensions...
 ]
 
-# # Intersphinx mappings for cross-referencing other Python library documentation
-# intersphinx_mapping = {
-#     "numpy": ("https://numpy.org/doc/stable/", None),
-#     "astropy": ("https://docs.astropy.org/en/stable/", None),
-# }
+# Intersphinx mappings for cross-referencing other Python library documentation
+intersphinx_mapping = {
+    # "numpy": ("https://numpy.org/doc/stable/", None),
+    "astropy": ("https://docs.astropy.org/en/stable/", None),
+}
 
 
 todo_include_todos = True  # Show TODO items in the built documentation

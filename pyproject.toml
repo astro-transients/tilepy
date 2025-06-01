@@ -60,6 +60,7 @@ tests = [
 docs = [
     "sphinx>=1.6",
     "sphinxcontrib-bibtex",
+    "sphinx-automodapi",
     "sphinx_rtd_theme",
     "astropy-sphinx-theme @ git+https://github.com/astropy/sphinx-astropy-theme.git",
 ]

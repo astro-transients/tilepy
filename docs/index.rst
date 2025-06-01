@@ -28,8 +28,8 @@ Table of Contents
    :maxdepth: 2
 
    install/index
-   source/ObservationScheduler
-   source/TilingDetermination
+   guide/index
+   .. source/TilingDetermination
 
 *****
 Index
