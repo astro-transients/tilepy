@@ -129,9 +129,10 @@ if "numpydoc" in extensions:
     extensions.remove("numpydoc")
 
 additional_extensions = [
-    "sphinx_astropy.ext.edit_on_github",
     "sphinx.ext.napoleon",
     "sphinxcontrib.typer",
+    "sphinxcontrib.bibtex",
+    "sphinx_astropy.ext.edit_on_github",
 ]
 for ext in additional_extensions:
     if ext not in extensions:
