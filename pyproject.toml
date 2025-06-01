@@ -58,9 +58,10 @@ tests = [
     "nbmake>=1.5.5",
 ]
 docs = [
-    "sphinx",
+    "sphinx>=1.6",
     "sphinxcontrib-bibtex",
     "sphinx_rtd_theme",
+     "git+https://github.com/astropy/sphinx-astropy-theme.git",
 ]
 
 dev = [
