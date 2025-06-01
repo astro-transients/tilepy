@@ -3,6 +3,9 @@
 # All rights reserved.
 # See full license details at: https://github.com/sphinx-doc/sphinx/blob/master/LICENSE.rst
 
+# FIXME: ImportError: numpy.core.multiarray failed to import
+# Une a numpy<2 for 'healpy==1.16.2',
+# SO we need to fix it in the pyprojet.toml
 
 import os
 import re

@@ -58,6 +58,7 @@ tests = [
     "nbmake>=1.5.5",
 ]
 docs = [
+    "numpy<2",
     "sphinx>=1.6",
     "sphinxcontrib-bibtex",
     "sphinx-automodapi",
