@@ -1,7 +1,3 @@
-
-
-
-
 # Unless otherwise indicated, all code in this project is licensed under the two-clause BSD license.
 # Copyright (c) 2007-2025 by the Sphinx team (see AUTHORS file).
 # All rights reserved.
@@ -122,10 +118,10 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # name of a builtin theme or the name of a custom theme in html_theme_path.
 # html_theme = None
 
-html_theme = "sphinx_rtd_theme"
+# html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 # html_css_files = [
-#     "css/risk_table.css", 
+#     "css/risk_table.css",
 # ]
 
 # Documentation site title (optional; defaults to "<project> v<release> documentation")
