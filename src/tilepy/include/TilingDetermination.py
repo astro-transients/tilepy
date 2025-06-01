@@ -91,20 +91,27 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     """
     Mid-level function that is called by GetSchedule to compute a observation schedule based on a 2D method.
 
-    :param skymap: The object containing the skympas
-    :type skymap: SkyMap
-    :param eventName: The name of the event
-    :type eventName: str
-    :param ObservationTime0: the desired time for scheduling to start
-    :type ObservationTime0: str
-    :param PointingFile: The path to the text file containing the pointings that have already been performed before the scheduling
-    :type PointingFile: str
-    :param obspar: Class containing the telescope configuration parameters to be used in the scheduling
-    :type obspar: Observation parameters class
-    :param dirName: Path to the output directory where the schedules and plots will eb saved
-    :type dirName: str
-    :return: SuggestedPointings, cat
-    rtype: ascii table, astropy table
+    Parameters
+    ----------
+    skymap : SkyMap
+        The object containing the sky maps.
+    nameEvent : str
+        The name of the event.
+    obspar : ObservationParameters
+        Observation parameters, including:
+        - obsTime (datetime): Desired time for scheduling to start.
+        - pointingsFile (str): Path to file with previous pointings.
+        - ... (other parameters as needed)
+        Class containing the telescope configuration parameters.
+    dirName : str
+        Output directory for schedules and plots.
+
+    Returns
+    -------
+    SuggestedPointings : astropy.table.Table
+        Table of scheduled pointings.
+    cat : astropy.table.Table
+        Galaxy catalogue used.
     """
 
     ObservationTime0 = obspar.obsTime
