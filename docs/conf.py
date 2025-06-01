@@ -1,7 +1,8 @@
-# Unless otherwise indicated, all code in this project is licensed under the two-clause BSD license.
-# Copyright (c) 2007-2025 by the Sphinx team (see AUTHORS file).
-# All rights reserved.
-# See full license details at: https://github.com/sphinx-doc/sphinx/blob/master/LICENSE.rst
+# -*- coding: utf-8 -*-
+# Copyright (C) 2024, tilepy developers
+# Licensed under the GNU license - see ../LICENSE.rst
+#
+# Inspired by Sphinx_Astropy, Sphinx, m4opt.
 
 # FIXME: ImportError: numpy.core.multiarray failed to import
 # Une a numpy<2 for 'healpy==1.16.2',
@@ -14,11 +15,20 @@ from importlib import import_module
 
 import astropy_sphinx_theme  # required for theme detection by Sphinx, even if unused  # noqa
 
+try:
+    from sphinx_astropy.conf.v2 import *  # noqa
+except ImportError:
+    print(
+        "ERROR: the documentation requires the sphinx-astropy package to be installed"
+    )
+    sys.exit(1)
+
 DEFAULT_PROJECT = "tilepy"
 DEFAULT_AUTHOR = "Halim, Monica, Fabian"
 DEFAULT_RELEASE = "1.0"
 
 sys.path.insert(0, os.path.abspath("../tilepy/include"))
+
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -80,52 +90,67 @@ rst_epilog = r"""
 .. |TilepyDocs| replace:: `tilepy documentation <https://readthedocs.org/projects/tilepy/badge/?version=implement-readthedocs>`__
 """
 
-# Extensions for Sphinx
-extensions = [
-    "sphinx.ext.autodoc",  # Automatic documentation for Python objects (functions, classes, etc.)
-    "sphinx.ext.napoleon",  # Support for Google-style and NumPy-style docstrings
-    "sphinx.ext.intersphinx",  # Cross-references to the docs of other projects
-    "sphinx.ext.todo",  # Use .. todo:: directives in your docs
-    "sphinx.ext.viewcode",  # Add links to highlighted source code in the API docs
-    "sphinxcontrib.bibtex",  # Scientific references (for citations)
-    "sphinx.ext.autosummary",  # Automatically generate summaries for modules, functions, classes, etc.
-    "sphinx.ext.extlinks",  # Create custom external links (e.g., to GitHub issues or web pages)
-    "sphinx.ext.coverage",  # Display code coverage information in the documentation
-    "sphinx.ext.inheritance_diagram",  # Generate inheritance diagrams for classes
-    "sphinx.ext.graphviz",  # Integrate Graphviz diagrams and graphs into the documentation
-    "sphinx_automodapi.automodapi",
-    # other extensions...
+highlight_language = "python3"
+
+
+# --- Additional/local Sphinx extensions ---
+# Add only those extensions that are NOT already included in sphinx_astropy.conf.v2
+
+try:
+    extensions  # noqa: F405
+except NameError:
+    extensions = [
+        "sphinx.ext.autodoc",  # Automatic documentation for Python objects (functions, classes, etc.)
+        "sphinx.ext.napoleon",  # Support for Google-style and NumPy-style docstrings
+        "sphinx.ext.intersphinx",  # Cross-references to the docs of other projects
+        "sphinx.ext.todo",  # Use .. todo:: directives in your docs
+        "sphinx.ext.viewcode",  # Add links to highlighted source code in the API docs
+        "sphinxcontrib.bibtex",  # Scientific references (for citations)
+        "sphinx.ext.autosummary",  # Automatically generate summaries for modules, functions, classes, etc.
+        "sphinx.ext.extlinks",  # Create custom external links (e.g., to GitHub issues or web pages)
+        "sphinx.ext.coverage",  # Display code coverage information in the documentation
+        "sphinx.ext.inheritance_diagram",  # Generate inheritance diagrams for classes
+        "sphinx.ext.graphviz",  # Integrate Graphviz diagrams and graphs into the documentation
+        "sphinx_automodapi.automodapi",
+        "sphinxcontrib.jquery",
+        "sphinx_copybutton",
+        "sphinx_astropy.ext.intersphinx_toggle",
+        "sphinx_automodapi.smart_resolver",
+        "pytest_doctestplus.sphinx.doctestplus",
+        "matplotlib.sphinxext.plot_directive",
+        "sphinx_astropy.ext.generate_config",
+        "sphinx_astropy.ext.missing_static",
+        "sphinx_astropy.ext.changelog_links",
+        # other extensions...
+    ]
+
+# Remove 'numpydoc' if present (we want to use 'napoleon' instead)
+if "numpydoc" in extensions:
+    extensions.remove("numpydoc")
+
+additional_extensions = [
+    "sphinx_astropy.ext.edit_on_github",
+    "sphinx.ext.napoleon",
+    "sphinxcontrib.typer",
 ]
+for ext in additional_extensions:
+    if ext not in extensions:
+        extensions.append(ext)
+
+# Activate TODO
+todo_include_todos = True
 
 # Intersphinx mappings for cross-referencing other Python library documentation
 intersphinx_mapping = {
     # "numpy": ("https://numpy.org/doc/stable/", None),
     "astropy": ("https://docs.astropy.org/en/stable/", None),
+    "ligo.skymap": ("https://lscsoft.docs.ligo.org/ligo.skymap/", None),
 }
-
-
-todo_include_todos = True  # Show TODO items in the built documentation
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-templates_path = ["_templates"]
-
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-
-
-# -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
-
-# Theme and Customizations
-# html_theme = "alabaster"
-html_theme = "bootstrap-astropy"
-html_static_path = ["_static"]
-
-html_theme_options = {
-    "github_url": "https://github.com/weizmannk/tilepy",
-    "use_edit_page_button": True,
-}
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "_templates"]
 
 
 # Documentation site title (optional; defaults to "<project> v<release> documentation")
@@ -135,7 +160,6 @@ htmlhelp_basename = project + "doc"
 
 # Prefixes that are ignored for sorting the Python module index
 modindex_common_prefix = ["tilepy."]
-
 
 html_context = {
     "default_mode": "light",
@@ -147,11 +171,30 @@ html_context = {
     "doc_path": "docs",
 }
 
-# -- Options for plot_directive -----------------------------------------------
-plot_include_source = True
-plot_formats = [("svg", 300), ("pdf", 300)]
-plot_html_show_formats = False
+# -- Options for HTML output -------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
+# Theme and Customizations
+try:
+    html_theme  # noqa: F405
+except NameError:
+    html_theme = "pydata_sphinx_theme"
+
+
+html_static_path = ["_static"]
+
+html_theme_options = {
+    "github_url": "https://github.com/weizmannk/tilepy",
+    "use_edit_page_button": True,
+}
+
+# Ignore issue/PR links; set retries/timeouts for external link checking
+linkcheck_ignore = [
+    r"https://github\.com/astro-transients/tilepy/(?:issues|pull)/\d+",
+]
+linkcheck_retry = 5
+linkcheck_timeout = 180
+linkcheck_anchors = False
 
 # -- Options for the edit_on_github extension ---------------------------------
 edit_on_github_project = "weizmannk/tilepy"
@@ -163,6 +206,16 @@ edit_on_github_doc_root = "docs"
 # Generate the URL for editing on GitHub
 edit_on_github_url = f"https://github.com/{edit_on_github_project}/edit/{edit_on_github_branch}/"  # Link to GitHub editor
 
+
+# If we want to use latex format
+latex_documents = [
+    ("index", project + ".tex", project + " Documentation", author, "manual")
+]
+
+# -- Options for plot_directive -----------------------------------------------
+plot_include_source = True
+plot_formats = [("svg", 300), ("pdf", 300)]
+plot_html_show_formats = False
 
 # -- API documentation options -----------------------------------------------
 autodoc_typehints = "description"  # Show type hints in the API documentation (optional)
