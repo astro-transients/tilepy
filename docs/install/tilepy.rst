@@ -1,5 +1,8 @@
-Tylepy Setup Guide
-==================
+
+TilePy Installation Guide
+==========================
+
+This is the process to install end to end TilePy.
 
 1. Clone and Install TilePy
 ---------------------------

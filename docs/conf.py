@@ -1,3 +1,13 @@
+
+
+
+
+# Unless otherwise indicated, all code in this project is licensed under the two-clause BSD license.
+# Copyright (c) 2007-2025 by the Sphinx team (see AUTHORS file).
+# All rights reserved.
+# See full license details at: https://github.com/sphinx-doc/sphinx/blob/master/LICENSE.rst
+
+
 import os
 import re
 import sys
@@ -70,12 +80,17 @@ rst_epilog = r"""
 """
 
 extensions = [
-    "sphinx.ext.autodoc",
+    "sphinx.ext.autodoc",  # Automatic documentation for Python objects (functions, classes, etc.)
     "sphinx.ext.napoleon",  # Support for Google-style and NumPy-style docstrings
     "sphinx.ext.intersphinx",  # Cross-references to the docs of other projects
     "sphinx.ext.todo",  # Use .. todo:: directives in your docs
     "sphinx.ext.viewcode",  # Add links to highlighted source code in the API docs
     "sphinxcontrib.bibtex",  # Scientific references (for citations)
+    "sphinx.ext.autosummary",  # Automatically generate summaries for modules, functions, classes, etc.
+    "sphinx.ext.extlinks",  # Create custom external links (e.g., to GitHub issues or web pages)
+    "sphinx.ext.coverage",  # Display code coverage information in the documentation
+    "sphinx.ext.inheritance_diagram",  # Generate inheritance diagrams for classes
+    "sphinx.ext.graphviz",  # Integrate Graphviz diagrams and graphs into the documentation
     # other extensions...
 ]
 
@@ -85,18 +100,33 @@ extensions = [
 #     "astropy": ("https://docs.astropy.org/en/stable/", None),
 # }
 
+
 todo_include_todos = True  # Show TODO items in the built documentation
 
 templates_path = ["_templates"]
+
+# List of patterns, relative to source directory, that match files and
+# directories to ignore when looking for source files.
+# This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "alabaster"
-html_static_path = ["_static"]
+# html_theme = "alabaster"
+# html_static_path = ["_static"]
 
+# The theme to use for HTML and HTML Help pages.  See the documentation for
+# a list of builtin themes. To override the custom theme, set this to the
+# name of a builtin theme or the name of a custom theme in html_theme_path.
+# html_theme = None
+
+html_theme = "sphinx_rtd_theme"
+html_static_path = ["_static"]
+# html_css_files = [
+#     "css/risk_table.css", 
+# ]
 
 # Documentation site title (optional; defaults to "<project> v<release> documentation")
 html_title = "TilePy"
