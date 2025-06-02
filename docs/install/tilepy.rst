@@ -61,5 +61,5 @@ If no error appears and the version number is printed, your installation is corr
 -------------
 
 - Open an issue on the |TilepyGitHub|
-- Contact the dev team at : |TilepyEmail|
-- Join the forum : https://forum.astro-colibri.science/c/instrumentation-and-tools/tilepy
+- Contact the dev team at: |TilepyEmail|
+- Join the forum: |Forum|
