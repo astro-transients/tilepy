@@ -87,8 +87,19 @@ html_title = "TilePy"
 rst_epilog = r"""
 .. |TilePy| replace:: *Tilepy*
 
-.. |TilepyGitHub| replace:: `GitHub <https://github.com/astro-transients/tilepy>`__
 .. |TilepyDocs| replace:: `tilepy documentation <https://readthedocs.org/projects/tilepy/badge/?version=implement-readthedocs>`__
+
+.. |TilepyGitHub| image:: https://img.shields.io/badge/GitHub-tilepy-9400D3?logo=github
+   :target: https://github.com/astro-transients/tilepy
+   :alt: Tilepy on GitHub
+
+.. |TilepyEmail| image:: https://img.shields.io/badge/Email-astro.tilepy@gmail.com-0078D4?logo=gmail
+   :target: mailto:astro.tilepy@gmail.com
+   :alt: Contact Tilepy Team
+
+.. |Forum| image:: https://img.shields.io/badge/Forum-Colibri-4B286D?logo=discourse
+   :target: https://forum.astro-colibri.science/c/instrumentation-and-tools/tilepy
+   :alt: Tilepy Forum
 
 .. |email| image:: /_static/email.svg
    :width: 16px
