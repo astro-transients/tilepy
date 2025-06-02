@@ -10,7 +10,21 @@ __all__ = [
 
 
 class HESSObservatory:
-    """Coordinates and location for the HESS Observatory."""
+    r"""
+    Coordinates and location for the HESS Observatory.
+
+    The **High Energy Stereoscopic System (H.E.S.S.)** is an array of five Imaging Atmospheric Cherenkov Telescopes (IACTs)
+    located in Namibia, dedicated to very high-energy gamma-ray astronomy. The array consists of four 12 m telescopes
+    arranged in a 120 m square for stereoscopic imaging, and a central 28 m telescope (operational since 2012).
+    H.E.S.S. has provided full service since 2022, enabling major discoveries of galactic and extragalactic sources
+    of gamma rays :footcite:`2018A&A...612A...1H,2022A&A...666A.124A`.
+
+    For more information, see the `H.E.S.S. website <https://www.mpi-hd.mpg.de/HESS/>`_.
+
+    References
+    ----------
+    .. footbibliography::
+    """
 
     def __init__(self):
         self.Name = "HESS"
