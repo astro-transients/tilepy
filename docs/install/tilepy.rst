@@ -60,6 +60,6 @@ If no error appears and the version number is printed, your installation is corr
 5. Need Help?
 -------------
 
-- Open an issue on the |TilepyGitHub|
-- Contact the dev team at : |email| |TilepyEmail|
+- Open an issue on the |TilepyGitHub| (astro.tilepy@gmail.com <mailto:astro.tilepy@gmail.com>)
+- Contact the dev team at : |TilepyEmail|
 - Join the forum : https://forum.astro-colibri.science/c/instrumentation-and-tools/tilepy
