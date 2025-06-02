@@ -110,8 +110,8 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     -------
     SuggestedPointings : astropy.table.Table
         Table of scheduled pointings.
-    cat : astropy.table.Table
-        Galaxy catalogue used.
+    ObservationTime0 : str
+        the desired time for scheduling to start.
     """
 
     ObservationTime0 = obspar.obsTime
@@ -304,28 +304,36 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
 
 def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
     """
-    Mid-level function that is called by GetSchedule to compute a observation schedule based on a 3D method.
-    Depending on the user input in the configuration file and the telescope FoV the pointings use the targtet galaxy strategy or integrated galaxy probability strategy.
+    Compute an observation schedule based on a 3D (galaxy-weighted) method.
 
-    :param skymap: The object storing sky maps
-    :type skymap: SkyMap
-    :param nameEvent: The name of the event
-    :type nameEvent: str
-    :param ObservationTime0: the desired time for scheduling to start
-    :type ObservationTime0: str
-    :param PointingFile: The path to the text file containing the pointings that have already been performed before the scheduling
-    :type PointingFile: str
-    :param galFile: The path to the galaxy catalog
-    :type galFile: str
-    :param obspar: Class containing the telescope configuration parameters to be used in the scheduling
-    :type obspar: Observation parameters class
-    :param dirName: Path to the output directory where the schedules and plots will eb saved
-    :type dirName: str
-    :return: SuggestedPointings, cat
-    rtype: ascii table, astropy table
+    This mid-level function is called by :func:`tilepy.include.observationschedule.GetSchedule`
+    and produces a suggested schedule of pointings for the given observatory,
+    using either the target galaxy strategy or the integrated galaxy probability strategy,
+    depending on user input and the telescope field of view.
+
+    Parameters
+    ----------
+    skymap : SkyMap
+        The object storing sky maps.
+    nameEvent : str
+        The name of the event.
+    galFile : str
+        Path to the galaxy catalog.
+    obspar : ObservationParameters
+        Telescope configuration parameters used in the scheduling.
+    dirName : str
+        Path to the output directory where the schedules and plots will be saved.
+
+    Returns
+    -------
+    SuggestedPointings : astropy.table.Table
+        Table of suggested pointings (with time, coordinates, probability, etc.).
+    tGals0 : astropy.table.Table
+        Filtered and ranked list of galaxies for scheduling.
     """
-
+    # The desired time for scheduling to start
     ObservationTime0 = obspar.obsTime
+    # The path to the text file containing the pointings that have already been performed before the scheduling
     PointingFile = obspar.pointingsFile
 
     # Main Parameters
@@ -852,14 +860,28 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
 
 def ObservationStartperObs(obsparameters, ObservationTime0):
     """
-    Mid-level function that is called by Nobs Tiling functions for multiple telescopes to find the first observation time for each observatory involved.
+    Compute the first observation time for each observatory involved in the scheduling.
 
-    :param obsparameters: a list of sets of parameters for each observatory needed to launch the tiling scheduler
-    :type obsparameters: list of class ObservationParameters
-    :param ObservationTime0: the desired time for scheduling to start
-    :type ObservationTime0: str
-    :return: obs_time, SameNight, NewActiveObs, NewActiveObsStart
-    rtype: datetime, boolean, list, list
+    This mid-level function is called by Nobs Tiling functions to determine the first available observation
+    time for each observatory and whether each observatory can observe on the same night.
+
+    Parameters
+    ----------
+    obsparameters : list of ObservationParameters
+        A list of sets of parameters for each observatory needed to launch the tiling scheduler.
+    ObservationTime0 : sr
+        The desired start time for scheduling to begin.
+
+    Returns
+    -------
+    obs_time : datetime
+        The current observation time, possibly adjusted.
+    SameNight : numpy.ndarray of bool
+        An array indicating whether each observatory is available for observation on the same night.
+    NewActiveObs : list of ObservationParameters
+        A list of observatories that are available to observe.
+    NewActiveObsStart : numpy.ndarray of datetime
+        A sorted list of the first available observation times for each observatory.
     """
     print("ObservationTime0", ObservationTime0)
 
@@ -943,22 +965,33 @@ def PGWinFoV_NObs(
     skymap, nameEvent, ObservationTime0, PointingFile, obsparameters, dirName
 ):
     """
-    Mid-level function that is called by GetSchedule to compute a observation schedule for multiple telescopes/observartories based on a 2D method.
+    Compute an observation schedule for multiple telescopes/observatories based on a 2D method.
 
-    :param skymap: The object storing sky maps
-    :type skymap: SkyMap
-    :param nameEvent: The name of the event
-    :type nameEvent: str
-    :param ObservationTime0: the desired time for scheduling to start
-    :type ObservationTime0: str
-    :param PointingFile: The path to the text file containing the pointings that have already been performed before the scheduling
-    :type PointingFile: str
-    :param obsparameters: a list of sets of parameters for each observatory needed to launch the tiling scheduler
-    :type obsparameters: list of class ObservationParameters
-    :param dirName: Path to the output directory where the schedules and plots will eb saved
-    :type dirName: str
-    :return: SuggestedPointings, cat
-    rtype: ascii table, astropy table
+    This mid-level function is called by `GetSchedule` (see :func:`tilepy.include.ObservationScheduler.GetSchedule`)
+    and produces a suggested schedule of pointings for each observatory, given the input sky map,
+    pointings already performed, and observation parameters.
+
+    Parameters
+    ----------
+    skymap : SkyMap
+        The object storing sky maps.
+    nameEvent : str
+        The name of the event.
+    ObservationTime0 : str
+        The desired start time for scheduling.
+    PointingFile : str
+        Path to the text file containing pointings already performed before scheduling.
+    obsparameters : list of ObservationParameters
+        Parameters for each observatory needed to launch the tiling scheduler.
+    dirName : str
+        Path to the output directory where the schedules and plots will be saved.
+
+    Returns
+    -------
+    SuggestedPointings : astropy.table.Table
+        Table of suggested pointings for all observatories.
+    obsparameters : list of ObservationParameters
+        (Possibly updated) list of parameters for each observatory.
     """
 
     obs_time, SameNight, NewActiveObs, NewActiveObsStart = ObservationStartperObs(
@@ -1220,22 +1253,7 @@ def PGalinFoV_NObs(
     skymap, nameEvent, ObservationTime0, PointingFile, galFile, obsparameters, dirName
 ):
     """
-    Mid-level function that is called by GetSchedule to compute a observation schedule for multiple telescopes/observartories based on a 3D method.
-
-    :param skymap: The object storing skympas
-    :type skymap: SkyMap
-    :param ObservationTime0: the desired time for scheduling to start
-    :type ObservationTime0: str
-    :param PointingFile: The path to the text file containing the pointings that have already been performed before the scheduling
-    :type PointingFile: str
-    :param galFile: The path to the galaxy catalog
-    :type galFile: str
-    :param obsparameters: a list of sets of parameters for each observatory needed to launch the tiling scheduler
-    :type obsparameters: list of class ObservationParameters
-    :param dirName: Path to the output directory where the schedules and plots will eb saved
-    :type dirName: str
-    :return: SuggestedPointings, cat, obsparameters
-    rtype: ascii table, astropy table, list
+    Compute the optimal observation schedule based on galaxy probability and gravitational wave data for multiple observatories.
     """
 
     obs_time, SameNight, NewActiveObs, NewActiveObsStart = ObservationStartperObs(
@@ -1784,6 +1802,10 @@ def PGalinFoV_NObs(
 
 
 def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
+    """
+    Compute the best observation tiles based on a 2D method, considering galaxy probabilities and observatory constraints.
+    """
+
     random.seed()
     RAarray = []
     DECarray = []
@@ -1869,6 +1891,10 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
 
 
 def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirName):
+    """
+    Compute the best observation tiles based on a 3D method for space-based observatories, considering galaxy probabilities and satellite constraints.
+    """
+
     random.seed()
     RAarray = []
     DECarray = []
@@ -1977,6 +2003,12 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
 def PGWinFoV_Space_NObs(
     skymap, nameEvent, ObservationTime0, PointingFile, obsparameters, dirName
 ):
+    """
+    Compute an observation schedule for space-based observatories using a 3D method.
+
+    It calculates optimal observation times considering the galaxy catalog, GW probability map, and satellite constraints.
+    The function returns suggested pointings along with satellite visibility times and SAA status.
+    """
     random.seed()
     RAarray = []
     DECarray = []
@@ -2166,6 +2198,38 @@ def PGWinFoV_Space_NObs(
 def PGalinFoV_Space_NObs(
     skymap, nameEvent, ObservationTime0, PointingFile, galFile, obsparameters, dirName
 ):
+    """
+    Compute an observation schedule for space-based observatories using a 3D method.
+
+    Called by :func:`tilepy.include.observationschedule.GetSchedule`, this function generates a schedule of pointings for each observatory,
+    considering the field of view (FoV), galaxy catalog, and satellite position with occultation constraints.
+
+    Parameters
+    ----------
+    skymap : SkyMap
+        The object storing sky maps.
+    nameEvent : str
+        The name of the event.
+    ObservationTime0 : datetime
+        The desired start time for scheduling to begin.
+    PointingFile : str, optional
+        Path to the text file containing the pointings that have already been performed.
+    galFile : str
+        Path to the galaxy catalog file.
+    obsparameters : list of ObservationParameters
+        A list of sets of parameters for each observatory needed to launch the tiling scheduler.
+    dirName : str
+        Path to the output directory where the schedules and plots will be saved.
+
+    Returns
+    -------
+    SuggestedPointings : astropy.table.Table
+        Table of suggested pointings with their RA, DEC, and galaxy probability.
+    SatTimes : numpy.ndarray
+        Array of satellite observation times.
+    saa : numpy.ndarray
+        Array indicating the satellite's South Atlantic Anomaly (SAA) status at each time step.
+    """
     random.seed()
     RAarray = []
     DECarray = []

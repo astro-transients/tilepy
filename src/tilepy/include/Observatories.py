@@ -10,6 +10,7 @@ __all__ = [
 
 
 class HESSObservatory:
+    """Coordinates and location for the HESS Observatory."""
 
     def __init__(self):
         self.Name = "HESS"
@@ -20,6 +21,7 @@ class HESSObservatory:
 
 
 class LST:
+    """Coordinates and location for the LST Observatory."""
 
     def __init__(self):
         self.Name = "LST"
@@ -30,6 +32,8 @@ class LST:
 
 
 class CTASouthObservatory:
+    """Coordinates and location for the CTA South Observatory."""
+
     def __init__(self):
         self.Name = "South"
         self.Lat = -24.5 * u.deg
@@ -39,6 +43,7 @@ class CTASouthObservatory:
 
 
 class CTANorthObservatory:
+    """Coordinates and location for the CTA North Observatory."""
 
     def __init__(self):
         self.Name = "North"
