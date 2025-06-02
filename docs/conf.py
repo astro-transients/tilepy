@@ -86,8 +86,15 @@ html_title = "TilePy"
 
 rst_epilog = r"""
 .. |TilePy| replace:: *Tilepy*
+
 .. |TilepyGitHub| replace:: `tilepy <https://github.com/astro-transients/tilepy>`__
 .. |TilepyDocs| replace:: `tilepy documentation <https://readthedocs.org/projects/tilepy/badge/?version=implement-readthedocs>`__
+
+.. |TilepyEmail| replace:: `astro.tilepy@gmail.com <mailto:astro.tilepy@gmail.com>`__
+
+.. |email| image:: /_static/email.svg
+   :width: 18px
+   :align: bottom
 """
 
 highlight_language = "python3"

@@ -54,11 +54,12 @@ If no error appears and the version number is printed, your installation is corr
 -------------------
 
 - **Dependencies** are automatically managed if you use the provided environment.
-- For advanced usage (simulations, scripts, or examples), check the `examples/` directory.
+- For advanced usage (simulations, scripts, or examples), check the `examples/ <https://github.com/astro-transients/tilepy/tree/main/examples>`__ directory.
+
 
 5. Need Help?
 -------------
 
-- Open an issue on the [GitHub repository](https://github.com/astro-transients/tilepy)
-- Contact the dev team at : astro.tilepy@gmail.com
+- Open an issue on the |TilepyGitHub|
+- Contact the dev team at : |email| |TilepyEmail|
 - Join the forum : https://forum.astro-colibri.science/c/instrumentation-and-tools/tilepy
