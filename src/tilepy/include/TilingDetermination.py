@@ -1957,6 +1957,7 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
         dirName,
         reducedNside,
         Occultedpixels,
+        obspar.minProbcut
     )
 
     ObsName = [obspar.obs_name for j in range(len(first_values))]
@@ -2241,6 +2242,7 @@ def PGalinFoV_Space_NObs(
         dirName,
         reducedNside,
         Occultedpixels,
+        obspar.minProbcut
     )
 
     # FOR SPACE ######################################################

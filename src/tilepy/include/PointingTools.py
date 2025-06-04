@@ -1514,14 +1514,19 @@ def GetBestGridPos3D(
     dirName,
     reducedNside,
     Occultedpixels,
+    minProbCut
 ):
-
+    
+    prob1 = prob[newpix]
+    galpix = galpix[np.argsort(prob1)[::-1]]
     SelectedGals = galpix
     dp_dV_FOV = []
+    BestGalsRA = []
+    BestGalsDec = []
+    galaxx= []
     for element in range(0, len(SelectedGals)):
         if element < len(SelectedGals):
-            dp_dV_FOV.append(
-                ComputePGalinFOV(
+            dp_dV_FOV1, galax =  ComputePGalinFOV(
                     prob,
                     cat,
                     SelectedGals[element],
@@ -1530,15 +1535,16 @@ def GetBestGridPos3D(
                     n_sides,
                     UsePix=True,
                 )
-            )
-        else:
-            dp_dV_FOV.append(0)
+        if dp_dV_FOV1 > minProbCut:
+            dp_dV_FOV.append(dp_dV_FOV1)
+            BestGalsRA.append(SelectedGals[element].ra.deg)
+            BestGalsDec.append(SelectedGals[element].dec.deg)
+            cat = galax
+            galaxx.append(galax)
 
-    print("Length of SelectedGals:", len(SelectedGals))
-    print("Length of dp_dV_FOV[:lengthSG]:", len(dp_dV_FOV))
 
     cat_pix = Table(
-        [SelectedGals.ra.deg, SelectedGals.dec.deg, dp_dV_FOV],
+        [BestGalsRA, BestGalsDec, dp_dV_FOV],
         names=("PIXRA", "PIXDEC", "PIXFOVPROB"),
     )
 
@@ -1562,8 +1568,7 @@ def GetBestGridPos3D(
         cat_sorted = cat_clean.copy()
         cat_sorted.sort('dp_dV', reverse=True)
         # Select top 100 galaxies with highest dp_dV
-        top100 = cat_sorted[:200]
-        print(top100)
+        top100 = cat_sorted[:100]
 
         # Plot with projplot
         hp.visufunc.projplot(
@@ -2290,6 +2295,8 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, n_sides, UsePix):
         Pgal_inFoV = (
             dp_dV[targetCoord2.separation(targetCoord).deg <= radius].sum() / totaldPdV
         )
+        return Pgal_inFoV, cat[targetCoord2.separation(targetCoord).deg > radius]
+    
     elif n_sides > 0:
             vertices_xyz = Tools.get_regular_polygon_vertices(targetCoord.ra.deg, targetCoord.dec.deg, radius, 4, 0)
 
@@ -2313,11 +2320,11 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, n_sides, UsePix):
 
             # 6. Calculate fraction inside FoV
             Pgal_inFoV = dp_dV[inside_mask].sum() / totaldPdV
+
+            return Pgal_inFoV, cat[~inside_mask]
+
     else:
         raise ValueError("Shape must be 'circle' or 'polygon'.")
-
-
-    return Pgal_inFoV
 
 
 def ModifyCatalogue(prob, cat, FOV, totaldPdV, nside):
@@ -2330,8 +2337,7 @@ def ModifyCatalogue(prob, cat, FOV, totaldPdV, nside):
     dp_dV_FOV = []
     for element in range(0, len(cat["dp_dV"])):
         if element < len(SelectedGals["dp_dV"]):
-            dp_dV_FOV.append(
-                ComputePGalinFOV(
+            dp_dV_FOV1, galax =  ComputePGalinFOV(
                     prob,
                     cat,
                     SelectedGals[element],
@@ -2340,7 +2346,7 @@ def ModifyCatalogue(prob, cat, FOV, totaldPdV, nside):
                     nside,
                     UsePix=False,
                 )
-            )
+            dp_dV_FOV.append(dp_dV_FOV1)
         else:
             dp_dV_FOV.append(0)
 
