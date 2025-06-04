@@ -1408,14 +1408,16 @@ def GetBestGridPos2D(
     Occultedpixels,
     doPlot,
     dirName,
-    n_sides
+    n_sides,
+    ipixlistHR,
+    minProbcut
 ):
 
     dp_dV_FOV = []
+    ra = []
+    dec = []
+    newpixfinal = []
 
-    #hp.mollview(prob, title="Polygon vertices", cbar=False)  # optional background
-
-    #shape = 'circle'
     for i in range(0, len(newpix)):
         if n_sides == 0:
             xyzpix = hp.pix2vec(reducedNside, newpix[i])
@@ -1427,54 +1429,36 @@ def GetBestGridPos2D(
             dec_center = 90 - np.rad2deg(theta)
             vertices = Tools.get_regular_polygon_vertices(ra_center, dec_center, radius, n_sides, 0)
             ipix_discfull = hp.query_polygon(HRnside, vertices, inclusive=True)
-            '''
-            # Convert vertices to theta/phi for plotting
-            xyz = np.array(vertices)  # shape (N, 3)
-            x, y, z = xyz[:, 0], xyz[:, 1], xyz[:, 2]
-            theta_v, phi_v = hp.vec2ang(np.vstack((x, y, z)).T)
-
-            # Plot polygon vertices on top of the map
-            hp.projscatter(theta_v, phi_v, lonlat=False, marker='o', color='red', s=10, label='Polygon Vertices')
-
-            # Optional: connect vertices with lines
-            theta_v = np.append(theta_v, theta_v[0])
-            phi_v = np.append(phi_v, phi_v[0])
-            hp.projplot(theta_v, phi_v, lonlat=False, color='red')
-            '''
         else:
             raise ValueError("Shape must be 'circle' or 'polygon'.")
+        
+        if len(ipixlistHR) == 0:
+            # No mask needed
+            HRprob = highres[ipix_discfull].sum()
+            ipixlistHR.extend(ipix_discfull)
+        else:
+            # Mask the ipix_discfull with the pixels that are already observed. I think the problem is here
+            maskComputeProb = np.isin(ipix_discfull, ipixlistHR, invert=True)
+            # Obtain list of pixel ID after the mask what has been observed already
+            m_ipix_discfull = ma.compressed(
+                ma.masked_array(ipix_discfull, mask=np.logical_not(maskComputeProb))
+            )
+            HRprob = highres[m_ipix_discfull].sum()
+            ipixlistHR.extend(m_ipix_discfull)
 
-        HRprob = highres[ipix_discfull].sum()
-        dp_dV_FOV.append(HRprob)
-    #plt.show()
-
-    theta, phi = hp.pix2ang(reducedNside, newpix)
-    ra = np.degrees(phi)  # RA in degrees
-    dec = 90 - np.degrees(theta)
+        if HRprob > minProbcut:
+            dp_dV_FOV.append(HRprob)
+            newpixfinal.append(newpix[i])
+            theta, phi = hp.pix2ang(reducedNside, newpix[i])
+            ra.append(np.degrees(phi))  # RA in degrees
+            dec.append(90 - np.degrees(theta))
 
     cat_pix = Table(
-        [newpix, ra, dec, dp_dV_FOV], names=("PIX", "PIXRA", "PIXDEC", "PIXFOVPROB")
+        [newpixfinal, ra, dec, dp_dV_FOV], names=("PIX", "PIXRA", "PIXDEC", "PIXFOVPROB")
     )
-
-    cat_pix["PIXFOVPROB"] = dp_dV_FOV
 
     sortcat1 = cat_pix[np.flipud(np.argsort(cat_pix["PIXFOVPROB"]))]
     first_values = sortcat1[:maxRuns]
-    '''
-    for i in range(0, len(first_values)):
-        vertices = Tools.get_regular_polygon_vertices(first_values["PIXRA"][i], first_values["PIXDEC"][i], radius, 4, 0)
-        xyz = np.array(vertices)  # shape (N, 3)
-        x, y, z = xyz[:, 0], xyz[:, 1], xyz[:, 2]
-        theta_v, phi_v = hp.vec2ang(np.vstack((x, y, z)).T)
-
-        # Plot polygon vertices on top of the map
-        hp.projscatter(theta_v, phi_v, lonlat=False, marker='o', color='red', s=10, label='Polygon Vertices')
-
-    plt.show()
-    '''
-    # mapsize = 200
-    # centerRA = 314
-    # centerDEC = 10
 
     if doPlot:
         path = dirName + "/GridPlot"
