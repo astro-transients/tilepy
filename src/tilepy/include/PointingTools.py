@@ -1417,7 +1417,8 @@ def GetBestGridPos2D(
     ra = []
     dec = []
     newpixfinal = []
-
+    prob1 = prob[newpix]
+    newpix = newpix[np.argsort(prob1)[::-1]]
     for i in range(0, len(newpix)):
         if n_sides == 0:
             xyzpix = hp.pix2vec(reducedNside, newpix[i])
@@ -1435,6 +1436,7 @@ def GetBestGridPos2D(
         if len(ipixlistHR) == 0:
             # No mask needed
             HRprob = highres[ipix_discfull].sum()
+            HRprobf = highres[ipix_discfull].sum()
             ipixlistHR.extend(ipix_discfull)
         else:
             # Mask the ipix_discfull with the pixels that are already observed. I think the problem is here
@@ -1444,21 +1446,22 @@ def GetBestGridPos2D(
                 ma.masked_array(ipix_discfull, mask=np.logical_not(maskComputeProb))
             )
             HRprob = highres[m_ipix_discfull].sum()
+            HRprobf = highres[ipix_discfull].sum()
             ipixlistHR.extend(m_ipix_discfull)
-
         if HRprob > minProbcut:
-            dp_dV_FOV.append(HRprob)
+            dp_dV_FOV.append(HRprobf)
             newpixfinal.append(newpix[i])
             theta, phi = hp.pix2ang(reducedNside, newpix[i])
             ra.append(np.degrees(phi))  # RA in degrees
             dec.append(90 - np.degrees(theta))
-
+        print(HRprob, HRprobf)
     cat_pix = Table(
         [newpixfinal, ra, dec, dp_dV_FOV], names=("PIX", "PIXRA", "PIXDEC", "PIXFOVPROB")
     )
 
     sortcat1 = cat_pix[np.flipud(np.argsort(cat_pix["PIXFOVPROB"]))]
     first_values = sortcat1[:maxRuns]
+    
 
     if doPlot:
         path = dirName + "/GridPlot"
