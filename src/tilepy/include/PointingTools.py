@@ -1454,7 +1454,6 @@ def GetBestGridPos2D(
             theta, phi = hp.pix2ang(reducedNside, newpix[i])
             ra.append(np.degrees(phi))  # RA in degrees
             dec.append(90 - np.degrees(theta))
-        print(HRprob, HRprobf)
     cat_pix = Table(
         [newpixfinal, ra, dec, dp_dV_FOV], names=("PIX", "PIXRA", "PIXDEC", "PIXFOVPROB")
     )
