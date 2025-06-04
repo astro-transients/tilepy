@@ -1454,12 +1454,17 @@ def GetBestGridPos2D(
             theta, phi = hp.pix2ang(reducedNside, newpix[i])
             ra.append(np.degrees(phi))  # RA in degrees
             dec.append(90 - np.degrees(theta))
-    cat_pix = Table(
-        [newpixfinal, ra, dec, dp_dV_FOV], names=("PIX", "PIXRA", "PIXDEC", "PIXFOVPROB")
-    )
 
-    sortcat1 = cat_pix[np.flipud(np.argsort(cat_pix["PIXFOVPROB"]))]
-    first_values = sortcat1[:maxRuns]
+    if len(dp_dV_FOV) > 0:     
+        cat_pix = Table(
+            [newpixfinal, ra, dec, dp_dV_FOV], names=("PIX", "PIXRA", "PIXDEC", "PIXFOVPROB")
+        )
+
+        sortcat1 = cat_pix[np.flipud(np.argsort(cat_pix["PIXFOVPROB"]))]
+        first_values = sortcat1[:maxRuns]
+    else:
+        raise ValueError("No pointing were found with current minProbCut")
+        
     
 
     if doPlot:
@@ -1524,6 +1529,7 @@ def GetBestGridPos3D(
     BestGalsRA = []
     BestGalsDec = []
     galaxx= []
+    cat0 = cat
     for element in range(0, len(SelectedGals)):
         if element < len(SelectedGals):
             dp_dV_FOV1, galax =  ComputePGalinFOV(
@@ -1536,20 +1542,23 @@ def GetBestGridPos3D(
                     UsePix=True,
                 )
         if dp_dV_FOV1 > minProbCut:
-            dp_dV_FOV.append(dp_dV_FOV1)
+            dp_dV_FOV2, galax2 = ComputePGalinFOV(prob, cat0, SelectedGals[element], FOV, totaldPdV, n_sides, UsePix=True )
+            dp_dV_FOV.append(dp_dV_FOV2)
             BestGalsRA.append(SelectedGals[element].ra.deg)
             BestGalsDec.append(SelectedGals[element].dec.deg)
             cat = galax
-            galaxx.append(galax)
 
+    if len(dp_dV_FOV) > 0:
+        cat_pix = Table(
+            [BestGalsRA, BestGalsDec, dp_dV_FOV],
+            names=("PIXRA", "PIXDEC", "PIXFOVPROB"),
+        )
 
-    cat_pix = Table(
-        [BestGalsRA, BestGalsDec, dp_dV_FOV],
-        names=("PIXRA", "PIXDEC", "PIXFOVPROB"),
-    )
+        sortcat = cat_pix[np.flipud(np.argsort(cat_pix["PIXFOVPROB"]))]
+        first_values = sortcat[:maxRuns]
 
-    sortcat = cat_pix[np.flipud(np.argsort(cat_pix["PIXFOVPROB"]))]
-    first_values = sortcat[:maxRuns]
+    else:
+        raise ValueError("No pointing were found with current minProbCut")
 
     if doPlot:
         path = dirName + "/GridPlot"
