@@ -91,7 +91,6 @@ __all__ = [
     "PlotSpaceOcc",
     "PlotSpaceOccTime",
     "PlotSpaceOccTimeRadec",
-    "plot_pixel_availability_healpix",
     "GetBestNSIDE",
     "FillSummary",
 ]
@@ -405,7 +404,7 @@ class Tools:
         return vertices
     
     @classmethod
-    def findmatchingcoords(cls, option, radec1, radec2, reducedNside):
+    def find_matching_coords(cls, option, radec1, radec2, reducedNside):
 
         if option == 1:
             firstvalue1_coords = co.SkyCoord(

@@ -2101,7 +2101,7 @@ def PGWinFoV_Space_NObs(
         #Let's get the list of pixels available at each iteration
         firstvalue1 = first_values1 
 
-        matching_rows1 = Tools.findmatchingcoords(1, firstvalue1, pixlistRROcc, reducedNside)
+        matching_rows1 = Tools.find_matching_coords(1, firstvalue1, pixlistRROcc, reducedNside)
         matching_tables.append(matching_rows1)
 
         radectime = co.SkyCoord(
@@ -2299,7 +2299,7 @@ def PGalinFoV_Space_NObs(
         #Let's get the list of pixels available at each iteration
         firstvalue1 = first_values1 
 
-        matching_rows1 = Tools.findmatchingcoords(1, firstvalue1, pixlistRROcc, reducedNside)
+        matching_rows1 = Tools.find_matching_coords(1, firstvalue1, pixlistRROcc, reducedNside)
         matching_tables.append(matching_rows1)
 
         radectime = co.SkyCoord(
