@@ -1,20 +1,20 @@
 ###############################
-|TilePy|: Tiling for Transients
+|tilepy|: Tiling for Transients
 ###############################
 
 .. image:: _static/tilepy_logo.png
-   :alt: |TilePy| logo
+   :alt: |tilepy| logo
    :align: center
 
 
-|TilePy| is an open-source toolkit for tiling and scheduling observations of large localization regions from transient astronomical events.
+|tilepy| is an open-source toolkit for tiling and scheduling observations of large localization regions from transient astronomical events.
 It supports automated scheduling for both space-based and ground-based telescopes, with flexible configurations and integration with galaxy catalogs to optimize follow-up campaigns.
 
 ***********
 How to Cite
 ***********
 
-To cite |TilePy| in your research, please cite :footcite:`Seglar-Arroyo_2024`.
+To cite |tilepy| in your research, please cite :footcite:`Seglar-Arroyo_2024`.
 
 References
 ----------

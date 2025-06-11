@@ -82,24 +82,24 @@ copyright = f"2023, {author}"
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-html_title = "TilePy"
+html_title = "tilepy"
 
 rst_epilog = r"""
-.. |TilePy| replace:: *Tilepy*
+.. |tilepy| replace:: *tilepy*
 
-.. |TilepyDocs| replace:: `tilepy documentation <https://readthedocs.org/projects/tilepy/badge/?version=implement-readthedocs>`__
+.. |tilepyDocs| replace:: `tilepy documentation <https://readthedocs.org/projects/tilepy/badge/?version=implement-readthedocs>`__
 
-.. |TilepyGitHub| image:: https://img.shields.io/badge/GitHub-tilepy-9400D3?logo=github
+.. |tilepyGitHub| image:: https://img.shields.io/badge/GitHub-tilepy-9400D3?logo=github
    :target: https://github.com/astro-transients/tilepy
-   :alt: Tilepy on GitHub
+   :alt: tilepy on GitHub
 
-.. |TilepyEmail| image:: https://img.shields.io/badge/Email-astro.tilepy@gmail.com-0078D4?logo=gmail
+.. |tilepyEmail| image:: https://img.shields.io/badge/Email-astro.tilepy@gmail.com-0078D4?logo=gmail
    :target: mailto:astro.tilepy@gmail.com
-   :alt: Contact Tilepy Team
+   :alt: Contact tilepy Team
 
 .. |Forum| image:: https://img.shields.io/badge/Forum-Colibri-4B286D?logo=discourse
    :target: https://forum.astro-colibri.science/c/instrumentation-and-tools/tilepy
-   :alt: Tilepy Forum
+   :alt: tilepy Forum
 
 .. |email| image:: /_static/email.svg
    :width: 16px
@@ -171,7 +171,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "_templates"]
 
 
 # Documentation site title (optional; defaults to "<project> v<release> documentation")
-html_title = "TilePy"
+html_title = "tilepy"
 
 htmlhelp_basename = project + "doc"
 
