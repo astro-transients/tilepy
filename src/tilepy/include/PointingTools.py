@@ -402,16 +402,15 @@ class Tools:
             vertices.append((theta_v, phi_v))
 
         return vertices
-    
+
     @classmethod
     def find_matching_coords(cls, option, radec1, radec2, reducedNside):
 
         if option == 1:
             firstvalue1_coords = co.SkyCoord(
-                ra=radec1['PIXRA'] * u.deg,
-                dec=radec1['PIXDEC'] * u.deg
-                )
-            
+                ra=radec1["PIXRA"] * u.deg, dec=radec1["PIXDEC"] * u.deg
+            )
+
             theta, phi = hp.pix2ang(reducedNside, radec2)
             ra = np.rad2deg(phi)
             dec = np.rad2deg(0.5 * np.pi - theta)
@@ -439,7 +438,9 @@ class Tools:
         return unmatched_rows
 
     @classmethod
-    def get_regular_polygon_vertices(cls, ra_center, dec_center, radius_deg, n_sides, rotation_deg):
+    def get_regular_polygon_vertices(
+        cls, ra_center, dec_center, radius_deg, n_sides, rotation_deg
+    ):
         """
         Generate a regular polygon's vertices on the celestial sphere.
 
@@ -459,7 +460,7 @@ class Tools:
         ra_vertices = [(ra_center + d_ra + 360) % 360 for d_ra in ra_offsets]
         dec_vertices = [dec_center + d_dec for d_dec in dec_offsets]
 
-        coords = SkyCoord(ra=ra_vertices*u.deg, dec=dec_vertices*u.deg)
+        coords = SkyCoord(ra=ra_vertices * u.deg, dec=dec_vertices * u.deg)
         return np.array([coord.cartesian.xyz.value for coord in coords])
 
 
@@ -1409,7 +1410,7 @@ def GetBestGridPos2D(
     dirName,
     n_sides,
     ipixlistHR,
-    minProbcut
+    minProbcut,
 ):
 
     dp_dV_FOV = []
@@ -1421,17 +1422,19 @@ def GetBestGridPos2D(
     for i in range(0, len(newpix)):
         if n_sides == 0:
             xyzpix = hp.pix2vec(reducedNside, newpix[i])
-            #xyzpix = np.column_stack(xyzpix1)
+            # xyzpix = np.column_stack(xyzpix1)
             ipix_discfull = hp.query_disc(HRnside, xyzpix, np.deg2rad(radius))
         elif n_sides > 0:
             theta, phi = hp.pix2ang(reducedNside, newpix[i])
             ra_center = np.rad2deg(phi)
             dec_center = 90 - np.rad2deg(theta)
-            vertices = Tools.get_regular_polygon_vertices(ra_center, dec_center, radius, n_sides, 0)
+            vertices = Tools.get_regular_polygon_vertices(
+                ra_center, dec_center, radius, n_sides, 0
+            )
             ipix_discfull = hp.query_polygon(HRnside, vertices, inclusive=True)
         else:
             raise ValueError("Shape must be 'circle' or 'polygon'.")
-        
+
         if len(ipixlistHR) == 0:
             # No mask needed
             HRprob = highres[ipix_discfull].sum()
@@ -1454,17 +1457,16 @@ def GetBestGridPos2D(
             ra.append(np.degrees(phi))  # RA in degrees
             dec.append(90 - np.degrees(theta))
 
-    if len(dp_dV_FOV) > 0:     
+    if len(dp_dV_FOV) > 0:
         cat_pix = Table(
-            [newpixfinal, ra, dec, dp_dV_FOV], names=("PIX", "PIXRA", "PIXDEC", "PIXFOVPROB")
+            [newpixfinal, ra, dec, dp_dV_FOV],
+            names=("PIX", "PIXRA", "PIXDEC", "PIXFOVPROB"),
         )
 
         sortcat1 = cat_pix[np.flipud(np.argsort(cat_pix["PIXFOVPROB"]))]
         first_values = sortcat1[:maxRuns]
     else:
         raise ValueError("No pointing were found with current minProbCut")
-        
-    
 
     if doPlot:
         path = dirName + "/GridPlot"
@@ -1518,30 +1520,32 @@ def GetBestGridPos3D(
     dirName,
     reducedNside,
     Occultedpixels,
-    minProbCut
+    minProbCut,
 ):
-    
+
     prob1 = prob[newpix]
     galpix = galpix[np.argsort(prob1)[::-1]]
     SelectedGals = galpix
     dp_dV_FOV = []
     BestGalsRA = []
     BestGalsDec = []
-    galaxx= []
+    galaxx = []
     cat0 = cat
     for element in range(0, len(SelectedGals)):
         if element < len(SelectedGals):
-            dp_dV_FOV1, galax =  ComputePGalinFOV(
-                    prob,
-                    cat,
-                    SelectedGals[element],
-                    FOV,
-                    totaldPdV,
-                    n_sides,
-                    UsePix=True,
-                )
+            dp_dV_FOV1, galax = ComputePGalinFOV(
+                prob,
+                cat,
+                SelectedGals[element],
+                FOV,
+                totaldPdV,
+                n_sides,
+                UsePix=True,
+            )
         if dp_dV_FOV1 > minProbCut:
-            dp_dV_FOV2, galax2 = ComputePGalinFOV(prob, cat0, SelectedGals[element], FOV, totaldPdV, n_sides, UsePix=True )
+            dp_dV_FOV2, galax2 = ComputePGalinFOV(
+                prob, cat0, SelectedGals[element], FOV, totaldPdV, n_sides, UsePix=True
+            )
             dp_dV_FOV.append(dp_dV_FOV2)
             BestGalsRA.append(SelectedGals[element].ra.deg)
             BestGalsDec.append(SelectedGals[element].dec.deg)
@@ -1569,12 +1573,12 @@ def GetBestGridPos3D(
         hp.graticule()
 
         # Filter out rows with NaN in dp_dV
-        mask = ~np.isnan(cat['dp_dV'])
+        mask = ~np.isnan(cat["dp_dV"])
         cat_clean = cat[mask]
 
         # Sort descending by dp_dV
         cat_sorted = cat_clean.copy()
-        cat_sorted.sort('dp_dV', reverse=True)
+        cat_sorted.sort("dp_dV", reverse=True)
         # Select top 100 galaxies with highest dp_dV
         top100 = cat_sorted[:100]
 
@@ -1676,11 +1680,13 @@ def PlotSpaceOccTime(dirName, pixels_by_time, times):
     plt.figure(figsize=(10, 6))
 
     for idx, (pixel, available_times) in enumerate(pixel_availability.items()):
-        plt.scatter(available_times, [pixel]*len(available_times), label=f'Pixel {pixel}')
+        plt.scatter(
+            available_times, [pixel] * len(available_times), label=f"Pixel {pixel}"
+        )
 
-    plt.xlabel('Time')
-    plt.ylabel('Pixel')
-    plt.title('Pixel Availability Over Time')
+    plt.xlabel("Time")
+    plt.ylabel("Pixel")
+    plt.title("Pixel Availability Over Time")
     plt.grid(True)
     plt.tight_layout()
     plt.savefig("%s/Occ_Pointing_Times.png" % (path))
@@ -1707,20 +1713,23 @@ def PlotSpaceOccTimeRadec(dirName, pixels_by_time, times, NSIDE):
         dec = 90 - np.degrees(theta)
 
         yval = idx  # Unique Y value per pixel
-        plt.scatter(available_times, [yval] * len(available_times), label=f'Pixel {pixel}', s=10)
+        plt.scatter(
+            available_times, [yval] * len(available_times), label=f"Pixel {pixel}", s=10
+        )
 
         yticks.append(yval)
         yticklabels.append(f"RA={ra:.1f}°, Dec={dec:.1f}°")
 
-    plt.xlabel('Time')
-    plt.ylabel('Sky Coordinates (RA, Dec)')
+    plt.xlabel("Time")
+    plt.ylabel("Sky Coordinates (RA, Dec)")
     plt.yticks(yticks, yticklabels, fontsize=8)
-    plt.title('Pixel Availability Over Time')
+    plt.title("Pixel Availability Over Time")
     plt.grid(True)
     plt.tight_layout()
 
     plt.savefig(os.path.join(path, "Occ_Pointing_Times_Radec.png"))
     plt.close()
+
 
 def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
     nside = obspar.reducedNside
@@ -2304,32 +2313,41 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, n_sides, UsePix):
             dp_dV[targetCoord2.separation(targetCoord).deg <= radius].sum() / totaldPdV
         )
         return Pgal_inFoV, cat[targetCoord2.separation(targetCoord).deg > radius]
-    
+
     elif n_sides > 0:
-            vertices_xyz = Tools.get_regular_polygon_vertices(targetCoord.ra.deg, targetCoord.dec.deg, radius, 4, 0)
+        vertices_xyz = Tools.get_regular_polygon_vertices(
+            targetCoord.ra.deg, targetCoord.dec.deg, radius, 4, 0
+        )
 
-            # 2. Convert the vertices from Cartesian to RA/Dec degrees
-            coords = SkyCoord(x=vertices_xyz[:,0], y=vertices_xyz[:,1], z=vertices_xyz[:,2], representation_type='cartesian')
+        # 2. Convert the vertices from Cartesian to RA/Dec degrees
+        coords = SkyCoord(
+            x=vertices_xyz[:, 0],
+            y=vertices_xyz[:, 1],
+            z=vertices_xyz[:, 2],
+            representation_type="cartesian",
+        )
 
-            # Convert to spherical representation (ICRS or default frame) explicitly
-            coords = coords.represent_as('spherical')
+        # Convert to spherical representation (ICRS or default frame) explicitly
+        coords = coords.represent_as("spherical")
 
-            ra_vertices = coords.lon.deg  # .lon is RA equivalent
-            dec_vertices = coords.lat.deg  # .lat is Dec equivalent
+        ra_vertices = coords.lon.deg  # .lon is RA equivalent
+        dec_vertices = coords.lat.deg  # .lat is Dec equivalent
 
-            # 3. Build the polygon path in RA/Dec
-            polygon_path = Path(np.column_stack((ra_vertices, dec_vertices)))
+        # 3. Build the polygon path in RA/Dec
+        polygon_path = Path(np.column_stack((ra_vertices, dec_vertices)))
 
-            # 4. Prepare your galaxies' RA, Dec arrays (in degrees)
-            galaxy_positions = np.column_stack((targetCoord2.ra.deg, targetCoord2.dec.deg))  # Replace galaxy_ra, galaxy_dec with your arrays
+        # 4. Prepare your galaxies' RA, Dec arrays (in degrees)
+        galaxy_positions = np.column_stack(
+            (targetCoord2.ra.deg, targetCoord2.dec.deg)
+        )  # Replace galaxy_ra, galaxy_dec with your arrays
 
-            # 5. Check which galaxies fall inside the polygon
-            inside_mask = polygon_path.contains_points(galaxy_positions)
+        # 5. Check which galaxies fall inside the polygon
+        inside_mask = polygon_path.contains_points(galaxy_positions)
 
-            # 6. Calculate fraction inside FoV
-            Pgal_inFoV = dp_dV[inside_mask].sum() / totaldPdV
+        # 6. Calculate fraction inside FoV
+        Pgal_inFoV = dp_dV[inside_mask].sum() / totaldPdV
 
-            return Pgal_inFoV, cat[~inside_mask]
+        return Pgal_inFoV, cat[~inside_mask]
 
     else:
         raise ValueError("Shape must be 'circle' or 'polygon'.")
@@ -2345,15 +2363,15 @@ def ModifyCatalogue(prob, cat, FOV, totaldPdV, nside):
     dp_dV_FOV = []
     for element in range(0, len(cat["dp_dV"])):
         if element < len(SelectedGals["dp_dV"]):
-            dp_dV_FOV1, galax =  ComputePGalinFOV(
-                    prob,
-                    cat,
-                    SelectedGals[element],
-                    FOV,
-                    totaldPdV,
-                    nside,
-                    UsePix=False,
-                )
+            dp_dV_FOV1, galax = ComputePGalinFOV(
+                prob,
+                cat,
+                SelectedGals[element],
+                FOV,
+                totaldPdV,
+                nside,
+                UsePix=False,
+            )
             dp_dV_FOV.append(dp_dV_FOV1)
         else:
             dp_dV_FOV.append(0)

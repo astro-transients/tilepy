@@ -261,14 +261,16 @@ def GetUniversalSchedule(obspar):
             if not os.path.exists(dirName):
                 os.makedirs(dirName)
             galaxies = obspar[0].datasetDir + obspar[0].galcatName
-            SuggestedPointings, SatTimes, SAA, RadecsVsTimes, TestTime = PGalinFoV_Space_NObs(
-                skymap,
-                raw_map.name_event,
-                ObservationTime,
-                obspar[0].pointingsFile,
-                galaxies,
-                obspar,
-                dirName,
+            SuggestedPointings, SatTimes, SAA, RadecsVsTimes, TestTime = (
+                PGalinFoV_Space_NObs(
+                    skymap,
+                    raw_map.name_event,
+                    ObservationTime,
+                    obspar[0].pointingsFile,
+                    galaxies,
+                    obspar,
+                    dirName,
+                )
             )
             print(SatTimes, SAA)
 
@@ -291,13 +293,15 @@ def GetUniversalSchedule(obspar):
             dirName = "%s/PGWinFoV_Space_NObs" % outputDir
             if not os.path.exists(dirName):
                 os.makedirs(dirName)
-            SuggestedPointings, SatTimes, SAA, RadecsVsTimes, TestTime = PGWinFoV_Space_NObs(
-                skymap,
-                raw_map.name_event,
-                ObservationTime,
-                obspar[0].pointingsFile,
-                obspar,
-                dirName,
+            SuggestedPointings, SatTimes, SAA, RadecsVsTimes, TestTime = (
+                PGWinFoV_Space_NObs(
+                    skymap,
+                    raw_map.name_event,
+                    ObservationTime,
+                    obspar[0].pointingsFile,
+                    obspar,
+                    dirName,
+                )
             )
 
     else:

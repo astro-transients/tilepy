@@ -97,8 +97,8 @@ class ObservationParameters(object):
         doRank=False,
         downloadMaxRetry=0,
         downloadWaitPeriodRetry=20,
-        shape = None,
-        numberSides = None,
+        shape=None,
+        numberSides=None,
     ):
         self.obs_name = obs_name
         self.event_name = event_name
@@ -124,8 +124,8 @@ class ObservationParameters(object):
         self.minDuration = minDuration
         self.useGreytime = useGreytime
         self.minSlewing = minSlewing
-        self.shape = shape,
-        self.numberSides = numberSides,
+        self.shape = (shape,)
+        self.numberSides = (numberSides,)
 
         # Tiling
         self.locCut90 = locCut90

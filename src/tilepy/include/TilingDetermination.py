@@ -1851,7 +1851,7 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
         dirName,
         obspar.numberSides,
         pixlistHR,
-        obspar.minProbcut
+        obspar.minProbcut,
     )
 
     # ObsName = [obspar.name for j in range(len(first_values))]
@@ -1957,7 +1957,7 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
         dirName,
         reducedNside,
         Occultedpixels,
-        obspar.minProbcut
+        obspar.minProbcut,
     )
 
     ObsName = [obspar.obs_name for j in range(len(first_values))]
@@ -2044,7 +2044,7 @@ def PGWinFoV_Space_NObs(
         dirName,
         obspar.numberSides,
         pixlistHR,
-        obspar.minProbcut
+        obspar.minProbcut,
     )
 
     # FOR SPACE ########################################################
@@ -2077,7 +2077,7 @@ def PGWinFoV_Space_NObs(
     i = 0
     current_time = ObservationTime0
     start_time = ObservationTime0
-    AvailablePixPerTime= [] 
+    AvailablePixPerTime = []
     TestTime = []
     RadecsVsTimes = []
     matching_tables = []
@@ -2098,18 +2098,19 @@ def PGWinFoV_Space_NObs(
             obspar.moonDown,
         )
 
-        #Let's get the list of pixels available at each iteration
-        firstvalue1 = first_values1 
+        # Let's get the list of pixels available at each iteration
+        firstvalue1 = first_values1
 
-        matching_rows1 = Tools.find_matching_coords(1, firstvalue1, pixlistRROcc, reducedNside)
+        matching_rows1 = Tools.find_matching_coords(
+            1, firstvalue1, pixlistRROcc, reducedNside
+        )
         matching_tables.append(matching_rows1)
 
         radectime = co.SkyCoord(
-            ra=matching_rows1['PIXRA'] * u.deg,
-            dec=matching_rows1['PIXDEC'] * u.deg
-            )
+            ra=matching_rows1["PIXRA"] * u.deg, dec=matching_rows1["PIXDEC"] * u.deg
+        )
         theta = np.radians(90.0 - matching_rows1["PIXDEC"])
-        phi = np.radians(matching_rows1["PIXRA"])            # phi = longitude
+        phi = np.radians(matching_rows1["PIXRA"])  # phi = longitude
         pix_idx = hp.ang2pix(reducedNside, theta, phi, nest=False)
 
         RadecsVsTimes.append(radectime)
@@ -2242,7 +2243,7 @@ def PGalinFoV_Space_NObs(
         dirName,
         reducedNside,
         Occultedpixels,
-        obspar.minProbcut
+        obspar.minProbcut,
     )
 
     # FOR SPACE ######################################################
@@ -2296,20 +2297,20 @@ def PGalinFoV_Space_NObs(
             obspar.moonDown,
         )
 
-        #Let's get the list of pixels available at each iteration
-        firstvalue1 = first_values1 
+        # Let's get the list of pixels available at each iteration
+        firstvalue1 = first_values1
 
-        matching_rows1 = Tools.find_matching_coords(1, firstvalue1, pixlistRROcc, reducedNside)
+        matching_rows1 = Tools.find_matching_coords(
+            1, firstvalue1, pixlistRROcc, reducedNside
+        )
         matching_tables.append(matching_rows1)
 
         radectime = co.SkyCoord(
-            ra=matching_rows1['PIXRA'] * u.deg,
-            dec=matching_rows1['PIXDEC'] * u.deg
-            )
+            ra=matching_rows1["PIXRA"] * u.deg, dec=matching_rows1["PIXDEC"] * u.deg
+        )
         theta = np.radians(90.0 - matching_rows1["PIXDEC"])
-        phi = np.radians(matching_rows1["PIXRA"])            # phi = longitude
+        phi = np.radians(matching_rows1["PIXRA"])  # phi = longitude
         pix_idx = hp.ang2pix(reducedNside, theta, phi, nest=False)
-
 
         RadecsVsTimes.append(radectime)
         AvailablePixPerTime.append(pix_idx)
