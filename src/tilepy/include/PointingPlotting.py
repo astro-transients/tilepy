@@ -715,3 +715,34 @@ def PlotPointings_Pretty(
         "%s/Plot_PrettyMap_%s.png" % (dirName, name), dpi=300, bbox_inches="tight"
     )
     plt.close()
+
+
+def plot_pixel_availability_healpix(dirName, pixels_by_time, times, nside):
+    path = dirName + "/Occ_Space_Obs"
+    if not os.path.exists(path):
+        os.mkdir(path, 493)
+    fig = plt.figure(figsize=(10, 7))
+    ax = fig.add_subplot(111, projection="3d")
+
+    # Construct arrays with the dimensions for the 16 bars.
+    dx = dy = dz = 0.1
+
+    time_float = mdates.date2num(times)
+    for i in range(len(pixels_by_time)):
+        theta, phi = hp.pix2ang(nside, pixels_by_time[i])
+        ra = np.rad2deg(phi)
+        dec = np.rad2deg(0.5 * np.pi - theta)
+        radec = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+
+        ax.bar3d(
+            radec.ra.deg, radec.dec.deg, time_float[i], dx, dy, dz, zsort="average"
+        )
+
+    ax.set_xlabel("RA (deg)")
+    ax.set_ylabel("Dec (deg)")
+    ax.set_zlabel("Time")
+    ax.set_title("HEALPix Pixel Availability Wireframe")
+
+    ax.zaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d\n%H:%M"))
+    plt.savefig("%s/Occ_Pointing_Times_Vis.png" % (path))
+    plt.close()

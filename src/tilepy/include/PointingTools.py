@@ -43,6 +43,8 @@ from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
 from skyfield.api import E, N, load, wgs84
+import matplotlib.dates as mdates
+from matplotlib.path import Path
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -87,6 +89,8 @@ __all__ = [
     "GetSunOccultedPix",
     "SAA_Times",
     "PlotSpaceOcc",
+    "PlotSpaceOccTime",
+    "PlotSpaceOccTimeRadec",
     "GetBestNSIDE",
     "FillSummary",
 ]
@@ -398,6 +402,66 @@ class Tools:
             vertices.append((theta_v, phi_v))
 
         return vertices
+
+    @classmethod
+    def find_matching_coords(cls, option, radec1, radec2, reducedNside):
+
+        if option == 1:
+            firstvalue1_coords = co.SkyCoord(
+                ra=radec1["PIXRA"] * u.deg, dec=radec1["PIXDEC"] * u.deg
+            )
+
+            theta, phi = hp.pix2ang(reducedNside, radec2)
+            ra = np.rad2deg(phi)
+            dec = np.rad2deg(0.5 * np.pi - theta)
+            radec = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+
+            # Match each radec coordinate to closest in firstvalue1
+            idx, sep2d, _ = firstvalue1_coords.match_to_catalog_sky(radec)
+
+            # Define a small tolerance for "common" (e.g. 1 arcsec)
+            tolerance = 1.0 * u.arcsec
+            mask_no_match = sep2d > tolerance
+
+            # Get matching rows
+            unmatched_rows = radec1[mask_no_match]
+
+        if option == 2:
+            idx, sep2d, _ = radec2.match_to_catalog_sky(radec1)
+            # Define a small tolerance for "common" (e.g. 1 arcsec)
+            tolerance = 1.0 * u.arcsec
+            mask = sep2d < tolerance
+
+            # Get matching rows
+            unmatched_rows = radec1[idx[mask]]
+
+        return unmatched_rows
+
+    @classmethod
+    def get_regular_polygon_vertices(
+        cls, ra_center, dec_center, radius_deg, n_sides, rotation_deg
+    ):
+        """
+        Generate a regular polygon's vertices on the celestial sphere.
+
+        Parameters:
+        - ra_center, dec_center: center in degrees
+        - radius_deg: angular radius from center to each vertex
+        - n_sides: number of polygon sides
+        - rotation_deg: optional rotation angle (degrees)
+
+        Returns:
+        - vertices (np.ndarray): (N, 3) array of unit vectors
+        """
+        angles = np.linspace(0, 360, n_sides, endpoint=False) + rotation_deg
+        ra_offsets = radius_deg * np.cos(np.radians(angles))
+        dec_offsets = radius_deg * np.sin(np.radians(angles))
+
+        ra_vertices = [(ra_center + d_ra + 360) % 360 for d_ra in ra_offsets]
+        dec_vertices = [dec_center + d_dec for d_dec in dec_offsets]
+
+        coords = SkyCoord(ra=ra_vertices * u.deg, dec=dec_vertices * u.deg)
+        return np.array([coord.cartesian.xyz.value for coord in coords])
 
 
 class Observer:
@@ -1344,34 +1408,65 @@ def GetBestGridPos2D(
     Occultedpixels,
     doPlot,
     dirName,
+    n_sides,
+    ipixlistHR,
+    minProbcut,
 ):
 
-    xyzpix1 = hp.pix2vec(reducedNside, newpix)
-    xyzpix = np.column_stack(xyzpix1)
-
     dp_dV_FOV = []
-
+    ra = []
+    dec = []
+    newpixfinal = []
+    prob1 = prob[newpix]
+    newpix = newpix[np.argsort(prob1)[::-1]]
     for i in range(0, len(newpix)):
-        ipix_discfull = hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
-        HRprob = highres[ipix_discfull].sum()
-        dp_dV_FOV.append(HRprob)
+        if n_sides == 0:
+            xyzpix = hp.pix2vec(reducedNside, newpix[i])
+            # xyzpix = np.column_stack(xyzpix1)
+            ipix_discfull = hp.query_disc(HRnside, xyzpix, np.deg2rad(radius))
+        elif n_sides > 0:
+            theta, phi = hp.pix2ang(reducedNside, newpix[i])
+            ra_center = np.rad2deg(phi)
+            dec_center = 90 - np.rad2deg(theta)
+            vertices = Tools.get_regular_polygon_vertices(
+                ra_center, dec_center, radius, n_sides, 0
+            )
+            ipix_discfull = hp.query_polygon(HRnside, vertices, inclusive=True)
+        else:
+            raise ValueError("Shape must be 'circle' or 'polygon'.")
 
-    theta, phi = hp.pix2ang(reducedNside, newpix)
-    ra = np.degrees(phi)  # RA in degrees
-    dec = 90 - np.degrees(theta)
+        if len(ipixlistHR) == 0:
+            # No mask needed
+            HRprob = highres[ipix_discfull].sum()
+            HRprobf = highres[ipix_discfull].sum()
+            ipixlistHR.extend(ipix_discfull)
+        else:
+            # Mask the ipix_discfull with the pixels that are already observed. I think the problem is here
+            maskComputeProb = np.isin(ipix_discfull, ipixlistHR, invert=True)
+            # Obtain list of pixel ID after the mask what has been observed already
+            m_ipix_discfull = ma.compressed(
+                ma.masked_array(ipix_discfull, mask=np.logical_not(maskComputeProb))
+            )
+            HRprob = highres[m_ipix_discfull].sum()
+            HRprobf = highres[ipix_discfull].sum()
+            ipixlistHR.extend(m_ipix_discfull)
+        if HRprob > minProbcut:
+            dp_dV_FOV.append(HRprobf)
+            newpixfinal.append(newpix[i])
+            theta, phi = hp.pix2ang(reducedNside, newpix[i])
+            ra.append(np.degrees(phi))  # RA in degrees
+            dec.append(90 - np.degrees(theta))
 
-    cat_pix = Table(
-        [newpix, ra, dec, dp_dV_FOV], names=("PIX", "PIXRA", "PIXDEC", "PIXFOVPROB")
-    )
+    if len(dp_dV_FOV) > 0:
+        cat_pix = Table(
+            [newpixfinal, ra, dec, dp_dV_FOV],
+            names=("PIX", "PIXRA", "PIXDEC", "PIXFOVPROB"),
+        )
 
-    cat_pix["PIXFOVPROB"] = dp_dV_FOV
-
-    sortcat1 = cat_pix[np.flipud(np.argsort(cat_pix["PIXFOVPROB"]))]
-    first_values = sortcat1[:maxRuns]
-
-    # mapsize = 200
-    # centerRA = 314
-    # centerDEC = 10
+        sortcat1 = cat_pix[np.flipud(np.argsort(cat_pix["PIXFOVPROB"]))]
+        first_values = sortcat1[:maxRuns]
+    else:
+        raise ValueError("No pointing were found with current minProbCut")
 
     if doPlot:
         path = dirName + "/GridPlot"
@@ -1379,7 +1474,7 @@ def GetBestGridPos2D(
             os.mkdir(path, 493)
 
         # mpl.rcParams.update({'font.size':14})
-        hp.mollview(prob)
+        hp.gnomview(prob, rot=(143, 10), xsize=1000, ysize=1000)
         hp.graticule()
         try:
             tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
@@ -1419,41 +1514,54 @@ def GetBestGridPos3D(
     FOV,
     totaldPdV,
     HRnside,
-    UsePix,
+    n_sides,
     maxRuns,
     doPlot,
     dirName,
     reducedNside,
     Occultedpixels,
+    minProbCut,
 ):
+
+    prob1 = prob[newpix]
+    galpix = galpix[np.argsort(prob1)[::-1]]
     SelectedGals = galpix
     dp_dV_FOV = []
+    BestGalsRA = []
+    BestGalsDec = []
+    galaxx = []
+    cat0 = cat
     for element in range(0, len(SelectedGals)):
         if element < len(SelectedGals):
-            dp_dV_FOV.append(
-                ComputePGalinFOV(
-                    prob,
-                    cat,
-                    SelectedGals[element],
-                    FOV,
-                    totaldPdV,
-                    reducedNside,
-                    UsePix=True,
-                )
+            dp_dV_FOV1, galax = ComputePGalinFOV(
+                prob,
+                cat,
+                SelectedGals[element],
+                FOV,
+                totaldPdV,
+                n_sides,
+                UsePix=True,
             )
-        else:
-            dp_dV_FOV.append(0)
+        if dp_dV_FOV1 > minProbCut:
+            dp_dV_FOV2, galax2 = ComputePGalinFOV(
+                prob, cat0, SelectedGals[element], FOV, totaldPdV, n_sides, UsePix=True
+            )
+            dp_dV_FOV.append(dp_dV_FOV2)
+            BestGalsRA.append(SelectedGals[element].ra.deg)
+            BestGalsDec.append(SelectedGals[element].dec.deg)
+            cat = galax
 
-    print("Length of SelectedGals:", len(SelectedGals))
-    print("Length of dp_dV_FOV[:lengthSG]:", len(dp_dV_FOV))
+    if len(dp_dV_FOV) > 0:
+        cat_pix = Table(
+            [BestGalsRA, BestGalsDec, dp_dV_FOV],
+            names=("PIXRA", "PIXDEC", "PIXFOVPROB"),
+        )
 
-    cat_pix = Table(
-        [SelectedGals.ra.deg, SelectedGals.dec.deg, dp_dV_FOV],
-        names=("PIXRA", "PIXDEC", "PIXFOVPROB"),
-    )
+        sortcat = cat_pix[np.flipud(np.argsort(cat_pix["PIXFOVPROB"]))]
+        first_values = sortcat[:maxRuns]
 
-    sortcat = cat_pix[np.flipud(np.argsort(cat_pix["PIXFOVPROB"]))]
-    first_values = sortcat[:maxRuns]
+    else:
+        raise ValueError("No pointing were found with current minProbCut")
 
     if doPlot:
         path = dirName + "/GridPlot"
@@ -1461,8 +1569,29 @@ def GetBestGridPos3D(
             os.mkdir(path, 493)
 
         # mpl.rcParams.update({'font.size':14})
-        hp.mollview(prob)
+        hp.gnomview(prob, rot=(143, 10), xsize=500, ysize=500)
         hp.graticule()
+
+        # Filter out rows with NaN in dp_dV
+        mask = ~np.isnan(cat["dp_dV"])
+        cat_clean = cat[mask]
+
+        # Sort descending by dp_dV
+        cat_sorted = cat_clean.copy()
+        cat_sorted.sort("dp_dV", reverse=True)
+        # Select top 100 galaxies with highest dp_dV
+        top100 = cat_sorted[:100]
+
+        # Plot with projplot
+        hp.visufunc.projplot(
+            top100["RAJ2000"],
+            top100["DEJ2000"],
+            "r.",
+            lonlat=True,
+            coord="C",
+            linewidth=0.1,
+        )
+
         try:
             tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
             ra2 = np.rad2deg(pp)
@@ -1476,6 +1605,7 @@ def GetBestGridPos3D(
                 coord="C",
                 linewidth=0.1,
             )
+
         except Exception:
             print("No occulted pix")
 
@@ -1499,7 +1629,7 @@ def PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values):
         os.mkdir(path, 493)
 
     # mpl.rcParams.update({'font.size':14})
-    hp.mollview(prob)
+    hp.gnomview(prob, rot=(143, 10), xsize=1000, ysize=1000)
     hp.graticule()
     try:
         tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
@@ -1526,6 +1656,78 @@ def PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values):
         linewidth=0.1,
     )
     plt.savefig("%s/Occ_Pointing.png" % (path))
+    plt.close()
+
+
+def map_pixel_availability(pixels_by_time, times):
+    pixel_availability = {}
+
+    for time, pixel_list in zip(times, pixels_by_time):
+        for pixel in pixel_list:
+            if pixel not in pixel_availability:
+                pixel_availability[pixel] = []
+            pixel_availability[pixel].append(time)
+    return pixel_availability
+
+
+def PlotSpaceOccTime(dirName, pixels_by_time, times):
+    path = dirName + "/Occ_Space_Obs"
+    if not os.path.exists(path):
+        os.mkdir(path, 493)
+
+    pixel_availability = map_pixel_availability(pixels_by_time, times)
+
+    plt.figure(figsize=(10, 6))
+
+    for idx, (pixel, available_times) in enumerate(pixel_availability.items()):
+        plt.scatter(
+            available_times, [pixel] * len(available_times), label=f"Pixel {pixel}"
+        )
+
+    plt.xlabel("Time")
+    plt.ylabel("Pixel")
+    plt.title("Pixel Availability Over Time")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig("%s/Occ_Pointing_Times.png" % (path))
+    plt.close()
+
+
+def PlotSpaceOccTimeRadec(dirName, pixels_by_time, times, NSIDE):
+    path = os.path.join(dirName, "Occ_Space_Obs")
+    os.makedirs(path, mode=0o755, exist_ok=True)
+
+    pixel_availability = map_pixel_availability(pixels_by_time, times)
+
+    num_pixels = len(pixel_availability)
+    fig_height = max(6, num_pixels * 0.2)  # Scale height dynamically
+
+    plt.figure(figsize=(12, fig_height))
+
+    yticks = []
+    yticklabels = []
+
+    for idx, (pixel, available_times) in enumerate(pixel_availability.items()):
+        theta, phi = hp.pix2ang(NSIDE, pixel, nest=False)
+        ra = np.degrees(phi)
+        dec = 90 - np.degrees(theta)
+
+        yval = idx  # Unique Y value per pixel
+        plt.scatter(
+            available_times, [yval] * len(available_times), label=f"Pixel {pixel}", s=10
+        )
+
+        yticks.append(yval)
+        yticklabels.append(f"RA={ra:.1f}°, Dec={dec:.1f}°")
+
+    plt.xlabel("Time")
+    plt.ylabel("Sky Coordinates (RA, Dec)")
+    plt.yticks(yticks, yticklabels, fontsize=8)
+    plt.title("Pixel Availability Over Time")
+    plt.grid(True)
+    plt.tight_layout()
+
+    plt.savefig(os.path.join(path, "Occ_Pointing_Times_Radec.png"))
     plt.close()
 
 
@@ -2079,7 +2281,7 @@ def SubstractGalaxiesCircle(
     return newgalaxies, P_GW, P_Gal, talreadysumipixarray
 
 
-def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, nside, UsePix):
+def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, n_sides, UsePix):
     """
     Computes probability Pgal in FoV
     """
@@ -2106,12 +2308,49 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, nside, UsePix):
     radius = FOV
 
     # translate pixel indices to coordinates
+    if n_sides == 0:
+        Pgal_inFoV = (
+            dp_dV[targetCoord2.separation(targetCoord).deg <= radius].sum() / totaldPdV
+        )
+        return Pgal_inFoV, cat[targetCoord2.separation(targetCoord).deg > radius]
 
-    Pgal_inFoV = (
-        dp_dV[targetCoord2.separation(targetCoord).deg <= radius].sum() / totaldPdV
-    )
+    elif n_sides > 0:
+        vertices_xyz = Tools.get_regular_polygon_vertices(
+            targetCoord.ra.deg, targetCoord.dec.deg, radius, 4, 0
+        )
 
-    return Pgal_inFoV
+        # 2. Convert the vertices from Cartesian to RA/Dec degrees
+        coords = SkyCoord(
+            x=vertices_xyz[:, 0],
+            y=vertices_xyz[:, 1],
+            z=vertices_xyz[:, 2],
+            representation_type="cartesian",
+        )
+
+        # Convert to spherical representation (ICRS or default frame) explicitly
+        coords = coords.represent_as("spherical")
+
+        ra_vertices = coords.lon.deg  # .lon is RA equivalent
+        dec_vertices = coords.lat.deg  # .lat is Dec equivalent
+
+        # 3. Build the polygon path in RA/Dec
+        polygon_path = Path(np.column_stack((ra_vertices, dec_vertices)))
+
+        # 4. Prepare your galaxies' RA, Dec arrays (in degrees)
+        galaxy_positions = np.column_stack(
+            (targetCoord2.ra.deg, targetCoord2.dec.deg)
+        )  # Replace galaxy_ra, galaxy_dec with your arrays
+
+        # 5. Check which galaxies fall inside the polygon
+        inside_mask = polygon_path.contains_points(galaxy_positions)
+
+        # 6. Calculate fraction inside FoV
+        Pgal_inFoV = dp_dV[inside_mask].sum() / totaldPdV
+
+        return Pgal_inFoV, cat[~inside_mask]
+
+    else:
+        raise ValueError("Shape must be 'circle' or 'polygon'.")
 
 
 def ModifyCatalogue(prob, cat, FOV, totaldPdV, nside):
@@ -2124,17 +2363,16 @@ def ModifyCatalogue(prob, cat, FOV, totaldPdV, nside):
     dp_dV_FOV = []
     for element in range(0, len(cat["dp_dV"])):
         if element < len(SelectedGals["dp_dV"]):
-            dp_dV_FOV.append(
-                ComputePGalinFOV(
-                    prob,
-                    cat,
-                    SelectedGals[element],
-                    FOV,
-                    totaldPdV,
-                    nside,
-                    UsePix=False,
-                )
+            dp_dV_FOV1, galax = ComputePGalinFOV(
+                prob,
+                cat,
+                SelectedGals[element],
+                FOV,
+                totaldPdV,
+                nside,
+                UsePix=False,
             )
+            dp_dV_FOV.append(dp_dV_FOV1)
         else:
             dp_dV_FOV.append(0)
 

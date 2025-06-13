@@ -71,7 +71,9 @@ eventName = args.eventName
 if not os.path.exists(outDir):
     os.makedirs(outDir)
 
-skymap = "https://gracedb.ligo.org/api/superevents/S190728q/files/GW190728_064510_PublicationSamples_flattened.fits.gz,0"
+skymap = (
+    "https://gracedb.ligo.org/api/superevents/S250328ae/files/Bilby.multiorder.fits,0"
+)
 
 ObsArray = ["SWIFT"]
 parameters = []
