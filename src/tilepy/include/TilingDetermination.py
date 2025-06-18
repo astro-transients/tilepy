@@ -1023,9 +1023,6 @@ def PGWinFoV_NObs(
     while (i < 500) & any(SameNight):
         for j in range(len(NewActiveObs)):
             obspar = NewActiveObs[j]
-            # print(j)
-            # print(NewActiveObs[0].name)
-            # print(obspar.name)
             ObservationTime = NewActiveObsTime[j]
             if ITERATION_OBS == len(obsparameters):
                 TIME_MIN_ALL = []
@@ -1325,9 +1322,6 @@ def PGalinFoV_NObs(
     #################################################################################################################################################
 
     counter = 0
-    # print(SameNight)
-    # print(NewActiveObs[0].name, NewActiveObs[1].name, NewActiveObs[2].name)
-    # print(NewActiveObsTime)
     i = 0
     couter_per_obs = np.zeros(len(NewActiveObs))
     while (i < 5000) & any(SameNight):
@@ -2340,15 +2334,16 @@ def PGalinFoV_Space_NObs(
 
     matching_rows = []
     for coord in pixradec:
-        # Check which rows in first_values match the coord
-        matches = np.where(first_values_coords.ra == coord.ra)[0]
-        matches = [m for m in matches if first_values_coords.dec[m] == coord.dec]
+        sep = first_values_coords.separation(coord)
+        matches = np.where(sep < 1e-2 * u.deg)[0]  # adjust tolerance as needed
 
-        # Append the matching rows to the result
         matching_rows.extend(first_values1[matches])
 
-    # Convert the list of matching rows back to an Astropy Table
-    first_values = Table(rows=matching_rows, names=first_values1.colnames)
+    if matching_rows:
+        first_values = Table(rows=matching_rows, names=first_values1.colnames)
+    else:
+        print("No coordinates matched within the tolerance.")
+        first_values = Table(names=first_values1.colnames)
 
     if obspar.doPlot:
         PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)

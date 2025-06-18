@@ -1045,7 +1045,7 @@ def GetEarthOccultedPix(
     earth_azimuth = np.arctan2(
         -satellite_position[1], -satellite_position[0]
     )  # Azimuth in radians
-
+    
     angle_of_occlusion = np.arcsin(earth_radius / distance_to_satellite)
 
     altaz_frame = AltAz(obstime=time, location=satellite_location)
@@ -1077,7 +1077,7 @@ def OccultationCut(
     mpixels = []
 
     mEarth, posEarth = GetEarthOccultedPix(
-        nside, time, 6371, 1, satellite_position, observatory
+        nside, time, 6371, 28, satellite_position, observatory
     )
     mpixels.extend(mEarth)
 
@@ -1145,7 +1145,7 @@ def SAA_Times(
         plt.plot(
             SatTimes, saa_numeric, drawstyle="steps-post", label="SAA (True=1, False=0)"
         )
-        plt.title("SAA Times")
+        #plt.title("SAA Times")
         plt.xlabel("Time")
         plt.ylabel("SAA Status")
         plt.ylim(-0.1, 1.1)  # Set limits to make binary values clear
@@ -1417,8 +1417,11 @@ def GetBestGridPos2D(
     ra = []
     dec = []
     newpixfinal = []
+    sum_PGW = []
     prob1 = prob[newpix]
     newpix = newpix[np.argsort(prob1)[::-1]]
+    rotation = 0
+
     for i in range(0, len(newpix)):
         if n_sides == 0:
             xyzpix = hp.pix2vec(reducedNside, newpix[i])
@@ -1429,7 +1432,7 @@ def GetBestGridPos2D(
             ra_center = np.rad2deg(phi)
             dec_center = 90 - np.rad2deg(theta)
             vertices = Tools.get_regular_polygon_vertices(
-                ra_center, dec_center, radius, n_sides, 0
+                ra_center, dec_center, radius, n_sides, rotation
             )
             ipix_discfull = hp.query_polygon(HRnside, vertices, inclusive=True)
         else:
@@ -1450,14 +1453,17 @@ def GetBestGridPos2D(
             HRprob = highres[m_ipix_discfull].sum()
             HRprobf = highres[ipix_discfull].sum()
             ipixlistHR.extend(m_ipix_discfull)
+        
         if HRprob > minProbcut:
+            sum_PGW.append(HRprob)
             dp_dV_FOV.append(HRprobf)
             newpixfinal.append(newpix[i])
             theta, phi = hp.pix2ang(reducedNside, newpix[i])
             ra.append(np.degrees(phi))  # RA in degrees
             dec.append(90 - np.degrees(theta))
-
+   
     if len(dp_dV_FOV) > 0:
+        print("sum_PGW", sum(sum_PGW))
         cat_pix = Table(
             [newpixfinal, ra, dec, dp_dV_FOV],
             names=("PIX", "PIXRA", "PIXDEC", "PIXFOVPROB"),
@@ -1465,16 +1471,28 @@ def GetBestGridPos2D(
 
         sortcat1 = cat_pix[np.flipud(np.argsort(cat_pix["PIXFOVPROB"]))]
         first_values = sortcat1[:maxRuns]
+        print(first_values)
+
     else:
         raise ValueError("No pointing were found with current minProbCut")
 
     if doPlot:
+        hp.gnomview(highres, rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]), xsize=700, ysize=700)
+        
         path = dirName + "/GridPlot"
         if not os.path.exists(path):
             os.mkdir(path, 493)
 
-        # mpl.rcParams.update({'font.size':14})
-        hp.gnomview(prob, rot=(143, 10), xsize=1000, ysize=1000)
+        if n_sides > 0:
+            for ra1, dec1 in zip(first_values["PIXRA"], first_values["PIXDEC"]):
+                vertices_radec = Tools.get_regular_polygon_vertices(
+                            ra1, dec1, radius, n_sides, rotation
+                        )
+                theta, phi = hp.vec2ang(vertices_radec)
+                hp.projplot(theta, phi, 'ro', markersize=4)  # Points
+                hp.projplot(np.append(theta, theta[0]), np.append(phi, phi[0]), 'r-', linewidth=1)  
+
+
         hp.graticule()
         try:
             tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
@@ -1490,7 +1508,7 @@ def GetBestGridPos2D(
                 linewidth=0.1,
             )
         except Exception:
-            print("No pcculted pix")
+            print("No occulted pix")
 
         hp.visufunc.projplot(
             first_values["PIXRA"],
@@ -1500,7 +1518,9 @@ def GetBestGridPos2D(
             coord="C",
             linewidth=0.1,
         )
-        plt.savefig("%s/Occ_Pointing.png" % (path))
+
+
+        plt.savefig("%s/Grid_Pointing.png" % (path))
         plt.close()
 
     return first_values
@@ -1552,6 +1572,7 @@ def GetBestGridPos3D(
             cat = galax
 
     if len(dp_dV_FOV) > 0:
+        print("sum(dp_dV_FOV)",  sum(dp_dV_FOV))
         cat_pix = Table(
             [BestGalsRA, BestGalsDec, dp_dV_FOV],
             names=("PIXRA", "PIXDEC", "PIXFOVPROB"),
@@ -1569,7 +1590,7 @@ def GetBestGridPos3D(
             os.mkdir(path, 493)
 
         # mpl.rcParams.update({'font.size':14})
-        hp.gnomview(prob, rot=(143, 10), xsize=500, ysize=500)
+        hp.gnomview(prob, rot=(143, 10), xsize=700, ysize=700)
         hp.graticule()
 
         # Filter out rows with NaN in dp_dV
@@ -1580,7 +1601,7 @@ def GetBestGridPos3D(
         cat_sorted = cat_clean.copy()
         cat_sorted.sort("dp_dV", reverse=True)
         # Select top 100 galaxies with highest dp_dV
-        top100 = cat_sorted[:100]
+        top100 = cat_sorted[:500]
 
         # Plot with projplot
         hp.visufunc.projplot(
@@ -1617,7 +1638,7 @@ def GetBestGridPos3D(
             coord="C",
             linewidth=0.1,
         )
-        plt.savefig("%s/Occ_Pointing.png" % (path))
+        plt.savefig("%s/Grid_Pointing.png" % (path))
         plt.close()
 
     return first_values
@@ -1629,7 +1650,8 @@ def PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values):
         os.mkdir(path, 493)
 
     # mpl.rcParams.update({'font.size':14})
-    hp.gnomview(prob, rot=(143, 10), xsize=1000, ysize=1000)
+    #hp.mollview(prob)
+    hp.gnomview(prob, rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]), xsize=700, ysize=700)
     hp.graticule()
     try:
         tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
@@ -1686,7 +1708,7 @@ def PlotSpaceOccTime(dirName, pixels_by_time, times):
 
     plt.xlabel("Time")
     plt.ylabel("Pixel")
-    plt.title("Pixel Availability Over Time")
+    #plt.title("Pixel Availability Over Time")
     plt.grid(True)
     plt.tight_layout()
     plt.savefig("%s/Occ_Pointing_Times.png" % (path))
@@ -1723,7 +1745,7 @@ def PlotSpaceOccTimeRadec(dirName, pixels_by_time, times, NSIDE):
     plt.xlabel("Time")
     plt.ylabel("Sky Coordinates (RA, Dec)")
     plt.yticks(yticks, yticklabels, fontsize=8)
-    plt.title("Pixel Availability Over Time")
+    #plt.title("Pixel Availability Over Time")
     plt.grid(True)
     plt.tight_layout()
 

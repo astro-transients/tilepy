@@ -32,7 +32,7 @@ parser.add_argument(
 parser.add_argument(
     "-time",
     metavar='"YYYY-MM-DD HH:MM:SS"',
-    default="2023-07-27 19:30:10",
+    default="2025-07-27 19:30:10",
     help="optional: date and time of the event (default: NOW, i.e. %(default)s)",
 )
 parser.add_argument(
@@ -75,6 +75,7 @@ skymap = (
     "https://gracedb.ligo.org/api/superevents/S250328ae/files/Bilby.multiorder.fits,0"
 )
 
+#skymap = ("https://dcc.ligo.org/public/0146/G1701985/001/LALInference_v2.fits.gz")
 ObsArray = ["SWIFT"]
 parameters = []
 
