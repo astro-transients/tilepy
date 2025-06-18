@@ -1051,6 +1051,7 @@ def PGWinFoV_NObs(
                         obspar.location,
                         obspar.sunDown,
                         obspar.moonDown,
+                        obspar.EarthDown,
                     )
                 else:
                     ObsBool, yprob = ZenithAngleCut(
@@ -2090,6 +2091,7 @@ def PGWinFoV_Space_NObs(
             satellite_location,
             obspar.sunDown,
             obspar.moonDown,
+            obspar.EarthDown,
         )
 
         # Let's get the list of pixels available at each iteration
@@ -2289,6 +2291,7 @@ def PGalinFoV_Space_NObs(
             satellite_location,
             obspar.sunDown,
             obspar.moonDown,
+            obspar.EarthDown,
         )
 
         # Let's get the list of pixels available at each iteration

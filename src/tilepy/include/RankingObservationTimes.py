@@ -35,12 +35,19 @@ from astropy.time import Time
 from six.moves import configparser
 from sklearn.cluster import AgglomerativeClustering
 
+from matplotlib.colors import Normalize
+import matplotlib.cm as cm
+from matplotlib.cm import ScalarMappable
+
 from .PointingTools import FilterGalaxies, Tools
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
 else:
     ConfigParser = configparser.ConfigParser
+from .MapManagement import SkyMap, create_map_reader
+import re
+
 
 
 # iers_file = os.path.join(os.path.abspath(
@@ -574,7 +581,7 @@ def distance(entry1, entry2):
 
 
 # Ranking function
-def Ranking_Space(dirName, PointingFile):
+def Ranking_Space(dirName, PointingFile, obspar):
     # Read the data from the pointing file
     file_path = f"{PointingFile}"
     data = pd.read_csv(file_path, delim_whitespace=True)
@@ -611,8 +618,75 @@ def Ranking_Space(dirName, PointingFile):
     pd.DataFrame(ranked).to_csv(output_file, index=False, sep="\t")
     print(f"Ranked file saved to {output_file}")
 
+    if obspar.doPlot:
+        raw_map = create_map_reader(obspar)
+        skymap = SkyMap(obspar, raw_map)
 
-def Ranking_Space_AI(dirName, PointingFile):
+        prob = skymap.getMap("prob", 512)
+
+
+        df = pd.read_csv(output_file, sep="\t")
+        ra = df["RA(deg)"].values
+        skycoords = SkyCoord(ra=df["RA(deg)"].values * u.deg, dec=df["DEC(deg)"].values * u.deg, frame="icrs")
+        ranks = np.arange(len(ra))
+
+        fig = plt.figure(figsize=(10, 6))
+        # Plot HEALPix map with its own color map
+        hp.gnomview(prob, rot=(skycoords[0].ra.deg, skycoords[0].dec.deg), xsize=700, ysize=700)
+
+
+        # Normalize ranks for colormap
+        norm = Normalize(vmin=min(ranks), vmax=max(ranks))
+        colors = [cm.autumn(norm(rank)) for rank in ranks]
+
+        # Plot each pointing using rank-based color
+        for coord, color, rank in zip(skycoords, colors, ranks):
+            hp.visufunc.projplot(
+                coord.ra.deg,
+                coord.dec.deg,
+                'o',
+                lonlat=True,
+                color=color,
+                markersize=5,
+                markeredgecolor="black",
+                markeredgewidth=0.3,
+            )
+            #x, y = hp.proj_to_xy(coord.ra.deg, coord.dec.deg, lonlat=True)
+            #plt.text(x, y, str(rank), fontsize=6, ha='center', va='center', color='black')
+            #hp.projtext(
+            #    coord.ra.deg,
+            #    coord.dec.deg,
+            #    str(rank),
+            #    lonlat=True,
+            #    ha='center', 
+            #    va='center', 
+            #    color='black'
+            #)
+
+        # Add colorbar
+        sm = ScalarMappable(cmap=cm.autumn, norm=norm)
+        sm.set_array([])
+
+        cax = fig.add_axes([0.15, 0.05, 0.7, 0.03])
+        cbar = fig.colorbar(sm, cax=cax, orientation='horizontal')
+        cbar.set_label("Pointing Rank")
+
+        hp.graticule()
+        plt.savefig("%s/RankingObservations_Space.png" % (dirName))
+
+def read_ranked_pointings(file_path):
+    ranked_pointings = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            match = re.search(r"Rank\s+\d+:\s+(?P<info>\{.*\})", line)
+            if match:
+                entry = eval(match.group("info"))  # Turn string dict into actual dict
+                ranked_pointings.append(entry)
+    return ranked_pointings
+
+
+def Ranking_Space_AI(dirName, PointingFile, obspar):
+
     # Convert to DataFrame for easier handling
     file_path = f"{PointingFile}"
     data = pd.read_csv(file_path, delim_whitespace=True)
@@ -640,10 +714,67 @@ def Ranking_Space_AI(dirName, PointingFile):
             )
         ranked_data.append(cluster_data)
 
-    # Combine ranked clusters
-    final_ranked = pd.concat(ranked_data)
+    # Combine ranked clusters and reset index
+    final_ranked = pd.concat(ranked_data).reset_index(drop=True)
+
+    # Assign global rank starting from 1
+    final_ranked["Rank"] = final_ranked.index + 1
 
     # Save the ranked list to a file
     output_file = "%s/RankingObservations_AI_Space.txt" % dirName
     pd.DataFrame(final_ranked).to_csv(output_file, index=False, sep="\t")
     print(f"Ranked file saved to {output_file}")
+
+    if obspar.doPlot:
+        raw_map = create_map_reader(obspar)
+        skymap = SkyMap(obspar, raw_map)
+
+        prob = skymap.getMap("prob", 512)
+
+
+        df = pd.read_csv(output_file, sep="\t")
+        skycoords = SkyCoord(ra=df["RA(deg)"].values * u.deg, dec=df["DEC(deg)"].values * u.deg, frame="icrs")
+        ranks = df["Rank"].values
+
+        fig = plt.figure(figsize=(10, 6))
+        # Plot HEALPix map with its own color map
+        hp.gnomview(prob, rot=(skycoords.ra.deg[0], skycoords.dec.deg[0]), xsize=700, ysize=700)
+
+        # Normalize ranks for colormap
+        norm = Normalize(vmin=min(ranks), vmax=max(ranks))
+        colors = [cm.autumn(norm(rank)) for rank in ranks]
+
+        # Plot each pointing using rank-based color
+        for coord, color, rank in zip(skycoords, colors, ranks):
+            hp.visufunc.projplot(
+                coord.ra.deg,
+                coord.dec.deg,
+                'o',
+                lonlat=True,
+                color=color,
+                markersize=5,
+                markeredgecolor="black",
+                markeredgewidth=0.3,
+            )
+            #x, y = hp.proj_to_xy(coord.ra.deg, coord.dec.deg, lonlat=True)
+            #plt.text(x, y, str(rank), fontsize=6, ha='center', va='center', color='black')
+            #hp.projtext(
+            #    coord.ra.deg,
+            #    coord.dec.deg,
+            #    str(rank),
+            #    lonlat=True,
+            #    ha='center', 
+            #    va='center', 
+            #    color='black'
+            #)
+
+        # Add colorbar
+        sm = ScalarMappable(cmap=cm.autumn, norm=norm)
+        sm.set_array([])
+
+        cax = fig.add_axes([0.15, 0.05, 0.7, 0.03])
+        cbar = fig.colorbar(sm, cax=cax, orientation='horizontal')
+        cbar.set_label("Pointing Rank")
+
+        hp.graticule()
+        plt.savefig("%s/RankingObservations_SpaceClustering.png" % (dirName))

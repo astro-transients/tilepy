@@ -60,6 +60,7 @@ class ObservationParameters(object):
         height=0,
         sunDown=None,
         moonDown=None,
+        EarthDown=None,
         moonGrey=None,
         moonPhase=None,
         minMoonSourceSeparation=None,
@@ -110,6 +111,7 @@ class ObservationParameters(object):
         # Visibility
         self.sunDown = sunDown
         self.moonDown = moonDown
+        self.EarthDown = EarthDown
         self.moonGrey = moonGrey
         self.moonPhase = moonPhase
         self.minMoonSourceSeparation = minMoonSourceSeparation
@@ -180,7 +182,7 @@ class ObservationParameters(object):
                 f"Observatory Location: {self.lat}, {self.lon}, {self.height}",
                 f"FOV: {self.FOV}, Duration: {self.duration}, Min Duration: {self.minDuration}, Min Slewing: {self.minSlewing}",
                 f"Max Runs: {self.maxRuns}, Max Nights: {self.maxNights}",
-                f"Visibility: {self.sunDown}, {self.moonDown}, {self.moonGrey}, {self.moonPhase}",
+                f"Visibility: {self.sunDown}, {self.moonDown}, {self.moonGrey}, {self.moonPhase}, {self.EarthDown}",
                 f"Min Moon Source Separation: {self.minMoonSourceSeparation}",
                 f"Max Moon Source Separation: {self.maxMoonSourceSeparation}",
                 f"Max Zenith: {self.maxZenith}, Zenith Weighting: {self.zenithWeighting}",
@@ -246,6 +248,7 @@ class ObservationParameters(object):
         section = "visibility"
         self.sunDown = int(parser.get(section, "sundown", fallback=0))
         self.moonDown = float(parser.get(section, "moondown", fallback=0))
+        self.EarthDown = float(parser.get(section, "earthdown", fallback=0))
         # Altitude in degrees
         self.moonGrey = int(parser.get(section, "moongrey", fallback=0))
         self.moonPhase = int(
@@ -315,6 +318,7 @@ class ObservationParameters(object):
         height,
         sunDown,
         moonDown,
+        EarthDown,
         moonGrey,
         moonPhase,
         minMoonSourceSeparation,
@@ -348,6 +352,7 @@ class ObservationParameters(object):
         # Visibility
         self.sunDown = sunDown
         self.moonDown = moonDown
+        self.EarthDown = EarthDown
         self.moonGrey = moonGrey
         self.moonPhase = moonPhase
         self.minMoonSourceSeparation = minMoonSourceSeparation
