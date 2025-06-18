@@ -49,7 +49,6 @@ from .MapManagement import SkyMap, create_map_reader
 import re
 
 
-
 # iers_file = os.path.join(os.path.abspath(
 #    os.path.dirname(__file__)), '../dataset/finals2000A.all')
 # iers.IERS.iers_table = iers.IERS_A.open(iers_file)
@@ -624,16 +623,20 @@ def Ranking_Space(dirName, PointingFile, obspar):
 
         prob = skymap.getMap("prob", 512)
 
-
         df = pd.read_csv(output_file, sep="\t")
         ra = df["RA(deg)"].values
-        skycoords = SkyCoord(ra=df["RA(deg)"].values * u.deg, dec=df["DEC(deg)"].values * u.deg, frame="icrs")
+        skycoords = SkyCoord(
+            ra=df["RA(deg)"].values * u.deg,
+            dec=df["DEC(deg)"].values * u.deg,
+            frame="icrs",
+        )
         ranks = np.arange(len(ra))
 
         fig = plt.figure(figsize=(10, 6))
         # Plot HEALPix map with its own color map
-        hp.gnomview(prob, rot=(skycoords[0].ra.deg, skycoords[0].dec.deg), xsize=700, ysize=700)
-
+        hp.gnomview(
+            prob, rot=(skycoords[0].ra.deg, skycoords[0].dec.deg), xsize=700, ysize=700
+        )
 
         # Normalize ranks for colormap
         norm = Normalize(vmin=min(ranks), vmax=max(ranks))
@@ -644,39 +647,40 @@ def Ranking_Space(dirName, PointingFile, obspar):
             hp.visufunc.projplot(
                 coord.ra.deg,
                 coord.dec.deg,
-                'o',
+                "o",
                 lonlat=True,
                 color=color,
                 markersize=5,
                 markeredgecolor="black",
                 markeredgewidth=0.3,
             )
-            #x, y = hp.proj_to_xy(coord.ra.deg, coord.dec.deg, lonlat=True)
-            #plt.text(x, y, str(rank), fontsize=6, ha='center', va='center', color='black')
-            #hp.projtext(
+            # x, y = hp.proj_to_xy(coord.ra.deg, coord.dec.deg, lonlat=True)
+            # plt.text(x, y, str(rank), fontsize=6, ha='center', va='center', color='black')
+            # hp.projtext(
             #    coord.ra.deg,
             #    coord.dec.deg,
             #    str(rank),
             #    lonlat=True,
-            #    ha='center', 
-            #    va='center', 
+            #    ha='center',
+            #    va='center',
             #    color='black'
-            #)
+            # )
 
         # Add colorbar
         sm = ScalarMappable(cmap=cm.autumn, norm=norm)
         sm.set_array([])
 
         cax = fig.add_axes([0.15, 0.05, 0.7, 0.03])
-        cbar = fig.colorbar(sm, cax=cax, orientation='horizontal')
+        cbar = fig.colorbar(sm, cax=cax, orientation="horizontal")
         cbar.set_label("Pointing Rank")
 
         hp.graticule()
         plt.savefig("%s/RankingObservations_Space.png" % (dirName))
 
+
 def read_ranked_pointings(file_path):
     ranked_pointings = []
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         for line in file:
             match = re.search(r"Rank\s+\d+:\s+(?P<info>\{.*\})", line)
             if match:
@@ -731,14 +735,19 @@ def Ranking_Space_AI(dirName, PointingFile, obspar):
 
         prob = skymap.getMap("prob", 512)
 
-
         df = pd.read_csv(output_file, sep="\t")
-        skycoords = SkyCoord(ra=df["RA(deg)"].values * u.deg, dec=df["DEC(deg)"].values * u.deg, frame="icrs")
+        skycoords = SkyCoord(
+            ra=df["RA(deg)"].values * u.deg,
+            dec=df["DEC(deg)"].values * u.deg,
+            frame="icrs",
+        )
         ranks = df["Rank"].values
 
         fig = plt.figure(figsize=(10, 6))
         # Plot HEALPix map with its own color map
-        hp.gnomview(prob, rot=(skycoords.ra.deg[0], skycoords.dec.deg[0]), xsize=700, ysize=700)
+        hp.gnomview(
+            prob, rot=(skycoords.ra.deg[0], skycoords.dec.deg[0]), xsize=700, ysize=700
+        )
 
         # Normalize ranks for colormap
         norm = Normalize(vmin=min(ranks), vmax=max(ranks))
@@ -749,31 +758,31 @@ def Ranking_Space_AI(dirName, PointingFile, obspar):
             hp.visufunc.projplot(
                 coord.ra.deg,
                 coord.dec.deg,
-                'o',
+                "o",
                 lonlat=True,
                 color=color,
                 markersize=5,
                 markeredgecolor="black",
                 markeredgewidth=0.3,
             )
-            #x, y = hp.proj_to_xy(coord.ra.deg, coord.dec.deg, lonlat=True)
-            #plt.text(x, y, str(rank), fontsize=6, ha='center', va='center', color='black')
-            #hp.projtext(
+            # x, y = hp.proj_to_xy(coord.ra.deg, coord.dec.deg, lonlat=True)
+            # plt.text(x, y, str(rank), fontsize=6, ha='center', va='center', color='black')
+            # hp.projtext(
             #    coord.ra.deg,
             #    coord.dec.deg,
             #    str(rank),
             #    lonlat=True,
-            #    ha='center', 
-            #    va='center', 
+            #    ha='center',
+            #    va='center',
             #    color='black'
-            #)
+            # )
 
         # Add colorbar
         sm = ScalarMappable(cmap=cm.autumn, norm=norm)
         sm.set_array([])
 
         cax = fig.add_axes([0.15, 0.05, 0.7, 0.03])
-        cbar = fig.colorbar(sm, cax=cax, orientation='horizontal')
+        cbar = fig.colorbar(sm, cax=cax, orientation="horizontal")
         cbar.set_label("Pointing Rank")
 
         hp.graticule()

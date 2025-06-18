@@ -397,13 +397,14 @@ def GetUniversalSchedule(obspar):
                     Ranking_Space(
                         dirName,
                         "%s/SuggestedPointings_GWOptimisation_%s.txt"
-                        % (dirName, obspar[j].obs_name), obspar[0]
+                        % (dirName, obspar[j].obs_name),
+                        obspar[0],
                     )
                     Ranking_Space_AI(
                         dirName,
                         "%s/SuggestedPointings_GWOptimisation_%s.txt"
                         % (dirName, obspar[j].obs_name),
-                        obspar[0]
+                        obspar[0],
                     )
 
         else:
