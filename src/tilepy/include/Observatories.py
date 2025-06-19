@@ -99,7 +99,7 @@ class CTASouthObservatory:
 
     The initial array—called the “Alpha Configuration”—includes:
     - 14 Medium-Sized Telescopes (MSTs), covering energies from 150 GeV to 5 TeV,
-    - 37 Small-Sized Telescopes (SSTs), which extend sensitivity above 5 TeV (5 - 300 TeV),
+    - 37 Small-Sized Telescopes (SSTs), which extend sensitivity above 5 TeV,
     and the full array covers about 3 km$^2$.
 
     No Large-Sized Telescopes (LSTs) are installed at CTAO-South for now, but the site is prepared for future LST additions.
