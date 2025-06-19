@@ -2,13 +2,13 @@ Scheduling and Tiling Tools (`tilepy.include`)
 ==============================================
 
 The `tilepy.include` package provides core modules for scheduling, tiling computation, and visualization
-in the |TilePy| workflow. It enables rapid follow-up observations, campaign configuration, and plotting for
+in the |tilepy| workflow. It enables rapid follow-up observations, campaign configuration, and plotting for
 multi-messenger astronomy.
 
 Observatories
 =============
 
-The **Observatories** subpackage defines the main ground- and space-based facilities supported in the |TilePy| workflow,
+The **Observatories** subpackage defines the main ground- and space-based facilities supported in the |tilepy| workflow,
 including location, field of view, and technical constraints for each telescope.
 
 .. automodapi:: tilepy.include.Observatories
