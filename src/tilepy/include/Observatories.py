@@ -45,7 +45,7 @@ class LST:
 
     The **Large-Sized Telescope (LST)** is the flagship instrument of the Cherenkov Telescope Array Observatory (CTAO),
     optimized for the detection of gamma rays at the lowest energies accessible from the ground (20-150 GeV).
-    Each LST features a 23-meter segmented mirror (collecting area : :math:`400 m^2`x) and a field of view of 4.3°, allowing
+    Each LST features a 23-meter segmented mirror (collecting area : :math:`400 m^2`) and a field of view of 4.3°, allowing
     high sensitivity to faint Cherenkov flashes :footcite:`2016APh....72...76A`.
 
     Four LSTs are being installed at the center of the CTAO northern site, enabling rapid and sensitive follow-up
