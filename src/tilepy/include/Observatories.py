@@ -45,7 +45,7 @@ class LST:
 
     The **Large-Sized Telescope (LST)** is the flagship instrument of the Cherenkov Telescope Array Observatory (CTAO),
     optimized for the detection of gamma rays at the lowest energies accessible from the ground (20-150 GeV).
-    Each LST features a 23-meter segmented mirror (collecting area: 400 m$^2$) and a field of view of 4.3°, allowing
+    Each LST features a 23-meter segmented mirror (collecting area : :math:`400 m^2`x) and a field of view of 4.3°, allowing
     high sensitivity to faint Cherenkov flashes :footcite:`2016APh....72...76A`.
 
     Four LSTs are being installed at the center of the CTAO northern site, enabling rapid and sensitive follow-up
@@ -64,10 +64,10 @@ class LST:
 
     .. figure:: ../_static/LST.jpg
         :alt: The Large-Sized Telescope (LST) at the CTAO site (Credit: Otger Ballester, IFAE).
-        :width: 70%
+        :width: 80%
         :align: center
 
-        The Large-Sized Telescope (LST) at the CTAO site.
+        The Large-Sized Telescope (LST) at the CTAO site (Credit: Otger Ballester, IFAE).
 
     References
     ----------
@@ -100,22 +100,22 @@ class CTASouthObservatory:
     The initial array—called the “Alpha Configuration”—includes:
     - 14 Medium-Sized Telescopes (MSTs), covering energies from 150 GeV to 5 TeV,
     - 37 Small-Sized Telescopes (SSTs), which extend sensitivity above 5 TeV,
-    and the full array covers about 3 km$^2$.
+    and the full array covers about :math:`3 km^{2}`.
 
     No Large-Sized Telescopes (LSTs) are installed at CTAO-South for now, but the site is prepared for future LST additions.
 
-    `The SSTs <https://www.ctao.org/emission-to-discovery/telescopes/sst/>` use a dual-mirror design with silicon photomultiplier (SiPM) cameras
-    and a wide field of view (about 8.8 degrees).
-    `The MSTs <https://www.ctao.org/emission-to-discovery/telescopes/mst/> have 12 m mirrors and fast PMT-based cameras (FlashCam), with a field of view of about 8 degrees.
+    `The SSTs <https://www.ctao.org/emission-to-discovery/telescopes/sst/>`_ use a dual-mirror design with silicon photomultiplier (SiPM) cameras
+    and a wide field of view (about 8.8 degrees). `The MSTs <https://www.ctao.org/emission-to-discovery/telescopes/mst/>`_ have 12 m mirrors and fast PMT-based cameras (FlashCam), with a field of view of about 8 degrees.
 
     `The CTAO-South site <https://www.ctao.org/emission-to-discovery/array-sites/ctao-south/>`_  is built to explore some of the most powerful particle accelerators in our Galaxy,
     such as supernova remnants, pulsar wind nebulae, and massive star clusters :footcite:`The_CTA_Consortium_2019`.
 
     .. figure:: ../_static/CTAO_south.jpg
-    :alt: An artistic illustration of the proposed CTA. Image credit: Gabriel Pérez Diaz, IAC / Marc-André Besel, CTAO.
-    :width: 70%
-    :align: center
+        :alt: An artistic illustration of the proposed CTA. Image credit: Gabriel Pérez Diaz, IAC / Marc-André Besel, CTAO.
+        :width: 80%
+        :align: center
 
+        An artistic illustration of the proposed CTA (credit: Gabriel Pérez Diaz, IAC / Marc-André Besel.
 
     References
     ----------
@@ -134,7 +134,7 @@ class CTANorthObservatory:
     r"""
     Coordinates and location for the CTA North Observatory.
 
-    The **CTAO-North Observatory** is located at the Roque de los Muchachos Observatory on La Palma (Canary Islands, Spain), at $\sim$ 2200 m altitude.
+    The **CTAO-North Observatory** is located at the Roque de los Muchachos Observatory on La Palma (Canary Islands, Spain), at :math:`\approx 2200` m altitude.
     This site is optimized for low- and mid-energy gamma rays (20 GeV to 5 TeV), with a layout focused on extragalactic sources.
 
     - **Latitude**: 28.762° N
@@ -143,7 +143,7 @@ class CTANorthObservatory:
     The “Alpha Configuration” includes:
       - 4 Large-Sized Telescopes (LSTs)
       - 9 Medium-Sized Telescopes (MSTs)
-    covering about 0.5 km$^2$.
+    covering about :math:`0.5 km^2`.
 
     As of mid‑2025:
       - **LST‑1**: installed in October 2018 and under commissioning
