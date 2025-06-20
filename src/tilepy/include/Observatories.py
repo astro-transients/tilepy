@@ -45,7 +45,7 @@ class LST:
 
     The **Large-Sized Telescope (LST)** is the flagship instrument of the Cherenkov Telescope Array Observatory (CTAO),
     optimized for the detection of gamma rays at the lowest energies accessible from the ground (20-150 GeV).
-    Each LST features a 23-meter segmented mirror (collecting area : :math:`400 m^2`) and a field of view of 4.3°, allowing
+    Each LST features a 23-meter segmented mirror (collecting area : 400 m:math:`^2`) and a field of view of 4.3°, allowing
     high sensitivity to faint Cherenkov flashes :footcite:`2016APh....72...76A`.
 
     Four LSTs are being installed at the center of the CTAO northern site, enabling rapid and sensitive follow-up
@@ -59,8 +59,7 @@ class LST:
     The LST, together with the Medium-Sized and Small-Sized Telescopes, forms the CTAO, offering broad energy
     coverage from 20 GeV to 300 TeV :footcite:`2023arXiv230512888H`.
 
-    More information:
-    `LST official page <https://www.ctao.org/emission-to-discovery/telescopes/lst/>`_
+    More information: `LST official page <https://www.ctao.org/emission-to-discovery/telescopes/lst/>`_
 
     .. figure:: ../_static/LST.jpg
         :alt: The Large-Sized Telescope (LST) at the CTAO site (Credit: Otger Ballester, IFAE).
@@ -97,18 +96,16 @@ class CTASouthObservatory:
     The southern array is designed to detect gamma rays from 150 GeV up to 300 TeV, covering the highest energies accessible
     from the ground and focusing mainly on Galactic sources .
 
-    The initial array—called the “Alpha Configuration”—includes:
+    The initial array, called the ``Alpha Configuration``, includes:
     - 14 Medium-Sized Telescopes (MSTs), covering energies from 150 GeV to 5 TeV,
     - 37 Small-Sized Telescopes (SSTs), which extend sensitivity above 5 TeV,
-    and the full array covers about :math:`3 km^{2}`.
+    and the full array covers about 3 km :math:`^{2}`.
 
     No Large-Sized Telescopes (LSTs) are installed at CTAO-South for now, but the site is prepared for future LST additions.
-
     `The SSTs <https://www.ctao.org/emission-to-discovery/telescopes/sst/>`_ use a dual-mirror design with silicon photomultiplier (SiPM) cameras
     and a wide field of view (about 8.8 degrees). `The MSTs <https://www.ctao.org/emission-to-discovery/telescopes/mst/>`_ have 12 m mirrors and fast PMT-based cameras (FlashCam), with a field of view of about 8 degrees.
-
     `The CTAO-South site <https://www.ctao.org/emission-to-discovery/array-sites/ctao-south/>`_  is built to explore some of the most powerful particle accelerators in our Galaxy,
-    such as supernova remnants, pulsar wind nebulae, and massive star clusters :footcite:`The_CTA_Consortium_2019`.
+    such as supernova remnants, pulsar wind nebulae, and massive star clusters :footcite:`019EPJWC.20901038C`.
 
     .. figure:: ../_static/CTAO_south.jpg
         :alt: An artistic illustration of the proposed CTA. Image credit: Gabriel Pérez Diaz, IAC / Marc-André Besel, CTAO.
@@ -143,7 +140,7 @@ class CTANorthObservatory:
     The “Alpha Configuration” includes:
       - 4 Large-Sized Telescopes (LSTs)
       - 9 Medium-Sized Telescopes (MSTs)
-    covering about :math:`0.5 km^2`.
+    covering about 0.5 km:math:`^2`.
 
     As of mid‑2025:
       - **LST‑1**: installed in October 2018 and under commissioning
