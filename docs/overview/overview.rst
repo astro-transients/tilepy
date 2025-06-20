@@ -27,4 +27,15 @@ It accounts for constraints and bacground noise like:
 These constraints are customized per telescope, enabling more focused and efficient tiling of the sky.
 This improves the chances of capturing the early light from fast transients and maximizes the scientific return of follow-up observations.
 
-.. note:
+.. note::
+
+   For a full description of **tilepy**, please see :footcite:`Seglar-Arroyo_2024`.
+
+
+
+
+==========
+References
+==========
+
+.. footbibliography::
