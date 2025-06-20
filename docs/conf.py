@@ -162,6 +162,7 @@ intersphinx_mapping = {
     # "numpy": ("https://numpy.org/doc/stable/", None),
     "astropy": ("https://docs.astropy.org/en/stable/", None),
     "ligo.skymap": ("https://lscsoft.docs.ligo.org/ligo.skymap/", None),
+    "userguide": ("https://emfollow.docs.ligo.org/userguide/", None),
 }
 
 # List of patterns, relative to source directory, that match files and

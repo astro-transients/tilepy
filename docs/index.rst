@@ -28,6 +28,7 @@ Table of Contents
 .. toctree::
    :maxdepth: 2
 
+   overview/index
    install/index
    guide/index
    .. source/TilingDetermination
