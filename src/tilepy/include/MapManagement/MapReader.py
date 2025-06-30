@@ -87,7 +87,9 @@ def create_map_reader(obspar):
     -------
     MapReader subclass instance
         One of: GaussianMapReader, LocProbMapReader, HealpixMapReader
+
     """
+
     mode = getattr(obspar, "mode", None)
     if mode is not None:
         mode = mode.lower()
@@ -148,6 +150,7 @@ class MapReader(ABC):
         -------
         filename : str
             Path to the downloaded file.
+
         """
 
         if download_max_nb_try < 1:

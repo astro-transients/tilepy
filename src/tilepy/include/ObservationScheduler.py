@@ -74,6 +74,7 @@ def GetSchedule(obspar):
     Examples
     --------
     >>> GetSchedule(obspar)
+
     """
 
     raw_map = create_map_reader(obspar)
@@ -240,6 +241,7 @@ def GetUniversalSchedule(obspar):
     Examples
     --------
     >>> GetUniversalSchedule([obspar1, obspar2])
+
     """
 
     raw_map = create_map_reader(obspar[0])

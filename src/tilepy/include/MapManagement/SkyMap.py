@@ -44,6 +44,7 @@ class SkyMap:
             Observation parameters.
         mapReader : object
             Interface for sky map data.
+
         """
         self.raw_map_prob_density = mapReader.getMap("prob")
         if obspar.algorithm == "2D":
@@ -78,7 +79,9 @@ class SkyMap:
         -------
         is3D : bool
             True if 3D mode is used, False otherwise.
+
         """
+
         is3D = True
         if mapReader.has3D:
             dist_mean, dist_std = mapReader.getDistance()
@@ -114,6 +117,7 @@ class SkyMap:
         -------
         pix_id : ndarray of int
             Pixel indices containing the requested probability fraction.
+
         """
 
         cache_line = (
@@ -169,7 +173,9 @@ class SkyMap:
         ------
         Exception
             If `mapType` is not recognized.
+
         """
+
         cache_entry = mapType + "_" + str(nside) + "_" + scheme
         if cache_entry in self.rasterized_map_cache.keys():
             return self.rasterized_map_cache[cache_entry]
@@ -212,7 +218,9 @@ class SkyMap:
         -------
         galaxyCatalog : same type as input
             Input table with additional 'dp_dV' probability column.
+
         """
+
         # Identify the pixel associated to each galaxy
         ra = galaxyCatalog["RAJ2000"]
         dec = galaxyCatalog["DEJ2000"]

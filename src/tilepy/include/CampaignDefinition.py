@@ -42,7 +42,9 @@ def set_gaussian_source(obspar, ra, dec, sigma, name="gaussian_event"):
     >>> set_gaussian_source(obspar, ra=180.0, dec=30.0, sigma=2.5)
     >>> print(obspar.mode)
     gaussian
+
     """
+
     obspar.raSource = ra
     obspar.decSource = dec
     obspar.sigmaSource = sigma

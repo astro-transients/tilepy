@@ -117,6 +117,7 @@ class CTASouthObservatory:
     References
     ----------
     .. footbibliography::
+
     """
 
     def __init__(self):
@@ -154,6 +155,7 @@ class CTANorthObservatory:
     References
     ----------
     .. footbibliography::
+
     """
 
     def __init__(self):

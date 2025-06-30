@@ -112,6 +112,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
         Table of scheduled pointings.
     ObservationTime0 : str
         the desired time for scheduling to start.
+
     """
 
     ObservationTime0 = obspar.obsTime
@@ -330,7 +331,9 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
         Table of suggested pointings (with time, coordinates, probability, etc.).
     tGals0 : astropy.table.Table
         Filtered and ranked list of galaxies for scheduling.
+
     """
+
     # The desired time for scheduling to start
     ObservationTime0 = obspar.obsTime
     # The path to the text file containing the pointings that have already been performed before the scheduling
@@ -882,7 +885,9 @@ def ObservationStartperObs(obsparameters, ObservationTime0):
         A list of observatories that are available to observe.
     NewActiveObsStart : numpy.ndarray of datetime
         A sorted list of the first available observation times for each observatory.
+
     """
+
     print("ObservationTime0", ObservationTime0)
 
     print("obsparameters", len(obsparameters))
@@ -992,6 +997,7 @@ def PGWinFoV_NObs(
         Table of suggested pointings for all observatories.
     obsparameters : list of ObservationParameters
         (Possibly updated) list of parameters for each observatory.
+
     """
 
     obs_time, SameNight, NewActiveObs, NewActiveObsStart = ObservationStartperObs(
@@ -2009,6 +2015,7 @@ def PGWinFoV_Space_NObs(
     It calculates optimal observation times considering the galaxy catalog, GW probability map, and satellite constraints.
     The function returns suggested pointings along with satellite visibility times and SAA status.
     """
+
     random.seed()
     RAarray = []
     DECarray = []
@@ -2229,7 +2236,9 @@ def PGalinFoV_Space_NObs(
         Array of satellite observation times.
     saa : numpy.ndarray
         Array indicating the satellite's South Atlantic Anomaly (SAA) status at each time step.
+
     """
+
     random.seed()
     RAarray = []
     DECarray = []

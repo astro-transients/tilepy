@@ -157,6 +157,7 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
     Pointing : astropy.table.Table
         The input Table with added columns:
         'Observation window', 'Array of zenith angles', 'Zenith angles in steps'.
+
     """
 
     source = SkyCoord(

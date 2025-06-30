@@ -119,6 +119,7 @@ class Tools:
       - Getting galactic extinction at given coordinates.
       - Checking if a position is within the South Atlantic Anomaly (SAA).
       - Miscellaneous geometric and HEALPix utilities for sky coverage analysis.
+
     """
 
     @classmethod
@@ -137,7 +138,9 @@ class Tools:
         -------
         bool
             True if darkness constraints are satisfied, False otherwise.
+
         """
+
         sunAlt = Tools.SunAlt(obsTime, obspar)
         moonAlt = Tools.MoonAlt(obsTime, obspar)
         SunDown = obspar.sunDown
@@ -156,7 +159,9 @@ class Tools:
         Return True if the sky meets the greyness (twilight) constraints for observation.
 
         So check if the Sun and Moon are in the grey twilight regime.
+
         """
+
         # SUN altitude
         sunAlt = Tools.SunAlt(obsTime, obspar)
         # MOON altitude
@@ -196,9 +201,7 @@ class Tools:
 
     @classmethod
     def SunAlt(cls, obsTime, obspar):
-        """
-        Return the Sun's altitude (in degrees) at the given time and site.
-        """
+        """Return the Sun's altitude (in degrees) at the given time and site."""
         sun = get_body("sun", Time(obsTime, scale="utc")).transform_to(
             AltAz(obstime=Time(obsTime, scale="utc"), location=obspar.location)
         )
@@ -401,6 +404,7 @@ class Tools:
         """
         Return the galactic extinction at the given coordinates.
         """
+
         # Extinction = DustMap.ebv(coords)
         extinction = DustMap.extinction(coords, dustmap="SFD", filters="SDSS_r")
         # GasMap.plot_map('HI4PI')
@@ -411,6 +415,7 @@ class Tools:
         """
         Return True if the given latitude and longitude are inside the South Atlantic Anomaly (SAA).
         """
+
         saa_lat_min = -40.0  # Minimum latitude for the SAA
         saa_lat_max = 0.0  # Maximum latitude for the SAA
         saa_lon_min = -50.0  # Minimum longitude for the SAA
@@ -702,6 +707,7 @@ class Observer:
             Maximum allowed altitude of the Moon (degrees).
         max_moon_phase : float
             Maximum allowed Moon phase (illumination fraction).
+
         """
 
         self.eph = load("de440s.bsp")
@@ -732,7 +738,9 @@ class Observer:
         -------
         list of datetime.datetime
             The start times for each run within the valid time range.
+
         """
+
         # Compute time interval
         if start_time.tzinfo is None:
             zone = timezone("UTC")
@@ -766,6 +774,7 @@ class Observer:
         -------
         list
             The intersection of the two time ranges.
+
         """
 
         # Initialisation
@@ -804,6 +813,7 @@ class Observer:
         -------
         list
             The start times for each run.
+
         """
 
         run_start_time = []
@@ -840,6 +850,7 @@ class Observer:
         -------
         list
             The time interval for the sun constraint.
+
         """
 
         rise_time, set_time = self.get_risings_and_settings(
@@ -872,6 +883,7 @@ class Observer:
         -------
         list
             The time interval for the moon constraint.
+
         """
 
         rise_time, set_time = self.get_risings_and_settings(
@@ -931,6 +943,7 @@ class Observer:
         -------
         float
             The moon phase at the given observation time.
+
         """
 
         sun, moon, earth = self.eph["sun"], self.eph["moon"], self.eph["earth"]
@@ -963,6 +976,7 @@ class Observer:
             The rise times of the celestial body.
         list of datetime.datetime
             The set times of the celestial body.
+
         """
 
         f = almanac.risings_and_settings(
@@ -1042,6 +1056,7 @@ def getdate(x):
     Returns
     -------
     None
+
     """
 
     if isinstance(x, datetime.datetime):
@@ -1066,6 +1081,7 @@ def UNIQSkymap_toNested(skymap_fname):
     -------
     dict
         The computed uniq map from the GW skymap.
+
     """
 
     sky_tab = Table.read(skymap_fname)
@@ -1130,10 +1146,8 @@ def get_lvk_uniq_maps(sky_map, Order, map_names="all"):
 
 
 def NightDarkObservation(time, obspar):
-    """
-    Function that searches for an array of observation times that fulfilled darkness condition and window
+    """Function that searches for an array of observation times that fulfilled darkness condition and window"""
 
-    """
     obs = Observer(
         longitude=obspar.lon.to_value(u.deg),
         latitude=obspar.lat.to_value(u.deg),
@@ -1148,10 +1162,7 @@ def NightDarkObservation(time, obspar):
 
 
 def NightDarkObservationwithGreyTime(time, obspar):
-    """
-    Function that searches for an array of observation times that fulfilled darkness condition and window
-
-    """
+    """Function that searches for an array of observation times that fulfilled darkness condition and window"""
     obs = Observer(
         longitude=obspar.lon.to_value(u.deg),
         latitude=obspar.lat.to_value(u.deg),
@@ -2272,6 +2283,7 @@ def VisibleAtTime(test_time, galaxies, maxz, observatory):
         True if a galaxy is visible now, False otherwise.
     alt_az : numpy.ndarray
         Altitude and azimuth locations of galaxies.
+
     """
 
     # print()
@@ -2419,7 +2431,9 @@ def ComputeProbGalTargeted(
         Table of galaxies outside the current FoV but within the LIGO signal region.
     talreadysumipixarray : list
         Updated list of observed HEALPix pixel indices.
+
     """
+
     observatory = obspar.location
     maxZenith = obspar.maxZenith
     FOV = obspar.FOV
