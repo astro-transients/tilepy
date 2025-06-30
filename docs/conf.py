@@ -17,8 +17,7 @@ import astropy_sphinx_theme  # required for theme detection by Sphinx, even if u
 
 # docs/_pybtex/short_alpha.py:
 sys.path.insert(0, os.path.abspath("_pybtex"))
-import short_alpha  # noqa: F401
-
+import short_alpha  # noqa: F401, E402
 
 try:
     from sphinx_astropy.conf.v2 import *  # noqa
@@ -246,5 +245,5 @@ autodoc_typehints = "description"  # Show type hints in the API documentation (o
 # -- BibTeX for scientific references ----------------------------------------
 bibtex_bibfiles = ["refs.bib"]  # For bibliography
 bibtex_default_style = "short_alpha"
-#bibtex_default_style = "plain"
+# bibtex_default_style = "plain"
 # bibtex_author_limit = 3

@@ -60,6 +60,7 @@ tests = [
 docs = [
     "numpy<2",
     "sphinx>=1.6",
+    "pybtex",
     "sphinx-astropy[confv2]",
     "sphinxcontrib-typer",
     "sphinxcontrib-bibtex",

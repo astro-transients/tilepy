@@ -1,3 +1,7 @@
+from .CampaignDefinition import (
+    ObservationParameters,
+    set_gaussian_source,
+)
 from .MapManagement import MapReader, SkyMap, create_map_reader
 from .ObservationScheduler import GetSchedule, GetUniversalSchedule
 from .Observatories import (
@@ -66,11 +70,6 @@ from .TilingDetermination import (
     PGalinFoV_NObs,
     PGWinFoV,
     PGWinFoV_NObs,
-)
-
-from .CampaignDefinition import (
-    set_gaussian_source,
-    ObservationParameters,
 )
 
 __all__ = [

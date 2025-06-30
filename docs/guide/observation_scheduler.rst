@@ -5,24 +5,54 @@ The `tilepy.include` package provides core modules for scheduling, tiling comput
 in the |tilepy| workflow. It enables rapid follow-up observations, campaign configuration, and plotting for
 multi-messenger astronomy.
 
-Observatories
-=============
+Read Skymap
+-----------
 
-The **Observatories** subpackage defines the main ground- and space-based facilities supported in the |tilepy| workflow,
+Provides classes and utilities for reading and interpreting localization skymaps.
+
+.. automodapi:: tilepy.include.MapManagement.SkyMap
+    :no-inheritance-diagram:
+
+
+Observatories
+-------------
+
+Defines the main ground- and space-based facilities supported in the |tilepy| workflow,
 including location, field of view, and technical constraints for each telescope.
 
 .. automodapi:: tilepy.include.Observatories
 
-Observation Scheduling
-======================
+Observatoire Configuration
+--------------------------
 
-The **ObservationScheduler** module provides algorithms and utilities to schedule rapid follow-up observations
-of electromagnetic counterparts to gravitational wave transients. It computes optimal tiling schedules for telescopes,
-generates visibility plots, and supports both single- and multi-observatory coordination.
+.. automodapi:: tilepy.include.CampaignDefinition
+    :no-inheritance-diagram:
+
+Tiling Determination
+--------------------
+
+Functions to compute tiling observation schedules for one or multiple observatories,
+using 2D/3D probability maps and considering constraints.
+
+.. automodapi:: tilepy.include.TilingDetermination
+
+Observation Scheduling
+----------------------
+
+Algorithms and utilities to schedule rapid follow-up observations, generate visibility plots, and support coordination.
 
 .. automodapi:: tilepy.include.ObservationScheduler
 
-Other Modules
-=============
+Ranking Observation Times
+-------------------------
 
-.. automodapi:: tilepy.include
+Tools to rank observations by probability covered, adding the observability window for a comprehensive view.
+
+.. automodapi:: tilepy.include.RankingObservationTimes
+
+Plotting Tools
+--------------
+
+Utilities for plotting sky maps, pointings, and other visualization tasks.
+
+.. automodapi:: tilepy.include.PointingTools

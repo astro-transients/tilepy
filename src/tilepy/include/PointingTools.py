@@ -100,11 +100,44 @@ __all__ = [
 
 class Tools:
     """
-    class with different visibility check functions and other setting and rising of the sun and the moon functions
+    Utility class for astronomical visibility and observing constraints.
+
+    Provides static and class methods for checking darkness/greyness,
+    Sun/Moon altitude, twilight, galactic extinction, and other observation-related computations.
+
+    Provides static and class methods for incorporating observational constraints,
+    such as darkness/greyness, Sun/Moon altitude, twilight, galactic extinction, and other
+    factors relevant to scheduling astronomical observations.
+
+
+    Most methods require an `obspar` object, which should provide site coordinates and observing thresholds.
+
+    Main functionalities include:
+      - Checking if the sky is dark or grey (usable) for observation.
+      - Computing Sun/Moon altitude, phase, rise and set times.
+      - Determining if a coordinate is inside the Galactic plane.
+      - Getting galactic extinction at given coordinates.
+      - Checking if a position is within the South Atlantic Anomaly (SAA).
+      - Miscellaneous geometric and HEALPix utilities for sky coverage analysis.
     """
 
     @classmethod
     def IsDarkness(cls, obsTime, obspar):
+        """
+        Return True if the sky meets the darkness constraints for observation.
+
+        Parameters
+        ----------
+        obsTime : datetime.datetime
+            Time of observation (UTC).
+        obspar : object
+            Observation parameters.
+
+        Returns
+        -------
+        bool
+            True if darkness constraints are satisfied, False otherwise.
+        """
         sunAlt = Tools.SunAlt(obsTime, obspar)
         moonAlt = Tools.MoonAlt(obsTime, obspar)
         SunDown = obspar.sunDown
@@ -119,6 +152,11 @@ class Tools:
 
     @classmethod
     def IsGreyness(cls, obsTime, obspar):
+        """
+        Return True if the sky meets the greyness (twilight) constraints for observation.
+
+        So check if the Sun and Moon are in the grey twilight regime.
+        """
         # SUN altitude
         sunAlt = Tools.SunAlt(obsTime, obspar)
         # MOON altitude
@@ -141,6 +179,9 @@ class Tools:
 
     @classmethod
     def MoonPhase(cls, obsTime, obspar):
+        """
+        Return the phase of the Moon (in percent) at the given time and site.
+        """
         moon = ephem.Moon()
         obs = ephem.Observer()
         obs.lon = str(obspar.lon / u.deg)
@@ -155,6 +196,9 @@ class Tools:
 
     @classmethod
     def SunAlt(cls, obsTime, obspar):
+        """
+        Return the Sun's altitude (in degrees) at the given time and site.
+        """
         sun = get_body("sun", Time(obsTime, scale="utc")).transform_to(
             AltAz(obstime=Time(obsTime, scale="utc"), location=obspar.location)
         )
@@ -165,6 +209,9 @@ class Tools:
 
     @classmethod
     def MoonAlt(cls, obsTime, obspar):
+        """
+        Return the Moon's altitude (in degrees) at the given time and site.
+        """
         moon = ephem.Moon()
         obs = ephem.Observer()
         obs.lon = str(obspar.lon / u.deg)
@@ -178,6 +225,9 @@ class Tools:
 
     @classmethod
     def NextSunrise(cls, obsTime, obspar):
+        """
+        Return the datetime of the next sunrise after the given time at the site.
+        """
         sun = ephem.Sun()
         obs = ephem.Observer()
         obs.lon = str(obspar.lon / u.deg)
@@ -325,6 +375,9 @@ class Tools:
 
     @classmethod
     def GalacticPlaneBorder(cls, coords):
+        """
+        Return True if the coordinates are inside the Galactic plane region.
+        """
         lon = coords.galactic.l.value  # x-coordinate
         lat = coords.galactic.b.value  # y-coordinate
         # print(lon)
@@ -345,6 +398,9 @@ class Tools:
 
     @classmethod
     def GetGalacticExtinction(cls, coords, dustmap="SFD", filters="SDSS_r"):
+        """
+        Return the galactic extinction at the given coordinates.
+        """
         # Extinction = DustMap.ebv(coords)
         extinction = DustMap.extinction(coords, dustmap="SFD", filters="SDSS_r")
         # GasMap.plot_map('HI4PI')
@@ -352,6 +408,9 @@ class Tools:
 
     @classmethod
     def is_in_saa(cls, latitude, longitude):
+        """
+        Return True if the given latitude and longitude are inside the South Atlantic Anomaly (SAA).
+        """
         saa_lat_min = -40.0  # Minimum latitude for the SAA
         saa_lat_max = 0.0  # Maximum latitude for the SAA
         saa_lon_min = -50.0  # Minimum longitude for the SAA
@@ -401,6 +460,9 @@ class Tools:
 
     @classmethod
     def query_square(nside, center, side_length_rad):
+        """
+        Return HEALPix pixel indices for a square region centered at the given point.
+        """
         # Convert side length to radians
 
         # Calculate corner offsets from the center point (assuming a small angle approximation)
@@ -620,17 +682,26 @@ class Observer:
         max_moon_phase,
     ):
         """
-        Initialize the class with all the needed parameters.
+        Initialize an Observer instance.
 
-        Args:
-        longitude (float): The longitude of the observatory (degree).
-        latitude (float): The latitude of the observatory (degree).
-        elevation (float): The elevation of the observatory (m).
-        run_duration (datetime.timedelta): The duration of each run.
-        minimal_run_duration (datetime.timedelta): The minimum duration of each run.
-        max_sun_altitude (float): The maximum altitude of the sun (degree).
-        max_moon_altitude (float): The maximum altitude of the moon (degree).
-        max_moon_phase (float): The maximum phase of the moon (illumination fraction).
+        Parameters
+        ----------
+        longitude : float
+            Longitude of the observatory (degrees).
+        latitude : float
+            Latitude of the observatory (degrees).
+        elevation : float
+            Elevation of the observatory (meters).
+        run_duration : datetime.timedelta
+            Duration of each observing run.
+        minimal_run_duration : datetime.timedelta
+            Minimum duration for an observing run.
+        max_sun_altitude : float
+            Maximum allowed altitude of the Sun (degrees).
+        max_moon_altitude : float
+            Maximum allowed altitude of the Moon (degrees).
+        max_moon_phase : float
+            Maximum allowed Moon phase (illumination fraction).
         """
 
         self.eph = load("de440s.bsp")
@@ -650,14 +721,18 @@ class Observer:
         """
         Calculate the time window for observations.
 
-        Args:
-        start_time (datetime): Earliest start time to start observations, if no timezone, assume UTC
-        nb_observation_night (int): The number of observation nights.
+        Parameters
+        ----------
+        start_time : datetime.datetime
+            Earliest time to start observations. If no timezone is provided, UTC is assumed.
+        nb_observation_night : int
+            Number of observation nights.
 
-        Returns:
-        list: The start times for each run within the valid time range.
+        Returns
+        -------
+        list of datetime.datetime
+            The start times for each run within the valid time range.
         """
-
         # Compute time interval
         if start_time.tzinfo is None:
             zone = timezone("UTC")
@@ -680,13 +755,19 @@ class Observer:
         """
         Compute the intersection of two time ranges.
 
-        Args:
-        time_range_1 (list): The first time range.
-        time_range_2 (list): The second time range.
+        Parameters
+        ----------
+        time_range_1 : list
+            The first time range.
+        time_range_2 : list
+            The second time range.
 
-        Returns:
-        list: The intersection of the two time ranges.
+        Returns
+        -------
+        list
+            The intersection of the two time ranges.
         """
+
         # Initialisation
         i = j = 0
         n = len(time_range_1)
@@ -714,12 +795,17 @@ class Observer:
         """
         Compute the start times for each run within a valid time range.
 
-        Args:
-        valid_time_range (list): The valid time range.
+        Parameters
+        ----------
+        valid_time_range : list
+            The valid time range.
 
-        Returns:
-        list: The start times for each run.
+        Returns
+        -------
+        list
+            The start times for each run.
         """
+
         run_start_time = []
         for i in range(len(valid_time_range)):
             observation_time_available = valid_time_range[i][1] - valid_time_range[i][0]
@@ -741,14 +827,21 @@ class Observer:
         """
         Get the time interval for the sun constraint.
 
-        Args:
-        start_time (datetime): The start time of observations.
-        stop_time (datetime): The stop time of observations.
-        nb_observation_night (int): The number of observation nights.
+        Parameters
+        ----------
+        start_time : datetime.datetime
+            The start time of observations.
+        stop_time : datetime.datetime
+            The stop time of observations.
+        nb_observation_night : int
+            The number of observation nights.
 
-        Returns:
-        list: The time interval for the sun constraint.
+        Returns
+        -------
+        list
+            The time interval for the sun constraint.
         """
+
         rise_time, set_time = self.get_risings_and_settings(
             "sun", self.max_sun_altitude, start_time, stop_time
         )
@@ -768,13 +861,19 @@ class Observer:
         """
         Get the time interval for the moon constraint.
 
-        Args:
-        start_time (datetime): The start time of observations.
-        stop_time (datetime): The stop time of observations.
+        Parameters
+        ----------
+        start_time : datetime.datetime
+            The start time of observations.
+        stop_time : datetime.datetime
+            The stop time of observations.
 
-        Returns:
-        list: The time interval for the moon constraint.
+        Returns
+        -------
+        list
+            The time interval for the moon constraint.
         """
+
         rise_time, set_time = self.get_risings_and_settings(
             "moon", self.max_moon_altitude, start_time, stop_time
         )
@@ -823,12 +922,17 @@ class Observer:
         """
         Get the moon phase at a given observation time.
 
-        Args:
-        observation_time (datetime): The time of observation.
+        Parameters
+        ----------
+        observation_time : datetime.datetime
+            The time of observation.
 
-        Returns:
-        float: The moon phase at the given observation time.
+        Returns
+        -------
+        float
+            The moon phase at the given observation time.
         """
+
         sun, moon, earth = self.eph["sun"], self.eph["moon"], self.eph["earth"]
 
         return (
@@ -842,15 +946,25 @@ class Observer:
         """
         Get the rise and set times of a celestial body within a given time range.
 
-        Args:
-        celestial_body (str): The celestial body.
-        horizon (float): The horizon to consider as rised or set (degree).
-        start_time (datetime): The start time.
-        stop_time (datetime): The stop time.
+        Parameters
+        ----------
+        celestial_body : str
+            The celestial body.
+        horizon : float
+            The horizon to consider as risen or set (degrees).
+        start_time : datetime.datetime
+            The start time.
+        stop_time : datetime.datetime
+            The stop time.
 
-        Returns:
-        list, list: The rise and set times of the celestial body.
+        Returns
+        -------
+        list of datetime.datetime
+            The rise times of the celestial body.
+        list of datetime.datetime
+            The set times of the celestial body.
         """
+
         f = almanac.risings_and_settings(
             self.eph,
             self.eph[celestial_body],
@@ -918,13 +1032,16 @@ class Observer:
 
 def getdate(x):
     """
-    Bottom-level function that takes a date and prints it in ISO format
+    Bottom-level function that takes a date and prints it in ISO format.
 
-    :param x: the date to be formatted
-    :type x: datetime
+    Parameters
+    ----------
+    x : datetime.datetime
+        The date to be formatted.
 
-    :return: none
-    rtype: none
+    Returns
+    -------
+    None
     """
 
     if isinstance(x, datetime.datetime):
@@ -938,13 +1055,17 @@ def getdate(x):
 
 def UNIQSkymap_toNested(skymap_fname):
     """
-    Bottom-level function that takes a skymap and computes from it the uniq map
+    Load a GW HEALPix skymap from file and compute its uniq map.
 
-    :param skymap_fname: Healpix skymap
-    :type skymap_fname: Table
+    Parameters
+    ----------
+    skymap_fname : str
+        Path to the HEALPix GW skymap file (FITS format).
 
-    :return: healpix_skymaps_dict
-    rtype: dict
+    Returns
+    -------
+    dict
+        The computed uniq map from the GW skymap.
     """
 
     sky_tab = Table.read(skymap_fname)
@@ -2134,21 +2255,23 @@ def MangroveGalaxiesProbabilities(catalog):
 
 
 def VisibleAtTime(test_time, galaxies, maxz, observatory):
-    """Determine if prompt or afterglow follow-up is possible by knowing if there are galaxies with non-negligible probability of hosting the NSM in the FoV
-     1) check if any galaxy is visible, if not --> AFTERGLOW
+    """
+    Determine if prompt or afterglow follow-up is possible by checking if there are galaxies
+    with non-negligible probability of hosting the NSM in the FoV.
 
-    2) loop over zenith angle and select subsets of galaxies
+    Process:
+        1. Check if any galaxy is visible; if not, follow-up is 'AFTERGLOW'.
+        2. Loop over zenith angle and select subsets of galaxies.
+        3. Stop if maximum p-value of this subset is smaller than 75% of the previous subset.
+        4. Otherwise, apply a stricter zenith cut and repeat.
+        5. Select the galaxy with highest p-value fulfilling both criteria as the target.
 
-    3) stop if maximum p-value of this subset is smaller than 75% of the previous subset
-
-    4) else: stricter cut on zenith and repeat
-
-    5) take galaxy with highest p-value fulfilling both criteria as target
-
-    RETURNS:
-    --------
-    bool `is_vis` : is visible now?
-    np.ndarray `alt_az` : alt_az location of galaxies
+    Returns
+    -------
+    is_vis : bool
+        True if a galaxy is visible now, False otherwise.
+    alt_az : numpy.ndarray
+        Altitude and azimuth locations of galaxies.
     """
 
     # print()
@@ -2157,7 +2280,6 @@ def VisibleAtTime(test_time, galaxies, maxz, observatory):
     # observatory time and location to look up visibility of objects
 
     # observatory = co.EarthLocation(lat=-23.271333 * u.deg,lon=16.5 * u.deg, height=1800 * u.m)
-
     frame = co.AltAz(obstime=test_time, location=observatory)
     # print('galaxies',galaxies)
     # print('galaxies',len(galaxies['RAJ2000']))
@@ -2279,18 +2401,24 @@ def ComputeProbGalTargeted(
     counter,
     dirName,
 ):
-    """Computes probability Pgal and Pgw in FoV but it takes into account a list of pixels to avoid recounting already observed zones.
-    Returns saved circle too (is it really needed? )
-    bool doPlot when  = True is used to plot the maps
+    """
+    Compute the galaxy and GW probabilities in FoV, excluding already observed regions,
+    and optionally plot the sky coverage and galaxy positions.
 
-    RETURNS:
+    This function avoids recounting previously observed zones and returns the probability of galaxies (P_Gal)
+    and GW signal (P_GW) in the current FoV, the galaxies outside the current FoV but within the LIGO signal region,
+    and the updated list of observed pixels.
 
-    --------
-
-        P_Gal: Probability of galaxies within FoV in the LIGO signal region
-        P_GW: Total probability within  FoV of the Ligo signal.
-        noncircleGal: Table of galaxies that are outside the circle(s) and inside the LIGO signal region
-
+    Returns
+    -------
+    P_Gal : float
+        Probability of galaxies within FoV in the LIGO signal region.
+    P_GW : float
+        Total probability within the FoV of the LIGO signal.
+    noncircleGal : astropy.table.Table
+        Table of galaxies outside the current FoV but within the LIGO signal region.
+    talreadysumipixarray : list
+        Updated list of observed HEALPix pixel indices.
     """
     observatory = obspar.location
     maxZenith = obspar.maxZenith

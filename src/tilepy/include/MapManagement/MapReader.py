@@ -20,9 +20,9 @@ import os
 import time
 import traceback
 from abc import ABC, abstractmethod
+from urllib.error import HTTPError
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
-from urllib.error import HTTPError
 
 import astropy.units as u
 import healpy as hp
@@ -133,12 +133,21 @@ class MapReader(ABC):
         """
         Download the map from a url
 
-        :param download_max_nb_try: If more than 1, will attempt multiple time to download the file in case of error the first time
-        :type download_max_nb_try: int
-        :param time_wait_retry: the time to wait between each attempt at downloading the file
-        :type time_wait_retry: int
+        Attempts to download the file from the provided URL. If the download fails,
+        the function will retry up to `download_max_nb_try` times, waiting
+        `time_wait_retry` seconds between each attempt.
 
-        :return: filename
+        Parameters
+        ----------
+        download_max_nb_try : int
+            Maximum number of download attempts (should be >1 to enable retries).
+        time_wait_retry : int
+            Number of seconds to wait between download attempts.
+
+        Returns
+        -------
+        filename : str
+            Path to the downloaded file.
         """
 
         if download_max_nb_try < 1:
@@ -763,12 +772,21 @@ class MapReaderLegacy:
         """
         Download the map from a url
 
-        :param download_max_nb_try: If more than 1, will attempt multiple time to download the file in case of error the first time
-        :type download_max_nb_try: int
-        :param time_wait_retry: the time to wait between each attempt at downloading the file
-        :type time_wait_retry: int
+        Attempts to download the file from a specified URL. If the first download attempt fails,
+        the function will retry up to `download_max_nb_try` times, waiting `time_wait_retry` seconds
+        between attempts.
 
-        :return: filename
+        Parameters
+        ----------
+        download_max_nb_try : int
+            Number of download attempts (if greater than 1, will retry on failure).
+        time_wait_retry : int
+            Time in seconds to wait between download attempts.
+
+        Returns
+        -------
+        filename : str
+            Name or path of the downloaded file.
         """
 
         if download_max_nb_try < 1:

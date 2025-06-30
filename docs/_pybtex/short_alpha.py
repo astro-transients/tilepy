@@ -1,4 +1,5 @@
 # Reproduce form
+# We then need add "pybtex" in the ../pyproject.toml, to be installed by sphinx
 
 """Pybtex style to display at most 3 authors in a reference.
 Reproduced from
