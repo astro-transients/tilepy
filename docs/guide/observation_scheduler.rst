@@ -14,7 +14,7 @@ including location, field of view, and technical constraints for each telescope.
 .. automodapi:: tilepy.include.Observatories
 
 Observation Scheduling
-=====================
+======================
 
 The **ObservationScheduler** module provides algorithms and utilities to schedule rapid follow-up observations
 of electromagnetic counterparts to gravitational wave transients. It computes optimal tiling schedules for telescopes,

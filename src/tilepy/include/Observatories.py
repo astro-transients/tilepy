@@ -144,7 +144,7 @@ class CTANorthObservatory:
 
     As of mid‑2025:
       - **LST‑1**: installed in October 2018 and under commissioning
-      - **LST‑2 / LST‑3 / LST‑4**: under construction, expected to be in place before end 2025
+      - **LST‑2 / LST‑3 / LST‑4**: under construction, expected to be in place before end 2026
       - **9 MSTs**: being deployed on-site
 
     CTAO–North is ideal for studying low-energy cosmic transients, distant active galactic nuclei, and extragalactic gamma-ray sources.
