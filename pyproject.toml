@@ -66,6 +66,8 @@ docs = [
     "sphinxcontrib-bibtex",
     "astropy-sphinx-theme @ git+https://github.com/astropy/sphinx-astropy-theme.git",
     "sphinx-automodapi @ git+https://github.com/astropy/sphinx-automodapi",
+    "ligo.skymap >= 2.4.0",
+    "python-ligo-lw",
 ]
 
 dev = [
