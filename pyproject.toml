@@ -57,12 +57,10 @@ tests = [
     "tomli",
     "nbmake>=1.5.5",
 ]
+
 docs = [
     "numpy<2",
-    #"matplotlib <= 3.9.0",
-   # "ligo.skymap >2.0.0  < 2.4.O",
-   # "igwn-ligolw",
-   "python-ligo-lw",
+    "python-ligo-lw",
     "sphinx>=1.6",
     "sphinx-astropy[confv2]",
     "sphinxcontrib-typer",
