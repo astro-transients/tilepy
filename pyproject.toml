@@ -59,16 +59,15 @@ tests = [
 ]
 docs = [
     "numpy<2",
+    "ligo.skymap >= 2.4.0",
+    "python-ligo-lw",
+    "igwn-ligolw",
     "sphinx>=1.6",
-    "pybtex",
     "sphinx-astropy[confv2]",
     "sphinxcontrib-typer",
     "sphinxcontrib-bibtex",
     "astropy-sphinx-theme @ git+https://github.com/astropy/sphinx-astropy-theme.git",
     "sphinx-automodapi @ git+https://github.com/astropy/sphinx-automodapi",
-    "ligo.skymap==2.3.0",
-    "python-ligo-lw<2.2.0",
-    "igwn-ligolw",
 ]
 
 dev = [
