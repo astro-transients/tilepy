@@ -45,6 +45,9 @@ from skyfield import almanac
 from skyfield.api import E, N, load, wgs84
 import matplotlib.dates as mdates
 from matplotlib.path import Path
+from skyfield.api import load
+import igrf
+from spacepy.igrf import IGRF
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -363,6 +366,31 @@ class Tools:
         else:
             return False
 
+    
+    @classmethod
+    def is_in_saa_opt(cls, satellite, current_time, threshold_nT=25000):
+        geocentric = satellite.at(current_time)
+        subpoint = geocentric.subpoint()
+
+        lat = subpoint.latitude.degrees
+        lon = subpoint.longitude.degrees
+        alt_km = subpoint.elevation.km
+
+        # Convert Skyfield time to datetime → decimal year
+        dt = current_time.utc_datetime()  # get Python datetime object in UTC
+        year = dt.year + (dt.timetuple().tm_yday - 1 + dt.hour/24 + dt.minute/1440 + dt.second/86400) / 365.25
+
+        coeffs = load_igrf_coeffs("igrf13coeffs.txt")
+
+        B_total = get_dipole_field(lat, lon, alt_km, year, coeffs)
+
+        print(f"[{satellite.name}] lat: {lat:.2f}, lon: {lon:.2f}, alt: {alt_km:.2f} km")
+        print(f"Magnetic field strength: {B_total:.1f} nT")
+
+        return B_total < threshold_nT
+
+
+
     @classmethod
     def query_square(nside, center, side_length_rad):
         # Convert side length to radians
@@ -462,6 +490,78 @@ class Tools:
 
         coords = SkyCoord(ra=ra_vertices * u.deg, dec=dec_vertices * u.deg)
         return np.array([coord.cartesian.xyz.value for coord in coords])
+
+
+def decimal_year(dt):
+    start = datetime.datetime(dt.year, 1, 1, tzinfo=timezone.utc)
+    end = datetime.datetime(dt.year + 1, 1, 1, tzinfo=timezone.utc)
+    return dt.year + (dt - start).total_seconds() / (end - start).total_seconds()
+
+def load_igrf_coeffs(filename="igrf13coeffs.txt"):
+    """
+    Load simplified IGRF coefficients (dipole only) from a full IGRF13 coefficient file.
+    This function skips headers and parses lines like:
+      g  1  0  -31543  ...  (only first g and h coefficients per line)
+    """
+
+    coeffs = []
+    with open(filename, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue  # skip empty and comment lines
+            
+            parts = line.split()
+            # first part is 'g' or 'h', then n, m, then many coefficients by year
+            if parts[0] not in ('g', 'h'):
+                continue  # skip any weird line
+
+            try:
+                coeff_type = parts[0]  # 'g' or 'h'
+                n = int(parts[1])
+                m = int(parts[2])
+                coeff_value = float(parts[3])  # take coefficient for 1900.0 as example
+            except (ValueError, IndexError):
+                continue  # skip lines that don't parse
+
+            # Store as (n, m, g, h) in coeffs list; accumulate g and h separately
+            # We need to collect both g and h for the same (n,m)
+            # So accumulate in a dict first:
+            # We'll build a dict keyed by (n,m) to hold g and h coefficients
+
+            coeffs.append((coeff_type, n, m, coeff_value))
+
+    # Now, reorganize coeffs to dict keyed by (n,m) with g and h values:
+    coeff_dict = {}
+    for coeff_type, n, m, val in coeffs:
+        if (n, m) not in coeff_dict:
+            coeff_dict[(n, m)] = {'g': None, 'h': None}
+        coeff_dict[(n, m)][coeff_type] = val
+
+    # Convert to list of tuples (n, m, g, h)
+    final_coeffs = []
+    for (n, m), vals in coeff_dict.items():
+        g_val = vals['g'] if vals['g'] is not None else 0.0
+        h_val = vals['h'] if vals['h'] is not None else 0.0
+        final_coeffs.append((n, m, g_val, h_val))
+
+    return final_coeffs
+
+def get_dipole_field(lat_deg, lon_deg, alt_km, year, coeffs):
+    """Estimate magnetic field strength using IGRF dipole terms only."""
+    Re = 6371.2  # Earth radius in km
+    r = Re + alt_km
+    lat_rad = np.radians(lat_deg)
+
+    g10 = next(g for n, m, g, h in coeffs if n == 1 and m == 0)
+    # You can extend to g11 and h11 if needed
+
+    B_r = -2 * g10 * (Re / r) ** 3 * np.cos(lat_rad)
+    B_theta = -g10 * (Re / r) ** 3 * np.sin(lat_rad)
+
+    B_total = np.sqrt(B_r ** 2 + B_theta ** 2)
+
+    return B_total
 
 
 class Observer:
@@ -1129,15 +1229,14 @@ def SAA_Times(
     saa = []
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
-        satellite_position, satellite_location = GetSatellitePositions(
-            SatelliteName, SatelliteTime
-        )
-
-        if Tools.is_in_saa(satellite_location.lat.deg, satellite_location.lon.deg):
-            saa.append(True)
-        else:
-            saa.append(False)
-
+        #satellite_position, satellite_location = GetSatellitePositions(
+        #    SatelliteName, SatelliteTime
+        #)
+        #if Tools.is_in_saa(satellite_location.lat.deg, satellite_location.lon.deg):
+        #    saa.append(True)
+        #else:
+        #    saa.append(False)
+        saa.append(Tools.is_in_saa_opt(SatelliteName, SatelliteTime, 25000))
         SatTimes.append(current_time)
 
         current_time += step
@@ -1702,73 +1801,128 @@ def PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values):
     plt.close()
 
 
-def map_pixel_availability(pixels_by_time, times):
-    pixel_availability = {}
+def map_pixel_availability(pixels_by_time, probs_by_time, times):
+    """
+    Map each pixel to a list of available times and a single aggregated probability.
 
-    for time, pixel_list in zip(times, pixels_by_time):
-        for pixel in pixel_list:
-            if pixel not in pixel_availability:
-                pixel_availability[pixel] = []
-            pixel_availability[pixel].append(time)
-    return pixel_availability
+    Args:
+        pixels_by_time: list of lists of pixels available at each time step
+        probs_by_time: list of lists of probabilities associated with each pixel at each time step
+        times: list of times corresponding to each pixel list
+
+    Returns:
+        dict: {pixel: {'times': [time1, time2, ...], 'prob': aggregated_probability}, ...}
+    """
+    pixel_data = {}
+
+    for time, pixel_list, prob_list in zip(times, pixels_by_time, probs_by_time):
+        for pixel, prob in zip(pixel_list, prob_list):
+            if pixel not in pixel_data:
+                pixel_data[pixel] = {'times': [], 'probs': []}
+            pixel_data[pixel]['times'].append(time)
+            pixel_data[pixel]['probs'].append(prob)
+
+    # Aggregate probabilities (e.g., average)
+    for pixel in pixel_data:
+        probs = pixel_data[pixel]['probs']
+        avg_prob = sum(probs) / len(probs)
+        pixel_data[pixel]['prob'] = avg_prob
+        del pixel_data[pixel]['probs']  # Remove raw list to keep only aggregated value
+
+    return pixel_data
 
 
-def PlotSpaceOccTime(dirName, pixels_by_time, times):
+
+def PlotSpaceOccTime(dirName, pixels_by_time, ProbaTime, times):
     path = dirName + "/Occ_Space_Obs"
     if not os.path.exists(path):
         os.mkdir(path, 493)
 
-    pixel_availability = map_pixel_availability(pixels_by_time, times)
+    pixel_availability = map_pixel_availability(pixels_by_time, ProbaTime, times)
+    
+    sorted_pixels = sorted(pixel_availability.items(), key=lambda x: x[1]['prob'])
 
     plt.figure(figsize=(10, 6))
 
-    for idx, (pixel, available_times) in enumerate(pixel_availability.items()):
-        plt.scatter(
-            available_times, [pixel] * len(available_times), label=f"Pixel {pixel}"
-        )
+    # Collect all times where any pixel is available
+    all_times = set()
+    for pixel, data in sorted_pixels:
+        all_times.update(data['times'])
+    all_times = sorted(all_times)
 
+    # Plot pixels
+    colors = plt.cm.tab20(np.linspace(0, 1, len(sorted_pixels)))
+    for y_index, (pixel, data) in enumerate(sorted_pixels):
+        times = data['times']
+        color = colors[y_index]
+        y_values = [y_index] * len(times)
+        plt.scatter(times, y_values, color=color, s=20)
+
+    # Y-axis labels
+    plt.yticks(
+        range(len(sorted_pixels)),
+        [f"{pixel} (p={data['prob']:.2f})" for pixel, data in sorted_pixels]
+    )
     plt.xlabel("Time")
-    plt.ylabel("Pixel")
-    # plt.title("Pixel Availability Over Time")
+    plt.ylabel("Pixels sorted by ascending probability")
+    #plt.title("Pixel Availability with Occulted Regions")
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig("%s/Occ_Pointing_Times.png" % (path))
+
+    # Format x-axis to show only time (HH:MM)
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+    plt.gcf().autofmt_xdate()
+
+    plt.savefig(os.path.join(path, "Occ_Pointing_Times.png"))
     plt.close()
 
 
-def PlotSpaceOccTimeRadec(dirName, pixels_by_time, times, NSIDE):
+def PlotSpaceOccTimeRadec(dirName, pixels_by_time, ProbaTime, times, NSIDE):
     path = os.path.join(dirName, "Occ_Space_Obs")
     os.makedirs(path, mode=0o755, exist_ok=True)
 
-    pixel_availability = map_pixel_availability(pixels_by_time, times)
+    # Map pixel availability with times and probabilities
+    pixel_availability = map_pixel_availability(pixels_by_time, ProbaTime, times)
+    sorted_pixels = sorted(pixel_availability.items(), key=lambda x: x[1]['prob'])
 
-    num_pixels = len(pixel_availability)
-    fig_height = max(6, num_pixels * 0.2)  # Scale height dynamically
+    plt.figure(figsize=(10, 6))
 
-    plt.figure(figsize=(12, fig_height))
+    # Collect all times where any pixel is available
+    all_times = set()
+    for _, data in sorted_pixels:
+        all_times.update(data['times'])
+    all_times = sorted(all_times)
 
     yticks = []
     yticklabels = []
 
-    for idx, (pixel, available_times) in enumerate(pixel_availability.items()):
+    colors = plt.cm.tab20(np.linspace(0, 1, len(sorted_pixels)))
+
+    for y_index, (pixel, data) in enumerate(sorted_pixels):
         theta, phi = hp.pix2ang(NSIDE, pixel, nest=False)
         ra = np.degrees(phi)
         dec = 90 - np.degrees(theta)
 
-        yval = idx  # Unique Y value per pixel
-        plt.scatter(
-            available_times, [yval] * len(available_times), label=f"Pixel {pixel}", s=10
-        )
+        times = data['times']
+        color = colors[y_index]
+        y_values = [y_index] * len(times)
 
-        yticks.append(yval)
-        yticklabels.append(f"RA={ra:.1f}°, Dec={dec:.1f}°")
+        plt.scatter(times, y_values, color=color, s=20)
 
-    plt.xlabel("Time")
-    plt.ylabel("Sky Coordinates (RA, Dec)")
-    plt.yticks(yticks, yticklabels, fontsize=8)
-    # plt.title("Pixel Availability Over Time")
+        yticks.append(y_index)
+        yticklabels.append(f"{ra:.1f}, {dec:.1f} (p={data['prob']:.2f})")
+
+
+    plt.yticks(yticks, yticklabels)
+    plt.xlabel("Time of Day")
+    plt.ylabel("RA, Dec of Pixels (sorted by ascending probability)")
+    #plt.title("Pixel Availability with Occulted Regions")
     plt.grid(True)
     plt.tight_layout()
+
+    # Format x-axis to only show time (HH:MM)
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+    plt.gcf().autofmt_xdate()
 
     plt.savefig(os.path.join(path, "Occ_Pointing_Times_Radec.png"))
     plt.close()

@@ -2076,6 +2076,7 @@ def PGWinFoV_Space_NObs(
     TestTime = []
     RadecsVsTimes = []
     matching_tables = []
+    ProbaTime = []
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         # Need to get a list of highest pixels
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
@@ -2108,10 +2109,12 @@ def PGWinFoV_Space_NObs(
         theta = np.radians(90.0 - matching_rows1["PIXDEC"])
         phi = np.radians(matching_rows1["PIXRA"])  # phi = longitude
         pix_idx = hp.ang2pix(reducedNside, theta, phi, nest=False)
+        pix_proba = matching_rows1["PIXFOVPROB"]
 
         RadecsVsTimes.append(radectime)
         AvailablePixPerTime.append(pix_idx)
         TestTime.append(current_time)
+        ProbaTime.append(pix_proba)
 
         # List of all cculted pixels
         Occultedpixels.append(pixlistRROcc)
@@ -2133,8 +2136,8 @@ def PGWinFoV_Space_NObs(
 
     if obspar.doPlot:
         PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
-        PlotSpaceOccTime(dirName, AvailablePixPerTime, TestTime)
-        PlotSpaceOccTimeRadec(dirName, AvailablePixPerTime, TestTime, reducedNside)
+        PlotSpaceOccTime(dirName, AvailablePixPerTime, ProbaTime, TestTime)
+        PlotSpaceOccTimeRadec(dirName, AvailablePixPerTime, ProbaTime, TestTime, reducedNside)
 
     ObsName = [obspar.obs_name for j in range(len(first_values))]
     RAarray = [row["PIXRA"] for row in first_values]
@@ -2145,6 +2148,8 @@ def PGWinFoV_Space_NObs(
         [ObsName, RAarray, DECarray, P_GWarray],
         names=["ObsName", "RA(deg)", "DEC(deg)", "PGW"],
     )
+    print(matching_tables)
+    print(TestTime)
 
     return SuggestedPointings, SatTimes, saa, matching_tables, TestTime
 
