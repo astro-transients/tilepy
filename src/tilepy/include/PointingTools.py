@@ -1596,7 +1596,6 @@ def GetBestGridPos2D(
 
         sortcat1 = cat_pix[np.flipud(np.argsort(cat_pix["PIXFOVPROB"]))]
         first_values = sortcat1[:maxRuns]
-        print(first_values)
 
     else:
         raise ValueError("No pointing were found with current minProbCut")
@@ -1605,8 +1604,8 @@ def GetBestGridPos2D(
         hp.gnomview(
             highres,
             rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]),
-            xsize=700,
-            ysize=700,
+            xsize=500,
+            ysize=500,
         )
 
         path = dirName + "/GridPlot"
@@ -1615,16 +1614,24 @@ def GetBestGridPos2D(
 
         if n_sides > 0:
             for ra1, dec1 in zip(first_values["PIXRA"], first_values["PIXDEC"]):
-                vertices_radec = Tools.get_regular_polygon_vertices(
-                    ra1, dec1, radius, n_sides, rotation
-                )
-                theta, phi = hp.vec2ang(vertices_radec)
-                hp.projplot(theta, phi, "ro", markersize=4)  # Points
+                # Get unit vector vertices (assumed in Cartesian coords)
+                vertices_radec = Tools.get_regular_polygon_vertices(ra1, dec1, radius, n_sides, rotation)
+                # Convert Cartesian to angular (theta, phi)
+                theta, phi = hp.vec2ang(vertices_radec)  # in radians
+                ra_deg = np.degrees(phi)
+                dec_deg = 90 - np.degrees(theta)
+
                 hp.projplot(
-                    np.append(theta, theta[0]),
-                    np.append(phi, phi[0]),
+                    ra_deg, dec_deg, "ro", markersize=4,
+                    lonlat=True, coord="C"  # RA/Dec mode
+                )
+                hp.projplot(
+                    np.append(ra_deg, ra_deg[0]),
+                    np.append(dec_deg, dec_deg[0]),
                     "r-",
                     linewidth=1,
+                    lonlat=True,
+                    coord="C"
                 )
 
         hp.graticule()
@@ -1723,7 +1730,7 @@ def GetBestGridPos3D(
             os.mkdir(path, 493)
 
         # mpl.rcParams.update({'font.size':14})
-        hp.gnomview(prob, rot=(143, 10), xsize=700, ysize=700)
+        hp.gnomview(prob, rot=(143, 10), xsize=500, ysize=500)
         hp.graticule()
 
         # Filter out rows with NaN in dp_dV
@@ -1787,8 +1794,8 @@ def PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values):
     hp.gnomview(
         prob,
         rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]),
-        xsize=700,
-        ysize=700,
+        xsize=500,
+        ysize=500,
     )
     hp.graticule()
     try:

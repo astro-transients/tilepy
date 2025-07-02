@@ -597,15 +597,27 @@ def Ranking_Space(dirName, PointingFile, obspar):
 
     # Iteratively find the closest entry
     while not data.empty:
-        last_entry = ranked[-1]
-        # Compute distances to the last entry
-        data["distance"] = data.apply(lambda row: distance(last_entry, row), axis=1)
-        # Find the closest entry
-        closest_idx = data["distance"].idxmin()
-        closest_entry = data.loc[closest_idx]
-        ranked.append(closest_entry)
-        # Remove the closest entry from the dataset
-        data = data.drop(index=closest_idx).reset_index(drop=True)
+            last_entry = ranked[-1]
+
+            # Normalize distance and PGW to 0-1 scale
+            distances = data.apply(lambda row: distance(last_entry, row), axis=1)
+            pgw_values = data["PGW"] if "PGW" in data.columns else data["PGal"]
+
+            max_dist = distances.max()
+            max_pgw = pgw_values.max()
+
+            data["distance_norm"] = distances / max_dist
+            data["pgw_norm"] = pgw_values / max_pgw
+
+            # Cost function: prioritize close and high probability
+            α, β = 0.5, 0.7  # tune as needed
+            data["score"] = α * data["distance_norm"] - β * data["pgw_norm"]
+
+            best_idx = data["score"].idxmin()
+            best_entry = data.loc[best_idx]
+
+            ranked.append(best_entry)
+            data = data.drop(index=best_idx).reset_index(drop=True)
 
     # Output the ranked list
     print("Ranked List:")
@@ -635,7 +647,7 @@ def Ranking_Space(dirName, PointingFile, obspar):
         fig = plt.figure(figsize=(10, 6))
         # Plot HEALPix map with its own color map
         hp.gnomview(
-            prob, rot=(skycoords[0].ra.deg, skycoords[0].dec.deg), xsize=700, ysize=700
+            prob, rot=(skycoords[0].ra.deg, skycoords[0].dec.deg), xsize=500, ysize=500
         )
 
         # Normalize ranks for colormap
@@ -746,7 +758,7 @@ def Ranking_Space_AI(dirName, PointingFile, obspar):
         fig = plt.figure(figsize=(10, 6))
         # Plot HEALPix map with its own color map
         hp.gnomview(
-            prob, rot=(skycoords.ra.deg[0], skycoords.dec.deg[0]), xsize=700, ysize=700
+            prob, rot=(skycoords.ra.deg[0], skycoords.dec.deg[0]), xsize=500, ysize=500
         )
 
         # Normalize ranks for colormap
