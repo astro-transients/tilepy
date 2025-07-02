@@ -357,7 +357,9 @@ def PlotPointings(
             plt.savefig("%s/Pointings%s.png" % (dirName, j))
 
 
-def PlotPointingsTogether(prob, targetCoord1, targetCoord2, FOV, plotType, doPlot=True):
+def PlotPointingsTogether(
+    prob, targetCoord1, targetCoord2, FOV1, FOV2, plotType, doPlot=True
+):
 
     if doPlot:
 
@@ -367,7 +369,7 @@ def PlotPointingsTogether(prob, targetCoord1, targetCoord2, FOV, plotType, doPlo
                 xsize=1000,
                 ysize=1000,
                 rot=[targetCoord1[0].ra.deg, targetCoord1[0].dec.deg],
-                reso=5.0,
+                reso=1.0,
             )
         if plotType == "mollweide":
             hp.mollview(prob, title="GW prob map (Equatorial)", coord="C")
@@ -389,8 +391,8 @@ def PlotPointingsTogether(prob, targetCoord1, targetCoord2, FOV, plotType, doPlo
         )
 
         npoints = 400
-        Fov_array = np.empty(npoints)
-        Fov_array.fill(FOV)
+        Fov_array1 = np.empty(npoints)
+        Fov_array1.fill(FOV1)
 
         theta = np.random.rand(npoints) * 360
         tarcoordra1 = np.empty(npoints)
@@ -399,8 +401,8 @@ def PlotPointingsTogether(prob, targetCoord1, targetCoord2, FOV, plotType, doPlo
         for j in range(0, len(targetCoord1.ra)):
             tarcoordra1.fill(targetCoord1[j].ra.deg)
             tarcoorddec1.fill(targetCoord1[j].dec.deg)
-            racoord1 = tarcoordra1 + Fov_array * np.cos(theta)
-            deccoord1 = tarcoorddec1 + Fov_array * np.sin(theta)
+            racoord1 = tarcoordra1 + Fov_array1 * np.cos(theta)
+            deccoord1 = tarcoorddec1 + Fov_array1 * np.sin(theta)
             hp.visufunc.projscatter(
                 racoord1, deccoord1, lonlat=True, marker=".", color=Colors[2]
             )
@@ -411,14 +413,17 @@ def PlotPointingsTogether(prob, targetCoord1, targetCoord2, FOV, plotType, doPlo
                 lonlat=True,
                 color=Colors[1],
             )
+
+        Fov_array2 = np.empty(npoints)
+        Fov_array2.fill(FOV2)
         tarcoordra2 = np.empty(npoints)
 
         tarcoorddec2 = np.empty(npoints)
         for j in range(0, len(targetCoord2.ra)):
             tarcoordra2.fill(targetCoord2[j].ra.deg)
             tarcoorddec2.fill(targetCoord2[j].dec.deg)
-            racoord2 = tarcoordra2 + Fov_array * np.cos(theta)
-            deccoord2 = tarcoorddec2 + Fov_array * np.sin(theta)
+            racoord2 = tarcoordra2 + Fov_array2 * np.cos(theta)
+            deccoord2 = tarcoorddec2 + Fov_array2 * np.sin(theta)
             hp.visufunc.projscatter(
                 racoord2, deccoord2, lonlat=True, marker=".", color=Colors[1]
             )

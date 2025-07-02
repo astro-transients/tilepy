@@ -279,7 +279,7 @@ def Time_DarkTime_GreyTime(
 
 
 def CompareTwoTilings(
-    filename, PointingsFile1=False, PointingsFile2=False, FOV=2, plotType="mollweide"
+    filename, PointingsFile1=False, PointingsFile2=False, plotType="mollweide"
 ):
     # Format of Pointing Files should be YYYY-MM-DD hh:mm:ss RAarray DECarray P_GWarray P_Galarray Round)
 
@@ -360,7 +360,8 @@ def CompareTwoTilings(
             prob,
             Coordinates1,
             Coordinates2,
-            FOV,
+            df1["FoV"][0],
+            df2["FoV"][0],
             plotType,
             doPlot=True,
         )
