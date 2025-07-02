@@ -46,8 +46,7 @@ from skyfield.api import E, N, load, wgs84
 import matplotlib.dates as mdates
 from matplotlib.path import Path
 from skyfield.api import load
-import igrf
-from spacepy.igrf import IGRF
+
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -382,7 +381,7 @@ class Tools:
 
         coeffs = load_igrf_coeffs("igrf13coeffs.txt")
 
-        B_total = get_dipole_field(lat, lon, alt_km, year, coeffs)
+        B_total = get_dipole_field(lat, lon, alt_km, coeffs)
 
         print(f"[{satellite.name}] lat: {lat:.2f}, lon: {lon:.2f}, alt: {alt_km:.2f} km")
         print(f"Magnetic field strength: {B_total:.1f} nT")
@@ -547,21 +546,40 @@ def load_igrf_coeffs(filename="igrf13coeffs.txt"):
 
     return final_coeffs
 
-def get_dipole_field(lat_deg, lon_deg, alt_km, year, coeffs):
-    """Estimate magnetic field strength using IGRF dipole terms only."""
-    Re = 6371.2  # Earth radius in km
+import numpy as np
+
+def get_dipole_field(lat_deg, lon_deg, alt_km, coeffs):
+    """
+    Estimate magnetic field strength using the full IGRF dipole terms (n=1, m=0,1).
+
+    Args:
+        lat_deg (float): Geodetic latitude in degrees.
+        lon_deg (float): Geodetic longitude in degrees.
+        alt_km (float): Altitude above sea level in kilometers.
+        coeffs (list): List of IGRF coefficients in (n, m, g, h) format.
+
+    Returns:
+        float: Magnetic field magnitude in nanotesla (nT).
+    """
+    Re = 6371.2  # Earth's mean radius in km
     r = Re + alt_km
-    lat_rad = np.radians(lat_deg)
+    theta = np.radians(90 - lat_deg)  # colatitude in radians
+    phi = np.radians(lon_deg)         # longitude in radians
 
+    # Extract dipole coefficients
     g10 = next(g for n, m, g, h in coeffs if n == 1 and m == 0)
-    # You can extend to g11 and h11 if needed
+    g11 = next(g for n, m, g, h in coeffs if n == 1 and m == 1)
+    h11 = next(h for n, m, g, h in coeffs if n == 1 and m == 1)
 
-    B_r = -2 * g10 * (Re / r) ** 3 * np.cos(lat_rad)
-    B_theta = -g10 * (Re / r) ** 3 * np.sin(lat_rad)
+    # Spherical harmonic terms (simplified for n=1)
+    Br = -2 * (Re / r) ** 3 * (g10 * np.cos(theta) + g11 * np.sin(theta) * np.cos(phi) + h11 * np.sin(theta) * np.sin(phi))
+    Btheta = - (Re / r) ** 3 * (g10 * np.sin(theta) - g11 * np.cos(theta) * np.cos(phi) - h11 * np.cos(theta) * np.sin(phi))
+    Bphi = (Re / r) ** 3 * (g11 * np.sin(phi) - h11 * np.cos(phi))  # eastward
 
-    B_total = np.sqrt(B_r ** 2 + B_theta ** 2)
-
+    # Total magnetic field strength
+    B_total = np.sqrt(Br**2 + Btheta**2 + Bphi**2)
     return B_total
+
 
 
 class Observer:

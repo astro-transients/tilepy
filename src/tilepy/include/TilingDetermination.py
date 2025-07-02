@@ -2134,7 +2134,7 @@ def PGWinFoV_Space_NObs(
 
     first_values = filtered_rows
 
-    if obspar.doPlot:
+    if obspar.doPlot and len(first_values) > 0:
         PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
         PlotSpaceOccTime(dirName, AvailablePixPerTime, ProbaTime, TestTime)
         PlotSpaceOccTimeRadec(dirName, AvailablePixPerTime, ProbaTime, TestTime, reducedNside)
@@ -2353,7 +2353,7 @@ def PGalinFoV_Space_NObs(
         print("No coordinates matched within the tolerance.")
         first_values = Table(names=first_values1.colnames)
 
-    if obspar.doPlot:
+    if obspar.doPlot and len(first_values) > 0:
         PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
         PlotSpaceOccTime(dirName, AvailablePixPerTime, TestTime)
         PlotSpaceOccTimeRadec(dirName, AvailablePixPerTime, TestTime, reducedNside)
