@@ -595,6 +595,7 @@ def Ranking_Space(dirName, PointingFile, obspar):
     ranked = [data.iloc[0]]
     data = data.iloc[1:].reset_index(drop=True)  # Exclude the first entry
 
+
     # Iteratively find the closest entry
     while not data.empty:
             last_entry = ranked[-1]
@@ -610,7 +611,7 @@ def Ranking_Space(dirName, PointingFile, obspar):
             data["pgw_norm"] = pgw_values / max_pgw
 
             # Cost function: prioritize close and high probability
-            α, β = 0.5, 0.7  # tune as needed
+            α, β = 0.9, 0.2  # tune as needed
             data["score"] = α * data["distance_norm"] - β * data["pgw_norm"]
 
             best_idx = data["score"].idxmin()
@@ -628,6 +629,23 @@ def Ranking_Space(dirName, PointingFile, obspar):
     output_file = "%s/RankingObservations_Space.txt" % dirName
     pd.DataFrame(ranked).to_csv(output_file, index=False, sep="\t")
     print(f"Ranked file saved to {output_file}")
+
+
+
+    # Read pre- and post-optimization data
+    pre_df = pd.read_csv(file_path, delim_whitespace=True)
+    # For probability coloring (before optimization)
+    prob_column = "PGW" if "PGW" in pre_df.columns else "PGal"
+    norm_prob = Normalize(vmin=np.min(pre_df[prob_column]), vmax=np.max(pre_df[prob_column]))
+    cmap_prob = cm.autumn
+    pre_colors = [cmap_prob(norm_prob(p)) for p in pre_df[prob_column]]
+
+    ranks = np.arange(len(ranked)) 
+    # For rank coloring (after optimization)
+    norm_rank = Normalize(vmin=np.min(ranks), vmax=np.max(ranks))
+    cmap_rank = cm.autumn
+    rank_colors = [cmap_rank(1 - norm_rank(r)) for r in ranks]
+
 
     if obspar.doPlot:
         raw_map = create_map_reader(obspar)
@@ -650,12 +668,8 @@ def Ranking_Space(dirName, PointingFile, obspar):
             prob, rot=(skycoords[0].ra.deg, skycoords[0].dec.deg), xsize=500, ysize=500
         )
 
-        # Normalize ranks for colormap
-        norm = Normalize(vmin=min(ranks), vmax=max(ranks))
-        colors = [cm.autumn(norm(rank)) for rank in ranks]
-
         # Plot each pointing using rank-based color
-        for coord, color, rank in zip(skycoords, colors, ranks):
+        for coord, color, rank in zip(skycoords, rank_colors, ranks):
             hp.visufunc.projplot(
                 coord.ra.deg,
                 coord.dec.deg,
@@ -666,28 +680,64 @@ def Ranking_Space(dirName, PointingFile, obspar):
                 markeredgecolor="black",
                 markeredgewidth=0.3,
             )
-            # x, y = hp.proj_to_xy(coord.ra.deg, coord.dec.deg, lonlat=True)
-            # plt.text(x, y, str(rank), fontsize=6, ha='center', va='center', color='black')
-            # hp.projtext(
-            #    coord.ra.deg,
-            #    coord.dec.deg,
-            #    str(rank),
-            #    lonlat=True,
-            #    ha='center',
-            #    va='center',
-            #    color='black'
-            # )
 
-        # Add colorbar
-        sm = ScalarMappable(cmap=cm.autumn, norm=norm)
-        sm.set_array([])
-
-        cax = fig.add_axes([0.15, 0.05, 0.7, 0.03])
-        cbar = fig.colorbar(sm, cax=cax, orientation="horizontal")
-        cbar.set_label("Pointing Rank")
+        # Rank colorbar
+        sm_rank = ScalarMappable(cmap=cmap_rank, norm=norm_rank)
+        sm_rank.set_array([])
+        cax_rank = fig.add_axes([0.15, 0.05, 0.7, 0.03])
+        cbar_rank = fig.colorbar(sm_rank, cax=cax_rank, orientation="horizontal")
+        cbar_rank.set_label("Pointing Rank")
 
         hp.graticule()
-        plt.savefig("%s/RankingObservations_Space.png" % (dirName))
+        plt.savefig("%s/RankingObservations_Space.png" % (dirName),  bbox_inches="tight")
+
+
+    if obspar.doPlot:
+        raw_map = create_map_reader(obspar)
+        skymap = SkyMap(obspar, raw_map)
+        prob = skymap.getMap("prob", 512)
+
+        try:
+            prob_column = "PGW" if "PGW" in pre_df.columns else "PGal"
+        except:
+            raise ValueError("Neither PGW nor PGal column found")
+
+        # Coordinates
+        pre_coords = SkyCoord(ra=pre_df["RA(deg)"].values * u.deg,
+                              dec=pre_df["DEC(deg)"].values * u.deg,
+                              frame="icrs")
+
+
+        # Create side-by-side subplots with same projection
+        fig = plt.figure(figsize=(14, 6))
+
+        for i, (coords, colors, title) in enumerate([
+            (pre_coords, pre_colors, "Before Optimization")
+        ]):
+            ax = fig.add_subplot(1, 2, i + 1, projection="mollweide")
+            hp.gnomview(prob, rot=(144.844, 11.111), xsize=500, ysize=500)
+        
+            for coord, color in zip(coords, colors):
+                hp.projplot(coord.ra.deg,
+                            coord.dec.deg,
+                            lonlat=True,
+                            marker="o",
+                            markersize=5,
+                            color=color,
+                            markeredgecolor="black",
+                            markeredgewidth=0.3)
+
+        # Probability colorbar
+        sm_prob = ScalarMappable(cmap=cmap_prob, norm=norm_prob)
+        sm_prob.set_array([])
+        cax_prob = fig.add_axes([0.25, 0.07, 0.5, 0.03])
+        cbar_prob = fig.colorbar(sm_prob, cax=cax_prob, orientation="horizontal")
+        cbar_prob.set_label(f"Probability ({prob_column})")
+
+        hp.graticule()
+        plt.savefig(f"{dirName}/Ranking_BeforeOptimization.png", bbox_inches="tight")
+        plt.close()
+
 
 
 def read_ranked_pointings(file_path):

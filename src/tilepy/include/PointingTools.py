@@ -1622,7 +1622,7 @@ def GetBestGridPos2D(
                 dec_deg = 90 - np.degrees(theta)
 
                 hp.projplot(
-                    ra_deg, dec_deg, "ro", markersize=4,
+                    ra_deg, dec_deg, "r", markersize=4,
                     lonlat=True, coord="C"  # RA/Dec mode
                 )
                 hp.projplot(
@@ -1660,7 +1660,7 @@ def GetBestGridPos2D(
             linewidth=0.1,
         )
 
-        plt.savefig("%s/Grid_Pointing.png" % (path))
+        plt.savefig("%s/Grid_Pointing.png" % (path), bbox_inches="tight")
         plt.close()
 
     return first_values
@@ -1822,7 +1822,7 @@ def PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values):
         coord="C",
         linewidth=0.1,
     )
-    plt.savefig("%s/Occ_Pointing.png" % (path))
+    plt.savefig("%s/Occ_Pointing.png" % (path), bbox_inches="tight")
     plt.close()
 
 
@@ -1898,7 +1898,7 @@ def PlotSpaceOccTime(dirName, pixels_by_time, ProbaTime, times):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
     plt.gcf().autofmt_xdate()
 
-    plt.savefig(os.path.join(path, "Occ_Pointing_Times.png"))
+    plt.savefig(os.path.join(path, "Occ_Pointing_Times.png"), bbox_inches="tight")
     plt.close()
 
 
@@ -1949,7 +1949,7 @@ def PlotSpaceOccTimeRadec(dirName, pixels_by_time, ProbaTime, times, NSIDE):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
     plt.gcf().autofmt_xdate()
 
-    plt.savefig(os.path.join(path, "Occ_Pointing_Times_Radec.png"))
+    plt.savefig(os.path.join(path, "Occ_Pointing_Times_Radec.png"), bbox_inches="tight")
     plt.close()
 
 
