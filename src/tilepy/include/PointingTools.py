@@ -1730,7 +1730,7 @@ def GetBestGridPos3D(
             os.mkdir(path, 493)
 
         # mpl.rcParams.update({'font.size':14})
-        hp.gnomview(prob, rot=(143, 10), xsize=500, ysize=500)
+        hp.gnomview(prob, rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]), xsize=500, ysize=500)
         hp.graticule()
 
         # Filter out rows with NaN in dp_dV

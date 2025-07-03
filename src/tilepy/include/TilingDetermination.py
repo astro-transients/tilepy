@@ -2281,6 +2281,7 @@ def PGalinFoV_Space_NObs(
     TestTime = []
     RadecsVsTimes = []
     matching_tables = []
+    ProbaTime = []
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         # Need to get a list of highest pixels
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
@@ -2314,9 +2315,12 @@ def PGalinFoV_Space_NObs(
         phi = np.radians(matching_rows1["PIXRA"])  # phi = longitude
         pix_idx = hp.ang2pix(reducedNside, theta, phi, nest=False)
 
+        pix_proba = matching_rows1["PIXFOVPROB"]
+
         RadecsVsTimes.append(radectime)
         AvailablePixPerTime.append(pix_idx)
         TestTime.append(current_time)
+        ProbaTime.append(pix_proba)
 
         # List of all cculted pixels
         Occultedpixels.append(pixlistRROcc)
@@ -2339,6 +2343,7 @@ def PGalinFoV_Space_NObs(
     first_values_coords = co.SkyCoord(
         ra=first_values1["PIXRA"], dec=first_values1["PIXDEC"], unit="deg"
     )
+    print(first_values1)
 
     matching_rows = []
     for coord in pixradec:
@@ -2355,8 +2360,8 @@ def PGalinFoV_Space_NObs(
 
     if obspar.doPlot and len(first_values) > 0:
         PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
-        PlotSpaceOccTime(dirName, AvailablePixPerTime, TestTime)
-        PlotSpaceOccTimeRadec(dirName, AvailablePixPerTime, TestTime, reducedNside)
+        PlotSpaceOccTime(dirName, AvailablePixPerTime, ProbaTime, TestTime)
+        PlotSpaceOccTimeRadec(dirName, AvailablePixPerTime, ProbaTime, TestTime, reducedNside)
 
     # FOR TARGETED HERE TRY TO FIND OUT WHICH GALAXIES ARE IN THE VISIBLE PART. Then choose the highest 10 betwee nthem
 
