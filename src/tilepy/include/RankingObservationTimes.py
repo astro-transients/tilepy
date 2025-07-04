@@ -580,7 +580,7 @@ def distance(entry1, entry2):
 
 
 # Ranking function
-def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR):
+def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, , skymap):
     # Read the data from the pointing file
     file_path = f"{PointingFile}"
     data = pd.read_csv(file_path, delim_whitespace=True)
@@ -648,10 +648,8 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR):
 
 
     if obspar.doPlot:
-        raw_map = create_map_reader(obspar)
-        skymap = SkyMap(obspar, raw_map)
 
-        prob = skymap.getMap("prob", 512)
+        prob = skymap.getMap("prob", obspar.HRnside)
 
         df = pd.read_csv(output_file, sep="\t")
         ra = df["RA(deg)"].values
@@ -693,10 +691,6 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR):
 
 
     if obspar.doPlot:
-        raw_map = create_map_reader(obspar)
-        skymap = SkyMap(obspar, raw_map)
-        prob = skymap.getMap("prob", 512)
-
         try:
             prob_column = "PGW" if "PGW" in pre_df.columns else "PGal"
         except:
@@ -751,7 +745,7 @@ def read_ranked_pointings(file_path):
     return ranked_pointings
 
 
-def Ranking_Space_AI(dirName, PointingFile, obspar):
+def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
 
     # Convert to DataFrame for easier handling
     file_path = f"{PointingFile}"
@@ -792,10 +786,7 @@ def Ranking_Space_AI(dirName, PointingFile, obspar):
     print(f"Ranked file saved to {output_file}")
 
     if obspar.doPlot:
-        raw_map = create_map_reader(obspar)
-        skymap = SkyMap(obspar, raw_map)
-
-        prob = skymap.getMap("prob", 512)
+        prob = skymap.getMap("prob", obspar.HRnside)
 
         df = pd.read_csv(output_file, sep="\t")
         skycoords = SkyCoord(

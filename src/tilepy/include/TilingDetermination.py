@@ -2150,8 +2150,6 @@ def PGWinFoV_Space_NObs(
         [ObsName, RAarray, DECarray, P_GWarray],
         names=["ObsName", "RA(deg)", "DEC(deg)", "PGW"],
     )
-    print(matching_tables)
-    print(TestTime)
 
     return SuggestedPointings, SatTimes, saa, matching_tables, TestTime
 
@@ -2347,7 +2345,6 @@ def PGalinFoV_Space_NObs(
     first_values_coords = co.SkyCoord(
         ra=first_values1["PIXRA"], dec=first_values1["PIXDEC"], unit="deg"
     )
-    print(first_values1)
 
     matching_rows = []
     for coord in pixradec:
