@@ -580,7 +580,7 @@ def distance(entry1, entry2):
 
 
 # Ranking function
-def Ranking_Space(dirName, PointingFile, obspar):
+def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR):
     # Read the data from the pointing file
     file_path = f"{PointingFile}"
     data = pd.read_csv(file_path, delim_whitespace=True)
@@ -611,7 +611,7 @@ def Ranking_Space(dirName, PointingFile, obspar):
             data["pgw_norm"] = pgw_values / max_pgw
 
             # Cost function: prioritize close and high probability
-            α, β = 0.9, 0.2  # tune as needed
+            α, β = alphaR, betaR  # tune as needed
             data["score"] = α * data["distance_norm"] - β * data["pgw_norm"]
 
             best_idx = data["score"].idxmin()

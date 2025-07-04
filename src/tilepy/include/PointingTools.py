@@ -367,7 +367,7 @@ class Tools:
 
     
     @classmethod
-    def is_in_saa_opt(cls, satellite, current_time, threshold_nT=25000):
+    def is_in_saa_opt(cls, satellite, current_time, threshold_nT, datasetDir):
         geocentric = satellite.at(current_time)
         subpoint = geocentric.subpoint()
 
@@ -379,7 +379,7 @@ class Tools:
         dt = current_time.utc_datetime()  # get Python datetime object in UTC
         year = dt.year + (dt.timetuple().tm_yday - 1 + dt.hour/24 + dt.minute/1440 + dt.second/86400) / 365.25
 
-        coeffs = load_igrf_coeffs("igrf13coeffs.txt")
+        coeffs = load_igrf_coeffs(f"{datasetDir}/igrf13coeffs.txt") 
 
         B_total = get_dipole_field(lat, lon, alt_km, coeffs)
 
@@ -1241,6 +1241,8 @@ def SAA_Times(
     step,
     doPlot,
     dirName,
+    datasetDir,
+    saathershold
 ):
     SatTimes = []
     i = 0
@@ -1254,7 +1256,7 @@ def SAA_Times(
         #    saa.append(True)
         #else:
         #    saa.append(False)
-        saa.append(Tools.is_in_saa_opt(SatelliteName, SatelliteTime, 25000))
+        saa.append(Tools.is_in_saa_opt(SatelliteName, SatelliteTime, saathershold, datasetDir))
         SatTimes.append(current_time)
 
         current_time += step
