@@ -32,7 +32,7 @@ parser.add_argument(
 parser.add_argument(
     "-time",
     metavar='"YYYY-MM-DD HH:MM:SS"',
-    default="2025-07-27 19:30:10",
+    default="2025-07-28 10:00:10",
     help="optional: date and time of the event (default: NOW, i.e. %(default)s)",
 )
 parser.add_argument(
@@ -53,6 +53,11 @@ parser.add_argument(
 parser.add_argument(
     "-galcatName", metavar="galaxy catalog name", default="Gladeplus.h5"
 )
+
+parser.add_argument(
+    "-igrfcoeffs", metavar="International Geomagnetic Reference Field", default="igrf13coeffs.txt"
+)
+
 parser.add_argument("-tiles", metavar="tiles already observed", default=None)
 parser.add_argument("-eventName", metavar="event name", default="undefined")
 
@@ -67,6 +72,7 @@ cfgFile = args.cfg
 galcatName = args.galcatName
 pointingsFile = args.tiles
 eventName = args.eventName
+igrfcoeffs = args.igrfcoeffs
 
 if not os.path.exists(outDir):
     os.makedirs(outDir)
@@ -90,10 +96,12 @@ obsparameters = []
 for j in range(len(parameters)):
     obspar = ObservationParameters()
     obspar.add_parsed_args(
-        skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile
+        skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, igrfcoeffs
     )
     obspar.from_configfile(parameters[j])
     obsparameters.append(obspar)
+
+print(obspar.skymap)
 
 GetUniversalSchedule(obsparameters)
 
