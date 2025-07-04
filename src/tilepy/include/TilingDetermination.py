@@ -1023,9 +1023,6 @@ def PGWinFoV_NObs(
     while (i < 500) & any(SameNight):
         for j in range(len(NewActiveObs)):
             obspar = NewActiveObs[j]
-            # print(j)
-            # print(NewActiveObs[0].name)
-            # print(obspar.name)
             ObservationTime = NewActiveObsTime[j]
             if ITERATION_OBS == len(obsparameters):
                 TIME_MIN_ALL = []
@@ -1054,6 +1051,7 @@ def PGWinFoV_NObs(
                         obspar.location,
                         obspar.sunDown,
                         obspar.moonDown,
+                        obspar.EarthDown,
                     )
                 else:
                     ObsBool, yprob = ZenithAngleCut(
@@ -1325,9 +1323,6 @@ def PGalinFoV_NObs(
     #################################################################################################################################################
 
     counter = 0
-    # print(SameNight)
-    # print(NewActiveObs[0].name, NewActiveObs[1].name, NewActiveObs[2].name)
-    # print(NewActiveObsTime)
     i = 0
     couter_per_obs = np.zeros(len(NewActiveObs))
     while (i < 5000) & any(SameNight):
@@ -2072,6 +2067,8 @@ def PGWinFoV_Space_NObs(
         step,
         doPlot,
         dirName,
+        obspar.datasetDir,
+        obspar.SaaThershold,
     )
 
     i = 0
@@ -2081,6 +2078,7 @@ def PGWinFoV_Space_NObs(
     TestTime = []
     RadecsVsTimes = []
     matching_tables = []
+    ProbaTime = []
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         # Need to get a list of highest pixels
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
@@ -2096,6 +2094,7 @@ def PGWinFoV_Space_NObs(
             satellite_location,
             obspar.sunDown,
             obspar.moonDown,
+            obspar.EarthDown,
         )
 
         # Let's get the list of pixels available at each iteration
@@ -2112,10 +2111,12 @@ def PGWinFoV_Space_NObs(
         theta = np.radians(90.0 - matching_rows1["PIXDEC"])
         phi = np.radians(matching_rows1["PIXRA"])  # phi = longitude
         pix_idx = hp.ang2pix(reducedNside, theta, phi, nest=False)
+        pix_proba = matching_rows1["PIXFOVPROB"]
 
         RadecsVsTimes.append(radectime)
         AvailablePixPerTime.append(pix_idx)
         TestTime.append(current_time)
+        ProbaTime.append(pix_proba)
 
         # List of all cculted pixels
         Occultedpixels.append(pixlistRROcc)
@@ -2135,10 +2136,12 @@ def PGWinFoV_Space_NObs(
 
     first_values = filtered_rows
 
-    if obspar.doPlot:
+    if obspar.doPlot and len(first_values) > 0:
         PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
-        PlotSpaceOccTime(dirName, AvailablePixPerTime, TestTime)
-        PlotSpaceOccTimeRadec(dirName, AvailablePixPerTime, TestTime, reducedNside)
+        PlotSpaceOccTime(dirName, AvailablePixPerTime, ProbaTime, TestTime)
+        PlotSpaceOccTimeRadec(
+            dirName, AvailablePixPerTime, ProbaTime, TestTime, reducedNside
+        )
 
     ObsName = [obspar.obs_name for j in range(len(first_values))]
     RAarray = [row["PIXRA"] for row in first_values]
@@ -2271,6 +2274,8 @@ def PGalinFoV_Space_NObs(
         step,
         doPlot,
         dirName,
+        obspar.datasetDir,
+        obspar.SaaThershold,
     )
 
     i = 0
@@ -2280,6 +2285,7 @@ def PGalinFoV_Space_NObs(
     TestTime = []
     RadecsVsTimes = []
     matching_tables = []
+    ProbaTime = []
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         # Need to get a list of highest pixels
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
@@ -2295,6 +2301,7 @@ def PGalinFoV_Space_NObs(
             satellite_location,
             obspar.sunDown,
             obspar.moonDown,
+            obspar.EarthDown,
         )
 
         # Let's get the list of pixels available at each iteration
@@ -2312,9 +2319,12 @@ def PGalinFoV_Space_NObs(
         phi = np.radians(matching_rows1["PIXRA"])  # phi = longitude
         pix_idx = hp.ang2pix(reducedNside, theta, phi, nest=False)
 
+        pix_proba = matching_rows1["PIXFOVPROB"]
+
         RadecsVsTimes.append(radectime)
         AvailablePixPerTime.append(pix_idx)
         TestTime.append(current_time)
+        ProbaTime.append(pix_proba)
 
         # List of all cculted pixels
         Occultedpixels.append(pixlistRROcc)
@@ -2340,20 +2350,23 @@ def PGalinFoV_Space_NObs(
 
     matching_rows = []
     for coord in pixradec:
-        # Check which rows in first_values match the coord
-        matches = np.where(first_values_coords.ra == coord.ra)[0]
-        matches = [m for m in matches if first_values_coords.dec[m] == coord.dec]
+        sep = first_values_coords.separation(coord)
+        matches = np.where(sep < 1e-2 * u.deg)[0]  # adjust tolerance as needed
 
-        # Append the matching rows to the result
         matching_rows.extend(first_values1[matches])
 
-    # Convert the list of matching rows back to an Astropy Table
-    first_values = Table(rows=matching_rows, names=first_values1.colnames)
+    if matching_rows:
+        first_values = Table(rows=matching_rows, names=first_values1.colnames)
+    else:
+        print("No coordinates matched within the tolerance.")
+        first_values = Table(names=first_values1.colnames)
 
-    if obspar.doPlot:
+    if obspar.doPlot and len(first_values) > 0:
         PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
-        PlotSpaceOccTime(dirName, AvailablePixPerTime, TestTime)
-        PlotSpaceOccTimeRadec(dirName, AvailablePixPerTime, TestTime, reducedNside)
+        PlotSpaceOccTime(dirName, AvailablePixPerTime, ProbaTime, TestTime)
+        PlotSpaceOccTimeRadec(
+            dirName, AvailablePixPerTime, ProbaTime, TestTime, reducedNside
+        )
 
     # FOR TARGETED HERE TRY TO FIND OUT WHICH GALAXIES ARE IN THE VISIBLE PART. Then choose the highest 10 betwee nthem
 

@@ -35,13 +35,19 @@ from astropy.time import Time
 from six.moves import configparser
 from sklearn.cluster import AgglomerativeClustering
 
+from matplotlib.colors import Normalize
+import matplotlib.cm as cm
+from matplotlib.cm import ScalarMappable
+
 from .PointingTools import FilterGalaxies, Tools
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
 else:
     ConfigParser = configparser.ConfigParser
-
+from .MapManagement import SkyMap, create_map_reader
+import re
+import os
 
 # iers_file = os.path.join(os.path.abspath(
 #    os.path.dirname(__file__)), '../dataset/finals2000A.all')
@@ -574,7 +580,7 @@ def distance(entry1, entry2):
 
 
 # Ranking function
-def Ranking_Space(dirName, PointingFile):
+def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
     # Read the data from the pointing file
     file_path = f"{PointingFile}"
     data = pd.read_csv(file_path, delim_whitespace=True)
@@ -592,14 +598,26 @@ def Ranking_Space(dirName, PointingFile):
     # Iteratively find the closest entry
     while not data.empty:
         last_entry = ranked[-1]
-        # Compute distances to the last entry
-        data["distance"] = data.apply(lambda row: distance(last_entry, row), axis=1)
-        # Find the closest entry
-        closest_idx = data["distance"].idxmin()
-        closest_entry = data.loc[closest_idx]
-        ranked.append(closest_entry)
-        # Remove the closest entry from the dataset
-        data = data.drop(index=closest_idx).reset_index(drop=True)
+
+        # Normalize distance and PGW to 0-1 scale
+        distances = data.apply(lambda row: distance(last_entry, row), axis=1)
+        pgw_values = data["PGW"] if "PGW" in data.columns else data["PGal"]
+
+        max_dist = distances.max()
+        max_pgw = pgw_values.max()
+
+        data["distance_norm"] = distances / max_dist
+        data["pgw_norm"] = pgw_values / max_pgw
+
+        # Cost function: prioritize close and high probability
+        α, β = alphaR, betaR  # tune as needed
+        data["score"] = α * data["distance_norm"] - β * data["pgw_norm"]
+
+        best_idx = data["score"].idxmin()
+        best_entry = data.loc[best_idx]
+
+        ranked.append(best_entry)
+        data = data.drop(index=best_idx).reset_index(drop=True)
 
     # Output the ranked list
     print("Ranked List:")
@@ -611,8 +629,134 @@ def Ranking_Space(dirName, PointingFile):
     pd.DataFrame(ranked).to_csv(output_file, index=False, sep="\t")
     print(f"Ranked file saved to {output_file}")
 
+    # Read pre- and post-optimization data
+    pre_df = pd.read_csv(file_path, delim_whitespace=True)
+    # For probability coloring (before optimization)
+    prob_column = "PGW" if "PGW" in pre_df.columns else "PGal"
+    norm_prob = Normalize(
+        vmin=np.min(pre_df[prob_column]), vmax=np.max(pre_df[prob_column])
+    )
+    cmap_prob = cm.autumn
+    pre_colors = [cmap_prob(norm_prob(p)) for p in pre_df[prob_column]]
 
-def Ranking_Space_AI(dirName, PointingFile):
+    ranks = np.arange(len(ranked))
+    # For rank coloring (after optimization)
+    norm_rank = Normalize(vmin=np.min(ranks), vmax=np.max(ranks))
+    cmap_rank = cm.autumn
+    rank_colors = [cmap_rank(1 - norm_rank(r)) for r in ranks]
+
+    if obspar.doPlot:
+
+        prob = skymap.getMap("prob", obspar.HRnside)
+
+        df = pd.read_csv(output_file, sep="\t")
+        ra = df["RA(deg)"].values
+        skycoords = SkyCoord(
+            ra=df["RA(deg)"].values * u.deg,
+            dec=df["DEC(deg)"].values * u.deg,
+            frame="icrs",
+        )
+        ranks = np.arange(len(ra))
+
+        fig = plt.figure(figsize=(10, 6))
+        # Plot HEALPix map with its own color map
+        hp.gnomview(
+            prob, rot=(skycoords[0].ra.deg, skycoords[0].dec.deg), xsize=500, ysize=500
+        )
+
+        # Plot each pointing using rank-based color
+        for coord, color, rank in zip(skycoords, rank_colors, ranks):
+            hp.visufunc.projplot(
+                coord.ra.deg,
+                coord.dec.deg,
+                "o",
+                lonlat=True,
+                color=color,
+                markersize=5,
+                markeredgecolor="black",
+                markeredgewidth=0.3,
+            )
+
+        # Rank colorbar
+        sm_rank = ScalarMappable(cmap=cmap_rank, norm=norm_rank)
+        sm_rank.set_array([])
+        cax_rank = fig.add_axes([0.15, 0.05, 0.7, 0.03])
+        cbar_rank = fig.colorbar(sm_rank, cax=cax_rank, orientation="horizontal")
+        cbar_rank.set_label("Pointing Rank")
+
+        hp.graticule()
+
+        output_dir_rank = os.path.join(dirName, "Ranked_grid")
+        os.makedirs(output_dir_rank, exist_ok=True)
+
+        # Save the plot
+        plt.savefig(os.path.join(output_dir_rank, "RankingObservations_Space.png"))
+        plt.close()
+
+    if obspar.doPlot:
+        try:
+            prob_column = "PGW" if "PGW" in pre_df.columns else "PGal"
+        except:
+            raise ValueError("Neither PGW nor PGal column found")
+
+        # Coordinates
+        pre_coords = SkyCoord(
+            ra=pre_df["RA(deg)"].values * u.deg,
+            dec=pre_df["DEC(deg)"].values * u.deg,
+            frame="icrs",
+        )
+
+        # Create side-by-side subplots with same projection
+        fig = plt.figure(figsize=(14, 6))
+
+        for i, (coords, colors, title) in enumerate(
+            [(pre_coords, pre_colors, "Before Optimization")]
+        ):
+            ax = fig.add_subplot(1, 2, i + 1, projection="mollweide")
+            hp.gnomview(prob, rot=(144.844, 11.111), xsize=500, ysize=500)
+
+            for coord, color in zip(coords, colors):
+                hp.projplot(
+                    coord.ra.deg,
+                    coord.dec.deg,
+                    lonlat=True,
+                    marker="o",
+                    markersize=5,
+                    color=color,
+                    markeredgecolor="black",
+                    markeredgewidth=0.3,
+                )
+
+        # Probability colorbar
+        sm_prob = ScalarMappable(cmap=cmap_prob, norm=norm_prob)
+        sm_prob.set_array([])
+        cax_prob = fig.add_axes([0.25, 0.07, 0.5, 0.03])
+        cbar_prob = fig.colorbar(sm_prob, cax=cax_prob, orientation="horizontal")
+        cbar_prob.set_label(f"Probability ({prob_column})")
+
+        hp.graticule()
+
+        output_dir_rank = os.path.join(dirName, "Ranked_grid")
+        os.makedirs(output_dir_rank, exist_ok=True)
+
+        # Save the plot
+        plt.savefig(os.path.join(output_dir_rank, "Ranking_BeforeOptimization.png"))
+        plt.close()
+
+
+def read_ranked_pointings(file_path):
+    ranked_pointings = []
+    with open(file_path, "r") as file:
+        for line in file:
+            match = re.search(r"Rank\s+\d+:\s+(?P<info>\{.*\})", line)
+            if match:
+                entry = eval(match.group("info"))  # Turn string dict into actual dict
+                ranked_pointings.append(entry)
+    return ranked_pointings
+
+
+def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
+
     # Convert to DataFrame for easier handling
     file_path = f"{PointingFile}"
     data = pd.read_csv(file_path, delim_whitespace=True)
@@ -640,10 +784,77 @@ def Ranking_Space_AI(dirName, PointingFile):
             )
         ranked_data.append(cluster_data)
 
-    # Combine ranked clusters
-    final_ranked = pd.concat(ranked_data)
+    # Combine ranked clusters and reset index
+    final_ranked = pd.concat(ranked_data).reset_index(drop=True)
+
+    # Assign global rank starting from 1
+    final_ranked["Rank"] = final_ranked.index + 1
 
     # Save the ranked list to a file
     output_file = "%s/RankingObservations_AI_Space.txt" % dirName
     pd.DataFrame(final_ranked).to_csv(output_file, index=False, sep="\t")
     print(f"Ranked file saved to {output_file}")
+
+    if obspar.doPlot:
+        prob = skymap.getMap("prob", obspar.HRnside)
+
+        df = pd.read_csv(output_file, sep="\t")
+        skycoords = SkyCoord(
+            ra=df["RA(deg)"].values * u.deg,
+            dec=df["DEC(deg)"].values * u.deg,
+            frame="icrs",
+        )
+        ranks = df["Rank"].values
+
+        fig = plt.figure(figsize=(10, 6))
+        # Plot HEALPix map with its own color map
+        hp.gnomview(
+            prob, rot=(skycoords.ra.deg[0], skycoords.dec.deg[0]), xsize=500, ysize=500
+        )
+
+        # Normalize ranks for colormap
+        norm = Normalize(vmin=min(ranks), vmax=max(ranks))
+        colors = [cm.autumn(norm(rank)) for rank in ranks]
+
+        # Plot each pointing using rank-based color
+        for coord, color, rank in zip(skycoords, colors, ranks):
+            hp.visufunc.projplot(
+                coord.ra.deg,
+                coord.dec.deg,
+                "o",
+                lonlat=True,
+                color=color,
+                markersize=5,
+                markeredgecolor="black",
+                markeredgewidth=0.3,
+            )
+            # x, y = hp.proj_to_xy(coord.ra.deg, coord.dec.deg, lonlat=True)
+            # plt.text(x, y, str(rank), fontsize=6, ha='center', va='center', color='black')
+            # hp.projtext(
+            #    coord.ra.deg,
+            #    coord.dec.deg,
+            #    str(rank),
+            #    lonlat=True,
+            #    ha='center',
+            #    va='center',
+            #    color='black'
+            # )
+
+        # Add colorbar
+        sm = ScalarMappable(cmap=cm.autumn, norm=norm)
+        sm.set_array([])
+
+        cax = fig.add_axes([0.15, 0.05, 0.7, 0.03])
+        cbar = fig.colorbar(sm, cax=cax, orientation="horizontal")
+        cbar.set_label("Pointing Rank")
+
+        hp.graticule()
+
+        output_dir_rank = os.path.join(dirName, "Ranked_grid")
+        os.makedirs(output_dir_rank, exist_ok=True)
+
+        # Save the plot
+        plt.savefig(
+            os.path.join(output_dir_rank, "RankingObservations_SpaceClustering.png")
+        )
+        plt.close()
