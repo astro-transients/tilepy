@@ -151,9 +151,8 @@ class ObservationParameters(object):
         self.strategy = strategy
         self.doRank = doRank
         self.countPrevious = countPrevious
-        self.alphaR = alphaR,
-        self.betaR = betaR,
-
+        self.alphaR = (alphaR,)
+        self.betaR = (betaR,)
 
         # Parsed args
         self.skymap = skymap
@@ -197,8 +196,7 @@ class ObservationParameters(object):
                 f"Max Zenith: {self.maxZenith}, Zenith Weighting: {self.zenithWeighting}",
                 f"FoV number of sides: {self.numberSides}, "
                 f"FoV rotation: {self.FoVRotation},"
-                f"Priority for FoV proximity and Probability: {self.alphaR}, Zenith Weighting: {self.betaR}",              
-
+                f"Priority for FoV proximity and Probability: {self.alphaR}, Zenith Weighting: {self.betaR}",
                 "--------------------- Skymap considerations ----------------",
                 f"Skymap: {self.skymap}",
                 f"Cuts: MinProbcut {self.minProbcut}, Dist Cut: {self.distCut}, Minimum Prob Cut for Catalogue: {self.minimumProbCutForCatalogue}",
@@ -320,7 +318,6 @@ class ObservationParameters(object):
         self.countPrevious = parser.getboolean(section, "countPrevious", fallback=None)
         self.alphaR = float(parser.get(section, "alphaR", fallback=0))
         self.betaR = float(parser.get(section, "betaR", fallback=0))
-        
 
         section = "general"
         self.downloadMaxRetry = int(parser.get(section, "downloadMaxRetry", fallback=0))

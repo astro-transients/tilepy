@@ -47,7 +47,7 @@ else:
     ConfigParser = configparser.ConfigParser
 from .MapManagement import SkyMap, create_map_reader
 import re
-
+import os
 
 # iers_file = os.path.join(os.path.abspath(
 #    os.path.dirname(__file__)), '../dataset/finals2000A.all')
@@ -580,7 +580,7 @@ def distance(entry1, entry2):
 
 
 # Ranking function
-def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, , skymap):
+def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
     # Read the data from the pointing file
     file_path = f"{PointingFile}"
     data = pd.read_csv(file_path, delim_whitespace=True)
@@ -595,30 +595,29 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, , skymap):
     ranked = [data.iloc[0]]
     data = data.iloc[1:].reset_index(drop=True)  # Exclude the first entry
 
-
     # Iteratively find the closest entry
     while not data.empty:
-            last_entry = ranked[-1]
+        last_entry = ranked[-1]
 
-            # Normalize distance and PGW to 0-1 scale
-            distances = data.apply(lambda row: distance(last_entry, row), axis=1)
-            pgw_values = data["PGW"] if "PGW" in data.columns else data["PGal"]
+        # Normalize distance and PGW to 0-1 scale
+        distances = data.apply(lambda row: distance(last_entry, row), axis=1)
+        pgw_values = data["PGW"] if "PGW" in data.columns else data["PGal"]
 
-            max_dist = distances.max()
-            max_pgw = pgw_values.max()
+        max_dist = distances.max()
+        max_pgw = pgw_values.max()
 
-            data["distance_norm"] = distances / max_dist
-            data["pgw_norm"] = pgw_values / max_pgw
+        data["distance_norm"] = distances / max_dist
+        data["pgw_norm"] = pgw_values / max_pgw
 
-            # Cost function: prioritize close and high probability
-            α, β = alphaR, betaR  # tune as needed
-            data["score"] = α * data["distance_norm"] - β * data["pgw_norm"]
+        # Cost function: prioritize close and high probability
+        α, β = alphaR, betaR  # tune as needed
+        data["score"] = α * data["distance_norm"] - β * data["pgw_norm"]
 
-            best_idx = data["score"].idxmin()
-            best_entry = data.loc[best_idx]
+        best_idx = data["score"].idxmin()
+        best_entry = data.loc[best_idx]
 
-            ranked.append(best_entry)
-            data = data.drop(index=best_idx).reset_index(drop=True)
+        ranked.append(best_entry)
+        data = data.drop(index=best_idx).reset_index(drop=True)
 
     # Output the ranked list
     print("Ranked List:")
@@ -630,22 +629,21 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, , skymap):
     pd.DataFrame(ranked).to_csv(output_file, index=False, sep="\t")
     print(f"Ranked file saved to {output_file}")
 
-
-
     # Read pre- and post-optimization data
     pre_df = pd.read_csv(file_path, delim_whitespace=True)
     # For probability coloring (before optimization)
     prob_column = "PGW" if "PGW" in pre_df.columns else "PGal"
-    norm_prob = Normalize(vmin=np.min(pre_df[prob_column]), vmax=np.max(pre_df[prob_column]))
+    norm_prob = Normalize(
+        vmin=np.min(pre_df[prob_column]), vmax=np.max(pre_df[prob_column])
+    )
     cmap_prob = cm.autumn
     pre_colors = [cmap_prob(norm_prob(p)) for p in pre_df[prob_column]]
 
-    ranks = np.arange(len(ranked)) 
+    ranks = np.arange(len(ranked))
     # For rank coloring (after optimization)
     norm_rank = Normalize(vmin=np.min(ranks), vmax=np.max(ranks))
     cmap_rank = cm.autumn
     rank_colors = [cmap_rank(1 - norm_rank(r)) for r in ranks]
-
 
     if obspar.doPlot:
 
@@ -687,8 +685,13 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, , skymap):
         cbar_rank.set_label("Pointing Rank")
 
         hp.graticule()
-        plt.savefig("%s/RankingObservations_Space.png" % (dirName),  bbox_inches="tight")
 
+        output_dir_rank = os.path.join(dirName, "Ranked_grid")
+        os.makedirs(output_dir_rank, exist_ok=True)
+
+        # Save the plot
+        plt.savefig(os.path.join(output_dir_rank, "RankingObservations_Space.png"))
+        plt.close()
 
     if obspar.doPlot:
         try:
@@ -697,29 +700,32 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, , skymap):
             raise ValueError("Neither PGW nor PGal column found")
 
         # Coordinates
-        pre_coords = SkyCoord(ra=pre_df["RA(deg)"].values * u.deg,
-                              dec=pre_df["DEC(deg)"].values * u.deg,
-                              frame="icrs")
-
+        pre_coords = SkyCoord(
+            ra=pre_df["RA(deg)"].values * u.deg,
+            dec=pre_df["DEC(deg)"].values * u.deg,
+            frame="icrs",
+        )
 
         # Create side-by-side subplots with same projection
         fig = plt.figure(figsize=(14, 6))
 
-        for i, (coords, colors, title) in enumerate([
-            (pre_coords, pre_colors, "Before Optimization")
-        ]):
+        for i, (coords, colors, title) in enumerate(
+            [(pre_coords, pre_colors, "Before Optimization")]
+        ):
             ax = fig.add_subplot(1, 2, i + 1, projection="mollweide")
             hp.gnomview(prob, rot=(144.844, 11.111), xsize=500, ysize=500)
-        
+
             for coord, color in zip(coords, colors):
-                hp.projplot(coord.ra.deg,
-                            coord.dec.deg,
-                            lonlat=True,
-                            marker="o",
-                            markersize=5,
-                            color=color,
-                            markeredgecolor="black",
-                            markeredgewidth=0.3)
+                hp.projplot(
+                    coord.ra.deg,
+                    coord.dec.deg,
+                    lonlat=True,
+                    marker="o",
+                    markersize=5,
+                    color=color,
+                    markeredgecolor="black",
+                    markeredgewidth=0.3,
+                )
 
         # Probability colorbar
         sm_prob = ScalarMappable(cmap=cmap_prob, norm=norm_prob)
@@ -729,9 +735,13 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, , skymap):
         cbar_prob.set_label(f"Probability ({prob_column})")
 
         hp.graticule()
-        plt.savefig(f"{dirName}/Ranking_BeforeOptimization.png", bbox_inches="tight")
-        plt.close()
 
+        output_dir_rank = os.path.join(dirName, "Ranked_grid")
+        os.makedirs(output_dir_rank, exist_ok=True)
+
+        # Save the plot
+        plt.savefig(os.path.join(output_dir_rank, "Ranking_BeforeOptimization.png"))
+        plt.close()
 
 
 def read_ranked_pointings(file_path):
@@ -839,4 +849,12 @@ def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
         cbar.set_label("Pointing Rank")
 
         hp.graticule()
-        plt.savefig("%s/RankingObservations_SpaceClustering.png" % (dirName))
+
+        output_dir_rank = os.path.join(dirName, "Ranked_grid")
+        os.makedirs(output_dir_rank, exist_ok=True)
+
+        # Save the plot
+        plt.savefig(
+            os.path.join(output_dir_rank, "RankingObservations_SpaceClustering.png")
+        )
+        plt.close()

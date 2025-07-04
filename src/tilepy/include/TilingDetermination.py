@@ -2139,7 +2139,9 @@ def PGWinFoV_Space_NObs(
     if obspar.doPlot and len(first_values) > 0:
         PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
         PlotSpaceOccTime(dirName, AvailablePixPerTime, ProbaTime, TestTime)
-        PlotSpaceOccTimeRadec(dirName, AvailablePixPerTime, ProbaTime, TestTime, reducedNside)
+        PlotSpaceOccTimeRadec(
+            dirName, AvailablePixPerTime, ProbaTime, TestTime, reducedNside
+        )
 
     ObsName = [obspar.obs_name for j in range(len(first_values))]
     RAarray = [row["PIXRA"] for row in first_values]
@@ -2362,7 +2364,9 @@ def PGalinFoV_Space_NObs(
     if obspar.doPlot and len(first_values) > 0:
         PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
         PlotSpaceOccTime(dirName, AvailablePixPerTime, ProbaTime, TestTime)
-        PlotSpaceOccTimeRadec(dirName, AvailablePixPerTime, ProbaTime, TestTime, reducedNside)
+        PlotSpaceOccTimeRadec(
+            dirName, AvailablePixPerTime, ProbaTime, TestTime, reducedNside
+        )
 
     # FOR TARGETED HERE TRY TO FIND OUT WHICH GALAXIES ARE IN THE VISIBLE PART. Then choose the highest 10 betwee nthem
 

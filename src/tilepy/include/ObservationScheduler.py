@@ -399,13 +399,17 @@ def GetUniversalSchedule(obspar):
                             dirName,
                             "%s/SuggestedPointings_GWOptimisation_%s.txt"
                             % (dirName, obspar[j].obs_name),
-                            obspar[j], obspar[j].alphaR, obspar[j].betaR, skymap
+                            obspar[j],
+                            obspar[j].alphaR,
+                            obspar[j].betaR,
+                            skymap,
                         )
                         Ranking_Space_AI(
                             dirName,
                             "%s/SuggestedPointings_GWOptimisation_%s.txt"
                             % (dirName, obspar[j].obs_name),
-                            obspar[j],  skymap
+                            obspar[j],
+                            skymap,
                         )
 
         else:
