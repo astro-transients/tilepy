@@ -1,9 +1,13 @@
-Scheduling and Tiling Tools (`tilepy.include`)
-==============================================
+===========================
+Scheduling and Tiling Tools
+===========================
 
-The `tilepy.include` package provides core modules for scheduling, tiling computation, and visualization
-in the |tilepy| workflow. It enables rapid follow-up observations, campaign configuration, and plotting for
-multi-messenger astronomy.
+.. admonition:: About this package
+   :class: info
+
+   The `tilepy.include` package provides core modules for scheduling, tiling computation, and visualization in the |tilepy| workflow.
+   It enables rapid follow-up observations, campaign configuration, and plotting for multi-messenger astronomy.
+
 
 Read Skymap
 -----------
