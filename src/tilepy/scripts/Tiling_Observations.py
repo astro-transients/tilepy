@@ -7,12 +7,12 @@
 import argparse
 import os
 import time
+
 from astropy.time import Time
 
+from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.include.ObservationScheduler import GetSchedule
 from tilepy.include.PointingTools import getdate
-from tilepy.include.CampaignDefinition import ObservationParameters
-
 
 __all__ = ["Tiling_Observations"]
 

@@ -1,9 +1,9 @@
 #####################################################################
 # Packages
+import six
 from astropy import units as u
 from astropy.coordinates import EarthLocation
 from six.moves import configparser
-import six
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -31,13 +31,20 @@ def set_gaussian_source(obspar, ra, dec, sigma, name="gaussian_event"):
     name : str, optional
         Event name to assign if not already set (default is "gaussian_event").
 
+    Returns
+    -------
+    None
+        This function modifies `obspar` in place and returns nothing.
+
     Example
     -------
     >>> obspar = ObservationParameters()
     >>> set_gaussian_source(obspar, ra=180.0, dec=30.0, sigma=2.5)
     >>> print(obspar.mode)
     gaussian
+
     """
+
     obspar.raSource = ra
     obspar.decSource = dec
     obspar.sigmaSource = sigma
@@ -47,7 +54,14 @@ def set_gaussian_source(obspar, ra, dec, sigma, name="gaussian_event"):
 
 
 class ObservationParameters(object):
-    """Stores all the parameters in the .ini file"""
+    """
+    Stores all the configuration parameters from the .ini file
+
+    This class collects observatory, scheduling, and event parameters used for observation planning.
+    Attributes are typically loaded via the `from_configfile()` method.
+
+    See source code for the complete list of available attributes.
+    """
 
     # Observatory
 
@@ -229,6 +243,8 @@ class ObservationParameters(object):
         sigma=None,
         nside=None,
     ):
+        """Update instance attributes from parsed command-line arguments."""
+
         # Parsed args in command line
         self.skymap = skymap
         self.obsTime = obsTime
@@ -245,6 +261,7 @@ class ObservationParameters(object):
         self.nside = nside
 
     def from_configfile(self, filepath):
+        """Update instance attributes using parsed command-line arguments."""
         ##################
         cfg = filepath
         parser = ConfigParser()
@@ -360,6 +377,8 @@ class ObservationParameters(object):
         HRnside,
         mangrove,
     ):
+        """Set instance attributes using direct function arguments."""
+
         self.obs_name = obsName
         self.event_name = eventName
         self.lat = lat * u.deg

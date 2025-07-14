@@ -70,7 +70,32 @@ __all__ = [
 
 
 def load_pointingFile(tpointingFile):
-    # Read PointingsFile
+    """
+    Load pointings from a file.
+
+    Reads a pointings file with columns for time, RA, and Dec, returning an
+    astropy Table with the loaded pointings.
+
+    Parameters
+    ----------
+    tpointingFile : str
+        Path to the pointing file to load.
+
+    Returns
+    -------
+    Pointings : astropy.table.Table
+        Table containing the pointings with columns: 'Pointing', 'Time',
+        'RAJ2000', and 'DEJ2000'.
+
+    Notes
+    -----
+    The input file should contain the following columns (whitespace-delimited):
+        - time1: Date part of the timestamp (string)
+        - time2: Time part of the timestamp (string, may include fractional seconds)
+        - ra: Right ascension in degrees (string/float)
+        - dec: Declination in degrees (string/float)
+
+    """
 
     print("Loading pointings from " + tpointingFile)
     (
@@ -113,6 +138,28 @@ def load_pointingFile(tpointingFile):
 
 
 def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
+    """
+    Compute visibility windows and zenith angles for each pointing.
+
+    Parameters
+    ----------
+    ObservationTime : datetime.datetime
+        The time to compute visibility for.
+    Pointing : astropy.table.Table
+        Table with pointing information (columns: 'Time', 'RAJ2000', 'DEJ2000').
+    obspar : object
+        Observation parameters (must have 'duration', 'maxZenith', 'location').
+    dirName : str
+        Output directory name.
+
+    Returns
+    -------
+    Pointing : astropy.table.Table
+        The input Table with added columns:
+        'Observation window', 'Array of zenith angles', 'Zenith angles in steps'.
+
+    """
+
     source = SkyCoord(
         Pointing["RAJ2000"], Pointing["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )

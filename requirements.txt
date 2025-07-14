@@ -4,13 +4,13 @@ scipy<1.14.0
 healpy==1.16.2
 tables
 ipython
-matplotlib
+matplotlib<3.9.0
 MOCpy
 numpy
 pandas
 ephem
 gdpyc
-ligo.skymap
+ligo.skymap>=2.0.0
 fastparquet
 skyfield
 ipykernel
@@ -18,6 +18,6 @@ six
 mhealpy>=0.3.0,<0.4
 setuptools
 requests
-scikit-learn
+scikit-learn>=1.6.1
 pytest
 nbmake

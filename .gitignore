@@ -37,3 +37,17 @@ GLADE+.txt
 *.fits.*
 *.fit.*
 examples/launcher/output
+
+# Compiled files
+*.py[cod]
+*.a
+*.o
+*.so
+__pycache__
+
+# Visual Studio Code project files
+.vscode
+
+# Sphinx
+docs/api
+docs/_build
