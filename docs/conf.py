@@ -91,7 +91,7 @@ html_title = "tilepy"
 rst_epilog = r"""
 .. |tilepy| replace:: *tilepy*
 
-.. |tilepyDocs| replace:: `tilepy documentation <https://readthedocs.org/projects/tilepy/badge/?version=implement-readthedocs>`__
+.. |tilepyDocs| replace:: `tilepy documentation <https://readthedocs.org/projects/tilepy/badge/?version=latest>`__
 
 .. |tilepyGitHub| image:: https://img.shields.io/badge/GitHub-tilepy-9400D3?logo=github
    :target: https://github.com/astro-transients/tilepy
@@ -203,9 +203,9 @@ html_context = {
     "default_mode": "light",
     "to_be_indexed": ["stable", "latest"],
     "is_development": dev,
-    "github_user": "weizmannk",
+    "github_user": "astro-transients",
     "github_repo": "tilepy",
-    "github_version": "implement-readthedocs",
+    "github_version": "main",
     "doc_path": "docs",
 }
 
@@ -222,7 +222,7 @@ except NameError:
 html_static_path = ["_static"]
 
 html_theme_options = {
-    "github_url": "https://github.com/weizmannk/tilepy",
+    "github_url": "https://github.com/astro-transients/tilepy",
     "use_edit_page_button": True,
 }
 
@@ -235,8 +235,8 @@ linkcheck_timeout = 180
 linkcheck_anchors = False
 
 # -- Options for the edit_on_github extension ---------------------------------
-edit_on_github_project = "weizmannk/tilepy"
-edit_on_github_branch = "implement-readthedocs"
+edit_on_github_project = "astro-transients/tilepy"
+edit_on_github_branch = "main"
 
 edit_on_github_source_root = ""
 edit_on_github_doc_root = "docs"
