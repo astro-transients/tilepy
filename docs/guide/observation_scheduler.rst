@@ -21,6 +21,7 @@ Defines the main ground- and space-based facilities supported in the |tilepy| wo
 including location, field of view, and technical constraints for each telescope.
 
 .. automodapi:: tilepy.include.Observatories
+    :no-inheritance-diagram:
 
 Observatoire Configuration
 --------------------------
@@ -35,6 +36,7 @@ Functions to compute tiling observation schedules for one or multiple observator
 using 2D/3D probability maps and considering constraints.
 
 .. automodapi:: tilepy.include.TilingDetermination
+     :no-inheritance-diagram:
 
 Observation Scheduling
 ----------------------
@@ -42,6 +44,7 @@ Observation Scheduling
 Algorithms and utilities to schedule rapid follow-up observations, generate visibility plots, and support coordination.
 
 .. automodapi:: tilepy.include.ObservationScheduler
+     :no-inheritance-diagram:
 
 Ranking Observation Times
 -------------------------
@@ -49,6 +52,7 @@ Ranking Observation Times
 Tools to rank observations by probability covered, adding the observability window for a comprehensive view.
 
 .. automodapi:: tilepy.include.RankingObservationTimes
+     :no-inheritance-diagram:
 
 Plotting Tools
 --------------
@@ -56,3 +60,4 @@ Plotting Tools
 Utilities for plotting sky maps, pointings, and other visualization tasks.
 
 .. automodapi:: tilepy.include.PointingTools
+     :no-inheritance-diagram:

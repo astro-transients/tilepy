@@ -153,6 +153,10 @@ additional_extensions = [
     "sphinxcontrib.typer",
     "sphinxcontrib.bibtex",
     "sphinx_astropy.ext.edit_on_github",
+    "sphinx.ext.mathjax",
+    "nbsphinx",  # To display jupyter notebook
+    "sphinx_gallery.gen_gallery",
+    "sphinx_design",
 ]
 for ext in additional_extensions:
     if ext not in extensions:
@@ -160,6 +164,18 @@ for ext in additional_extensions:
 
 # Activate TODO
 todo_include_todos = True
+
+
+# -- Options for nbsphinx -----------------------------------------------------
+
+examples_dirs = ["./tutorials"]
+gallery_dirs = ["auto_tutorials"]
+
+sphinx_gallery_conf = {
+    "examples_dirs": examples_dirs,
+    "gallery_dirs": gallery_dirs,
+    "capture_repr": ("_repr_html_", "__repr__"),
+}
 
 # Intersphinx mappings for cross-referencing other Python library documentation
 intersphinx_mapping = {

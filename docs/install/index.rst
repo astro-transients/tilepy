@@ -1,7 +1,8 @@
 .. highlight:: sh
 
-Installation
-============
+===========
+Get Started
+===========
 
 .. toctree::
    :maxdepth: 2

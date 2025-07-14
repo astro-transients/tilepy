@@ -1,42 +1,44 @@
-###############################
-|tilepy|: Tiling for Transients
-###############################
+###################################
+**tilepy** : Tiling for Transients
+##################################
 
 .. image:: _static/tilepy_logo.png
    :alt: |tilepy| logo
    :align: center
 
+.. note::
 
-|tilepy| is an open-source toolkit for tiling and scheduling observations of large localization regions from transient astronomical events.
-It supports automated scheduling for both space-based and ground-based telescopes, with flexible configurations and integration with galaxy catalogs to optimize follow-up campaigns.
+   |tilepy| is an open-source toolkit for tiling and scheduling observations of large localization regions from transient astronomical events.
+   It supports automated scheduling for both space-based and ground-based telescopes, with flexible configurations and integration with galaxy catalogs to optimize follow-up campaigns.
 
-***********
-How to Cite
-***********
 
-To cite |tilepy| in your research, please cite :footcite:`Seglar-Arroyo_2024`.
+.. admonition:: How to Cite
+   :class: tip
+
+   To cite |tilepy| in your research, please cite :footcite:`Seglar-Arroyo_2024`.
+
+
+.. admonition:: Contents
+   :class: info
+
+   .. toctree::
+      :maxdepth: 2
+
+      install/index
+      overview/index
+      guide/index
+      .. source/TilingDetermination
+
 
 References
 ----------
 .. footbibliography::
 
 
-*****************
-Table of Contents
-*****************
+.. admonition:: Quick links
 
-.. toctree::
-   :maxdepth: 2
+   * :ref:`genindex`
 
-   overview/index
-   install/index
-   guide/index
-   .. source/TilingDetermination
+   * :ref:`modindex`
 
-*****
-Index
-*****
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   * :ref:`search`
