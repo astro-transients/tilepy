@@ -120,6 +120,15 @@ class SkyMap:
 
         return self.rasterized_map_cache[cache_entry]
 
+    def getMaximumProbabilityCoordinates(self):
+        """
+        Returns the sky coordinates (RA, Dec) of the highest-probability pixel
+        in the raw probability density map.
+        """
+        ipix_max = np.argmax(self.raw_map_prob_density.data)
+        lon, lat = self.raw_map_prob_density.pix2ang(ipix_max, lonlat=True)
+        return SkyCoord(ra=lon * u.deg, dec=lat * u.deg)
+
     def computeGalaxyProbability(self, galaxyCatalog, mangrove=False):
 
         # Identify the pixel associated to each galaxy

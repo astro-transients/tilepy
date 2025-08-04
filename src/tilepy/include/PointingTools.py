@@ -1995,15 +1995,6 @@ def FulfillsRequirementGreyObservations(
     return greymask
 
 
-def ObtainHighestProbabilityCoordinates(hpx_prob):
-    ipix_max = np.argmax(hpx_prob)
-    nside = hp.npix2nside(len(hpx_prob))
-    theta, phi = hp.pix2ang(nside, ipix_max)
-    ra = np.rad2deg(phi)
-    dec = np.rad2deg(0.5 * np.pi - theta)
-    return ra, dec
-
-
 def ComputeProbGalTargeted(
     prob,
     time,
