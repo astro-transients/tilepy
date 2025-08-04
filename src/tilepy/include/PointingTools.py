@@ -1995,10 +1995,7 @@ def FulfillsRequirementGreyObservations(
     return greymask
 
 
-def ObtainHighestProbabilityCoordinates(filename):
-    hpx = UNIQSkymap_toNested(filename)
-    hpx_prob = hpx["PROB"]
-    print(sum(hpx_prob))
+def ObtainHighestProbabilityCoordinates(hpx_prob):
     ipix_max = np.argmax(hpx_prob)
     nside = hp.npix2nside(len(hpx_prob))
     theta, phi = hp.pix2ang(nside, ipix_max)
