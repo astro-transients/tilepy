@@ -10,7 +10,7 @@ repos:
   rev: 25.1.0
   hooks:
   - id: black
-    stages: [commit]
+    stages: [pre-commit]
 
 - repo: https://github.com/pycqa/isort
   rev: 6.0.0
