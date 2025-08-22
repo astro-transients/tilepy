@@ -55,7 +55,9 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "-igrfcoeffs", metavar="International Geomagnetic Reference Field", default="igrf13coeffs.txt"
+    "-igrfcoeffs",
+    metavar="International Geomagnetic Reference Field",
+    default="igrf13coeffs.txt",
 )
 
 parser.add_argument("-tiles", metavar="tiles already observed", default=None)
@@ -81,7 +83,7 @@ skymap = (
     "https://gracedb.ligo.org/api/superevents/S250328ae/files/Bilby.multiorder.fits,0"
 )
 
-#skymap = ("https://dcc.ligo.org/public/0146/G1701985/001/LALInference_v2.fits.gz")
+# skymap = ("https://dcc.ligo.org/public/0146/G1701985/001/LALInference_v2.fits.gz")
 ObsArray = ["SWIFT"]
 parameters = []
 

@@ -11,7 +11,7 @@
 [![Latest release](http://img.shields.io/pypi/v/tilepy.svg?text=version)](https://pypi.org/project/tilepy/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/astro-transients/tilepy/blob/master/LICENSE.rst)
 [![ApJS Published](https://img.shields.io/badge/ApJS-Published-Green.svg)](https://doi.org/10.3847/1538-4365/ad5bde)
-[![Documentation Status](https://readthedocs.org/projects/tilepy/badge/?version=implement-readthedocs)](https://tilepy.readthedocs.io/en/implement-readthedocs/?badge=implement-readthedocs)
+[![Documentation Status](https://readthedocs.org/projects/tilepy/badge/?version=latest)](https://tilepy.readthedocs.io/en/latest)
 
 </div>
 

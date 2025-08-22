@@ -23,6 +23,7 @@ import datetime
 
 import astropy.coordinates as co
 import healpy as hp
+import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -32,12 +33,10 @@ from astropy.coordinates import AltAz, SkyCoord, get_body
 from astropy.io import ascii
 from astropy.table import Table
 from astropy.time import Time
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import Normalize
 from six.moves import configparser
 from sklearn.cluster import AgglomerativeClustering
-
-from matplotlib.colors import Normalize
-import matplotlib.cm as cm
-from matplotlib.cm import ScalarMappable
 
 from .PointingTools import FilterGalaxies, Tools
 
@@ -45,9 +44,8 @@ if six.PY2:
     ConfigParser = configparser.SafeConfigParser
 else:
     ConfigParser = configparser.ConfigParser
-from .MapManagement import SkyMap, create_map_reader
-import re
 import os
+import re
 
 # iers_file = os.path.join(os.path.abspath(
 #    os.path.dirname(__file__)), '../dataset/finals2000A.all')
@@ -743,7 +741,7 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
     if obspar.doPlot:
         try:
             prob_column = "PGW" if "PGW" in pre_df.columns else "PGal"
-        except:
+        except Exception:
             raise ValueError("Neither PGW nor PGal column found")
 
         # Coordinates
@@ -759,7 +757,7 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
         for i, (coords, colors, title) in enumerate(
             [(pre_coords, pre_colors, "Before Optimization")]
         ):
-            ax = fig.add_subplot(1, 2, i + 1, projection="mollweide")
+            fig.add_subplot(1, 2, i + 1, projection="mollweide")
             hp.gnomview(prob, rot=(144.844, 11.111), xsize=500, ysize=500)
 
             for coord, color in zip(coords, colors):

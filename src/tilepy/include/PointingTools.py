@@ -28,6 +28,7 @@ import os
 import astropy.coordinates as co
 import ephem
 import healpy as hp
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.ma as ma
@@ -39,14 +40,11 @@ from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord, get_body
 from astropy.table import Table
 from astropy.time import Time
 from gdpyc import DustMap
+from matplotlib.path import Path
 from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
 from skyfield.api import E, N, load, wgs84
-import matplotlib.dates as mdates
-from matplotlib.path import Path
-from skyfield.api import load
-
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -439,18 +437,18 @@ class Tools:
         alt_km = subpoint.elevation.km
 
         # Convert Skyfield time to datetime → decimal year
-        dt = current_time.utc_datetime()  # get Python datetime object in UTC
-        year = (
-            dt.year
-            + (
-                dt.timetuple().tm_yday
-                - 1
-                + dt.hour / 24
-                + dt.minute / 1440
-                + dt.second / 86400
-            )
-            / 365.25
-        )
+        # dt = current_time.utc_datetime()  # get Python datetime object in UTC
+        # year = (
+        #     dt.year
+        #     + (
+        #         dt.timetuple().tm_yday
+        #         - 1
+        #         + dt.hour / 24
+        #         + dt.minute / 1440
+        #         + dt.second / 86400
+        #     )
+        #     / 365.25
+        # )
 
         coeffs = load_igrf_coeffs(f"{datasetDir}/igrf13coeffs.txt")
 
@@ -622,9 +620,6 @@ def load_igrf_coeffs(filename="igrf13coeffs.txt"):
         final_coeffs.append((n, m, g_val, h_val))
 
     return final_coeffs
-
-
-import numpy as np
 
 
 def get_dipole_field(lat_deg, lon_deg, alt_km, coeffs):
@@ -1854,7 +1849,7 @@ def GetBestGridPos3D(
     dp_dV_FOV = []
     BestGalsRA = []
     BestGalsDec = []
-    galaxx = []
+    # galaxx = []
     cat0 = cat
     for element in range(0, len(SelectedGals)):
         if element < len(SelectedGals):

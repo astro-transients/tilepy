@@ -235,7 +235,7 @@ class ObservationParameters(object):
         galcatName,
         outDir,
         pointingsFile,
-        igrfcoeffs,
+        igrfcoeffs=None,
         eventName=None,
         mode="healpix",
         ra=None,

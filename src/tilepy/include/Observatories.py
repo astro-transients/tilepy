@@ -103,7 +103,7 @@ class CTASouthObservatory:
     `The SSTs <https://www.ctao.org/emission-to-discovery/telescopes/sst/>`_ use a dual-mirror design with silicon photomultiplier (SiPM) cameras
     and a wide field of view (about 8.8 degrees). `The MSTs <https://www.ctao.org/emission-to-discovery/telescopes/mst/>`_ have 12 m mirrors and fast PMT-based cameras (FlashCam), with a field of view of about 8 degrees.
     `The CTAO-South site <https://www.ctao.org/emission-to-discovery/array-sites/ctao-south/>`_  is built to explore some of the most powerful particle accelerators in our Galaxy,
-    such as supernova remnants, pulsar wind nebulae, and massive star clusters :footcite:`019EPJWC.20901038C`.
+    such as supernova remnants, pulsar wind nebulae, and massive star clusters :footcite:`2019EPJWC.20901038C`.
 
     There is no Large-Sized Telescopes (LSTs) are installed at CTAO-South for now, but the site is prepared for future LST additions.
 
@@ -138,10 +138,9 @@ class CTANorthObservatory:
     - **Latitude**: 28.762°
     - **Longitude**: -17.891°
 
-    The “Alpha Configuration” includes:
+    The “Alpha Configuration” includes (covering about 0.5 km\ :math:`^2`):
       - 4 Large-Sized Telescopes (LSTs)
       - 9 Medium-Sized Telescopes (MSTs)
-    covering about 0.5 km:math:`^2`.
 
     As of mid‑2025:
       - **LST‑1**: installed in October 2018 and under commissioning
