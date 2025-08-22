@@ -1,5 +1,6 @@
 import datetime
 import json
+from pathlib import Path
 
 import pytest
 
@@ -8,7 +9,8 @@ from tilepy.include.CampaignDefinition import ObservationParameters
 
 def load_test_cases():
     """Reads test cases from a JSON file."""
-    with open("tests/test_cases.json", "r") as f:
+    data_path = Path(__file__).resolve().parent / "test_cases.json"
+    with data_path.open(encoding="utf-8") as f:
         return json.load(f)  # Returns a list of dictionaries
 
 
