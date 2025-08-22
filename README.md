@@ -14,7 +14,6 @@
 [![Documentation Status](https://readthedocs.org/projects/tilepy/badge/?version=latest)](https://tilepy.readthedocs.io/en/latest)
 https://tilepy.readthedocs.io/en/latest/
 </div>
- https://m4opt.readthedocs.io/en/latest/?badge=latest
 ## Installation
 
 We clone the repo, create an environment to work, activate the environment and install the package. You can use conda or mamba for this.
