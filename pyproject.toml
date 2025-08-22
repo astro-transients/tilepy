@@ -54,6 +54,7 @@ dependencies = [
 tests = [
     "pytest >= 7.0",
     "pytest-cov",
+    "pytest-doctestplus",
     "tomli",
     "nbmake>=1.5.5",
 ]
