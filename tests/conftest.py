@@ -41,6 +41,7 @@ def parsed_obs_parameters(request):
         test_case["galcatName"],
         test_case["outDir"],
         test_case["pointingsFile"],
+        test_case.get("igrfcoeffs", None),
     )
 
     return obspar
