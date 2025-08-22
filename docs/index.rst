@@ -1,6 +1,7 @@
-###################################
+##################################
 **tilepy** : Tiling for Transients
 ##################################
+
 
 .. image:: _static/tilepy_logo.png
    :alt: |tilepy| logo
@@ -27,7 +28,6 @@
       install/index
       overview/index
       guide/index
-      .. source/TilingDetermination
 
 
 References
