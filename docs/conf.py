@@ -205,7 +205,7 @@ html_context = {
     "is_development": dev,
     "github_user": "astro-transients",
     "github_repo": "tilepy",
-    "github_version": "main",
+    "github_version": "master",
     "doc_path": "docs",
 }
 
@@ -236,7 +236,7 @@ linkcheck_anchors = False
 
 # -- Options for the edit_on_github extension ---------------------------------
 edit_on_github_project = "astro-transients/tilepy"
-edit_on_github_branch = "main"
+edit_on_github_branch = "master"
 
 edit_on_github_source_root = ""
 edit_on_github_doc_root = "docs"
