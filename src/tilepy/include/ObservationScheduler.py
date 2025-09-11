@@ -254,7 +254,10 @@ def GetUniversalSchedule(obspar):
 
     ObservationTime = obspar[0].obsTime
     outputDir = "%s/%s" % (obspar[0].outDir, raw_map.name_event)
-    galaxies = obspar[0].datasetDir + obspar[0].galcatName
+
+    if skymap.is3D:
+        galaxies = obspar[0].datasetDir + obspar[0].galcatName
+
     cat = None
 
     if base == "grid":
