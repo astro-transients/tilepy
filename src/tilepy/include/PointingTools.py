@@ -69,7 +69,6 @@ __all__ = [
     "VisibleAtTime",
     "FulfillsRequirement",
     "FulfillsRequirementGreyObservations",
-    "ObtainHighestProbabilityCoordinates",
     "ComputeProbGalTargeted",
     "SubstractPointings",
     "SubstractGalaxiesCircle",
