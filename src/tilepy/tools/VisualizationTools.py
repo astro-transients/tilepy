@@ -9,6 +9,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
+from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.include.Observatories import CTANorthObservatory, HESSObservatory
 from tilepy.include.PointingPlotting import (
     LoadPointings,
@@ -22,8 +23,6 @@ from tilepy.include.PointingTools import (
     TransformRADec,
     getdate,
 )
-
-from tilepy.include.CampaignDefinition import ObservationParameters
 
 
 def LocateSource(filename, ra, dec, PercentCov=90):

@@ -41,6 +41,7 @@ else:
     ConfigParser = configparser.ConfigParser
 
 import matplotlib.colors as mcolors
+import matplotlib.dates as mdates
 from matplotlib.patches import Circle
 
 __all__ = [

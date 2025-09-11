@@ -53,11 +53,28 @@ __all__ = [
 
 def GetSchedule(obspar):
     """
-    Top level function that is called by the user with specific arguments and creates a folder
-    with the tiling schedules for a single telescope and visibility plots.
+    Generates a tiling schedule and visibility plots for a single telescope.
 
-    :param obspar: the set of parameters needed to launch the tiling scheduler
-    :type obspar: class ObservationParameters
+    This top level function takes the observation parameters, computes the optimal tiling
+    and creates a dedicated output folder containing the scheduled pointings and optional plots.
+
+    Parameters
+    ----------
+    obspar : ObservationParameters
+        The set of parameters needed to launch the tiling scheduler.
+
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    If the 90% localization area is larger than the configured maximum (`locCut90`), no schedule is generated.
+
+    Examples
+    --------
+    >>> GetSchedule(obspar)
+
     """
 
     raw_map = create_map_reader(obspar)
@@ -67,7 +84,8 @@ def GetSchedule(obspar):
     area_50 = skymap.getArea(0.5).to_value(u.deg * u.deg)
 
     if obspar.locCut90 is not None:
-        area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
+        # FIXME : a repetitive calculation
+        # area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
         if obspar.locCut90 < area_90:
             print(
                 "The 90% area ("
@@ -78,6 +96,8 @@ def GetSchedule(obspar):
             )
             return
 
+    # FIXME : Not necessary but could ovoid to have along "==" in the code
+    # print("=" * 91)
     print(
         "==========================================================================================="
     )
@@ -92,6 +112,8 @@ def GetSchedule(obspar):
 
     if not os.path.exists(dirName):
         os.makedirs(dirName)
+    # FIXME:
+    # os.makedirs(dirName, exist_ok=True)
 
     if skymap.is3D:
         print(
@@ -196,11 +218,30 @@ def GetSchedule(obspar):
 
 def GetUniversalSchedule(obspar):
     """
-    Top level function that is called by the user with specific arguments and creates a folder
-    with the tiling schedules for multiple telescopes/observartories and visibility plots.
+    Generates tiling schedules and visibility plots for multiple telescopes/observatories.
 
-    :param obspar: a list of sets of parameters for each observatory needed to launch the tiling scheduler
-    :type obsparameters: list of class ObservationParameters
+    This top-level function takes as input a list of observation parameter sets (one per observatory),
+    computes optimal tilings according to the skymap, and saves the results in output folders.
+    Optionally, it produces ranked pointings and plots if requested in the input parameters.
+
+    Parameters
+    ----------
+    obspar : list of ObservationParameters
+        List of parameter objects, one for each observatory, defining the scheduling configuration.
+
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    The function creates necessary output folders and writes results to disk. If no suitable
+    schedule can be generated for any observatory, no output file is created for that observatory.
+
+    Examples
+    --------
+    >>> GetUniversalSchedule([obspar1, obspar2])
+
     """
 
     raw_map = create_map_reader(obspar[0])
@@ -375,7 +416,7 @@ def GetUniversalSchedule(obspar):
             for j in range(len(obspar)):
                 obspar1 = obspar[j]
                 SuggestedPointings_1 = SuggestedPointings[
-                    SuggestedPointings["ObsName"] == obspar1.obs_name
+                    SuggestedPointings["ObsName"] == obspar[j].obs_name
                 ]
                 print(SuggestedPointings_1)
                 if base == "space":
@@ -394,16 +435,23 @@ def GetUniversalSchedule(obspar):
                         overwrite=True,
                         fast_writer=False,
                     )
-                    Ranking_Space(
-                        dirName,
-                        "%s/SuggestedPointings_GWOptimisation_%s.txt"
-                        % (dirName, obspar[j].obs_name),
-                    )
-                    Ranking_Space_AI(
-                        dirName,
-                        "%s/SuggestedPointings_GWOptimisation_%s.txt"
-                        % (dirName, obspar[j].obs_name),
-                    )
+                    if obspar[j].doRank:
+                        Ranking_Space(
+                            dirName,
+                            "%s/SuggestedPointings_GWOptimisation_%s.txt"
+                            % (dirName, obspar[j].obs_name),
+                            obspar[j],
+                            obspar[j].alphaR,
+                            obspar[j].betaR,
+                            skymap,
+                        )
+                        Ranking_Space_AI(
+                            dirName,
+                            "%s/SuggestedPointings_GWOptimisation_%s.txt"
+                            % (dirName, obspar[j].obs_name),
+                            obspar[j],
+                            skymap,
+                        )
 
         else:
             # for obspar in parameters:
@@ -421,34 +469,37 @@ def GetUniversalSchedule(obspar):
                         overwrite=True,
                         fast_writer=False,
                     )
-                    RankingTimes_2D(
-                        ObservationTime,
-                        skymap.getMap("prob", obspar[j].HRnside),
-                        obspar[j],
-                        dirName,
-                        "%s/SuggestedPointings_GWOptimisation_%s.txt"
-                        % (dirName, obspar[j].obs_name),
-                        obspar[j].obs_name,
-                    )
-                    PointingPlotting(
-                        skymap.getMap("prob", obspar[j].HRnside),
-                        obspar[j],
-                        obspar[j].obs_name,
-                        dirName,
-                        "%s/SuggestedPointings_GWOptimisation_%s.txt"
-                        % (dirName, obspar[j].obs_name),
-                        obspar[j].obs_name,
-                        cat,
-                    )
-            PointingPlotting(
-                skymap.getMap("prob", obspar[j].HRnside),
-                obspar[0],
-                "all",
-                dirName,
-                "%s/SuggestedPointings_GWOptimisation.txt" % dirName,
-                "all",
-                cat,
-            )
+                    if obspar[j].doRank:
+                        RankingTimes_2D(
+                            ObservationTime,
+                            skymap.getMap("prob", obspar[j].HRnside),
+                            obspar[j],
+                            dirName,
+                            "%s/SuggestedPointings_GWOptimisation_%s.txt"
+                            % (dirName, obspar[j].obs_name),
+                            obspar[j].obs_name,
+                        )
+                    if obspar[j].doPlot:
+                        PointingPlotting(
+                            skymap.getMap("prob", obspar[j].HRnside),
+                            obspar[j],
+                            obspar[j].obs_name,
+                            dirName,
+                            "%s/SuggestedPointings_GWOptimisation_%s.txt"
+                            % (dirName, obspar[j].obs_name),
+                            obspar[j].obs_name,
+                            cat,
+                        )
+            if obspar[j].doPlot:
+                PointingPlotting(
+                    skymap.getMap("prob", obspar[j].HRnside),
+                    obspar[0],
+                    "all",
+                    dirName,
+                    "%s/SuggestedPointings_GWOptimisation.txt" % dirName,
+                    "all",
+                    cat,
+                )
 
     else:
         print("No observations are scheduled")

@@ -28,6 +28,7 @@ import os
 import astropy.coordinates as co
 import ephem
 import healpy as hp
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.ma as ma
@@ -39,12 +40,11 @@ from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord, get_body
 from astropy.table import Table
 from astropy.time import Time
 from gdpyc import DustMap
+from matplotlib.path import Path
 from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
 from skyfield.api import E, N, load, wgs84
-import matplotlib.dates as mdates
-from matplotlib.path import Path
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -98,11 +98,47 @@ __all__ = [
 
 class Tools:
     """
-    class with different visibility check functions and other setting and rising of the sun and the moon functions
+    Utility class for astronomical visibility and observing constraints.
+
+    Provides static and class methods for checking darkness/greyness,
+    Sun/Moon altitude, twilight, galactic extinction, and other observation-related computations.
+
+    Provides static and class methods for incorporating observational constraints,
+    such as darkness/greyness, Sun/Moon altitude, twilight, galactic extinction, and other
+    factors relevant to scheduling astronomical observations.
+
+
+    Most methods require an `obspar` object, which should provide site coordinates and observing thresholds.
+
+    Main functionalities include:
+      - Checking if the sky is dark or grey (usable) for observation.
+      - Computing Sun/Moon altitude, phase, rise and set times.
+      - Determining if a coordinate is inside the Galactic plane.
+      - Getting galactic extinction at given coordinates.
+      - Checking if a position is within the South Atlantic Anomaly (SAA).
+      - Miscellaneous geometric and HEALPix utilities for sky coverage analysis.
+
     """
 
     @classmethod
     def IsDarkness(cls, obsTime, obspar):
+        """
+        Return True if the sky meets the darkness constraints for observation.
+
+        Parameters
+        ----------
+        obsTime : datetime.datetime
+            Time of observation (UTC).
+        obspar : object
+            Observation parameters.
+
+        Returns
+        -------
+        bool
+            True if darkness constraints are satisfied, False otherwise.
+
+        """
+
         sunAlt = Tools.SunAlt(obsTime, obspar)
         moonAlt = Tools.MoonAlt(obsTime, obspar)
         SunDown = obspar.sunDown
@@ -117,6 +153,13 @@ class Tools:
 
     @classmethod
     def IsGreyness(cls, obsTime, obspar):
+        """
+        Return True if the sky meets the greyness (twilight) constraints for observation.
+
+        So check if the Sun and Moon are in the grey twilight regime.
+
+        """
+
         # SUN altitude
         sunAlt = Tools.SunAlt(obsTime, obspar)
         # MOON altitude
@@ -139,6 +182,9 @@ class Tools:
 
     @classmethod
     def MoonPhase(cls, obsTime, obspar):
+        """
+        Return the phase of the Moon (in percent) at the given time and site.
+        """
         moon = ephem.Moon()
         obs = ephem.Observer()
         obs.lon = str(obspar.lon / u.deg)
@@ -153,6 +199,7 @@ class Tools:
 
     @classmethod
     def SunAlt(cls, obsTime, obspar):
+        """Return the Sun's altitude (in degrees) at the given time and site."""
         sun = get_body("sun", Time(obsTime, scale="utc")).transform_to(
             AltAz(obstime=Time(obsTime, scale="utc"), location=obspar.location)
         )
@@ -163,6 +210,9 @@ class Tools:
 
     @classmethod
     def MoonAlt(cls, obsTime, obspar):
+        """
+        Return the Moon's altitude (in degrees) at the given time and site.
+        """
         moon = ephem.Moon()
         obs = ephem.Observer()
         obs.lon = str(obspar.lon / u.deg)
@@ -176,6 +226,9 @@ class Tools:
 
     @classmethod
     def NextSunrise(cls, obsTime, obspar):
+        """
+        Return the datetime of the next sunrise after the given time at the site.
+        """
         sun = ephem.Sun()
         obs = ephem.Observer()
         obs.lon = str(obspar.lon / u.deg)
@@ -323,6 +376,9 @@ class Tools:
 
     @classmethod
     def GalacticPlaneBorder(cls, coords):
+        """
+        Return True if the coordinates are inside the Galactic plane region.
+        """
         lon = coords.galactic.l.value  # x-coordinate
         lat = coords.galactic.b.value  # y-coordinate
         # print(lon)
@@ -343,6 +399,10 @@ class Tools:
 
     @classmethod
     def GetGalacticExtinction(cls, coords, dustmap="SFD", filters="SDSS_r"):
+        """
+        Return the galactic extinction at the given coordinates.
+        """
+
         # Extinction = DustMap.ebv(coords)
         extinction = DustMap.extinction(coords, dustmap="SFD", filters="SDSS_r")
         # GasMap.plot_map('HI4PI')
@@ -350,6 +410,10 @@ class Tools:
 
     @classmethod
     def is_in_saa(cls, latitude, longitude):
+        """
+        Return True if the given latitude and longitude are inside the South Atlantic Anomaly (SAA).
+        """
+
         saa_lat_min = -40.0  # Minimum latitude for the SAA
         saa_lat_max = 0.0  # Maximum latitude for the SAA
         saa_lon_min = -50.0  # Minimum longitude for the SAA
@@ -364,7 +428,44 @@ class Tools:
             return False
 
     @classmethod
+    def is_in_saa_opt(cls, satellite, current_time, threshold_nT, datasetDir):
+        geocentric = satellite.at(current_time)
+        subpoint = geocentric.subpoint()
+
+        lat = subpoint.latitude.degrees
+        lon = subpoint.longitude.degrees
+        alt_km = subpoint.elevation.km
+
+        # Convert Skyfield time to datetime → decimal year
+        # dt = current_time.utc_datetime()  # get Python datetime object in UTC
+        # year = (
+        #     dt.year
+        #     + (
+        #         dt.timetuple().tm_yday
+        #         - 1
+        #         + dt.hour / 24
+        #         + dt.minute / 1440
+        #         + dt.second / 86400
+        #     )
+        #     / 365.25
+        # )
+
+        coeffs = load_igrf_coeffs(f"{datasetDir}/igrf13coeffs.txt")
+
+        B_total = get_dipole_field(lat, lon, alt_km, coeffs)
+
+        print(
+            f"[{satellite.name}] lat: {lat:.2f}, lon: {lon:.2f}, alt: {alt_km:.2f} km"
+        )
+        print(f"Magnetic field strength: {B_total:.1f} nT")
+
+        return B_total < threshold_nT
+
+    @classmethod
     def query_square(nside, center, side_length_rad):
+        """
+        Return HEALPix pixel indices for a square region centered at the given point.
+        """
         # Convert side length to radians
 
         # Calculate corner offsets from the center point (assuming a small angle approximation)
@@ -464,6 +565,108 @@ class Tools:
         return np.array([coord.cartesian.xyz.value for coord in coords])
 
 
+def decimal_year(dt):
+    start = datetime.datetime(dt.year, 1, 1, tzinfo=timezone.utc)
+    end = datetime.datetime(dt.year + 1, 1, 1, tzinfo=timezone.utc)
+    return dt.year + (dt - start).total_seconds() / (end - start).total_seconds()
+
+
+def load_igrf_coeffs(filename="igrf13coeffs.txt"):
+    """
+    Load simplified IGRF coefficients (dipole only) from a full IGRF13 coefficient file.
+    This function skips headers and parses lines like:
+      g  1  0  -31543  ...  (only first g and h coefficients per line)
+    """
+
+    coeffs = []
+    with open(filename, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue  # skip empty and comment lines
+
+            parts = line.split()
+            # first part is 'g' or 'h', then n, m, then many coefficients by year
+            if parts[0] not in ("g", "h"):
+                continue  # skip any weird line
+
+            try:
+                coeff_type = parts[0]  # 'g' or 'h'
+                n = int(parts[1])
+                m = int(parts[2])
+                coeff_value = float(parts[3])  # take coefficient for 1900.0 as example
+            except (ValueError, IndexError):
+                continue  # skip lines that don't parse
+
+            # Store as (n, m, g, h) in coeffs list; accumulate g and h separately
+            # We need to collect both g and h for the same (n,m)
+            # So accumulate in a dict first:
+            # We'll build a dict keyed by (n,m) to hold g and h coefficients
+
+            coeffs.append((coeff_type, n, m, coeff_value))
+
+    # Now, reorganize coeffs to dict keyed by (n,m) with g and h values:
+    coeff_dict = {}
+    for coeff_type, n, m, val in coeffs:
+        if (n, m) not in coeff_dict:
+            coeff_dict[(n, m)] = {"g": None, "h": None}
+        coeff_dict[(n, m)][coeff_type] = val
+
+    # Convert to list of tuples (n, m, g, h)
+    final_coeffs = []
+    for (n, m), vals in coeff_dict.items():
+        g_val = vals["g"] if vals["g"] is not None else 0.0
+        h_val = vals["h"] if vals["h"] is not None else 0.0
+        final_coeffs.append((n, m, g_val, h_val))
+
+    return final_coeffs
+
+
+def get_dipole_field(lat_deg, lon_deg, alt_km, coeffs):
+    """
+    Estimate magnetic field strength using the full IGRF dipole terms (n=1, m=0,1).
+
+    Args:
+        lat_deg (float): Geodetic latitude in degrees.
+        lon_deg (float): Geodetic longitude in degrees.
+        alt_km (float): Altitude above sea level in kilometers.
+        coeffs (list): List of IGRF coefficients in (n, m, g, h) format.
+
+    Returns:
+        float: Magnetic field magnitude in nanotesla (nT).
+    """
+    Re = 6371.2  # Earth's mean radius in km
+    r = Re + alt_km
+    theta = np.radians(90 - lat_deg)  # colatitude in radians
+    phi = np.radians(lon_deg)  # longitude in radians
+
+    # Extract dipole coefficients
+    g10 = next(g for n, m, g, h in coeffs if n == 1 and m == 0)
+    g11 = next(g for n, m, g, h in coeffs if n == 1 and m == 1)
+    h11 = next(h for n, m, g, h in coeffs if n == 1 and m == 1)
+
+    # Spherical harmonic terms (simplified for n=1)
+    Br = (
+        -2
+        * (Re / r) ** 3
+        * (
+            g10 * np.cos(theta)
+            + g11 * np.sin(theta) * np.cos(phi)
+            + h11 * np.sin(theta) * np.sin(phi)
+        )
+    )
+    Btheta = -((Re / r) ** 3) * (
+        g10 * np.sin(theta)
+        - g11 * np.cos(theta) * np.cos(phi)
+        - h11 * np.cos(theta) * np.sin(phi)
+    )
+    Bphi = (Re / r) ** 3 * (g11 * np.sin(phi) - h11 * np.cos(phi))  # eastward
+
+    # Total magnetic field strength
+    B_total = np.sqrt(Br**2 + Btheta**2 + Bphi**2)
+    return B_total
+
+
 class Observer:
     """Class to store information and handle operation related to the observatory used for the observations."""
 
@@ -479,17 +682,27 @@ class Observer:
         max_moon_phase,
     ):
         """
-        Initialize the class with all the needed parameters.
+        Initialize an Observer instance.
 
-        Args:
-        longitude (float): The longitude of the observatory (degree).
-        latitude (float): The latitude of the observatory (degree).
-        elevation (float): The elevation of the observatory (m).
-        run_duration (datetime.timedelta): The duration of each run.
-        minimal_run_duration (datetime.timedelta): The minimum duration of each run.
-        max_sun_altitude (float): The maximum altitude of the sun (degree).
-        max_moon_altitude (float): The maximum altitude of the moon (degree).
-        max_moon_phase (float): The maximum phase of the moon (illumination fraction).
+        Parameters
+        ----------
+        longitude : float
+            Longitude of the observatory (degrees).
+        latitude : float
+            Latitude of the observatory (degrees).
+        elevation : float
+            Elevation of the observatory (meters).
+        run_duration : datetime.timedelta
+            Duration of each observing run.
+        minimal_run_duration : datetime.timedelta
+            Minimum duration for an observing run.
+        max_sun_altitude : float
+            Maximum allowed altitude of the Sun (degrees).
+        max_moon_altitude : float
+            Maximum allowed altitude of the Moon (degrees).
+        max_moon_phase : float
+            Maximum allowed Moon phase (illumination fraction).
+
         """
 
         self.eph = load("de440s.bsp")
@@ -509,12 +722,18 @@ class Observer:
         """
         Calculate the time window for observations.
 
-        Args:
-        start_time (datetime): Earliest start time to start observations, if no timezone, assume UTC
-        nb_observation_night (int): The number of observation nights.
+        Parameters
+        ----------
+        start_time : datetime.datetime
+            Earliest time to start observations. If no timezone is provided, UTC is assumed.
+        nb_observation_night : int
+            Number of observation nights.
 
-        Returns:
-        list: The start times for each run within the valid time range.
+        Returns
+        -------
+        list of datetime.datetime
+            The start times for each run within the valid time range.
+
         """
 
         # Compute time interval
@@ -539,13 +758,20 @@ class Observer:
         """
         Compute the intersection of two time ranges.
 
-        Args:
-        time_range_1 (list): The first time range.
-        time_range_2 (list): The second time range.
+        Parameters
+        ----------
+        time_range_1 : list
+            The first time range.
+        time_range_2 : list
+            The second time range.
 
-        Returns:
-        list: The intersection of the two time ranges.
+        Returns
+        -------
+        list
+            The intersection of the two time ranges.
+
         """
+
         # Initialisation
         i = j = 0
         n = len(time_range_1)
@@ -573,12 +799,18 @@ class Observer:
         """
         Compute the start times for each run within a valid time range.
 
-        Args:
-        valid_time_range (list): The valid time range.
+        Parameters
+        ----------
+        valid_time_range : list
+            The valid time range.
 
-        Returns:
-        list: The start times for each run.
+        Returns
+        -------
+        list
+            The start times for each run.
+
         """
+
         run_start_time = []
         for i in range(len(valid_time_range)):
             observation_time_available = valid_time_range[i][1] - valid_time_range[i][0]
@@ -600,14 +832,22 @@ class Observer:
         """
         Get the time interval for the sun constraint.
 
-        Args:
-        start_time (datetime): The start time of observations.
-        stop_time (datetime): The stop time of observations.
-        nb_observation_night (int): The number of observation nights.
+        Parameters
+        ----------
+        start_time : datetime.datetime
+            The start time of observations.
+        stop_time : datetime.datetime
+            The stop time of observations.
+        nb_observation_night : int
+            The number of observation nights.
 
-        Returns:
-        list: The time interval for the sun constraint.
+        Returns
+        -------
+        list
+            The time interval for the sun constraint.
+
         """
+
         rise_time, set_time = self.get_risings_and_settings(
             "sun", self.max_sun_altitude, start_time, stop_time
         )
@@ -627,13 +867,20 @@ class Observer:
         """
         Get the time interval for the moon constraint.
 
-        Args:
-        start_time (datetime): The start time of observations.
-        stop_time (datetime): The stop time of observations.
+        Parameters
+        ----------
+        start_time : datetime.datetime
+            The start time of observations.
+        stop_time : datetime.datetime
+            The stop time of observations.
 
-        Returns:
-        list: The time interval for the moon constraint.
+        Returns
+        -------
+        list
+            The time interval for the moon constraint.
+
         """
+
         rise_time, set_time = self.get_risings_and_settings(
             "moon", self.max_moon_altitude, start_time, stop_time
         )
@@ -682,12 +929,18 @@ class Observer:
         """
         Get the moon phase at a given observation time.
 
-        Args:
-        observation_time (datetime): The time of observation.
+        Parameters
+        ----------
+        observation_time : datetime.datetime
+            The time of observation.
 
-        Returns:
-        float: The moon phase at the given observation time.
+        Returns
+        -------
+        float
+            The moon phase at the given observation time.
+
         """
+
         sun, moon, earth = self.eph["sun"], self.eph["moon"], self.eph["earth"]
 
         return (
@@ -701,15 +954,26 @@ class Observer:
         """
         Get the rise and set times of a celestial body within a given time range.
 
-        Args:
-        celestial_body (str): The celestial body.
-        horizon (float): The horizon to consider as rised or set (degree).
-        start_time (datetime): The start time.
-        stop_time (datetime): The stop time.
+        Parameters
+        ----------
+        celestial_body : str
+            The celestial body.
+        horizon : float
+            The horizon to consider as risen or set (degrees).
+        start_time : datetime.datetime
+            The start time.
+        stop_time : datetime.datetime
+            The stop time.
 
-        Returns:
-        list, list: The rise and set times of the celestial body.
+        Returns
+        -------
+        list of datetime.datetime
+            The rise times of the celestial body.
+        list of datetime.datetime
+            The set times of the celestial body.
+
         """
+
         f = almanac.risings_and_settings(
             self.eph,
             self.eph[celestial_body],
@@ -777,13 +1041,17 @@ class Observer:
 
 def getdate(x):
     """
-    Bottom-level function that takes a date and prints it in ISO format
+    Bottom-level function that takes a date and prints it in ISO format.
 
-    :param x: the date to be formatted
-    :type x: datetime
+    Parameters
+    ----------
+    x : datetime.datetime
+        The date to be formatted.
 
-    :return: none
-    rtype: none
+    Returns
+    -------
+    None
+
     """
 
     if isinstance(x, datetime.datetime):
@@ -797,13 +1065,18 @@ def getdate(x):
 
 def UNIQSkymap_toNested(skymap_fname):
     """
-    Bottom-level function that takes a skymap and computes from it the uniq map
+    Load a GW HEALPix skymap from file and compute its uniq map.
 
-    :param skymap_fname: Healpix skymap
-    :type skymap_fname: Table
+    Parameters
+    ----------
+    skymap_fname : str
+        Path to the HEALPix GW skymap file (FITS format).
 
-    :return: healpix_skymaps_dict
-    rtype: dict
+    Returns
+    -------
+    dict
+        The computed uniq map from the GW skymap.
+
     """
 
     sky_tab = Table.read(skymap_fname)
@@ -868,10 +1141,8 @@ def get_lvk_uniq_maps(sky_map, Order, map_names="all"):
 
 
 def NightDarkObservation(time, obspar):
-    """
-    Function that searches for an array of observation times that fulfilled darkness condition and window
+    """Function that searches for an array of observation times that fulfilled darkness condition and window"""
 
-    """
     obs = Observer(
         longitude=obspar.lon.to_value(u.deg),
         latitude=obspar.lat.to_value(u.deg),
@@ -886,10 +1157,7 @@ def NightDarkObservation(time, obspar):
 
 
 def NightDarkObservationwithGreyTime(time, obspar):
-    """
-    Function that searches for an array of observation times that fulfilled darkness condition and window
-
-    """
+    """Function that searches for an array of observation times that fulfilled darkness condition and window"""
     obs = Observer(
         longitude=obspar.lon.to_value(u.deg),
         latitude=obspar.lat.to_value(u.deg),
@@ -1064,7 +1332,15 @@ def GetEarthOccultedPix(
 
 
 def OccultationCut(
-    prob, nside, time, minProbcut, satellite_position, observatory, sun_sep, moon_sep
+    prob,
+    nside,
+    time,
+    minProbcut,
+    satellite_position,
+    observatory,
+    sun_sep,
+    moon_sep,
+    earth_sep,
 ):
     """
     Mask in the pixels that are occulted by Earth, Sun and Moon
@@ -1077,7 +1353,7 @@ def OccultationCut(
     mpixels = []
 
     mEarth, posEarth = GetEarthOccultedPix(
-        nside, time, 6371, 1, satellite_position, observatory
+        nside, time, 6371, earth_sep, satellite_position, observatory
     )
     mpixels.extend(mEarth)
 
@@ -1115,21 +1391,24 @@ def SAA_Times(
     step,
     doPlot,
     dirName,
+    datasetDir,
+    saathershold,
 ):
     SatTimes = []
     i = 0
     saa = []
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
-        satellite_position, satellite_location = GetSatellitePositions(
-            SatelliteName, SatelliteTime
+        # satellite_position, satellite_location = GetSatellitePositions(
+        #    SatelliteName, SatelliteTime
+        # )
+        # if Tools.is_in_saa(satellite_location.lat.deg, satellite_location.lon.deg):
+        #    saa.append(True)
+        # else:
+        #    saa.append(False)
+        saa.append(
+            Tools.is_in_saa_opt(SatelliteName, SatelliteTime, saathershold, datasetDir)
         )
-
-        if Tools.is_in_saa(satellite_location.lat.deg, satellite_location.lon.deg):
-            saa.append(True)
-        else:
-            saa.append(False)
-
         SatTimes.append(current_time)
 
         current_time += step
@@ -1145,7 +1424,7 @@ def SAA_Times(
         plt.plot(
             SatTimes, saa_numeric, drawstyle="steps-post", label="SAA (True=1, False=0)"
         )
-        plt.title("SAA Times")
+        # plt.title("SAA Times")
         plt.xlabel("Time")
         plt.ylabel("SAA Status")
         plt.ylim(-0.1, 1.1)  # Set limits to make binary values clear
@@ -1417,8 +1696,11 @@ def GetBestGridPos2D(
     ra = []
     dec = []
     newpixfinal = []
+    sum_PGW = []
     prob1 = prob[newpix]
     newpix = newpix[np.argsort(prob1)[::-1]]
+    rotation = 0
+
     for i in range(0, len(newpix)):
         if n_sides == 0:
             xyzpix = hp.pix2vec(reducedNside, newpix[i])
@@ -1429,7 +1711,7 @@ def GetBestGridPos2D(
             ra_center = np.rad2deg(phi)
             dec_center = 90 - np.rad2deg(theta)
             vertices = Tools.get_regular_polygon_vertices(
-                ra_center, dec_center, radius, n_sides, 0
+                ra_center, dec_center, radius, n_sides, rotation
             )
             ipix_discfull = hp.query_polygon(HRnside, vertices, inclusive=True)
         else:
@@ -1450,7 +1732,9 @@ def GetBestGridPos2D(
             HRprob = highres[m_ipix_discfull].sum()
             HRprobf = highres[ipix_discfull].sum()
             ipixlistHR.extend(m_ipix_discfull)
+
         if HRprob > minProbcut:
+            sum_PGW.append(HRprob)
             dp_dV_FOV.append(HRprobf)
             newpixfinal.append(newpix[i])
             theta, phi = hp.pix2ang(reducedNside, newpix[i])
@@ -1458,6 +1742,7 @@ def GetBestGridPos2D(
             dec.append(90 - np.degrees(theta))
 
     if len(dp_dV_FOV) > 0:
+        print("sum_PGW", sum(sum_PGW))
         cat_pix = Table(
             [newpixfinal, ra, dec, dp_dV_FOV],
             names=("PIX", "PIXRA", "PIXDEC", "PIXFOVPROB"),
@@ -1465,16 +1750,50 @@ def GetBestGridPos2D(
 
         sortcat1 = cat_pix[np.flipud(np.argsort(cat_pix["PIXFOVPROB"]))]
         first_values = sortcat1[:maxRuns]
+
     else:
         raise ValueError("No pointing were found with current minProbCut")
 
     if doPlot:
+        hp.gnomview(
+            highres,
+            rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]),
+            xsize=500,
+            ysize=500,
+        )
+
         path = dirName + "/GridPlot"
         if not os.path.exists(path):
             os.mkdir(path, 493)
 
-        # mpl.rcParams.update({'font.size':14})
-        hp.gnomview(prob, rot=(143, 10), xsize=1000, ysize=1000)
+        if n_sides > 0:
+            for ra1, dec1 in zip(first_values["PIXRA"], first_values["PIXDEC"]):
+                # Get unit vector vertices (assumed in Cartesian coords)
+                vertices_radec = Tools.get_regular_polygon_vertices(
+                    ra1, dec1, radius, n_sides, rotation
+                )
+                # Convert Cartesian to angular (theta, phi)
+                theta, phi = hp.vec2ang(vertices_radec)  # in radians
+                ra_deg = np.degrees(phi)
+                dec_deg = 90 - np.degrees(theta)
+
+                hp.projplot(
+                    ra_deg,
+                    dec_deg,
+                    "r",
+                    markersize=4,
+                    lonlat=True,
+                    coord="C",  # RA/Dec mode
+                )
+                hp.projplot(
+                    np.append(ra_deg, ra_deg[0]),
+                    np.append(dec_deg, dec_deg[0]),
+                    "r-",
+                    linewidth=1,
+                    lonlat=True,
+                    coord="C",
+                )
+
         hp.graticule()
         try:
             tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
@@ -1490,7 +1809,7 @@ def GetBestGridPos2D(
                 linewidth=0.1,
             )
         except Exception:
-            print("No pcculted pix")
+            print("No occulted pix")
 
         hp.visufunc.projplot(
             first_values["PIXRA"],
@@ -1500,7 +1819,8 @@ def GetBestGridPos2D(
             coord="C",
             linewidth=0.1,
         )
-        plt.savefig("%s/Occ_Pointing.png" % (path))
+
+        plt.savefig("%s/Grid_Pointing.png" % (path), bbox_inches="tight")
         plt.close()
 
     return first_values
@@ -1529,7 +1849,7 @@ def GetBestGridPos3D(
     dp_dV_FOV = []
     BestGalsRA = []
     BestGalsDec = []
-    galaxx = []
+    # galaxx = []
     cat0 = cat
     for element in range(0, len(SelectedGals)):
         if element < len(SelectedGals):
@@ -1552,6 +1872,7 @@ def GetBestGridPos3D(
             cat = galax
 
     if len(dp_dV_FOV) > 0:
+        print("sum(dp_dV_FOV)", sum(dp_dV_FOV))
         cat_pix = Table(
             [BestGalsRA, BestGalsDec, dp_dV_FOV],
             names=("PIXRA", "PIXDEC", "PIXFOVPROB"),
@@ -1569,7 +1890,12 @@ def GetBestGridPos3D(
             os.mkdir(path, 493)
 
         # mpl.rcParams.update({'font.size':14})
-        hp.gnomview(prob, rot=(143, 10), xsize=500, ysize=500)
+        hp.gnomview(
+            prob,
+            rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]),
+            xsize=500,
+            ysize=500,
+        )
         hp.graticule()
 
         # Filter out rows with NaN in dp_dV
@@ -1580,7 +1906,7 @@ def GetBestGridPos3D(
         cat_sorted = cat_clean.copy()
         cat_sorted.sort("dp_dV", reverse=True)
         # Select top 100 galaxies with highest dp_dV
-        top100 = cat_sorted[:100]
+        top100 = cat_sorted[:500]
 
         # Plot with projplot
         hp.visufunc.projplot(
@@ -1617,7 +1943,7 @@ def GetBestGridPos3D(
             coord="C",
             linewidth=0.1,
         )
-        plt.savefig("%s/Occ_Pointing.png" % (path))
+        plt.savefig("%s/Grid_Pointing.png" % (path))
         plt.close()
 
     return first_values
@@ -1629,7 +1955,13 @@ def PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values):
         os.mkdir(path, 493)
 
     # mpl.rcParams.update({'font.size':14})
-    hp.gnomview(prob, rot=(143, 10), xsize=1000, ysize=1000)
+    # hp.mollview(prob)
+    hp.gnomview(
+        prob,
+        rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]),
+        xsize=500,
+        ysize=500,
+    )
     hp.graticule()
     try:
         tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
@@ -1655,79 +1987,132 @@ def PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values):
         coord="C",
         linewidth=0.1,
     )
-    plt.savefig("%s/Occ_Pointing.png" % (path))
+    plt.savefig("%s/Occ_Pointing.png" % (path), bbox_inches="tight")
     plt.close()
 
 
-def map_pixel_availability(pixels_by_time, times):
-    pixel_availability = {}
+def map_pixel_availability(pixels_by_time, probs_by_time, times):
+    """
+    Map each pixel to a list of available times and a single aggregated probability.
 
-    for time, pixel_list in zip(times, pixels_by_time):
-        for pixel in pixel_list:
-            if pixel not in pixel_availability:
-                pixel_availability[pixel] = []
-            pixel_availability[pixel].append(time)
-    return pixel_availability
+    Args:
+        pixels_by_time: list of lists of pixels available at each time step
+        probs_by_time: list of lists of probabilities associated with each pixel at each time step
+        times: list of times corresponding to each pixel list
+
+    Returns:
+        dict: {pixel: {'times': [time1, time2, ...], 'prob': aggregated_probability}, ...}
+    """
+    pixel_data = {}
+
+    for time, pixel_list, prob_list in zip(times, pixels_by_time, probs_by_time):
+        for pixel, prob in zip(pixel_list, prob_list):
+            if pixel not in pixel_data:
+                pixel_data[pixel] = {"times": [], "probs": []}
+            pixel_data[pixel]["times"].append(time)
+            pixel_data[pixel]["probs"].append(prob)
+
+    # Aggregate probabilities (e.g., average)
+    for pixel in pixel_data:
+        probs = pixel_data[pixel]["probs"]
+        avg_prob = sum(probs) / len(probs)
+        pixel_data[pixel]["prob"] = avg_prob
+        del pixel_data[pixel]["probs"]  # Remove raw list to keep only aggregated value
+
+    return pixel_data
 
 
-def PlotSpaceOccTime(dirName, pixels_by_time, times):
+def PlotSpaceOccTime(dirName, pixels_by_time, ProbaTime, times):
     path = dirName + "/Occ_Space_Obs"
     if not os.path.exists(path):
         os.mkdir(path, 493)
 
-    pixel_availability = map_pixel_availability(pixels_by_time, times)
+    pixel_availability = map_pixel_availability(pixels_by_time, ProbaTime, times)
+
+    sorted_pixels = sorted(pixel_availability.items(), key=lambda x: x[1]["prob"])
 
     plt.figure(figsize=(10, 6))
 
-    for idx, (pixel, available_times) in enumerate(pixel_availability.items()):
-        plt.scatter(
-            available_times, [pixel] * len(available_times), label=f"Pixel {pixel}"
-        )
+    # Collect all times where any pixel is available
+    all_times = set()
+    for pixel, data in sorted_pixels:
+        all_times.update(data["times"])
+    all_times = sorted(all_times)
 
+    # Plot pixels
+    colors = plt.cm.tab20(np.linspace(0, 1, len(sorted_pixels)))
+    for y_index, (pixel, data) in enumerate(sorted_pixels):
+        times = data["times"]
+        color = colors[y_index]
+        y_values = [y_index] * len(times)
+        plt.scatter(times, y_values, color=color, s=20)
+
+    # Y-axis labels
+    plt.yticks(
+        range(len(sorted_pixels)),
+        [f"{pixel} (p={data['prob']:.2f})" for pixel, data in sorted_pixels],
+    )
     plt.xlabel("Time")
-    plt.ylabel("Pixel")
-    plt.title("Pixel Availability Over Time")
+    plt.ylabel("Pixels sorted by ascending probability")
+    # plt.title("Pixel Availability with Occulted Regions")
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig("%s/Occ_Pointing_Times.png" % (path))
+
+    # Format x-axis to show only time (HH:MM)
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+    plt.gcf().autofmt_xdate()
+
+    plt.savefig(os.path.join(path, "Occ_Pointing_Times.png"), bbox_inches="tight")
     plt.close()
 
 
-def PlotSpaceOccTimeRadec(dirName, pixels_by_time, times, NSIDE):
+def PlotSpaceOccTimeRadec(dirName, pixels_by_time, ProbaTime, times, NSIDE):
     path = os.path.join(dirName, "Occ_Space_Obs")
     os.makedirs(path, mode=0o755, exist_ok=True)
 
-    pixel_availability = map_pixel_availability(pixels_by_time, times)
+    # Map pixel availability with times and probabilities
+    pixel_availability = map_pixel_availability(pixels_by_time, ProbaTime, times)
+    sorted_pixels = sorted(pixel_availability.items(), key=lambda x: x[1]["prob"])
 
-    num_pixels = len(pixel_availability)
-    fig_height = max(6, num_pixels * 0.2)  # Scale height dynamically
+    plt.figure(figsize=(10, 6))
 
-    plt.figure(figsize=(12, fig_height))
+    # Collect all times where any pixel is available
+    all_times = set()
+    for _, data in sorted_pixels:
+        all_times.update(data["times"])
+    all_times = sorted(all_times)
 
     yticks = []
     yticklabels = []
 
-    for idx, (pixel, available_times) in enumerate(pixel_availability.items()):
+    colors = plt.cm.tab20(np.linspace(0, 1, len(sorted_pixels)))
+
+    for y_index, (pixel, data) in enumerate(sorted_pixels):
         theta, phi = hp.pix2ang(NSIDE, pixel, nest=False)
         ra = np.degrees(phi)
         dec = 90 - np.degrees(theta)
 
-        yval = idx  # Unique Y value per pixel
-        plt.scatter(
-            available_times, [yval] * len(available_times), label=f"Pixel {pixel}", s=10
-        )
+        times = data["times"]
+        color = colors[y_index]
+        y_values = [y_index] * len(times)
 
-        yticks.append(yval)
-        yticklabels.append(f"RA={ra:.1f}°, Dec={dec:.1f}°")
+        plt.scatter(times, y_values, color=color, s=20)
 
-    plt.xlabel("Time")
-    plt.ylabel("Sky Coordinates (RA, Dec)")
-    plt.yticks(yticks, yticklabels, fontsize=8)
-    plt.title("Pixel Availability Over Time")
+        yticks.append(y_index)
+        yticklabels.append(f"{ra:.1f}, {dec:.1f} (p={data['prob']:.2f})")
+
+    plt.yticks(yticks, yticklabels)
+    plt.xlabel("Time of Day")
+    plt.ylabel("RA, Dec of Pixels (sorted by ascending probability)")
+    # plt.title("Pixel Availability with Occulted Regions")
     plt.grid(True)
     plt.tight_layout()
 
-    plt.savefig(os.path.join(path, "Occ_Pointing_Times_Radec.png"))
+    # Format x-axis to only show time (HH:MM)
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+    plt.gcf().autofmt_xdate()
+
+    plt.savefig(os.path.join(path, "Occ_Pointing_Times_Radec.png"), bbox_inches="tight")
     plt.close()
 
 
@@ -1876,21 +2261,24 @@ def MangroveGalaxiesProbabilities(catalog):
 
 
 def VisibleAtTime(test_time, galaxies, maxz, observatory):
-    """Determine if prompt or afterglow follow-up is possible by knowing if there are galaxies with non-negligible probability of hosting the NSM in the FoV
-     1) check if any galaxy is visible, if not --> AFTERGLOW
+    """
+    Determine if prompt or afterglow follow-up is possible by checking if there are galaxies
+    with non-negligible probability of hosting the NSM in the FoV.
 
-    2) loop over zenith angle and select subsets of galaxies
+    Process:
+        1. Check if any galaxy is visible; if not, follow-up is 'AFTERGLOW'.
+        2. Loop over zenith angle and select subsets of galaxies.
+        3. Stop if maximum p-value of this subset is smaller than 75% of the previous subset.
+        4. Otherwise, apply a stricter zenith cut and repeat.
+        5. Select the galaxy with highest p-value fulfilling both criteria as the target.
 
-    3) stop if maximum p-value of this subset is smaller than 75% of the previous subset
+    Returns
+    -------
+    is_vis : bool
+        True if a galaxy is visible now, False otherwise.
+    alt_az : numpy.ndarray
+        Altitude and azimuth locations of galaxies.
 
-    4) else: stricter cut on zenith and repeat
-
-    5) take galaxy with highest p-value fulfilling both criteria as target
-
-    RETURNS:
-    --------
-    bool `is_vis` : is visible now?
-    np.ndarray `alt_az` : alt_az location of galaxies
     """
 
     # print()
@@ -1899,7 +2287,6 @@ def VisibleAtTime(test_time, galaxies, maxz, observatory):
     # observatory time and location to look up visibility of objects
 
     # observatory = co.EarthLocation(lat=-23.271333 * u.deg,lon=16.5 * u.deg, height=1800 * u.m)
-
     frame = co.AltAz(obstime=test_time, location=observatory)
     # print('galaxies',galaxies)
     # print('galaxies',len(galaxies['RAJ2000']))
@@ -2009,19 +2396,27 @@ def ComputeProbGalTargeted(
     counter,
     dirName,
 ):
-    """Computes probability Pgal and Pgw in FoV but it takes into account a list of pixels to avoid recounting already observed zones.
-    Returns saved circle too (is it really needed? )
-    bool doPlot when  = True is used to plot the maps
+    """
+    Compute the galaxy and GW probabilities in FoV, excluding already observed regions,
+    and optionally plot the sky coverage and galaxy positions.
 
-    RETURNS:
+    This function avoids recounting previously observed zones and returns the probability of galaxies (P_Gal)
+    and GW signal (P_GW) in the current FoV, the galaxies outside the current FoV but within the LIGO signal region,
+    and the updated list of observed pixels.
 
-    --------
-
-        P_Gal: Probability of galaxies within FoV in the LIGO signal region
-        P_GW: Total probability within  FoV of the Ligo signal.
-        noncircleGal: Table of galaxies that are outside the circle(s) and inside the LIGO signal region
+    Returns
+    -------
+    P_Gal : float
+        Probability of galaxies within FoV in the LIGO signal region.
+    P_GW : float
+        Total probability within the FoV of the LIGO signal.
+    noncircleGal : astropy.table.Table
+        Table of galaxies outside the current FoV but within the LIGO signal region.
+    talreadysumipixarray : list
+        Updated list of observed HEALPix pixel indices.
 
     """
+
     observatory = obspar.location
     maxZenith = obspar.maxZenith
     FOV = obspar.FOV

@@ -18,10 +18,10 @@ PGalinFoV
 .. autofunction:: tilepy.include.TilingDetermination.PGalinFoV
    :noindex:
 
-PGalinFoV_PixRegion
---------------------
-.. autofunction:: tilepy.include.TilingDetermination.PGalinFoV_PixRegion
-   :noindex:
+.. PGalinFoV_PixRegion
+.. --------------------
+.. .. autofunction:: tilepy.include.TilingDetermination.PGalinFoV_PixRegion
+..    :noindex:
 
 ObservationStartperObs
 ----------------------

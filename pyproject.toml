@@ -33,11 +33,11 @@ requires-python = ">=3.9"
 dependencies = [
           'astropy',
           'scipy<1.14.0',
+          'numpy',
           'healpy==1.16.2',
           'ipython',
           'matplotlib<3.9.0',
           'MOCpy',
-          'numpy',
           'pandas',
           'pytz',
           'ephem',
@@ -54,8 +54,24 @@ dependencies = [
 tests = [
     "pytest >= 7.0",
     "pytest-cov",
+    "pytest-doctestplus",
     "tomli",
     "nbmake>=1.5.5",
+]
+
+docs = [
+    "numpy<2",
+    "python-ligo-lw",
+    "sphinx>=1.6",
+    "sphinx-astropy[confv2]",
+    "sphinxcontrib-typer",
+    "sphinxcontrib-bibtex",
+    "sphinx-design",
+    "ipykernel",
+    "nbsphinx",
+    "sphinx-gallery",
+    "astropy-sphinx-theme @ git+https://github.com/astropy/sphinx-astropy-theme.git",
+    "sphinx-automodapi @ git+https://github.com/astropy/sphinx-automodapi",
 ]
 
 dev = [
@@ -89,3 +105,16 @@ exclude = [
 
 [tool.setuptools_scm]
 write_to = "src/tilepy/_version.py"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tilepy",
+    "docs",
+]
+norecursedirs = [
+    "_build",
+]
+addopts = [
+    "--doctest-rst",
+    "--ignore=docs/_build",
+]

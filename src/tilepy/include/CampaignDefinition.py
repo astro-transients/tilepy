@@ -1,9 +1,9 @@
 #####################################################################
 # Packages
+import six
 from astropy import units as u
 from astropy.coordinates import EarthLocation
 from six.moves import configparser
-import six
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -31,13 +31,20 @@ def set_gaussian_source(obspar, ra, dec, sigma, name="gaussian_event"):
     name : str, optional
         Event name to assign if not already set (default is "gaussian_event").
 
+    Returns
+    -------
+    None
+        This function modifies `obspar` in place and returns nothing.
+
     Example
     -------
     >>> obspar = ObservationParameters()
     >>> set_gaussian_source(obspar, ra=180.0, dec=30.0, sigma=2.5)
     >>> print(obspar.mode)
     gaussian
+
     """
+
     obspar.raSource = ra
     obspar.decSource = dec
     obspar.sigmaSource = sigma
@@ -47,7 +54,14 @@ def set_gaussian_source(obspar, ra, dec, sigma, name="gaussian_event"):
 
 
 class ObservationParameters(object):
-    """Stores all the parameters in the .ini file"""
+    """
+    Stores all the configuration parameters from the .ini file
+
+    This class collects observatory, scheduling, and event parameters used for observation planning.
+    Attributes are typically loaded via the `from_configfile()` method.
+
+    See source code for the complete list of available attributes.
+    """
 
     # Observatory
 
@@ -60,6 +74,7 @@ class ObservationParameters(object):
         height=0,
         sunDown=None,
         moonDown=None,
+        EarthDown=None,
         moonGrey=None,
         moonPhase=None,
         minMoonSourceSeparation=None,
@@ -99,6 +114,10 @@ class ObservationParameters(object):
         downloadWaitPeriodRetry=20,
         shape=None,
         numberSides=None,
+        igrfcoeffs=None,
+        FoVRotation=None,
+        alphaR=None,
+        betaR=None,
     ):
         self.obs_name = obs_name
         self.event_name = event_name
@@ -110,14 +129,17 @@ class ObservationParameters(object):
         # Visibility
         self.sunDown = sunDown
         self.moonDown = moonDown
+        self.EarthDown = EarthDown
         self.moonGrey = moonGrey
         self.moonPhase = moonPhase
         self.minMoonSourceSeparation = minMoonSourceSeparation
         self.maxMoonSourceSeparation = maxMoonSourceSeparation
+        self.igrfcoeffs = igrfcoeffs
 
         # Operations
         self.maxZenith = maxZenith
         self.FOV = FOV
+        self.FoVRotation = FoVRotation
         self.maxRuns = maxRuns
         self.maxNights = maxNights
         self.duration = duration
@@ -143,6 +165,8 @@ class ObservationParameters(object):
         self.strategy = strategy
         self.doRank = doRank
         self.countPrevious = countPrevious
+        self.alphaR = (alphaR,)
+        self.betaR = (betaR,)
 
         # Parsed args
         self.skymap = skymap
@@ -180,11 +204,13 @@ class ObservationParameters(object):
                 f"Observatory Location: {self.lat}, {self.lon}, {self.height}",
                 f"FOV: {self.FOV}, Duration: {self.duration}, Min Duration: {self.minDuration}, Min Slewing: {self.minSlewing}",
                 f"Max Runs: {self.maxRuns}, Max Nights: {self.maxNights}",
-                f"Visibility: {self.sunDown}, {self.moonDown}, {self.moonGrey}, {self.moonPhase}",
+                f"Visibility: {self.sunDown}, {self.moonDown}, {self.moonGrey}, {self.moonPhase}, {self.EarthDown}",
                 f"Min Moon Source Separation: {self.minMoonSourceSeparation}",
                 f"Max Moon Source Separation: {self.maxMoonSourceSeparation}",
                 f"Max Zenith: {self.maxZenith}, Zenith Weighting: {self.zenithWeighting}",
                 f"FoV number of sides: {self.numberSides}, "
+                f"FoV rotation: {self.FoVRotation},"
+                f"Priority for FoV proximity and Probability: {self.alphaR}, Zenith Weighting: {self.betaR}",
                 "--------------------- Skymap considerations ----------------",
                 f"Skymap: {self.skymap}",
                 f"Cuts: MinProbcut {self.minProbcut}, Dist Cut: {self.distCut}, Minimum Prob Cut for Catalogue: {self.minimumProbCutForCatalogue}",
@@ -193,6 +219,8 @@ class ObservationParameters(object):
                 "--------------------- Directories and files ----------------",
                 f"DatasetDir: {self.datasetDir}",
                 f"Galaxy Catalog Name: {self.galcatName}",
+                f"Geomagnetic Coefficient Data Name: {self.igrfcoeffs}",
+                f"Geomagnetic Threshold for SAA: {self.SaaThershold}",
                 f"Output Directory: {self.outDir}",
                 f"Pointings File: {self.pointingsFile}",
                 "============================================================",
@@ -207,6 +235,7 @@ class ObservationParameters(object):
         galcatName,
         outDir,
         pointingsFile,
+        igrfcoeffs=None,
         eventName=None,
         mode="healpix",
         ra=None,
@@ -214,11 +243,14 @@ class ObservationParameters(object):
         sigma=None,
         nside=None,
     ):
+        """Update instance attributes from parsed command-line arguments."""
+
         # Parsed args in command line
         self.skymap = skymap
         self.obsTime = obsTime
         self.datasetDir = datasetDir
         self.galcatName = galcatName
+        self.igrfcoeffs = igrfcoeffs
         self.outDir = outDir
         self.pointingsFile = pointingsFile
         self.event_name = self.event_name if eventName is None else eventName
@@ -229,6 +261,7 @@ class ObservationParameters(object):
         self.nside = nside
 
     def from_configfile(self, filepath):
+        """Update instance attributes using parsed command-line arguments."""
         ##################
         cfg = filepath
         parser = ConfigParser()
@@ -246,6 +279,7 @@ class ObservationParameters(object):
         section = "visibility"
         self.sunDown = int(parser.get(section, "sundown", fallback=0))
         self.moonDown = float(parser.get(section, "moondown", fallback=0))
+        self.EarthDown = float(parser.get(section, "earthdown", fallback=0))
         # Altitude in degrees
         self.moonGrey = int(parser.get(section, "moongrey", fallback=0))
         self.moonPhase = int(
@@ -257,6 +291,7 @@ class ObservationParameters(object):
         self.maxMoonSourceSeparation = int(
             parser.get(section, "maxmoonsourceseparation", fallback=0)
         )  # Max separation in degrees
+        self.SaaThershold = int(parser.get(section, "SaaThershold", fallback=0))
 
         section = "operations"
         self.maxZenith = int(parser.get(section, "maxzenith", fallback=0))
@@ -269,6 +304,7 @@ class ObservationParameters(object):
         self.minSlewing = float(parser.get(section, "minSlewing", fallback=0))
         self.shape = str(parser.get(section, "shape", fallback=None))
         self.numberSides = int(parser.get(section, "numberSides", fallback=0))
+        self.FoVRotation = int(parser.get(section, "FoVRotation", fallback=0))
 
         section = "tiling"
         self.locCut90 = float(parser.get(section, "locCut90", fallback=99999))
@@ -297,6 +333,8 @@ class ObservationParameters(object):
         self.strategy = str(parser.get(section, "strategy", fallback=None))
         self.doRank = parser.getboolean(section, "doRank", fallback=None)
         self.countPrevious = parser.getboolean(section, "countPrevious", fallback=None)
+        self.alphaR = float(parser.get(section, "alphaR", fallback=0))
+        self.betaR = float(parser.get(section, "betaR", fallback=0))
 
         section = "general"
         self.downloadMaxRetry = int(parser.get(section, "downloadMaxRetry", fallback=0))
@@ -315,6 +353,7 @@ class ObservationParameters(object):
         height,
         sunDown,
         moonDown,
+        EarthDown,
         moonGrey,
         moonPhase,
         minMoonSourceSeparation,
@@ -338,6 +377,8 @@ class ObservationParameters(object):
         HRnside,
         mangrove,
     ):
+        """Set instance attributes using direct function arguments."""
+
         self.obs_name = obsName
         self.event_name = eventName
         self.lat = lat * u.deg
@@ -348,6 +389,7 @@ class ObservationParameters(object):
         # Visibility
         self.sunDown = sunDown
         self.moonDown = moonDown
+        self.EarthDown = EarthDown
         self.moonGrey = moonGrey
         self.moonPhase = moonPhase
         self.minMoonSourceSeparation = minMoonSourceSeparation
