@@ -200,14 +200,20 @@ class SkyMap:
 
         return self.rasterized_map_cache[cache_entry]
 
-    def getMaximumProbabilityCoordinates(self):
+    def getMaximumProbabilityCoordinates(self, obspar=None):
         """
         Returns the sky coordinates (RA, Dec) of the highest-probability pixel
         in the raw probability density map.
         """
-        ipix_max = np.argmax(self.raw_map_prob_density.data)
-        lon, lat = self.raw_map_prob_density.pix2ang(ipix_max, lonlat=True)
-        return SkyCoord(ra=lon * u.deg, dec=lat * u.deg)
+        if obspar is not None and getattr(obspar, "mode", None) == "gaussian":
+            maxCoord = SkyCoord(
+                ra=obspar.raSource * u.deg, dec=obspar.decSource * u.deg
+            )
+        else:
+            ipix_max = np.argmax(self.raw_map_prob_density.data)
+            lon, lat = self.raw_map_prob_density.pix2ang(ipix_max, lonlat=True)
+            maxCoord = SkyCoord(ra=lon * u.deg, dec=lat * u.deg)
+        return maxCoord
 
     def computeGalaxyProbability(self, galaxyCatalog, mangrove=False):
         """
