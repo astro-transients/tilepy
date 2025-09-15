@@ -254,7 +254,10 @@ def GetUniversalSchedule(obspar):
 
     ObservationTime = obspar[0].obsTime
     outputDir = "%s/%s" % (obspar[0].outDir, raw_map.name_event)
-    galaxies = obspar[0].datasetDir + obspar[0].galcatName
+
+    if skymap.is3D:
+        galaxies = obspar[0].datasetDir + obspar[0].galcatName
+
     cat = None
 
     if base == "grid":
@@ -413,7 +416,7 @@ def GetUniversalSchedule(obspar):
         print(f"Resulting pointings file is {outfilename}")
 
         if base in ["space", "grid"]:
-            for j in range(len(obspar)):
+            for j, obs in enumerate(obspar):
                 obspar1 = obspar[j]
                 SuggestedPointings_1 = SuggestedPointings[
                     SuggestedPointings["ObsName"] == obspar[j].obs_name
@@ -455,7 +458,7 @@ def GetUniversalSchedule(obspar):
 
         else:
             # for obspar in parameters:
-            for j in range(len(obspar)):
+            for j, obs in enumerate(obspar):
                 obspar1 = obspar[j]
                 SuggestedPointings_1 = SuggestedPointings[
                     SuggestedPointings["ObsName"] == obspar1.obs_name
