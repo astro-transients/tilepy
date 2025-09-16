@@ -12,11 +12,11 @@ from astropy.coordinates import SkyCoord
 from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.include.Observatories import CTANorthObservatory, HESSObservatory
 from tilepy.include.PointingPlotting import (
-    LoadPointings,
     PlotPointings_Pretty,
     PlotPointingsTogether,
 )
 from tilepy.include.PointingTools import (
+    LoadPointings,
     Get90RegionPixReduced,
     NightDarkObservation,
     NightDarkObservationwithGreyTime,

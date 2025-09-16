@@ -52,7 +52,7 @@ import re
 # iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
 __all__ = [
-    "load_pointingFile",
+    "LoadPointingFile",
     "VisibilityWindow",
     "GetObservationPeriod",
     "GetVisibility",
@@ -67,7 +67,7 @@ __all__ = [
 ]
 
 
-def load_pointingFile(tpointingFile):
+def LoadPointingFile(tpointingFile):
     """
     Load pointings from a file.
 
@@ -116,12 +116,10 @@ def load_pointingFile(tpointingFile):
     dec = np.atleast_1d(dec)
 
     time = []
-
-    for i in range(len(time1)):
+    for i, t1 in enumerate(time1):
+        t2 = time2[i]
         time.append(
-            (
-                time1[i] + " " + time2[i].split(":")[0] + ":" + time2[i].split(":")[1]
-            ).split('"')[1]
+            (t1 + " " + t2.split(":")[0] + ":" + t2.split(":")[1]).split('"')[1]
         )
 
     ra = ra.astype(float)
@@ -161,9 +159,9 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
     source = SkyCoord(
         Pointing["RAJ2000"], Pointing["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
-    WINDOW = []
-    ZENITH = []
-    SZENITH = []
+    window_arr = []
+    zenith_arr = []
+    szenith_arr = []
 
     try:
         auxtime = datetime.datetime.strptime(
@@ -179,16 +177,16 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
 
     # frame = co.AltAz(obstime=auxtime, location=observatory)
     timeInitial = auxtime - datetime.timedelta(minutes=obspar.duration)
-    for i in range(0, len(source)):
+    for i, s in enumerate(source):
         NonValidwindow, Stepzenith = GetVisibility(
             Pointing["Time"], source[i], obspar.maxZenith, obspar.location
         )
         window, zenith = GetObservationPeriod(
             timeInitial, source[i], obspar, i, dirName, False
         )
-        WINDOW.append(window)
-        ZENITH.append(zenith)
-        SZENITH.append(Stepzenith)
+        window_arr.append(window)
+        zenith_arr.append(zenith)
+        szenith_arr.append(Stepzenith)
 
         # At input ObservationTime the night is over, the scheduling has been computed for the next night (with the condition <24h holding)
         if not Tools.IsGreyness(ObservationTime, obspar):
@@ -205,9 +203,9 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
                 ObservationTime, source[i], obspar, i, dirName, True
             )
 
-    Pointing["Observation window"] = WINDOW
-    Pointing["Array of zenith angles"] = ZENITH
-    Pointing["Zenith angles in steps"] = SZENITH
+    Pointing["Observation window"] = window_arr
+    Pointing["Array of zenith angles"] = zenith_arr
+    Pointing["Zenith angles in steps"] = szenith_arr
 
     return Pointing
 
@@ -566,7 +564,7 @@ def EvolutionPlot(galPointing, tname, ObsArray):
 
 
 def RankingTimes(ObservationTime, skymap, cat, obspar, dirName, PointingFile, ObsArray):
-    point = load_pointingFile(PointingFile)
+    point = LoadPointingFile(PointingFile)
 
     ################################################################
 
@@ -590,7 +588,7 @@ def RankingTimes(ObservationTime, skymap, cat, obspar, dirName, PointingFile, Ob
 
 
 def RankingTimes_2D(ObservationTime, prob, obspar, dirName, PointingFile, ObsArray):
-    point = load_pointingFile(PointingFile)
+    point = LoadPointingFile(PointingFile)
 
     ################################################################
 

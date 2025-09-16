@@ -30,17 +30,22 @@ import six
 from astropy import units as u
 from astropy.table import Table
 from six.moves import configparser
-
+from .MaskingTools import (
+    ZenithAngleCut,
+    VisibleAtTime,
+    FulfillsRequirement,
+    FulfillsRequirementGreyObservations,
+    GetBestGridPos2D,
+    GetBestGridPos3D,
+    OccultationCut,
+    SAA_Times,
+)
 from .PointingTools import (
     ComputeProbability2D,
     ComputeProbGalTargeted,
     ComputeProbPGALIntegrateFoV,
     FilterGalaxies,
-    FulfillsRequirement,
-    FulfillsRequirementGreyObservations,
     Get90RegionPixReduced,
-    GetBestGridPos2D,
-    GetBestGridPos3D,
     GetBestNSIDE,
     GetSatelliteName,
     GetSatellitePositions,
@@ -52,17 +57,14 @@ from .PointingTools import (
     NextWindowTools,
     NightDarkObservation,
     NightDarkObservationwithGreyTime,
-    OccultationCut,
     PlotSpaceOcc,
     PlotSpaceOccTime,
     PlotSpaceOccTimeRadec,
-    SAA_Times,
     SubstractPointings,
     SubstractPointings2D,
     Tools,
-    VisibleAtTime,
-    ZenithAngleCut,
 )
+
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -141,7 +143,6 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     print()
 
     # Retrieve maps
-    nside = obspar.reducedNside
     prob = skymap.getMap("prob", obspar.reducedNside)
     highres = skymap.getMap("prob", obspar.HRnside)
 
@@ -185,16 +186,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     for j, NightDarkRun in enumerate(NightDarkRuns):
         if len(ObservationTimearray) < maxRuns:
             ObservationTime = NightDarkRun
-            ObsBool, yprob = ZenithAngleCut(
-                prob,
-                nside,
-                ObservationTime,
-                obspar.minProbcut,
-                obspar.maxZenith,
-                obspar.location,
-                obspar.minMoonSourceSeparation,
-                obspar.useGreytime,
-            )
+            ObsBool, yprob = ZenithAngleCut(prob, ObservationTime, obspar)
             if ObsBool:
                 # Round 1
                 P_GW, TC, pixlist, pixlistHR = ComputeProbability2D(
@@ -443,7 +435,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
             if len(ObservationTimearray) < maxRuns:
                 ObservationTime = NightDarkRun
                 visible, altaz, tGals_aux = VisibleAtTime(
-                    ObservationTime, tGals_aux, obspar.maxZenith, obspar.location
+                    ObservationTime, tGals_aux, obspar
                 )
                 if visible:
                     # select galaxies within the slightly enlarged visiblity window
@@ -472,10 +464,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                             and obspar.secondRound
                         ):
                             visible, altaz, tGals_aux2 = VisibleAtTime(
-                                ObservationTime,
-                                tGals_aux2,
-                                obspar.maxZenith,
-                                obspar.location,
+                                ObservationTime, tGals_aux2, obspar
                             )
                             if visible:
                                 visiMask = altaz.alt.value > 90 - (
@@ -646,7 +635,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
             if len(ObservationTimearray) < maxRuns:
                 ObservationTime = NightDarkRun
                 visible, altaz, tGals_aux = VisibleAtTime(
-                    ObservationTime, tGals_aux, obspar.maxZenith, obspar.location
+                    ObservationTime, tGals_aux, obspar
                 )
                 if visible:
                     # select galaxies within the slightly enlarged visiblity window
@@ -672,10 +661,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                             and obspar.secondRound
                         ):
                             visible, altaz, tGals_aux2 = VisibleAtTime(
-                                ObservationTime,
-                                tGals_aux2,
-                                obspar.maxZenith,
-                                obspar.location,
+                                ObservationTime, tGals_aux2, obspar
                             )
                             if visible:
                                 visiMask = altaz.alt.value > 90 - (
@@ -1023,7 +1009,6 @@ def PGWinFoV_NObs(
     obspar = obsparameters[0]
 
     # Retrieve maps
-    nside = obspar.reducedNside
     prob = skymap.getMap("prob", obspar.reducedNside)
     highres = skymap.getMap("prob", obspar.HRnside)
 
@@ -1066,9 +1051,11 @@ def PGWinFoV_NObs(
     counter = 0
     i = 0
     couter_per_obs = np.zeros(len(NewActiveObs))
+    print("------NewActiveObsTime--------", NewActiveObs[0].obs_name)
     while (i < 500) & any(SameNight):
-        for j in range(len(NewActiveObs)):
+        for j, obs in enumerate(NewActiveObs):
             obspar = NewActiveObs[j]
+            print("Observatory: ", obspar.obs_name)
             ObservationTime = NewActiveObsTime[j]
             if ITERATION_OBS == len(obsparameters):
                 TIME_MIN_ALL = []
@@ -1100,16 +1087,7 @@ def PGWinFoV_NObs(
                         obspar.EarthDown,
                     )
                 else:
-                    ObsBool, yprob = ZenithAngleCut(
-                        prob,
-                        nside,
-                        ObservationTime,
-                        obspar.minProbcut,
-                        obspar.maxZenith,
-                        obspar.location,
-                        obspar.minMoonSourceSeparation,
-                        obspar.useGreytime,
-                    )
+                    ObsBool, yprob = ZenithAngleCut(prob, ObservationTime, obspar)
 
                 if ObsBool:
                     # Round 1
@@ -1371,7 +1349,7 @@ def PGalinFoV_NObs(
 
                 if obspar.strategy == "integrated":
                     visible, altaz, tGals_aux = VisibleAtTime(
-                        ObservationTime, tGals_aux, obspar.maxZenith, obspar.location
+                        ObservationTime, tGals_aux, obspar
                     )
 
                     if visible:
@@ -1407,10 +1385,7 @@ def PGalinFoV_NObs(
                             ):
                                 print("probability", finalGals["dp_dV_FOV"][:1])
                                 visible, altaz, tGals_aux2 = VisibleAtTime(
-                                    ObservationTime,
-                                    tGals_aux2,
-                                    obspar.maxZenith,
-                                    obspar.location,
+                                    ObservationTime, tGals_aux2, obspar
                                 )
                                 if visible:
                                     visiMask = altaz.alt.value > 90 - (
@@ -1559,7 +1534,7 @@ def PGalinFoV_NObs(
 
                 if obspar.strategy == "targeted":
                     visible, altaz, tGals_aux = VisibleAtTime(
-                        ObservationTime, tGals_aux, obspar.maxZenith, obspar.location
+                        ObservationTime, tGals_aux, obspar
                     )
                     if visible:
                         # select galaxies within the slightly enlarged visiblity window
@@ -1592,10 +1567,7 @@ def PGalinFoV_NObs(
                                 and obspar.secondRound
                             ):
                                 visible, altaz, tGals_aux2 = VisibleAtTime(
-                                    ObservationTime,
-                                    tGals_aux2,
-                                    obspar.maxZenith,
-                                    obspar.location,
+                                    ObservationTime, tGals_aux2, obspar
                                 )
                                 if visible:
                                     visiMask = altaz.alt.value > 90 - (
@@ -1608,10 +1580,7 @@ def PGalinFoV_NObs(
 
                                     if obspar.useGreytime:
                                         maskgrey = FulfillsRequirementGreyObservations(
-                                            ObservationTime,
-                                            visiGals2,
-                                            obspar.location,
-                                            obspar.minMoonSourceSeparation,
+                                            ObservationTime, visiGals2, obspar
                                         )
                                         finalGals2 = visiGals2[mask & maskgrey]
                                     if not obspar.useGreytime:
