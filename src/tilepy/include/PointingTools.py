@@ -66,6 +66,8 @@ __all__ = [
     "TransformRADec",
     "TransformRADecToPix",
     "TransformPixToRaDec",
+    "FindMatchingPixs",
+    "FindMatchingCoords",
     "LoadGalaxies",
     "LoadGalaxies_SteMgal",
     "VisibleAtTime",
@@ -504,40 +506,6 @@ class Tools:
             vertices.append((theta_v, phi_v))
 
         return vertices
-
-    @classmethod
-    def find_matching_coords(cls, option, radec1, radec2, reducedNside):
-
-        if option == 1:
-            firstvalue1_coords = co.SkyCoord(
-                ra=radec1["PIXRA"] * u.deg, dec=radec1["PIXDEC"] * u.deg
-            )
-
-            theta, phi = hp.pix2ang(reducedNside, radec2)
-            ra = np.rad2deg(phi)
-            dec = np.rad2deg(0.5 * np.pi - theta)
-            radec = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
-
-            # Match each radec coordinate to closest in firstvalue1
-            idx, sep2d, _ = firstvalue1_coords.match_to_catalog_sky(radec)
-
-            # Define a small tolerance for "common" (e.g. 1 arcsec)
-            tolerance = 1.0 * u.arcsec
-            mask_no_match = sep2d > tolerance
-
-            # Get matching rows
-            unmatched_rows = radec1[mask_no_match]
-
-        if option == 2:
-            idx, sep2d, _ = radec2.match_to_catalog_sky(radec1)
-            # Define a small tolerance for "common" (e.g. 1 arcsec)
-            tolerance = 1.0 * u.arcsec
-            mask = sep2d < tolerance
-
-            # Get matching rows
-            unmatched_rows = radec1[idx[mask]]
-
-        return unmatched_rows
 
     @classmethod
     def get_regular_polygon_vertices(
@@ -2199,6 +2167,46 @@ def TransformPixToRaDec(pix, nside):
     dec2 = np.rad2deg(0.5 * np.pi - tt)
     pixradec = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
     return pixradec
+
+def FindMatchingPixs(pix1, pix2):
+    pix_values = pix2
+    common_pix = set(pix1).intersection(pix_values)
+    filtered_rows = pix2[[pix in common_pix for pix in pix_values]]
+    return filtered_rows
+
+def FindMatchingCoords(cls, option, radec1, radec2, reducedNside):
+
+    if option == 1:
+        firstvalue1_coords = co.SkyCoord(
+            ra=radec1["PIXRA"] * u.deg, dec=radec1["PIXDEC"] * u.deg
+        )
+
+        theta, phi = hp.pix2ang(reducedNside, radec2)
+        ra = np.rad2deg(phi)
+        dec = np.rad2deg(0.5 * np.pi - theta)
+        radec = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+
+        # Match each radec coordinate to closest in firstvalue1
+        idx, sep2d, _ = firstvalue1_coords.match_to_catalog_sky(radec)
+
+        # Define a small tolerance for "common" (e.g. 1 arcsec)
+        tolerance = 1.0 * u.arcsec
+        mask_no_match = sep2d > tolerance
+
+        # Get matching rows
+        unmatched_rows = radec1[mask_no_match]
+
+    if option == 2:
+        idx, sep2d, _ = radec2.match_to_catalog_sky(radec1)
+        # Define a small tolerance for "common" (e.g. 1 arcsec)
+        tolerance = 1.0 * u.arcsec
+        mask = sep2d < tolerance
+
+        # Get matching rows
+        unmatched_rows = radec1[idx[mask]]
+
+    return unmatched_rows
+
 
 def LoadGalaxies(tgalFile):
     """

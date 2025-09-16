@@ -62,8 +62,10 @@ from .PointingTools import (
     Tools,
     TransformRADecToPix,
     TransformPixToRaDec,
+    FindMatchingPixs,
+    FindMatchingCoords,
     VisibleAtTime,
-    ZenithAngleCut,
+    ZenithAngleCut
 )
 
 if six.PY2:
@@ -2009,7 +2011,8 @@ def PGWinFoV_Space_NObs(
             "==========================================================================================="
         )
 
-    newpix = TransformRADecToPix(radecs, reducedNside)
+    ipix = TransformRADecToPix(radecs, reducedNside)
+    newpix = ipix
 
     first_values1 = GetBestGridPos2D(
         prob,
@@ -2085,7 +2088,7 @@ def PGWinFoV_Space_NObs(
         # Let's get the list of pixels available at each iteration
         firstvalue1 = first_values1
 
-        matching_rows1 = Tools.find_matching_coords(
+        matching_rows1 = FindMatchingCoords(
             1, firstvalue1, pixlistRROcc, reducedNside
         )
         matching_tables.append(matching_rows1)
@@ -2113,11 +2116,7 @@ def PGWinFoV_Space_NObs(
     newpix = OldPix[searchpix]
 
     # Find common pixels
-    pix_values = first_values1["PIX"]
-    common_pix = set(newpix).intersection(pix_values)
-    filtered_rows = first_values1[[pix in common_pix for pix in pix_values]]
-
-    first_values = filtered_rows
+    first_values = FindMatchingPixs(newpix, first_values1["PIX"])
 
     if obspar.doPlot and len(first_values) > 0:
         PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
@@ -2284,7 +2283,7 @@ def PGalinFoV_Space_NObs(
         # Let's get the list of pixels available at each iteration
         firstvalue1 = first_values1
 
-        matching_rows1 = Tools.find_matching_coords(
+        matching_rows1 = FindMatchingCoords(
             1, firstvalue1, pixlistRROcc, reducedNside
         )
         matching_tables.append(matching_rows1)
