@@ -91,7 +91,7 @@ all = [
 [project.scripts]
 Tiling_Observations = "tilepy.scripts.Tiling_Observations:main"
 PlottingTwoCampaigns = "tilepy.scripts.PlottingTwoCampaigns:main"
-#ConvertGalaxyCatalog = "tilepy.tools.ConvertGalaxyCatalog:main"
+ConvertGalaxyCatalog = "tilepy.tools.ConvertGalaxyCatalog:main"
 
 
 [project.urls]
@@ -117,6 +117,7 @@ write_to = "src/tilepy/_version.py"
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
+   #"src/tilepy",
     "docs",
 ]
 
@@ -133,6 +134,12 @@ addopts = [
 doctest_optionflags = [
     "FLOAT_CMP",
     "IGNORE_EXCEPTION_DETAIL",
+]
+
+[tool.coverage.run]
+omit = [
+    "src/tilepy/_dev_version*",
+    "*/tilepy/_dev_version*",
 ]
 
 [tool.coverage.report]
