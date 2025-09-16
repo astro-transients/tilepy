@@ -64,6 +64,8 @@ __all__ = [
     "ComputeProbability2D",
     "SubstractPointings2D",
     "TransformRADec",
+    "TransformRADecToPix",
+    "TransformPixToRaDec",
     "LoadGalaxies",
     "LoadGalaxies_SteMgal",
     "VisibleAtTime",
@@ -2181,6 +2183,22 @@ def TransformRADec(vra, vdec):
     coordinates = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
     return coordinates
 
+
+def TransformRADecToPix(radecs, nside):
+    pix_ra = radecs.ra.deg
+    pix_dec = radecs.dec.deg
+    phipix = np.deg2rad(pix_ra)
+    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
+    ipix = hp.ang2pix(nside, thetapix, phipix)
+    newpix = ipix
+    return newpix
+
+def TransformPixToRaDec(pix, nside):
+    tt, pp = hp.pix2ang(nside, pix)
+    ra2 = np.rad2deg(pp)
+    dec2 = np.rad2deg(0.5 * np.pi - tt)
+    pixradec = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+    return pixradec
 
 def LoadGalaxies(tgalFile):
     """
