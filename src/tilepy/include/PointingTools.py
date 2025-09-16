@@ -1716,7 +1716,6 @@ def FindMatchingCoords(option, radec1, radec2, reducedNside):
     return unmatched_rows
 
 
-
 def LoadGalaxies(tgalFile):
     """
     Load galaxy catalog as an Astropy Table

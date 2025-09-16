@@ -2362,7 +2362,7 @@ def PGalinFoV_Space_NObs(
 
     # CONVERTING newpix to angles on the coordinate grid
     pixradec = TransformPixToRaDec(newpix, reducedNside)
-    
+
     # Finding the common radec betweem visible pixels and the grid
     first_values_coords = co.SkyCoord(
         ra=first_values1["PIXRA"], dec=first_values1["PIXDEC"], unit="deg"
