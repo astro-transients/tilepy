@@ -2181,7 +2181,8 @@ def PGalinFoV_Space_NObs(
             "==========================================================================================="
         )
 
-    newpix = TransformRADecToPix(radecs, reducedNside)
+    ipix = TransformRADecToPix(radecs, reducedNside)
+    newpix  = ipix
     pixradec = radecs
 
     first_values1 = GetBestGridPos3D(
