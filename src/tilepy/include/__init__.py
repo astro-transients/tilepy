@@ -20,7 +20,7 @@ from .PointingPlotting import (
     PointingPlotting,
     PointingPlottingGWCTA,
 )
-from .PointingTools import (
+from .PointingTools import (  # ObtainHighestProbabilityCoordinates,
     ComputePGalinFOV,
     ComputeProbability2D,
     ComputeProbGalTargeted,
