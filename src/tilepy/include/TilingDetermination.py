@@ -68,7 +68,7 @@ from .PointingTools import (
     FindMatchingPixList,
     FindMatchingCoords,
     VisibleAtTime,
-    ZenithAngleCut
+    ZenithAngleCut,
 )
 
 
@@ -1895,7 +1895,6 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
         )
         print("========")
 
-    
     newpix = TransformRADecToPix(radecs, reducedNside)
 
     # CONVERTING newpix to angles on the coor
@@ -2059,9 +2058,7 @@ def PGWinFoV_Space_NObs(
         # Let's get the list of pixels available at each iteration
         firstvalue1 = first_values1
 
-        matching_rows1 = FindMatchingCoords(
-            1, firstvalue1, pixlistRROcc, reducedNside
-        )
+        matching_rows1 = FindMatchingCoords(1, firstvalue1, pixlistRROcc, reducedNside)
         matching_tables.append(matching_rows1)
 
         radectime = co.SkyCoord(
@@ -2182,7 +2179,7 @@ def PGalinFoV_Space_NObs(
         )
 
     ipix = TransformRADecToPix(radecs, reducedNside)
-    newpix  = ipix
+    newpix = ipix
     pixradec = radecs
 
     first_values1 = GetBestGridPos3D(
@@ -2260,9 +2257,7 @@ def PGalinFoV_Space_NObs(
         # Let's get the list of pixels available at each iteration
         firstvalue1 = first_values1
 
-        matching_rows1 = FindMatchingCoords(
-            1, firstvalue1, pixlistRROcc, reducedNside
-        )
+        matching_rows1 = FindMatchingCoords(1, firstvalue1, pixlistRROcc, reducedNside)
         matching_tables.append(matching_rows1)
 
         radectime = co.SkyCoord(

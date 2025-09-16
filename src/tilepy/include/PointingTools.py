@@ -1666,6 +1666,7 @@ def TransformRADecToPix(radecs, nside):
     newpix = ipix
     return newpix
 
+
 def TransformPixToRaDec(pix, nside):
     tt, pp = hp.pix2ang(nside, pix)
     ra2 = np.rad2deg(pp)
@@ -1673,11 +1674,13 @@ def TransformPixToRaDec(pix, nside):
     pixradec = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
     return pixradec
 
+
 def FindMatchingPixList(pix1, list2):
     pix_values = list2["PIX"]
     common_pix = set(pix1).intersection(pix_values)
     filtered_rows = list2[[pix in common_pix for pix in pix_values]]
     return filtered_rows
+
 
 def FindMatchingCoords(option, radec1, radec2, reducedNside):
 
