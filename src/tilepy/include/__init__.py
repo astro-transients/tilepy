@@ -20,7 +20,7 @@ from .PointingPlotting import (
     PointingPlotting,
     PointingPlottingGWCTA,
 )
-from .PointingTools import (
+from .PointingTools import (  # ObtainHighestProbabilityCoordinates,
     ComputePGalinFOV,
     ComputeProbability2D,
     ComputeProbGalTargeted,
@@ -38,7 +38,6 @@ from .PointingTools import (
     NightDarkObservation,
     NightDarkObservationwithGreyTime,
     Observer,
-    ObtainHighestProbabilityCoordinates,
     SubstractGalaxiesCircle,
     SubstractPointings,
     SubstractPointings2D,
@@ -107,7 +106,7 @@ __all__ = [
     "VisibleAtTime",
     "FulfillsRequirement",
     "FulfillsRequirementGreyObservations",
-    "ObtainHighestProbabilityCoordinates",
+    # "ObtainHighestProbabilityCoordinates",
     "ComputeProbGalTargeted",
     "SubstractPointings",
     "SubstractGalaxiesCircle",
