@@ -54,6 +54,7 @@ else:
 __all__ = [
     "Tools",
     "Observer",
+    "LoadPointings",
     "NextWindowTools",
     "getdate",
     "UNIQSkymap_toNested",
@@ -1038,6 +1039,18 @@ class Observer:
 ######################################################
 
 
+def LoadPointings(tpointingFile):
+    print("Loading pointings from " + tpointingFile)
+    # Read the first line of the file to determine column names
+    with open(tpointingFile, "r") as f:
+        header_line = f.readline().strip()
+    # Read the data into a DataFrame
+    data = pd.read_csv(
+        tpointingFile, delimiter=" ", header=None, names=header_line.split(), skiprows=1
+    )
+    return data
+
+
 def getdate(x):
     """
     Bottom-level function that takes a date and prints it in ISO format.
@@ -1168,76 +1181,6 @@ def NightDarkObservationwithGreyTime(time, obspar):
         max_moon_phase=obspar.moonPhase / 100.0,
     )
     return obs.get_time_window(start_time=time, nb_observation_night=obspar.maxNights)
-
-
-def ZenithAngleCut(
-    prob,
-    nside,
-    time,
-    minProbcut,
-    maxZenith,
-    observatory,
-    minMoonSourceSeparation,
-    useGreytime,
-):
-    """
-    Mask in the pixels with zenith angle larger than 45
-    """
-    # observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
-    frame = co.AltAz(obstime=time, location=observatory)
-    pprob = prob
-
-    mzenith = hp.ma(pprob)
-    maskzenith = np.zeros(hp.nside2npix(nside), dtype=bool)
-
-    pixel_theta, pixel_phi = hp.pix2ang(nside, np.arange(hp.nside2npix(nside)))
-    ra = np.rad2deg(pixel_phi)
-    dec = np.rad2deg(0.5 * np.pi - pixel_theta)
-    targetCoord_map = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
-    altaz_map = targetCoord_map.transform_to(frame)
-    maskzenith[altaz_map.alt.value < 90 - maxZenith] = 1
-    mzenith.mask = maskzenith
-    # hp.mollview(mzenith)
-    # plt.show()
-    # plt.savefig("/Users/mseglar/Documents/GitLab/gw-follow-up-simulations/Zenithmask_%g.png")
-
-    yprob = ma.masked_array(pprob, mzenith.mask)
-    # hp.mollview(yprob)
-    # plt.savefig("/Users/mseglar/Documents/GitLab/gw-follow-up-simulations/Zenithmask_prob_%g.png")
-
-    # print('Integrated probability of the masked map', np.sum(yprob))
-
-    if np.sum(yprob) < minProbcut:
-        ObsBool = False
-    else:
-        ObsBool = True
-
-    if useGreytime and ObsBool:
-        # Get Alt/Az of the Moon
-        moonaltazs = get_body("moon", Time(time, scale="utc")).transform_to(
-            AltAz(obstime=Time(time, scale="utc"), location=observatory)
-        )
-        separations = altaz_map.separation(moonaltazs)
-        mask_moonDistance = np.zeros(hp.nside2npix(nside), dtype=bool)
-        mask_moonDistance[separations < minMoonSourceSeparation * u.deg] = 1
-        mzenith = hp.ma(pprob)
-        mzenith.mask = mask_moonDistance
-        yprob = ma.masked_array(pprob, mzenith.mask)
-        # hp.mollview(pprob)
-        # hp.mollview(yprob)
-        # plt.show()
-        if np.sum(yprob) < minProbcut:
-            ObsBool = False
-        else:
-            ObsBool = True
-        # print('Integrated probability of the masked map', np.sum(yprob))
-        # hp.mollview(mzenith)
-        # plt.show()
-        # Get the mask that does a radius around, of 30 degs
-        # Plot to check
-        # Return a bool if there is any observable region
-
-    return ObsBool, yprob
 
 
 def GetSatelliteName(satellitename, stationsurl):

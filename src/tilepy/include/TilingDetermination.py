@@ -30,17 +30,21 @@ import six
 from astropy import units as u
 from astropy.table import Table
 from six.moves import configparser
-
+from .MaskingTools import (ZenithAngleCut
+    VisibleAtTime,
+    FulfillsRequirement,
+    FulfillsRequirementGreyObservations,
+    GetBestGridPos2D,
+    GetBestGridPos3D,
+    OccultationCut,
+    SAA_Times,
+)
 from .PointingTools import (
     ComputeProbability2D,
     ComputeProbGalTargeted,
     ComputeProbPGALIntegrateFoV,
     FilterGalaxies,
-    FulfillsRequirement,
-    FulfillsRequirementGreyObservations,
     Get90RegionPixReduced,
-    GetBestGridPos2D,
-    GetBestGridPos3D,
     GetBestNSIDE,
     GetSatelliteName,
     GetSatellitePositions,
@@ -52,17 +56,14 @@ from .PointingTools import (
     NextWindowTools,
     NightDarkObservation,
     NightDarkObservationwithGreyTime,
-    OccultationCut,
     PlotSpaceOcc,
     PlotSpaceOccTime,
     PlotSpaceOccTimeRadec,
-    SAA_Times,
     SubstractPointings,
     SubstractPointings2D,
     Tools,
-    VisibleAtTime,
-    ZenithAngleCut,
 )
+
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -1066,9 +1067,11 @@ def PGWinFoV_NObs(
     counter = 0
     i = 0
     couter_per_obs = np.zeros(len(NewActiveObs))
+    print("------NewActiveObsTime--------", NewActiveObs[0].obs_name)
     while (i < 500) & any(SameNight):
         for j in range(len(NewActiveObs)):
             obspar = NewActiveObs[j]
+            print("Observatory: ", obspar.obs_name)
             ObservationTime = NewActiveObsTime[j]
             if ITERATION_OBS == len(obsparameters):
                 TIME_MIN_ALL = []
