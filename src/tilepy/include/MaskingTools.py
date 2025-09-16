@@ -56,6 +56,7 @@ __all__ = [
     "FulfillsRequirementGreyObservations",
     "GetEarthOccultedPix",
     "GetMoonOccultedPix",
+    "GetSunOccultedPix",
     "OccultationCut",
     "SAA_Times",
     "GetBestGridPos2D",
@@ -68,10 +69,10 @@ def ZenithAngleCut(prob, time, obspar):
     Mask in the pixels with zenith angle larger than the max Zenith cut
     """
     nside = obspar.reducedNside
-    minProbcut = (obspar.minProbcut,)
-    maxZenith = (obspar.maxZenith,)
-    observatory = (obspar.location,)
-    minMoonSourceSeparation = (obspar.minMoonSourceSeparation,)
+    minProbcut = obspar.minProbcut
+    maxZenith = obspar.maxZenith
+    observatory = obspar.location
+    minMoonSourceSeparation = obspar.minMoonSourceSeparation
     useGreytime = obspar.useGreytime
 
     frame = co.AltAz(obstime=time, location=observatory)
@@ -278,6 +279,18 @@ def GetMoonOccultedPix(nside, moon_sep, time):
     moon_xyzpix = hp.ang2vec(thetapix_moon, phipix_moon)
     moon_occulted_pix = hp.query_disc(nside, moon_xyzpix, np.deg2rad(moon_sep))
     return moon_occulted_pix, MoonCoord_equatorial
+
+
+def GetSunOccultedPix(nside, sun_sep, time):
+    time = Time(time)
+    # for equatorial frame
+    SunCoord_equatorial = get_body("sun", time, location=EarthLocation(0, 0, 0))
+    SunCoord_equatorial = SunCoord_equatorial.transform_to("icrs")
+    phipix_sun = np.deg2rad(SunCoord_equatorial.ra.deg)
+    thetapix_sun = 0.5 * np.pi - np.deg2rad(SunCoord_equatorial.dec.deg)
+    sun_xyzpix = hp.ang2vec(thetapix_sun, phipix_sun)
+    sun_occulted_pix = hp.query_disc(nside, sun_xyzpix, np.deg2rad(sun_sep))
+    return sun_occulted_pix, SunCoord_equatorial
 
 
 def OccultationCut(

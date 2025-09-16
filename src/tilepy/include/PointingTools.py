@@ -1213,18 +1213,6 @@ def GetSatellitePositions(satellite_name, t):
     return satellite_position, satellite_location
 
 
-def GetSunOccultedPix(nside, sun_sep, time):
-    time = Time(time)
-    # for equatorial frame
-    SunCoord_equatorial = get_body("sun", time, location=EarthLocation(0, 0, 0))
-    SunCoord_equatorial = SunCoord_equatorial.transform_to("icrs")
-    phipix_sun = np.deg2rad(SunCoord_equatorial.ra.deg)
-    thetapix_sun = 0.5 * np.pi - np.deg2rad(SunCoord_equatorial.dec.deg)
-    sun_xyzpix = hp.ang2vec(thetapix_sun, phipix_sun)
-    sun_occulted_pix = hp.query_disc(nside, sun_xyzpix, np.deg2rad(sun_sep))
-    return sun_occulted_pix, SunCoord_equatorial
-
-
 def GetBestNSIDE(ReducedNSIDE, HRnside, fov):
 
     if isinstance(HRnside, int) and HRnside > 0 and (HRnside & (HRnside - 1)) == 0:

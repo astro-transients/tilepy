@@ -30,7 +30,8 @@ import six
 from astropy import units as u
 from astropy.table import Table
 from six.moves import configparser
-from .MaskingTools import (ZenithAngleCut
+from .MaskingTools import (
+    ZenithAngleCut,
     VisibleAtTime,
     FulfillsRequirement,
     FulfillsRequirementGreyObservations,
@@ -186,11 +187,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     for j, NightDarkRun in enumerate(NightDarkRuns):
         if len(ObservationTimearray) < maxRuns:
             ObservationTime = NightDarkRun
-            ObsBool, yprob = ZenithAngleCut(
-                prob,
-                ObservationTime
-                obspar,
-            )
+            ObsBool, yprob = ZenithAngleCut(prob, ObservationTime, obspar)
             if ObsBool:
                 # Round 1
                 P_GW, TC, pixlist, pixlistHR = ComputeProbability2D(
@@ -468,9 +465,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                             and obspar.secondRound
                         ):
                             visible, altaz, tGals_aux2 = VisibleAtTime(
-                                ObservationTime,
-                                tGals_aux2,
-                                obspar
+                                ObservationTime, tGals_aux2, obspar
                             )
                             if visible:
                                 visiMask = altaz.alt.value > 90 - (
@@ -667,9 +662,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                             and obspar.secondRound
                         ):
                             visible, altaz, tGals_aux2 = VisibleAtTime(
-                                ObservationTime,
-                                tGals_aux2,
-                                obspar
+                                ObservationTime, tGals_aux2, obspar
                             )
                             if visible:
                                 visiMask = altaz.alt.value > 90 - (
@@ -1062,7 +1055,7 @@ def PGWinFoV_NObs(
     couter_per_obs = np.zeros(len(NewActiveObs))
     print("------NewActiveObsTime--------", NewActiveObs[0].obs_name)
     while (i < 500) & any(SameNight):
-        for j in range(len(NewActiveObs)):
+        for j, obs in enumerate(NewActiveObs):
             obspar = NewActiveObs[j]
             print("Observatory: ", obspar.obs_name)
             ObservationTime = NewActiveObsTime[j]
@@ -1096,11 +1089,7 @@ def PGWinFoV_NObs(
                         obspar.EarthDown,
                     )
                 else:
-                    ObsBool, yprob = ZenithAngleCut(
-                        prob,
-                        ObservationTime,
-                        obspar
-                    )
+                    ObsBool, yprob = ZenithAngleCut(prob, ObservationTime, obspar)
 
                 if ObsBool:
                     # Round 1
@@ -1362,7 +1351,8 @@ def PGalinFoV_NObs(
 
                 if obspar.strategy == "integrated":
                     visible, altaz, tGals_aux = VisibleAtTime(
-                        ObservationTime, tGals_aux, obspar)
+                        ObservationTime, tGals_aux, obspar
+                    )
 
                     if visible:
 
@@ -1397,9 +1387,7 @@ def PGalinFoV_NObs(
                             ):
                                 print("probability", finalGals["dp_dV_FOV"][:1])
                                 visible, altaz, tGals_aux2 = VisibleAtTime(
-                                    ObservationTime,
-                                    tGals_aux2,
-                                    obspar
+                                    ObservationTime, tGals_aux2, obspar
                                 )
                                 if visible:
                                     visiMask = altaz.alt.value > 90 - (
@@ -1581,9 +1569,7 @@ def PGalinFoV_NObs(
                                 and obspar.secondRound
                             ):
                                 visible, altaz, tGals_aux2 = VisibleAtTime(
-                                    ObservationTime,
-                                    tGals_aux2,
-                                    obspar
+                                    ObservationTime, tGals_aux2, obspar
                                 )
                                 if visible:
                                     visiMask = altaz.alt.value > 90 - (
@@ -1596,9 +1582,7 @@ def PGalinFoV_NObs(
 
                                     if obspar.useGreytime:
                                         maskgrey = FulfillsRequirementGreyObservations(
-                                            ObservationTime,
-                                            visiGals2,
-                                            obspar
+                                            ObservationTime, visiGals2, obspar
                                         )
                                         finalGals2 = visiGals2[mask & maskgrey]
                                     if not obspar.useGreytime:
