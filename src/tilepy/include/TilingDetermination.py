@@ -188,13 +188,8 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
             ObservationTime = NightDarkRun
             ObsBool, yprob = ZenithAngleCut(
                 prob,
-                nside,
-                ObservationTime,
-                obspar.minProbcut,
-                obspar.maxZenith,
-                obspar.location,
-                obspar.minMoonSourceSeparation,
-                obspar.useGreytime,
+                ObservationTime
+                obspar,
             )
             if ObsBool:
                 # Round 1
@@ -444,7 +439,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
             if len(ObservationTimearray) < maxRuns:
                 ObservationTime = NightDarkRun
                 visible, altaz, tGals_aux = VisibleAtTime(
-                    ObservationTime, tGals_aux, obspar.maxZenith, obspar.location
+                    ObservationTime, tGals_aux, obspar
                 )
                 if visible:
                     # select galaxies within the slightly enlarged visiblity window
@@ -475,8 +470,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                             visible, altaz, tGals_aux2 = VisibleAtTime(
                                 ObservationTime,
                                 tGals_aux2,
-                                obspar.maxZenith,
-                                obspar.location,
+                                obspar
                             )
                             if visible:
                                 visiMask = altaz.alt.value > 90 - (
@@ -647,7 +641,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
             if len(ObservationTimearray) < maxRuns:
                 ObservationTime = NightDarkRun
                 visible, altaz, tGals_aux = VisibleAtTime(
-                    ObservationTime, tGals_aux, obspar.maxZenith, obspar.location
+                    ObservationTime, tGals_aux, obspar
                 )
                 if visible:
                     # select galaxies within the slightly enlarged visiblity window
@@ -675,8 +669,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                             visible, altaz, tGals_aux2 = VisibleAtTime(
                                 ObservationTime,
                                 tGals_aux2,
-                                obspar.maxZenith,
-                                obspar.location,
+                                obspar
                             )
                             if visible:
                                 visiMask = altaz.alt.value > 90 - (
@@ -1105,13 +1098,8 @@ def PGWinFoV_NObs(
                 else:
                     ObsBool, yprob = ZenithAngleCut(
                         prob,
-                        nside,
                         ObservationTime,
-                        obspar.minProbcut,
-                        obspar.maxZenith,
-                        obspar.location,
-                        obspar.minMoonSourceSeparation,
-                        obspar.useGreytime,
+                        obspar
                     )
 
                 if ObsBool:
@@ -1374,8 +1362,7 @@ def PGalinFoV_NObs(
 
                 if obspar.strategy == "integrated":
                     visible, altaz, tGals_aux = VisibleAtTime(
-                        ObservationTime, tGals_aux, obspar.maxZenith, obspar.location
-                    )
+                        ObservationTime, tGals_aux, obspar)
 
                     if visible:
 
@@ -1412,8 +1399,7 @@ def PGalinFoV_NObs(
                                 visible, altaz, tGals_aux2 = VisibleAtTime(
                                     ObservationTime,
                                     tGals_aux2,
-                                    obspar.maxZenith,
-                                    obspar.location,
+                                    obspar
                                 )
                                 if visible:
                                     visiMask = altaz.alt.value > 90 - (
@@ -1562,7 +1548,7 @@ def PGalinFoV_NObs(
 
                 if obspar.strategy == "targeted":
                     visible, altaz, tGals_aux = VisibleAtTime(
-                        ObservationTime, tGals_aux, obspar.maxZenith, obspar.location
+                        ObservationTime, tGals_aux, obspar
                     )
                     if visible:
                         # select galaxies within the slightly enlarged visiblity window
@@ -1597,8 +1583,7 @@ def PGalinFoV_NObs(
                                 visible, altaz, tGals_aux2 = VisibleAtTime(
                                     ObservationTime,
                                     tGals_aux2,
-                                    obspar.maxZenith,
-                                    obspar.location,
+                                    obspar
                                 )
                                 if visible:
                                     visiMask = altaz.alt.value > 90 - (
@@ -1613,8 +1598,7 @@ def PGalinFoV_NObs(
                                         maskgrey = FulfillsRequirementGreyObservations(
                                             ObservationTime,
                                             visiGals2,
-                                            obspar.location,
-                                            obspar.minMoonSourceSeparation,
+                                            obspar
                                         )
                                         finalGals2 = visiGals2[mask & maskgrey]
                                     if not obspar.useGreytime:

@@ -54,6 +54,8 @@ __all__ = [
     "VisibleAtTime",
     "FulfillsRequirement",
     "FulfillsRequirementGreyObservations",
+    "GetEarthOccultedPix",
+    "GetMoonOccultedPix",
     "OccultationCut",
     "SAA_Times",
     "GetBestGridPos2D",
@@ -61,20 +63,17 @@ __all__ = [
 ]
 
 
-def ZenithAngleCut(
-    prob,
-    nside,
-    time,
-    minProbcut,
-    maxZenith,
-    observatory,
-    minMoonSourceSeparation,
-    useGreytime,
-):
+def ZenithAngleCut(prob, time, obspar):
     """
-    Mask in the pixels with zenith angle larger than 45
+    Mask in the pixels with zenith angle larger than the max Zenith cut
     """
-    # observatory = co.EarthLocation(lat=-23.271333 * u.deg, lon=16.5 * u.deg, height=1800 * u.m)
+    nside = obspar.reducedNside
+    minProbcut = (obspar.minProbcut,)
+    maxZenith = (obspar.maxZenith,)
+    observatory = (obspar.location,)
+    minMoonSourceSeparation = (obspar.minMoonSourceSeparation,)
+    useGreytime = obspar.useGreytime
+
     frame = co.AltAz(obstime=time, location=observatory)
     pprob = prob
 
@@ -88,15 +87,8 @@ def ZenithAngleCut(
     altaz_map = targetCoord_map.transform_to(frame)
     maskzenith[altaz_map.alt.value < 90 - maxZenith] = 1
     mzenith.mask = maskzenith
-    # hp.mollview(mzenith)
-    # plt.show()
-    # plt.savefig("/Users/mseglar/Documents/GitLab/gw-follow-up-simulations/Zenithmask_%g.png")
 
     yprob = ma.masked_array(pprob, mzenith.mask)
-    # hp.mollview(yprob)
-    # plt.savefig("/Users/mseglar/Documents/GitLab/gw-follow-up-simulations/Zenithmask_prob_%g.png")
-
-    # print('Integrated probability of the masked map', np.sum(yprob))
 
     if np.sum(yprob) < minProbcut:
         ObsBool = False
@@ -104,7 +96,6 @@ def ZenithAngleCut(
         ObsBool = True
 
     if useGreytime and ObsBool:
-        # Get Alt/Az of the Moon
         moonaltazs = get_body("moon", Time(time, scale="utc")).transform_to(
             AltAz(obstime=Time(time, scale="utc"), location=observatory)
         )
@@ -114,24 +105,16 @@ def ZenithAngleCut(
         mzenith = hp.ma(pprob)
         mzenith.mask = mask_moonDistance
         yprob = ma.masked_array(pprob, mzenith.mask)
-        # hp.mollview(pprob)
-        # hp.mollview(yprob)
-        # plt.show()
+
         if np.sum(yprob) < minProbcut:
             ObsBool = False
         else:
             ObsBool = True
-        # print('Integrated probability of the masked map', np.sum(yprob))
-        # hp.mollview(mzenith)
-        # plt.show()
-        # Get the mask that does a radius around, of 30 degs
-        # Plot to check
-        # Return a bool if there is any observable region
 
     return ObsBool, yprob
 
 
-def VisibleAtTime(test_time, galaxies, maxz, observatory):
+def VisibleAtTime(test_time, galaxies, obspar):
     """
     Determine if prompt or afterglow follow-up is possible by checking if there are galaxies
     with non-negligible probability of hosting the NSM in the FoV.
@@ -158,6 +141,8 @@ def VisibleAtTime(test_time, galaxies, maxz, observatory):
     # observatory time and location to look up visibility of objects
 
     # observatory = co.EarthLocation(lat=-23.271333 * u.deg,lon=16.5 * u.deg, height=1800 * u.m)
+    maxz = obspar.maxZenith
+    observatory = obspar.location
     frame = co.AltAz(obstime=test_time, location=observatory)
     # print('galaxies',galaxies)
     # print('galaxies',len(galaxies['RAJ2000']))
@@ -236,9 +221,9 @@ def FulfillsRequirement(theseGals, obspar, UsePix):
     return mask, thisminz
 
 
-def FulfillsRequirementGreyObservations(
-    Ktime, theseGals, observatory, minMoonSourceSeparation
-):
+def FulfillsRequirementGreyObservations(Ktime, theseGals, obspar):
+    observatory = obspar.location
+    minMoonSourceSeparation = obspar.minMoonSourceSeparation
     targetCoord = co.SkyCoord(
         theseGals["RAJ2000"], theseGals["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
     )
@@ -251,6 +236,48 @@ def FulfillsRequirementGreyObservations(
     # Mask
     greymask = separations > minMoonSourceSeparation * u.deg
     return greymask
+
+
+def GetEarthOccultedPix(
+    nside, time, earth_radius, earth_sep, satellite_position, satellite_location
+):
+    # for equatorial frame
+
+    distance_to_satellite = np.linalg.norm(satellite_position)
+    earth_altitude = np.arcsin(
+        -satellite_position[2] / distance_to_satellite
+    )  # Altitude in radians
+    earth_azimuth = np.arctan2(
+        -satellite_position[1], -satellite_position[0]
+    )  # Azimuth in radians
+
+    angle_of_occlusion = np.arcsin(earth_radius / distance_to_satellite)
+
+    altaz_frame = AltAz(obstime=time, location=satellite_location)
+    earthCoord = SkyCoord(
+        earth_azimuth * u.rad, earth_altitude * u.rad, frame=altaz_frame
+    )
+    earthCoord_equatorial = earthCoord.transform_to("icrs")
+
+    earth_phipix = np.deg2rad(earthCoord_equatorial.ra.deg)
+    earth_thetapix = 0.5 * np.pi - np.deg2rad(earthCoord_equatorial.dec.deg)
+    earth_xyzpix = hp.ang2vec(earth_thetapix, earth_phipix)
+    earth_occulted_pix = hp.query_disc(
+        nside, earth_xyzpix, np.deg2rad(np.rad2deg(angle_of_occlusion) + earth_sep)
+    )
+    return earth_occulted_pix, earthCoord_equatorial
+
+
+def GetMoonOccultedPix(nside, moon_sep, time):
+    time = Time(time)
+    # for equatorial frame
+    MoonCoord_equatorial = get_body("moon", time, location=EarthLocation(0, 0, 0))
+    MoonCoord_equatorial = MoonCoord_equatorial.transform_to("icrs")
+    phipix_moon = np.deg2rad(MoonCoord_equatorial.ra.deg)
+    thetapix_moon = 0.5 * np.pi - np.deg2rad(MoonCoord_equatorial.dec.deg)
+    moon_xyzpix = hp.ang2vec(thetapix_moon, phipix_moon)
+    moon_occulted_pix = hp.query_disc(nside, moon_xyzpix, np.deg2rad(moon_sep))
+    return moon_occulted_pix, MoonCoord_equatorial
 
 
 def OccultationCut(
