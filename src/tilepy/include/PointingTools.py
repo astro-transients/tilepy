@@ -45,6 +45,7 @@ from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
 from skyfield.api import E, N, load, wgs84
+import pandas as pd
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -79,9 +80,6 @@ __all__ = [
     "GetSatelliteName",
     "GetSatelliteTime",
     "GetSatellitePositions",
-    "GetEarthOccultedPix",
-    "GetMoonOccultedPix",
-    "GetSunOccultedPix",
     "PlotSpaceOcc",
     "PlotSpaceOccTime",
     "PlotSpaceOccTimeRadec",

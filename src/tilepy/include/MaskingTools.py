@@ -26,22 +26,17 @@ import datetime
 import os
 
 import astropy.coordinates as co
-import ephem
 import healpy as hp
-import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.ma as ma
-import pytz
 import six
-import tables
 from astropy import units as u
-from astropy.coordinates import AltAz, get_body
+from astropy.coordinates import AltAz, get_body, EarthLocation, SkyCoord
 from astropy.table import Table
 from astropy.time import Time
-from matplotlib.path import Path
-from pytz import timezone
 from six.moves import configparser
+from .PointingTools import Tools, GetSatelliteTime, ComputePGalinFOV
 
 
 if six.PY2:

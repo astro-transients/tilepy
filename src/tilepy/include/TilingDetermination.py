@@ -143,7 +143,6 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     print()
 
     # Retrieve maps
-    nside = obspar.reducedNside
     prob = skymap.getMap("prob", obspar.reducedNside)
     highres = skymap.getMap("prob", obspar.HRnside)
 
@@ -1010,7 +1009,6 @@ def PGWinFoV_NObs(
     obspar = obsparameters[0]
 
     # Retrieve maps
-    nside = obspar.reducedNside
     prob = skymap.getMap("prob", obspar.reducedNside)
     highres = skymap.getMap("prob", obspar.HRnside)
 
