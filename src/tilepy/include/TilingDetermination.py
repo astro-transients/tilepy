@@ -63,6 +63,10 @@ from .PointingTools import (
     SubstractPointings,
     SubstractPointings2D,
     Tools,
+    TransformRADecToPix,
+    TransformPixToRaDec,
+    FindMatchingPixList,
+    FindMatchingCoords,
 )
 
 
@@ -1786,6 +1790,7 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
     DECarray = []
     P_GWarray = []
     Occultedpixels = []
+    pixlistHR = []
     obspar = obsparameters[0]
 
     radius = obspar.FOV
@@ -1829,12 +1834,7 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
             "==========================================================================================="
         )
 
-    pix_ra = radecs.ra.deg
-    pix_dec = radecs.dec.deg
-    phipix = np.deg2rad(pix_ra)
-    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
-    ipix = hp.ang2pix(reducedNside, thetapix, phipix)
-
+    ipix = TransformRADecToPix(radecs, reducedNside)
     newpix = ipix
 
     first_values = GetBestGridPos2D(
@@ -1933,18 +1933,11 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
         )
         print("========")
 
-    pix_ra = radecs.ra.deg
-    pix_dec = radecs.dec.deg
-    phipix = np.deg2rad(pix_ra)
-    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
-    ipix = hp.ang2pix(reducedNside, thetapix, phipix)
+    ipix = TransformRADecToPix(radecs, reducedNside)
     newpix = ipix
 
     # CONVERTING newpix to angles on the coordinate grid
-    tt, pp = hp.pix2ang(reducedNside, newpix)
-    ra2 = np.rad2deg(pp)
-    dec2 = np.rad2deg(0.5 * np.pi - tt)
-    pixradec = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+    pixradec = TransformPixToRaDec(newpix, reducedNside)
 
     first_values = GetBestGridPos3D(
         prob,
@@ -2034,11 +2027,7 @@ def PGWinFoV_Space_NObs(
             "==========================================================================================="
         )
 
-    pix_ra = radecs.ra.deg
-    pix_dec = radecs.dec.deg
-    phipix = np.deg2rad(pix_ra)
-    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
-    ipix = hp.ang2pix(reducedNside, thetapix, phipix)
+    ipix = TransformRADecToPix(radecs, reducedNside)
     newpix = ipix
 
     first_values1 = GetBestGridPos2D(
@@ -2115,17 +2104,13 @@ def PGWinFoV_Space_NObs(
         # Let's get the list of pixels available at each iteration
         firstvalue1 = first_values1
 
-        matching_rows1 = Tools.find_matching_coords(
-            1, firstvalue1, pixlistRROcc, reducedNside
-        )
+        matching_rows1 = FindMatchingCoords(1, firstvalue1, pixlistRROcc, reducedNside)
         matching_tables.append(matching_rows1)
 
         radectime = co.SkyCoord(
             ra=matching_rows1["PIXRA"] * u.deg, dec=matching_rows1["PIXDEC"] * u.deg
         )
-        theta = np.radians(90.0 - matching_rows1["PIXDEC"])
-        phi = np.radians(matching_rows1["PIXRA"])  # phi = longitude
-        pix_idx = hp.ang2pix(reducedNside, theta, phi, nest=False)
+        pix_idx = TransformRADecToPix(radectime, reducedNside)
         pix_proba = matching_rows1["PIXFOVPROB"]
 
         RadecsVsTimes.append(radectime)
@@ -2145,11 +2130,7 @@ def PGWinFoV_Space_NObs(
     newpix = OldPix[searchpix]
 
     # Find common pixels
-    pix_values = first_values1["PIX"]
-    common_pix = set(newpix).intersection(pix_values)
-    filtered_rows = first_values1[[pix in common_pix for pix in pix_values]]
-
-    first_values = filtered_rows
+    first_values = FindMatchingPixList(newpix, first_values1)
 
     if obspar.doPlot and len(first_values) > 0:
         PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
@@ -2272,12 +2253,7 @@ def PGalinFoV_Space_NObs(
             "==========================================================================================="
         )
 
-    pix_ra = radecs.ra.deg
-    pix_dec = radecs.dec.deg
-    phipix = np.deg2rad(pix_ra)
-    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
-    ipix = hp.ang2pix(reducedNside, thetapix, phipix)
-
+    ipix = TransformRADecToPix(radecs, reducedNside)
     newpix = ipix
     pixradec = radecs
 
@@ -2356,9 +2332,7 @@ def PGalinFoV_Space_NObs(
         # Let's get the list of pixels available at each iteration
         firstvalue1 = first_values1
 
-        matching_rows1 = Tools.find_matching_coords(
-            1, firstvalue1, pixlistRROcc, reducedNside
-        )
+        matching_rows1 = FindMatchingCoords(1, firstvalue1, pixlistRROcc, reducedNside)
         matching_tables.append(matching_rows1)
 
         radectime = co.SkyCoord(
@@ -2387,11 +2361,8 @@ def PGalinFoV_Space_NObs(
     newpix = OldPix[searchpix]
 
     # CONVERTING newpix to angles on the coordinate grid
-    tt, pp = hp.pix2ang(reducedNside, newpix)
-    ra2 = np.rad2deg(pp)
-    dec2 = np.rad2deg(0.5 * np.pi - tt)
-    pixradec = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
-
+    pixradec = TransformPixToRaDec(newpix, reducedNside)
+    
     # Finding the common radec betweem visible pixels and the grid
     first_values_coords = co.SkyCoord(
         ra=first_values1["PIXRA"], dec=first_values1["PIXDEC"], unit="deg"
