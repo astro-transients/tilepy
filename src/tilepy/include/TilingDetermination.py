@@ -62,7 +62,7 @@ from .PointingTools import (
     Tools,
     TransformRADecToPix,
     TransformPixToRaDec,
-    FindMatchingPixs,
+    FindMatchingPixList,
     FindMatchingCoords,
     VisibleAtTime,
     ZenithAngleCut
@@ -2116,7 +2116,8 @@ def PGWinFoV_Space_NObs(
     newpix = OldPix[searchpix]
 
     # Find common pixels
-    first_values = FindMatchingPixs(newpix, first_values1["PIX"])
+    first_values = FindMatchingPixList(newpix, first_values1)
+    print(first_values)
 
     if obspar.doPlot and len(first_values) > 0:
         PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
@@ -2124,6 +2125,10 @@ def PGWinFoV_Space_NObs(
         PlotSpaceOccTimeRadec(
             dirName, AvailablePixPerTime, ProbaTime, TestTime, reducedNside
         )
+
+    print(AvailablePixPerTime)
+    print(ProbaTime)
+    print(TestTime)
 
     ObsName = [obspar.obs_name for j in range(len(first_values))]
     RAarray = [row["PIXRA"] for row in first_values]

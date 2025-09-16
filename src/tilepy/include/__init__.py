@@ -103,7 +103,7 @@ __all__ = [
     "TransformRADec",
     "TransformRADecToPix",
     "TransformPixToRaDec",
-    "FindMatchingPixs",
+    "FindMatchingPixList",
     "FindMatchingCoords",
     "LoadGalaxies",
     "LoadGalaxies_SteMgal",

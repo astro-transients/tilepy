@@ -66,7 +66,7 @@ __all__ = [
     "TransformRADec",
     "TransformRADecToPix",
     "TransformPixToRaDec",
-    "FindMatchingPixs",
+    "FindMatchingPixList",
     "FindMatchingCoords",
     "LoadGalaxies",
     "LoadGalaxies_SteMgal",
@@ -2168,13 +2168,13 @@ def TransformPixToRaDec(pix, nside):
     pixradec = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
     return pixradec
 
-def FindMatchingPixs(pix1, pix2):
-    pix_values = pix2
+def FindMatchingPixList(pix1, list2):
+    pix_values = list2["PIX"]
     common_pix = set(pix1).intersection(pix_values)
-    filtered_rows = pix2[[pix in common_pix for pix in pix_values]]
+    filtered_rows = list2[[pix in common_pix for pix in pix_values]]
     return filtered_rows
 
-def FindMatchingCoords(cls, option, radec1, radec2, reducedNside):
+def FindMatchingCoords(option, radec1, radec2, reducedNside):
 
     if option == 1:
         firstvalue1_coords = co.SkyCoord(
