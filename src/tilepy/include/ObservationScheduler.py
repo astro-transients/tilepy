@@ -27,12 +27,14 @@ from astropy.io import ascii
 from astropy.table import Table
 
 from .MapManagement import SkyMap, create_map_reader
-from .PointingPlotting import PointingPlotting
+from .PointingPlotting import PointingPlotting, PlotAccRegion
 from .RankingObservationTimes import (
     Ranking_Space,
     Ranking_Space_AI,
     RankingTimes,
     RankingTimes_2D,
+    PlotAccRegionTimePix,
+    PlotAccRegionTimeRadec,
 )
 from .TilingDetermination import (
     GetBestTiles2D,
@@ -301,18 +303,23 @@ def GetUniversalSchedule(obspar):
             if not os.path.exists(dirName):
                 os.makedirs(dirName)
             galaxies = obspar[0].datasetDir + obspar[0].galcatName
-            SuggestedPointings, SatTimes, SAA, RadecsVsTimes, TestTime = (
-                PGalinFoV_Space_NObs(
-                    skymap,
-                    raw_map.name_event,
-                    ObservationTime,
-                    obspar[0].pointingsFile,
-                    galaxies,
-                    obspar,
-                    dirName,
-                )
+            SuggestedPointings, result = PGalinFoV_Space_NObs(
+                skymap,
+                raw_map.name_event,
+                ObservationTime,
+                obspar[0].pointingsFile,
+                galaxies,
+                obspar,
+                dirName,
             )
-            print(SatTimes, SAA)
+            if obspar[0].doPlot and len(result["first_values1"]) > 0:
+                PlotAccRegion(
+                    skymap,
+                    dirName,
+                    obspar[0],
+                    result["Occultedpixels"],
+                    result["first_values"],
+                )
 
         else:
             print(
@@ -333,16 +340,26 @@ def GetUniversalSchedule(obspar):
             dirName = "%s/PGWinFoV_Space_NObs" % outputDir
             if not os.path.exists(dirName):
                 os.makedirs(dirName)
-            SuggestedPointings, SatTimes, SAA, RadecsVsTimes, TestTime = (
-                PGWinFoV_Space_NObs(
-                    skymap,
-                    raw_map.name_event,
-                    ObservationTime,
-                    obspar[0].pointingsFile,
-                    obspar,
-                    dirName,
-                )
+            SuggestedPointings, result = PGWinFoV_Space_NObs(
+                skymap,
+                raw_map.name_event,
+                ObservationTime,
+                obspar[0].pointingsFile,
+                obspar,
+                dirName,
             )
+            if obspar[0].doPlot and len(result["first_values1"]) > 0:
+                PlotAccRegion(
+                    skymap,
+                    dirName,
+                    obspar[0],
+                    result["Occultedpixels"],
+                    result["first_values"],
+                )
+                # PlotAccRegionTimePix(dirName, AvailablePixPerTime, ProbaTime, TestTime)
+                # PlotAccRegionTimeRadec(
+                #    dirName, AvailablePixPerTime, ProbaTime, result["TestTime"], reducedNside
+                # )
 
     else:
         # GROUND
@@ -419,7 +436,9 @@ def GetUniversalSchedule(obspar):
                 ]
                 print(SuggestedPointings_1)
                 if base == "space":
-                    time_table = Table([SatTimes, SAA], names=("SatTimes", "SAA"))
+                    time_table = Table(
+                        [result["SatTimes"], result["saa"]], names=("SatTimes", "SAA")
+                    )
                     ascii.write(
                         time_table,
                         "%s/SAA_Times_%s.txt" % (dirName, obspar[j].obs_name),
