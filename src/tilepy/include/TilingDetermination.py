@@ -1205,8 +1205,8 @@ def PGWinFoV_NObs(
         ],
         names=[
             "Time[UTC]",
-            "RA(deg)",
-            "DEC(deg)",
+            "RA[deg]",
+            "DEC[deg]",
             "PGW",
             "Round",
             "ObsName",
@@ -1741,8 +1741,8 @@ def PGalinFoV_NObs(
         ],
         names=[
             "Time[UTC]",
-            "RA(deg)",
-            "DEC(deg)",
+            "RA[deg]",
+            "DEC[deg]",
             "PGW",
             "Pgal",
             "Round",
@@ -1835,7 +1835,7 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
     P_GWarray = [row["PIXFOVPROB"] for row in first_values]
 
     SuggestedPointings = Table(
-        [RAarray, DECarray, P_GWarray], names=["RA(deg)", "DEC(deg)", "PGW"]
+        [RAarray, DECarray, P_GWarray], names=["RA[deg]", "DEC[deg]", "PGW"]
     )
 
     return SuggestedPointings
@@ -1939,7 +1939,7 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
 
     SuggestedPointings = Table(
         [ObsName, RAarray, DECarray, P_Galarray],
-        names=["ObsName", "RA(deg)", "DEC(deg)", "PGal"],
+        names=["ObsName", "RA[deg]", "DEC[deg]", "PGal"],
     )
     return SuggestedPointings
 
@@ -2363,7 +2363,7 @@ def PGalinFoV_Space_NObs(
 
     SuggestedPointings = Table(
         [ObsName, RAarray, DECarray, P_Galarray],
-        names=["ObsName", "RA(deg)", "DEC(deg)", "PGal"],
+        names=["ObsName", "RA[deg]", "DEC[deg]", "PGal"],
     )
 
     result = {

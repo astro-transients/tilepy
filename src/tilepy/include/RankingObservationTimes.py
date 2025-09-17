@@ -87,7 +87,7 @@ def LoadPointingFile(tpointingFile):
     -------
     Pointings : astropy.table.Table
         Table containing the pointings with columns: 'Pointing', 'Time',
-        'RAJ2000', and 'DEJ2000'.
+        'RA[deg]', and 'DEC[deg]'.
 
     Notes
     -----
@@ -131,7 +131,7 @@ def LoadPointingFile(tpointingFile):
 
     index_list = list(range(len(ra)))
     Pointings = Table(
-        [index_list, time, ra, dec], names=("Pointing", "Time", "RAJ2000", "DEJ2000")
+        [index_list, time, ra, dec], names=("Pointing", "Time", "RA[deg]", "DEC[deg]")
     )
 
     return Pointings
@@ -146,7 +146,7 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
     ObservationTime : datetime.datetime
         The time to compute visibility for.
     Pointing : astropy.table.Table
-        Table with pointing information (columns: 'Time', 'RAJ2000', 'DEJ2000').
+        Table with pointing information (columns: 'Time', 'RA[deg]', 'DEC[deg]').
     obspar : object
         Observation parameters (must have 'duration', 'maxZenith', 'location').
     dirName : str
@@ -161,7 +161,7 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
     """
 
     source = SkyCoord(
-        Pointing["RAJ2000"], Pointing["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
+        Pointing["RA[deg]"], Pointing["DEC[deg]"], frame="icrs", unit=(u.deg, u.deg)
     )
     window_arr = []
     zenith_arr = []
@@ -183,11 +183,9 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
     timeInitial = auxtime - datetime.timedelta(minutes=obspar.duration)
     for i, s in enumerate(source):
         NonValidwindow, Stepzenith = GetVisibility(
-            Pointing["Time"], source[i], obspar.maxZenith, obspar.location
+            Pointing["Time"], s, obspar.maxZenith, obspar.location
         )
-        window, zenith = GetObservationPeriod(
-            timeInitial, source[i], obspar, i, dirName, False
-        )
+        window, zenith = GetObservationPeriod(timeInitial, s, obspar, i, dirName, False)
         window_arr.append(window)
         zenith_arr.append(zenith)
         szenith_arr.append(Stepzenith)
@@ -196,7 +194,7 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
         if not Tools.IsGreyness(ObservationTime, obspar):
             window, zenith = GetObservationPeriod(
                 ObservationTime + datetime.timedelta(hours=12),
-                source[i],
+                s,
                 obspar,
                 i,
                 dirName,
@@ -204,7 +202,7 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
             )
         else:
             window, zenith = GetObservationPeriod(
-                ObservationTime, source[i], obspar, i, dirName, True
+                ObservationTime, s, obspar, i, dirName, True
             )
 
     Pointing["Observation window"] = window_arr
@@ -280,9 +278,9 @@ def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlo
                 NightsCounter,
             ],
             names=[
-                "Time UTC",
-                "Alt Source",
-                "Alt Sun",
+                "TimeUTC",
+                "AltSource",
+                "AltSun",
                 "AltMoon",
                 "moonPhase",
                 "MoonDistance",
@@ -291,36 +289,36 @@ def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlo
         )
         # selectedTimes=Altitudes['Time UTC']
         selection = (
-            (Altitudes["Alt Sun"] < -18.0)
-            & (Altitudes["Alt Source"] > AltitudeCut)
+            (Altitudes["AltSun"] < -18.0)
+            & (Altitudes["AltSource"] > AltitudeCut)
             & (Altitudes["AltMoon"] < -0.5)
         )
         DTaltitudes = Altitudes[selection]
         newtimes = []
-        newtimes.extend(DTaltitudes["Time UTC"].mjd)
+        newtimes.extend(DTaltitudes["TimeUTC"].mjd)
         selectionGreyness = (
             (Altitudes["AltMoon"] < moonGrey)
             & (Altitudes["AltMoon"] > moonDown)
             & (Altitudes["moonPhase"] < moonPhase)
-            & (Altitudes["Alt Sun"] < sunDown)
+            & (Altitudes["AltSun"] < sunDown)
             & (Altitudes["MoonDistance"] > minMoonSourceSeparation)
             & (Altitudes["MoonDistance"] < maxMoonSourceSeparation)
-            & (Altitudes["Alt Source"] > AltitudeCut)
+            & (Altitudes["AltSource"] > AltitudeCut)
         )
         GTaltitudes = Altitudes[selectionGreyness]
-        newtimes.extend(GTaltitudes["Time UTC"].mjd)
+        newtimes.extend(GTaltitudes["TimeUTC"].mjd)
         newtimes = sorted(newtimes)
         ScheduledTimes = Time(newtimes, format="mjd").iso
 
     else:
         Altitudes = Table(
             [times, msourcealtazs.alt, sunaltazs.alt, moonaltazs.alt, NightsCounter],
-            names=["Time UTC", "Alt Source", "Alt Sun", "AltMoon", "NightsCounter"],
+            names=["TimeUTC", "AltSource", "AltSun", "AltMoon", "NightsCounter"],
         )
-        Times = Altitudes["Time UTC"]
+        Times = Altitudes["TimeUTC"]
         selection = (
-            (Altitudes["Alt Sun"] < -18.0)
-            & (Altitudes["Alt Source"] > AltitudeCut)
+            (Altitudes["AltSun"] < -18.0)
+            & (Altitudes["AltSource"] > AltitudeCut)
             & (Altitudes["AltMoon"] < -0.5)
         )
         ScheduledTimes = Time(Times[selection], format="mjd").iso
@@ -379,8 +377,8 @@ def GetVisibility(time, radecs, maxZenith, obsLoc):
 
 
 def ProbabilitiesinPointings3D(cat, galPointing, FOV, totaldPdV, prob, nside):
-    ra = galPointing["RAJ2000"]
-    dec = galPointing["DEJ2000"]
+    ra = galPointing["RA[deg]"]
+    dec = galPointing["DEC[deg]"]
     PGW = []
     PGAL = []
 
@@ -400,7 +398,7 @@ def ProbabilitiesinPointings3D(cat, galPointing, FOV, totaldPdV, prob, nside):
 
 def PGGPGalinFOV(cat, ra, dec, prob, totaldPdV, FOV, nside):
     targetCoordcat = co.SkyCoord(
-        cat["RAJ2000"], cat["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
+        cat["RA[deg]"], cat["DEC[deg]"], frame="icrs", unit=(u.deg, u.deg)
     )
     targetCoordpointing = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
     dp_dV = cat["dp_dV"]
@@ -425,8 +423,8 @@ def PGGPGalinFOV(cat, ra, dec, prob, totaldPdV, FOV, nside):
 
 
 def ProbabilitiesinPointings2D(Pointing, FOV, prob, nside):
-    ra = Pointing["RAJ2000"]
-    dec = Pointing["DEJ2000"]
+    ra = Pointing["RA[deg]"]
+    dec = Pointing["DEC[deg]"]
     PGW = []
     PGAL = []
     for i in range(0, len(ra)):
@@ -460,8 +458,8 @@ def PGinFOV(ra, dec, prob, radius, nside):
 def Sortingby(galPointing, name, exposure):
     gggalPointing = galPointing[np.flipud(np.argsort(galPointing["Pgal"]))]
     prioritygal = list(range(len(galPointing["Pgal"])))
-    ra = gggalPointing["RAJ2000"]
-    dec = gggalPointing["DEJ2000"]
+    ra = gggalPointing["RA[deg]"]
+    dec = gggalPointing["DEC[deg]"]
     coord = SkyCoord(ra, dec, unit="deg")
     # print(coord.to_string('hmsdms'))
     gggalPointing["RA(HH:MM:SS) Dec (DD:MM:SS)"] = coord.to_string("hmsdms")
@@ -509,9 +507,9 @@ def Sortingby(galPointing, name, exposure):
     gwgalPointing["Duration"] = exposure
 
     gwgalPointing_TH = gwgalPointing[
-        "Target", "Id", "RAJ2000", "DEJ2000", "Time", "Duration"
+        "Target", "Id", "RA[deg]", "DEC[deg]", "Time", "Duration"
     ]
-    # new_order = ['Target', 'Id', 'RAJ2000','DEJ2000']  # List or tuple
+
     # gwgalPointing_TH = gwgalPointing[new_order]
     outfilename = "%s/RankingObservationTimes_forAlerter.txt" % name
     ascii.write(
@@ -524,8 +522,8 @@ def Sortingby(galPointing, name, exposure):
 def EvolutionPlot(galPointing, tname, ObsArray):
     fig = plt.figure(figsize=(18, 10))
     ax = fig.add_axes([0.1, 0.1, 0.6, 0.8])
-    ra = galPointing["RAJ2000"]
-    dec = galPointing["DEJ2000"]
+    ra = galPointing["RA[deg]"]
+    dec = galPointing["DEC[deg]"]
     pgw = galPointing["Pgw"]
     pgal = galPointing["Pgal"]
     time = galPointing["Time"]
@@ -567,7 +565,10 @@ def EvolutionPlot(galPointing, tname, ObsArray):
     plt.savefig("%s/AltitudevsTime_%s.png" % (tname, ObsArray))
 
 
-def RankingTimes(ObservationTime, skymap, cat, obspar, dirName, PointingFile, ObsArray):
+def RankingTimes(obspar, skymap, cat, dirName, PointingFile):
+
+    ObservationTime = obspar.obsTime
+    ObsArray = obspar.obs_name
     point = LoadPointingFile(PointingFile)
 
     ################################################################
@@ -591,7 +592,11 @@ def RankingTimes(ObservationTime, skymap, cat, obspar, dirName, PointingFile, Ob
     Sortingby(point, dirName, obspar.duration)
 
 
-def RankingTimes_2D(ObservationTime, prob, obspar, dirName, PointingFile, ObsArray):
+def RankingTimes_2D(obspar, prob, dirName, PointingFile):
+
+    ObservationTime = obspar.obsTime
+    ObsArray = obspar.obs_name
+
     point = LoadPointingFile(PointingFile)
 
     ################################################################
@@ -615,8 +620,8 @@ def RankingTimes_2D(ObservationTime, prob, obspar, dirName, PointingFile, ObsArr
 
 # Function to compute 2D distance between two rows
 def distance(entry1, entry2):
-    ra1, dec1 = entry1["RA(deg)"], entry1["DEC(deg)"]
-    ra2, dec2 = entry2["RA(deg)"], entry2["DEC(deg)"]
+    ra1, dec1 = entry1["RA[deg]"], entry1["DEC[deg]"]
+    ra2, dec2 = entry2["RA[deg]"], entry2["DEC[deg]"]
 
     # Handle circular distance for RA
     delta_ra = min(abs(ra1 - ra2), 360 - abs(ra1 - ra2))

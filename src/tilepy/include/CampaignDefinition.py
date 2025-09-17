@@ -72,6 +72,7 @@ class ObservationParameters(object):
         lat=0,
         lon=0,
         height=0,
+        wobbleOffset=0,
         sunDown=None,
         moonDown=None,
         EarthDown=None,
@@ -125,6 +126,7 @@ class ObservationParameters(object):
         self.lon = lon
         self.height = height
         self.location = EarthLocation(lat=self.lat, lon=self.lon, height=self.height)
+        self.wobbleOffset = wobbleOffset * u.deg
 
         # Visibility
         self.sunDown = sunDown
@@ -202,6 +204,7 @@ class ObservationParameters(object):
                 f"Do Plot = {self.doPlot}, Do Rank = {self.doRank}, Count Previous= {self.countPrevious}, Second Round= {self.secondRound}, Use Grey Time= {self.useGreytime}",
                 "--------------------- Observatory ---------------------",
                 f"Observatory Location: {self.lat}, {self.lon}, {self.height}",
+                f"Wobble Offset: {self.wobbleOffset}",
                 f"FOV: {self.FOV}, Duration: {self.duration}, Min Duration: {self.minDuration}, Min Slewing: {self.minSlewing}",
                 f"Max Runs: {self.maxRuns}, Max Nights: {self.maxNights}",
                 f"Visibility: {self.sunDown}, {self.moonDown}, {self.moonGrey}, {self.moonPhase}, {self.EarthDown}",
@@ -275,6 +278,9 @@ class ObservationParameters(object):
         self.location = EarthLocation(lat=self.lat, lon=self.lon, height=self.height)
         self.base = str(parser.get(section, "base", fallback=None))
         self.stationsurl = str(parser.get(section, "stationsurl", fallback=None))
+        self.wobbleOffset = (
+            float(parser.get(section, "wobbleoffset", fallback=0)) * u.deg
+        )
 
         section = "visibility"
         self.sunDown = int(parser.get(section, "sundown", fallback=0))
