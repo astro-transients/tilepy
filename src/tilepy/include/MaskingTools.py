@@ -289,16 +289,18 @@ def OccultationCut(
     prob,
     nside,
     time,
-    minProbcut,
+    obspar,
     satellitePosition,
-    observatory,
-    sun_sep,
-    moon_sep,
-    earth_sep,
+    satelliteLocation,
 ):
     """
     Mask in the pixels that are occulted by Earth, Sun and Moon
     """
+    minProbcut = obspar.minProbcut
+    sun_sep = (obspar.sunDown,)
+    moon_sep = (obspar.moonDown,)
+    earth_sep = obspar.EarthDown
+
     pixlist = []
     pprob = prob
 
@@ -307,7 +309,7 @@ def OccultationCut(
     mpixels = []
 
     mEarth, posEarth = GetEarthOccultedPix(
-        nside, time, 6371, earth_sep, satellitePosition, observatory
+        nside, time, 6371, earth_sep, satellitePosition, satelliteLocation
     )
     mpixels.extend(mEarth)
 
