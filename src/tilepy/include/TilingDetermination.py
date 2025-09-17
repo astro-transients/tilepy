@@ -1072,7 +1072,7 @@ def PGWinFoV_NObs(
                 pixlistHROcc = None
                 if obspar.base == "space":
                     SatelliteTime = GetSatelliteTime(SatelliteName, ObservationTime)
-                    satellite_position, obspar.location = GetSatellitePositions(
+                    satellitePosition, satelliteLocation = GetSatellitePositions(
                         SatelliteName, SatelliteTime
                     )
                     ObsBool, yprob, pixlistHROcc = OccultationCut(
@@ -1080,8 +1080,8 @@ def PGWinFoV_NObs(
                         obspar.reducedNside,
                         ObservationTime,
                         obspar.minProbcut,
-                        satellite_position,
-                        obspar.location,
+                        satellitePosition,
+                        satelliteLocation,
                         obspar.sunDown,
                         obspar.moonDown,
                         obspar.EarthDown,
@@ -2097,7 +2097,7 @@ def PGWinFoV_Space_NObs(
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         # Need to get a list of highest pixels
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
-        satellite_position, satellite_location = GetSatellitePositions(
+        satellitePosition, satelliteLocation = GetSatellitePositions(
             SatelliteName, SatelliteTime
         )
         ObsBool, yprob, pixlistRROcc = OccultationCut(
@@ -2105,8 +2105,8 @@ def PGWinFoV_Space_NObs(
             reducedNside,
             current_time,
             obspar.minProbcut,
-            satellite_position,
-            satellite_location,
+            satellitePosition,
+            satelliteLocation,
             obspar.sunDown,
             obspar.moonDown,
             obspar.EarthDown,
@@ -2338,7 +2338,7 @@ def PGalinFoV_Space_NObs(
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         # Need to get a list of highest pixels
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
-        satellite_position, satellite_location = GetSatellitePositions(
+        satellitePosition, satelliteLocation = GetSatellitePositions(
             SatelliteName, SatelliteTime
         )
         ObsBool, yprob, pixlistRROcc = OccultationCut(
@@ -2346,8 +2346,8 @@ def PGalinFoV_Space_NObs(
             reducedNside,
             current_time,
             obspar.minProbcut,
-            satellite_position,
-            satellite_location,
+            satellitePosition,
+            satelliteLocation,
             obspar.sunDown,
             obspar.moonDown,
             obspar.EarthDown,

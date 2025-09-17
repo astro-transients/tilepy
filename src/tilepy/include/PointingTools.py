@@ -1202,13 +1202,13 @@ def GetSatellitePositions(satellite_name, t):
     subpoint = geocentric.subpoint()
 
     # Get satellite's current position in astronomical units (AU)
-    satellite_position = geocentric.position.km
-    satellite_location = EarthLocation(
+    satellitePosition = geocentric.position.km
+    satelliteLocation = EarthLocation(
         lat=subpoint.latitude.degrees,
         lon=subpoint.longitude.degrees,
         height=subpoint.elevation.m,
     )
-    return satellite_position, satellite_location
+    return satellitePosition, satelliteLocation
 
 
 def GetBestNSIDE(ReducedNSIDE, HRnside, fov):

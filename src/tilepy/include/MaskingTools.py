@@ -214,14 +214,14 @@ def FulfillsRequirement(theseGals, obspar, UsePix):
     return mask, thisminz
 
 
-def FulfillsRequirementGreyObservations(Ktime, theseGals, obspar):
+def FulfillsRequirementGreyObservations(time, theseGals, obspar):
     observatory = obspar.location
     minMoonSourceSeparation = obspar.minMoonSourceSeparation
     targetCoord = co.SkyCoord(
         theseGals["RAJ2000"], theseGals["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
     )
-    frame = co.AltAz(obstime=Ktime, location=observatory)
-    moonaltazs = get_body("moon", Time(Ktime, scale="utc")).transform_to(frame)
+    frame = co.AltAz(obstime=time, location=observatory)
+    moonaltazs = get_body("moon", Time(time, scale="utc")).transform_to(frame)
 
     altaz_map = targetCoord.transform_to(frame)
     separations = altaz_map.separation(moonaltazs)
@@ -232,21 +232,21 @@ def FulfillsRequirementGreyObservations(Ktime, theseGals, obspar):
 
 
 def GetEarthOccultedPix(
-    nside, time, earth_radius, earth_sep, satellite_position, satellite_location
+    nside, time, earth_radius, earth_sep, satellitePosition, satelliteLocation
 ):
     # for equatorial frame
 
-    distance_to_satellite = np.linalg.norm(satellite_position)
+    distance_to_satellite = np.linalg.norm(satellitePosition)
     earth_altitude = np.arcsin(
-        -satellite_position[2] / distance_to_satellite
+        -satellitePosition[2] / distance_to_satellite
     )  # Altitude in radians
     earth_azimuth = np.arctan2(
-        -satellite_position[1], -satellite_position[0]
+        -satellitePosition[1], -satellitePosition[0]
     )  # Azimuth in radians
 
     angle_of_occlusion = np.arcsin(earth_radius / distance_to_satellite)
 
-    altaz_frame = AltAz(obstime=time, location=satellite_location)
+    altaz_frame = AltAz(obstime=time, location=satelliteLocation)
     earthCoord = SkyCoord(
         earth_azimuth * u.rad, earth_altitude * u.rad, frame=altaz_frame
     )
@@ -290,7 +290,7 @@ def OccultationCut(
     nside,
     time,
     minProbcut,
-    satellite_position,
+    satellitePosition,
     observatory,
     sun_sep,
     moon_sep,
@@ -307,7 +307,7 @@ def OccultationCut(
     mpixels = []
 
     mEarth, posEarth = GetEarthOccultedPix(
-        nside, time, 6371, earth_sep, satellite_position, observatory
+        nside, time, 6371, earth_sep, satellitePosition, observatory
     )
     mpixels.extend(mEarth)
 
@@ -346,22 +346,16 @@ def SAA_Times(
     doPlot,
     dirName,
     datasetDir,
-    saathershold,
+    SAAThreshold,
 ):
     SatTimes = []
     i = 0
     saa = []
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
-        # satellite_position, satellite_location = GetSatellitePositions(
-        #    SatelliteName, SatelliteTime
-        # )
-        # if Tools.is_in_saa(satellite_location.lat.deg, satellite_location.lon.deg):
-        #    saa.append(True)
-        # else:
-        #    saa.append(False)
+
         saa.append(
-            Tools.is_in_saa_opt(SatelliteName, SatelliteTime, saathershold, datasetDir)
+            Tools.is_in_saa_opt(SatelliteName, SatelliteTime, SAAThreshold, datasetDir)
         )
         SatTimes.append(current_time)
 
