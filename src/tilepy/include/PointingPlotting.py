@@ -755,7 +755,6 @@ def plot_pixel_availability_healpix(dirName, pixels_by_time, times, nside):
     plt.close()
 
 
-
 def PlotAccRegion(skymap, dirName, obspar, Occultedpixels, first_values):
     reducedNside = obspar.reducedNside
     prob = skymap.getMap("prob", reducedNside)

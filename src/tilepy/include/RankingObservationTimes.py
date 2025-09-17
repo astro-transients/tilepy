@@ -67,7 +67,7 @@ __all__ = [
     "PlotAccRegionTimePix",
     "PlotAccRegionTimeRadec",
     "Ranking_Space",
-    "Ranking_Space_AI"
+    "Ranking_Space_AI",
 ]
 
 
@@ -905,8 +905,6 @@ def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
             os.path.join(output_dir_rank, "RankingObservations_SpaceClustering.png")
         )
         plt.close()
-
-
 
 
 def map_pixel_availability(pixels_by_time, probs_by_time, times):
