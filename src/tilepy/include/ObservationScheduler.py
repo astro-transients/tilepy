@@ -145,13 +145,11 @@ def GetSchedule(obspar):
             print(f"Resulting pointings file is {outfilename}")
             if obspar.doRank:
                 RankingTimes(
-                    obspar.obsTime,
+                    obspar,
                     skymap,
                     cat,
-                    obspar,
                     dirName,
                     "%s/SuggestedPointings_GalProbOptimisation.txt" % dirName,
-                    obspar.obs_name,
                 )
             if obspar.doPlot:
                 PointingPlotting(
@@ -195,12 +193,10 @@ def GetSchedule(obspar):
             print(f"Resulting pointings file is {outfilename}")
             if obspar.doRank:
                 RankingTimes_2D(
-                    obspar.obsTime,
-                    skymap.getMap("prob", obspar.HRnside),
                     obspar,
+                    skymap.getMap("prob", obspar.HRnside),
                     dirName,
                     "%s/SuggestedPointings_2DProbOptimisation.txt" % dirName,
-                    obspar.obs_name,
                 )
             if obspar.doPlot:
                 PointingPlotting(
@@ -474,13 +470,11 @@ def GetUniversalSchedule(obspar):
                     )
                     if obspar[j].doRank:
                         RankingTimes_2D(
-                            ObservationTime,
-                            skymap.getMap("prob", obspar[j].HRnside),
                             obspar[j],
+                            skymap.getMap("prob", obspar[j].HRnside),
                             dirName,
                             "%s/SuggestedPointings_GWOptimisation_%s.txt"
                             % (dirName, obspar[j].obs_name),
-                            obspar[j].obs_name,
                         )
                     if obspar[j].doPlot:
                         PointingPlotting(

@@ -563,7 +563,10 @@ def EvolutionPlot(galPointing, tname, ObsArray):
     plt.savefig("%s/AltitudevsTime_%s.png" % (tname, ObsArray))
 
 
-def RankingTimes(ObservationTime, skymap, cat, obspar, dirName, PointingFile, ObsArray):
+def RankingTimes(obspar, skymap, cat, dirName, PointingFile):
+
+    ObservationTime = obspar.obsTime
+    ObsArray = obspar.obs_name
     point = LoadPointingFile(PointingFile)
 
     ################################################################
@@ -587,7 +590,11 @@ def RankingTimes(ObservationTime, skymap, cat, obspar, dirName, PointingFile, Ob
     Sortingby(point, dirName, obspar.duration)
 
 
-def RankingTimes_2D(ObservationTime, prob, obspar, dirName, PointingFile, ObsArray):
+def RankingTimes_2D(obspar, prob, dirName, PointingFile):
+
+    ObservationTime = obspar.obsTime
+    ObsArray = obspar.obs_name
+
     point = LoadPointingFile(PointingFile)
 
     ################################################################
