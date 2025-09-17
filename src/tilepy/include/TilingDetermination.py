@@ -57,9 +57,6 @@ from .PointingTools import (
     NextWindowTools,
     NightDarkObservation,
     NightDarkObservationwithGreyTime,
-    PlotSpaceOcc,
-    PlotSpaceOccTime,
-    PlotSpaceOccTimeRadec,
     SubstractPointings,
     SubstractPointings2D,
     Tools,
@@ -2108,13 +2105,6 @@ def PGWinFoV_Space_NObs(
     # Find common pixels
     first_values = FindMatchingPixList(newpix, first_values1)
 
-    if obspar.doPlot and len(first_values) > 0:
-        PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
-        PlotSpaceOccTime(dirName, AvailablePixPerTime, ProbaTime, TestTime)
-        PlotSpaceOccTimeRadec(
-            dirName, AvailablePixPerTime, ProbaTime, TestTime, reducedNside
-        )
-
     ObsName = [obspar.obs_name for j in range(len(first_values))]
     RAarray = [row["PIXRA"] for row in first_values]
     DECarray = [row["PIXDEC"] for row in first_values]
@@ -2125,7 +2115,17 @@ def PGWinFoV_Space_NObs(
         names=["ObsName", "RA(deg)", "DEC(deg)", "PGW"],
     )
 
-    return SuggestedPointings, SatTimes, saa, matching_tables, TestTime
+    result = {
+        "SatTimes": SatTimes,
+        "saa": saa,
+        "first_values": first_values,
+        "first_values1": first_values1,
+        "TestTime": TestTime,
+        "matching_tables": matching_tables,
+        "Occultedpixels": Occultedpixels,
+    }
+
+    return SuggestedPointings, result
 
 
 def PGalinFoV_Space_NObs(
@@ -2354,13 +2354,6 @@ def PGalinFoV_Space_NObs(
         print("No coordinates matched within the tolerance.")
         first_values = Table(names=first_values1.colnames)
 
-    if obspar.doPlot and len(first_values) > 0:
-        PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
-        PlotSpaceOccTime(dirName, AvailablePixPerTime, ProbaTime, TestTime)
-        PlotSpaceOccTimeRadec(
-            dirName, AvailablePixPerTime, ProbaTime, TestTime, reducedNside
-        )
-
     # FOR TARGETED HERE TRY TO FIND OUT WHICH GALAXIES ARE IN THE VISIBLE PART. Then choose the highest 10 betwee nthem
 
     ObsName = [obspar.obs_name for j in range(len(first_values))]
@@ -2372,4 +2365,15 @@ def PGalinFoV_Space_NObs(
         [ObsName, RAarray, DECarray, P_Galarray],
         names=["ObsName", "RA(deg)", "DEC(deg)", "PGal"],
     )
-    return SuggestedPointings, SatTimes, saa, matching_tables, TestTime
+
+    result = {
+        "SatTimes": SatTimes,
+        "saa": saa,
+        "first_values": first_values,
+        "first_values1": first_values1,
+        "TestTime": TestTime,
+        "matching_tables": matching_tables,
+        "Occultedpixels": Occultedpixels,
+    }
+
+    return SuggestedPointings, result

@@ -53,6 +53,7 @@ __all__ = [
     "PlotPointingsTogether",
     "PointingPlottingGWCTA",
     "PlotPointings_Pretty",
+    "PlotAccRegion",
 ]
 
 
@@ -751,4 +752,50 @@ def plot_pixel_availability_healpix(dirName, pixels_by_time, times, nside):
 
     ax.zaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d\n%H:%M"))
     plt.savefig("%s/Occ_Pointing_Times_Vis.png" % (path))
+    plt.close()
+
+
+
+def PlotAccRegion(skymap, dirName, obspar, Occultedpixels, first_values):
+    reducedNside = obspar.reducedNside
+    prob = skymap.getMap("prob", reducedNside)
+
+    path = dirName + "/Occ_Space_Obs"
+    if not os.path.exists(path):
+        os.mkdir(path, 493)
+
+    # mpl.rcParams.update({'font.size':14})
+    # hp.mollview(prob)
+    hp.gnomview(
+        prob,
+        rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]),
+        xsize=500,
+        ysize=500,
+    )
+    hp.graticule()
+    try:
+        tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
+        ra2 = np.rad2deg(pp)
+        dec2 = np.rad2deg(0.5 * np.pi - tt)
+        skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+        hp.visufunc.projplot(
+            skycoord.ra.deg,
+            skycoord.dec.deg,
+            "g.",
+            lonlat=True,
+            coord="C",
+            linewidth=0.1,
+        )
+    except Exception:
+        print("No pcculted pix")
+
+    hp.visufunc.projplot(
+        first_values["PIXRA"],
+        first_values["PIXDEC"],
+        "b.",
+        lonlat=True,
+        coord="C",
+        linewidth=0.1,
+    )
+    plt.savefig("%s/Occ_Pointing.png" % (path), bbox_inches="tight")
     plt.close()

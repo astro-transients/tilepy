@@ -64,6 +64,10 @@ __all__ = [
     "EvolutionPlot",
     "RankingTimes",
     "RankingTimes_2D",
+    "PlotAccRegionTimePix",
+    "PlotAccRegionTimeRadec",
+    "Ranking_Space",
+    "Ranking_Space_AI"
 ]
 
 
@@ -901,3 +905,130 @@ def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
             os.path.join(output_dir_rank, "RankingObservations_SpaceClustering.png")
         )
         plt.close()
+
+
+
+
+def map_pixel_availability(pixels_by_time, probs_by_time, times):
+    """
+    Map each pixel to a list of available times and a single aggregated probability.
+
+    Args:
+        pixels_by_time: list of lists of pixels available at each time step
+        probs_by_time: list of lists of probabilities associated with each pixel at each time step
+        times: list of times corresponding to each pixel list
+
+    Returns:
+        dict: {pixel: {'times': [time1, time2, ...], 'prob': aggregated_probability}, ...}
+    """
+    pixel_data = {}
+
+    for time, pixel_list, prob_list in zip(times, pixels_by_time, probs_by_time):
+        for pixel, prob in zip(pixel_list, prob_list):
+            if pixel not in pixel_data:
+                pixel_data[pixel] = {"times": [], "probs": []}
+            pixel_data[pixel]["times"].append(time)
+            pixel_data[pixel]["probs"].append(prob)
+
+    # Aggregate probabilities (e.g., average)
+    for pixel in pixel_data:
+        probs = pixel_data[pixel]["probs"]
+        avg_prob = sum(probs) / len(probs)
+        pixel_data[pixel]["prob"] = avg_prob
+        del pixel_data[pixel]["probs"]  # Remove raw list to keep only aggregated value
+
+    return pixel_data
+
+
+def PlotAccRegionTimePix(dirName, pixels_by_time, ProbaTime, times):
+    path = dirName + "/Occ_Space_Obs"
+    if not os.path.exists(path):
+        os.mkdir(path, 493)
+
+    pixel_availability = map_pixel_availability(pixels_by_time, ProbaTime, times)
+
+    sorted_pixels = sorted(pixel_availability.items(), key=lambda x: x[1]["prob"])
+
+    plt.figure(figsize=(10, 6))
+
+    # Collect all times where any pixel is available
+    all_times = set()
+    for pixel, data in sorted_pixels:
+        all_times.update(data["times"])
+    all_times = sorted(all_times)
+
+    # Plot pixels
+    colors = plt.cm.tab20(np.linspace(0, 1, len(sorted_pixels)))
+    for y_index, (pixel, data) in enumerate(sorted_pixels):
+        times = data["times"]
+        color = colors[y_index]
+        y_values = [y_index] * len(times)
+        plt.scatter(times, y_values, color=color, s=20)
+
+    # Y-axis labels
+    plt.yticks(
+        range(len(sorted_pixels)),
+        [f"{pixel} (p={data['prob']:.2f})" for pixel, data in sorted_pixels],
+    )
+    plt.xlabel("Time")
+    plt.ylabel("Pixels sorted by ascending probability")
+    # plt.title("Pixel Availability with Occulted Regions")
+    plt.grid(True)
+    plt.tight_layout()
+
+    # Format x-axis to show only time (HH:MM)
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+    plt.gcf().autofmt_xdate()
+
+    plt.savefig(os.path.join(path, "Occ_Pointing_Times.png"), bbox_inches="tight")
+    plt.close()
+
+
+def PlotAccRegionTimeRadec(dirName, pixels_by_time, ProbaTime, times, nside):
+    path = os.path.join(dirName, "Occ_Space_Obs")
+    os.makedirs(path, mode=0o755, exist_ok=True)
+
+    # Map pixel availability with times and probabilities
+    pixel_availability = map_pixel_availability(pixels_by_time, ProbaTime, times)
+    sorted_pixels = sorted(pixel_availability.items(), key=lambda x: x[1]["prob"])
+
+    plt.figure(figsize=(10, 6))
+
+    # Collect all times where any pixel is available
+    all_times = set()
+    for _, data in sorted_pixels:
+        all_times.update(data["times"])
+    all_times = sorted(all_times)
+
+    yticks = []
+    yticklabels = []
+
+    colors = plt.cm.tab20(np.linspace(0, 1, len(sorted_pixels)))
+
+    for y_index, (pixel, data) in enumerate(sorted_pixels):
+        theta, phi = hp.pix2ang(nside, pixel, nest=False)
+        ra = np.degrees(phi)
+        dec = 90 - np.degrees(theta)
+
+        times = data["times"]
+        color = colors[y_index]
+        y_values = [y_index] * len(times)
+
+        plt.scatter(times, y_values, color=color, s=20)
+
+        yticks.append(y_index)
+        yticklabels.append(f"{ra:.1f}, {dec:.1f} (p={data['prob']:.2f})")
+
+    plt.yticks(yticks, yticklabels)
+    plt.xlabel("Time of Day")
+    plt.ylabel("RA, Dec of Pixels (sorted by ascending probability)")
+    # plt.title("Pixel Availability with Occulted Regions")
+    plt.grid(True)
+    plt.tight_layout()
+
+    # Format x-axis to only show time (HH:MM)
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+    plt.gcf().autofmt_xdate()
+
+    plt.savefig(os.path.join(path, "Occ_Pointing_Times_Radec.png"), bbox_inches="tight")
+    plt.close()
