@@ -220,7 +220,7 @@ class ObservationParameters(object):
                 f"DatasetDir: {self.datasetDir}",
                 f"Galaxy Catalog Name: {self.galcatName}",
                 f"Geomagnetic Coefficient Data Name: {self.igrfcoeffs}",
-                f"Geomagnetic Threshold for SAA: {self.SaaThershold}",
+                f"Geomagnetic Threshold for SAA: {self.SAAThreshold}",
                 f"Output Directory: {self.outDir}",
                 f"Pointings File: {self.pointingsFile}",
                 "============================================================",
@@ -291,7 +291,7 @@ class ObservationParameters(object):
         self.maxMoonSourceSeparation = int(
             parser.get(section, "maxmoonsourceseparation", fallback=0)
         )  # Max separation in degrees
-        self.SaaThershold = int(parser.get(section, "SaaThershold", fallback=0))
+        self.SAAThreshold = int(parser.get(section, "SAAThreshold", fallback=0))
 
         section = "operations"
         self.maxZenith = int(parser.get(section, "maxzenith", fallback=0))

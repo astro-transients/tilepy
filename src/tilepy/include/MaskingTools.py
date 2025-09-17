@@ -110,7 +110,7 @@ def ZenithAngleCut(prob, time, obspar):
     return ObsBool, yprob
 
 
-def VisibleAtTime(test_time, galaxies, obspar):
+def VisibleAtTime(time, galaxies, obspar):
     """
     Determine if prompt or afterglow follow-up is possible by checking if there are galaxies
     with non-negligible probability of hosting the NSM in the FoV.
@@ -131,15 +131,12 @@ def VisibleAtTime(test_time, galaxies, obspar):
 
     """
 
-    # print()
-    # print("Check visibility at time {0}".format(test_time))
-
     # observatory time and location to look up visibility of objects
 
     # observatory = co.EarthLocation(lat=-23.271333 * u.deg,lon=16.5 * u.deg, height=1800 * u.m)
     maxz = obspar.maxZenith
     observatory = obspar.location
-    frame = co.AltAz(obstime=test_time, location=observatory)
+    frame = co.AltAz(obstime=time, location=observatory)
     # print('galaxies',galaxies)
     # print('galaxies',len(galaxies['RAJ2000']))
     radecs = co.SkyCoord(
@@ -217,14 +214,14 @@ def FulfillsRequirement(theseGals, obspar, UsePix):
     return mask, thisminz
 
 
-def FulfillsRequirementGreyObservations(Ktime, theseGals, obspar):
+def FulfillsRequirementGreyObservations(time, theseGals, obspar):
     observatory = obspar.location
     minMoonSourceSeparation = obspar.minMoonSourceSeparation
     targetCoord = co.SkyCoord(
         theseGals["RAJ2000"], theseGals["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
     )
-    frame = co.AltAz(obstime=Ktime, location=observatory)
-    moonaltazs = get_body("moon", Time(Ktime, scale="utc")).transform_to(frame)
+    frame = co.AltAz(obstime=time, location=observatory)
+    moonaltazs = get_body("moon", Time(time, scale="utc")).transform_to(frame)
 
     altaz_map = targetCoord.transform_to(frame)
     separations = altaz_map.separation(moonaltazs)
@@ -235,21 +232,21 @@ def FulfillsRequirementGreyObservations(Ktime, theseGals, obspar):
 
 
 def GetEarthOccultedPix(
-    nside, time, earth_radius, earth_sep, satellite_position, satellite_location
+    nside, time, earth_radius, earth_sep, satellitePosition, satelliteLocation
 ):
     # for equatorial frame
 
-    distance_to_satellite = np.linalg.norm(satellite_position)
+    distance_to_satellite = np.linalg.norm(satellitePosition)
     earth_altitude = np.arcsin(
-        -satellite_position[2] / distance_to_satellite
+        -satellitePosition[2] / distance_to_satellite
     )  # Altitude in radians
     earth_azimuth = np.arctan2(
-        -satellite_position[1], -satellite_position[0]
+        -satellitePosition[1], -satellitePosition[0]
     )  # Azimuth in radians
 
     angle_of_occlusion = np.arcsin(earth_radius / distance_to_satellite)
 
-    altaz_frame = AltAz(obstime=time, location=satellite_location)
+    altaz_frame = AltAz(obstime=time, location=satelliteLocation)
     earthCoord = SkyCoord(
         earth_azimuth * u.rad, earth_altitude * u.rad, frame=altaz_frame
     )
@@ -292,16 +289,18 @@ def OccultationCut(
     prob,
     nside,
     time,
-    minProbcut,
-    satellite_position,
-    observatory,
-    sun_sep,
-    moon_sep,
-    earth_sep,
+    obspar,
+    satellitePosition,
+    satelliteLocation,
 ):
     """
     Mask in the pixels that are occulted by Earth, Sun and Moon
     """
+    minProbcut = obspar.minProbcut
+    sun_sep = (obspar.sunDown,)
+    moon_sep = (obspar.moonDown,)
+    earth_sep = obspar.EarthDown
+
     pixlist = []
     pprob = prob
 
@@ -310,7 +309,7 @@ def OccultationCut(
     mpixels = []
 
     mEarth, posEarth = GetEarthOccultedPix(
-        nside, time, 6371, earth_sep, satellite_position, observatory
+        nside, time, 6371, earth_sep, satellitePosition, satelliteLocation
     )
     mpixels.extend(mEarth)
 
@@ -349,22 +348,16 @@ def SAA_Times(
     doPlot,
     dirName,
     datasetDir,
-    saathershold,
+    SAAThreshold,
 ):
     SatTimes = []
     i = 0
     saa = []
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
-        # satellite_position, satellite_location = GetSatellitePositions(
-        #    SatelliteName, SatelliteTime
-        # )
-        # if Tools.is_in_saa(satellite_location.lat.deg, satellite_location.lon.deg):
-        #    saa.append(True)
-        # else:
-        #    saa.append(False)
+
         saa.append(
-            Tools.is_in_saa_opt(SatelliteName, SatelliteTime, saathershold, datasetDir)
+            Tools.is_in_saa_opt(SatelliteName, SatelliteTime, SAAThreshold, datasetDir)
         )
         SatTimes.append(current_time)
 

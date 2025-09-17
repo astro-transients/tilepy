@@ -451,10 +451,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                     mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
                     if obspar.useGreytime:
                         maskgrey = FulfillsRequirementGreyObservations(
-                            ObservationTime,
-                            visiGals,
-                            obspar.location,
-                            obspar.minMoonSourceSeparation,
+                            ObservationTime, visiGals, obspar
                         )
                         finalGals = visiGals[mask & maskgrey]
                     if not obspar.useGreytime:
@@ -485,10 +482,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
 
                                 if obspar.useGreytime:
                                     maskgrey = FulfillsRequirementGreyObservations(
-                                        ObservationTime,
-                                        visiGals2,
-                                        obspar.location,
-                                        obspar.minMoonSourceSeparation,
+                                        ObservationTime, visiGals2, obspar
                                     )
                                     finalGals2 = visiGals2[mask & maskgrey]
                                 if not obspar.useGreytime:
@@ -648,10 +642,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                     mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
                     if obspar.useGreytime:
                         maskgrey = FulfillsRequirementGreyObservations(
-                            ObservationTime,
-                            visiGals,
-                            obspar.location,
-                            obspar.minMoonSourceSeparation,
+                            ObservationTime, visiGals, obspar
                         )
                         finalGals = visiGals[mask & maskgrey]
                     if not obspar.useGreytime:
@@ -678,10 +669,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
 
                                 if obspar.useGreytime:
                                     maskgrey = FulfillsRequirementGreyObservations(
-                                        ObservationTime,
-                                        visiGals2,
-                                        obspar.location,
-                                        obspar.minMoonSourceSeparation,
+                                        ObservationTime, visiGals2, obspar
                                     )
                                     finalGals2 = visiGals2[mask & maskgrey]
                                 if not obspar.useGreytime:
@@ -1076,19 +1064,16 @@ def PGWinFoV_NObs(
                 pixlistHROcc = None
                 if obspar.base == "space":
                     SatelliteTime = GetSatelliteTime(SatelliteName, ObservationTime)
-                    satellite_position, obspar.location = GetSatellitePositions(
+                    satellitePosition, satelliteLocation = GetSatellitePositions(
                         SatelliteName, SatelliteTime
                     )
                     ObsBool, yprob, pixlistHROcc = OccultationCut(
                         prob,
                         obspar.reducedNside,
                         ObservationTime,
-                        obspar.minProbcut,
-                        satellite_position,
-                        obspar.location,
-                        obspar.sunDown,
-                        obspar.moonDown,
-                        obspar.EarthDown,
+                        obspar,
+                        satellitePosition,
+                        satelliteLocation,
                     )
                 else:
                     ObsBool, yprob = ZenithAngleCut(prob, ObservationTime, obspar)
@@ -1339,7 +1324,7 @@ def PGalinFoV_NObs(
     i = 0
     couter_per_obs = np.zeros(len(NewActiveObs))
     while (i < 5000) & any(SameNight):
-        for j in range(len(NewActiveObs)):
+        for j, obs in enumerate(NewActiveObs):
             obspar = NewActiveObs[j]
             ObservationTime = NewActiveObsTime[j]
             if ITERATION_OBS == len(obsparameters):
@@ -1370,10 +1355,7 @@ def PGalinFoV_NObs(
                         mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
                         if obspar.useGreytime:
                             maskgrey = FulfillsRequirementGreyObservations(
-                                ObservationTime,
-                                visiGals,
-                                obspar.location,
-                                obspar.minMoonSourceSeparation,
+                                ObservationTime, visiGals, obspar
                             )
                             finalGals = visiGals[mask & maskgrey]
                         if not obspar.useGreytime:
@@ -1406,10 +1388,7 @@ def PGalinFoV_NObs(
 
                                     if obspar.useGreytime:
                                         maskgrey = FulfillsRequirementGreyObservations(
-                                            ObservationTime,
-                                            visiGals2,
-                                            obspar.location,
-                                            obspar.minMoonSourceSeparation,
+                                            ObservationTime, visiGals2, obspar
                                         )
                                         finalGals2 = visiGals2[mask & maskgrey]
                                     if not obspar.useGreytime:
@@ -2072,7 +2051,7 @@ def PGWinFoV_Space_NObs(
         doPlot,
         dirName,
         obspar.datasetDir,
-        obspar.SaaThershold,
+        obspar.SAAThreshold,
     )
 
     i = 0
@@ -2086,19 +2065,16 @@ def PGWinFoV_Space_NObs(
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         # Need to get a list of highest pixels
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
-        satellite_position, satellite_location = GetSatellitePositions(
+        satellitePosition, satelliteLocation = GetSatellitePositions(
             SatelliteName, SatelliteTime
         )
         ObsBool, yprob, pixlistRROcc = OccultationCut(
             prob,
             reducedNside,
             current_time,
-            obspar.minProbcut,
-            satellite_position,
-            satellite_location,
-            obspar.sunDown,
-            obspar.moonDown,
-            obspar.EarthDown,
+            obspar,
+            satellitePosition,
+            satelliteLocation,
         )
 
         # Let's get the list of pixels available at each iteration
@@ -2300,7 +2276,7 @@ def PGalinFoV_Space_NObs(
         doPlot,
         dirName,
         obspar.datasetDir,
-        obspar.SaaThershold,
+        obspar.SAAThreshold,
     )
 
     i = 0
@@ -2314,19 +2290,16 @@ def PGalinFoV_Space_NObs(
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         # Need to get a list of highest pixels
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
-        satellite_position, satellite_location = GetSatellitePositions(
+        satellitePosition, satelliteLocation = GetSatellitePositions(
             SatelliteName, SatelliteTime
         )
         ObsBool, yprob, pixlistRROcc = OccultationCut(
             prob,
             reducedNside,
             current_time,
-            obspar.minProbcut,
-            satellite_position,
-            satellite_location,
-            obspar.sunDown,
-            obspar.moonDown,
-            obspar.EarthDown,
+            obspar,
+            satellitePosition,
+            satelliteLocation,
         )
 
         # Let's get the list of pixels available at each iteration
