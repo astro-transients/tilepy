@@ -179,11 +179,9 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
     timeInitial = auxtime - datetime.timedelta(minutes=obspar.duration)
     for i, s in enumerate(source):
         NonValidwindow, Stepzenith = GetVisibility(
-            Pointing["Time"], source[i], obspar.maxZenith, obspar.location
+            Pointing["Time"], s, obspar.maxZenith, obspar.location
         )
-        window, zenith = GetObservationPeriod(
-            timeInitial, source[i], obspar, i, dirName, False
-        )
+        window, zenith = GetObservationPeriod(timeInitial, s, obspar, i, dirName, False)
         window_arr.append(window)
         zenith_arr.append(zenith)
         szenith_arr.append(Stepzenith)
@@ -192,7 +190,7 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
         if not Tools.IsGreyness(ObservationTime, obspar):
             window, zenith = GetObservationPeriod(
                 ObservationTime + datetime.timedelta(hours=12),
-                source[i],
+                s,
                 obspar,
                 i,
                 dirName,
@@ -200,7 +198,7 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
             )
         else:
             window, zenith = GetObservationPeriod(
-                ObservationTime, source[i], obspar, i, dirName, True
+                ObservationTime, s, obspar, i, dirName, True
             )
 
     Pointing["Observation window"] = window_arr
