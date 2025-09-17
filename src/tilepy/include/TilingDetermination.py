@@ -447,10 +447,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                     mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
                     if obspar.useGreytime:
                         maskgrey = FulfillsRequirementGreyObservations(
-                            ObservationTime,
-                            visiGals,
-                            obspar.location,
-                            obspar.minMoonSourceSeparation,
+                            ObservationTime, visiGals, obspar
                         )
                         finalGals = visiGals[mask & maskgrey]
                     if not obspar.useGreytime:
@@ -481,10 +478,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
 
                                 if obspar.useGreytime:
                                     maskgrey = FulfillsRequirementGreyObservations(
-                                        ObservationTime,
-                                        visiGals2,
-                                        obspar.location,
-                                        obspar.minMoonSourceSeparation,
+                                        ObservationTime, visiGals2, obspar
                                     )
                                     finalGals2 = visiGals2[mask & maskgrey]
                                 if not obspar.useGreytime:
@@ -644,10 +638,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                     mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
                     if obspar.useGreytime:
                         maskgrey = FulfillsRequirementGreyObservations(
-                            ObservationTime,
-                            visiGals,
-                            obspar.location,
-                            obspar.minMoonSourceSeparation,
+                            ObservationTime, visiGals, obspar
                         )
                         finalGals = visiGals[mask & maskgrey]
                     if not obspar.useGreytime:
@@ -674,10 +665,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
 
                                 if obspar.useGreytime:
                                     maskgrey = FulfillsRequirementGreyObservations(
-                                        ObservationTime,
-                                        visiGals2,
-                                        obspar.location,
-                                        obspar.minMoonSourceSeparation,
+                                        ObservationTime, visiGals2, obspar
                                     )
                                     finalGals2 = visiGals2[mask & maskgrey]
                                 if not obspar.useGreytime:
@@ -1332,7 +1320,7 @@ def PGalinFoV_NObs(
     i = 0
     couter_per_obs = np.zeros(len(NewActiveObs))
     while (i < 5000) & any(SameNight):
-        for j in range(len(NewActiveObs)):
+        for j, obs in enumerate(NewActiveObs):
             obspar = NewActiveObs[j]
             ObservationTime = NewActiveObsTime[j]
             if ITERATION_OBS == len(obsparameters):
@@ -1363,10 +1351,7 @@ def PGalinFoV_NObs(
                         mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
                         if obspar.useGreytime:
                             maskgrey = FulfillsRequirementGreyObservations(
-                                ObservationTime,
-                                visiGals,
-                                obspar.location,
-                                obspar.minMoonSourceSeparation,
+                                ObservationTime, visiGals, obspar
                             )
                             finalGals = visiGals[mask & maskgrey]
                         if not obspar.useGreytime:
@@ -1399,10 +1384,7 @@ def PGalinFoV_NObs(
 
                                     if obspar.useGreytime:
                                         maskgrey = FulfillsRequirementGreyObservations(
-                                            ObservationTime,
-                                            visiGals2,
-                                            obspar.location,
-                                            obspar.minMoonSourceSeparation,
+                                            ObservationTime, visiGals2, obspar
                                         )
                                         finalGals2 = visiGals2[mask & maskgrey]
                                     if not obspar.useGreytime:
