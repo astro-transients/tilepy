@@ -2083,7 +2083,7 @@ def PGWinFoV_Space_NObs(
         doPlot,
         dirName,
         obspar.datasetDir,
-        obspar.SaaThershold,
+        obspar.SAAThreshold,
     )
 
     i = 0
@@ -2324,7 +2324,7 @@ def PGalinFoV_Space_NObs(
         doPlot,
         dirName,
         obspar.datasetDir,
-        obspar.SaaThershold,
+        obspar.SAAThreshold,
     )
 
     i = 0

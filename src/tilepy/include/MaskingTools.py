@@ -110,7 +110,7 @@ def ZenithAngleCut(prob, time, obspar):
     return ObsBool, yprob
 
 
-def VisibleAtTime(test_time, galaxies, obspar):
+def VisibleAtTime(time, galaxies, obspar):
     """
     Determine if prompt or afterglow follow-up is possible by checking if there are galaxies
     with non-negligible probability of hosting the NSM in the FoV.
@@ -131,15 +131,12 @@ def VisibleAtTime(test_time, galaxies, obspar):
 
     """
 
-    # print()
-    # print("Check visibility at time {0}".format(test_time))
-
     # observatory time and location to look up visibility of objects
 
     # observatory = co.EarthLocation(lat=-23.271333 * u.deg,lon=16.5 * u.deg, height=1800 * u.m)
     maxz = obspar.maxZenith
     observatory = obspar.location
-    frame = co.AltAz(obstime=test_time, location=observatory)
+    frame = co.AltAz(obstime=time, location=observatory)
     # print('galaxies',galaxies)
     # print('galaxies',len(galaxies['RAJ2000']))
     radecs = co.SkyCoord(
