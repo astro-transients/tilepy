@@ -356,6 +356,20 @@ def GetUniversalSchedule(obspar):
                     result["Occultedpixels"],
                     result["first_values"],
                 )
+            if obspar[0].doRank:
+                PlotAccRegionTimePix(
+                    dirName,
+                    result["matching_tables"],
+                    result["ProbaTime"],
+                    result["TestTime"]
+                )
+                PlotAccRegionTimeRadec(
+                    dirName,
+                    result["matching_tables"],
+                    result["ProbaTime"],
+                    result["TestTime"],
+                    obspar.reducedNside
+                )
                 # PlotAccRegionTimePix(dirName, AvailablePixPerTime, ProbaTime, TestTime)
                 # PlotAccRegionTimeRadec(
                 #    dirName, AvailablePixPerTime, ProbaTime, result["TestTime"], reducedNside
@@ -393,6 +407,27 @@ def GetUniversalSchedule(obspar):
                 obspar,
                 dirName,
             )
+            if obspar[0].doPlot and len(result["first_values1"]) > 0:
+                PlotAccRegion(
+                    skymap,
+                    dirName,
+                    obspar[0],
+                    result["Occultedpixels"],
+                    result["first_values"],
+                )
+            if obspar[0].doRank:
+                PlotAccRegionTimePix(
+                    dirName,
+                    result["matching_tables"],
+                    result["ProbaTime"],
+                    result["TestTime"]
+                )
+                PlotAccRegionTimeRadec(
+                    dirName,
+                    result["matching_tables"],
+                    result["ProbaTime"],
+                    result["TestTime"],
+                )
         else:
             print(
                 "==========================================================================================="
