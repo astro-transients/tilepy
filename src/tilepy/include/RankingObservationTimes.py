@@ -37,6 +37,7 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 from six.moves import configparser
 from sklearn.cluster import AgglomerativeClustering
+import matplotlib.dates as mdates
 
 from .PointingTools import FilterGalaxies, Tools
 
@@ -702,10 +703,10 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
         prob = skymap.getMap("prob", obspar.HRnside)
 
         df = pd.read_csv(output_file, sep="\t")
-        ra = df["RA(deg)"].values
+        ra = df["RA[deg]"].values
         skycoords = SkyCoord(
-            ra=df["RA(deg)"].values * u.deg,
-            dec=df["DEC(deg)"].values * u.deg,
+            ra=df["RA[deg]"].values * u.deg,
+            dec=df["DEC[deg]"].values * u.deg,
             frame="icrs",
         )
         ranks = np.arange(len(ra))
@@ -753,8 +754,8 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
 
         # Coordinates
         pre_coords = SkyCoord(
-            ra=pre_df["RA(deg)"].values * u.deg,
-            dec=pre_df["DEC(deg)"].values * u.deg,
+            ra=pre_df["RA[deg]"].values * u.deg,
+            dec=pre_df["DEC[deg]"].values * u.deg,
             frame="icrs",
         )
 
@@ -815,7 +816,7 @@ def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
     df = pd.DataFrame(data)
 
     # Extract RA and DEC for clustering
-    coordinates = df[["RA(deg)", "DEC(deg)"]].to_numpy()
+    coordinates = df[["RA[deg]", "DEC[deg]"]].to_numpy()
 
     # Clustering with Agglomerative Clustering
     clustering = AgglomerativeClustering(
@@ -852,8 +853,8 @@ def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
 
         df = pd.read_csv(output_file, sep="\t")
         skycoords = SkyCoord(
-            ra=df["RA(deg)"].values * u.deg,
-            dec=df["DEC(deg)"].values * u.deg,
+            ra=df["RA[deg]"].values * u.deg,
+            dec=df["DEC[deg]"].values * u.deg,
             frame="icrs",
         )
         ranks = df["Rank"].values
@@ -983,7 +984,7 @@ def PlotAccRegionTimePix(dirName, pixels_by_time, ProbaTime, times):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
     plt.gcf().autofmt_xdate()
 
-    plt.savefig(os.path.join(path, "Occ_Pointing_Times.png"), bbox_inches="tight")
+    plt.savefig(os.path.join(path, "Acc_Pointing_Times_Pix.png"), bbox_inches="tight")
     plt.close()
 
 
@@ -1033,5 +1034,5 @@ def PlotAccRegionTimeRadec(dirName, pixels_by_time, ProbaTime, times, nside):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
     plt.gcf().autofmt_xdate()
 
-    plt.savefig(os.path.join(path, "Occ_Pointing_Times_Radec.png"), bbox_inches="tight")
+    plt.savefig(os.path.join(path, "Acc_Pointing_Times_Radec.png"), bbox_inches="tight")
     plt.close()

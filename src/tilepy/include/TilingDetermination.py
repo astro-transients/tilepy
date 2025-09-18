@@ -2112,16 +2112,17 @@ def PGWinFoV_Space_NObs(
 
     SuggestedPointings = Table(
         [ObsName, RAarray, DECarray, P_GWarray],
-        names=["ObsName", "RA(deg)", "DEC(deg)", "PGW"],
+        names=["ObsName", "RA[deg]", "DEC[deg]", "PGW"],
     )
 
     result = {
         "SatTimes": SatTimes,
         "saa": saa,
-        "first_values": first_values,
         "first_values1": first_values1,
+        "first_values": first_values,
         "TestTime": TestTime,
-        "matching_tables": matching_tables,
+        "AvailablePixPerTime": AvailablePixPerTime,
+        "ProbaTime": ProbaTime,
         "Occultedpixels": Occultedpixels,
     }
 
@@ -2369,10 +2370,11 @@ def PGalinFoV_Space_NObs(
     result = {
         "SatTimes": SatTimes,
         "saa": saa,
-        "first_values": first_values,
         "first_values1": first_values1,
+        "first_values": first_values,
         "TestTime": TestTime,
-        "matching_tables": matching_tables,
+        "AvailablePixPerTime": AvailablePixPerTime,
+        "ProbaTime": ProbaTime,
         "Occultedpixels": Occultedpixels,
     }
 
