@@ -325,14 +325,14 @@ def GetUniversalSchedule(obspar):
                     dirName,
                     result["AvailablePixPerTime"],
                     result["ProbaTime"],
-                    result["TestTime"]
+                    result["TestTime"],
                 )
                 PlotAccRegionTimeRadec(
                     dirName,
                     result["AvailablePixPerTime"],
                     result["ProbaTime"],
                     result["TestTime"],
-                    obspar[0].reducedNside
+                    obspar[0].reducedNside,
                 )
 
         else:
@@ -375,14 +375,14 @@ def GetUniversalSchedule(obspar):
                     dirName,
                     result["AvailablePixPerTime"],
                     result["ProbaTime"],
-                    result["TestTime"]
+                    result["TestTime"],
                 )
                 PlotAccRegionTimeRadec(
                     dirName,
                     result["AvailablePixPerTime"],
                     result["ProbaTime"],
                     result["TestTime"],
-                    obspar[0].reducedNside
+                    obspar[0].reducedNside,
                 )
                 # PlotAccRegionTimePix(dirName, AvailablePixPerTime, ProbaTime, TestTime)
                 # PlotAccRegionTimeRadec(
