@@ -2118,10 +2118,11 @@ def PGWinFoV_Space_NObs(
     result = {
         "SatTimes": SatTimes,
         "saa": saa,
-        "first_values": first_values,
         "first_values1": first_values1,
+        "first_values": first_values,
         "TestTime": TestTime,
-        "matching_tables": matching_tables,
+        "AvailablePixPerTime": AvailablePixPerTime,
+        "ProbaTime": ProbaTime,
         "Occultedpixels": Occultedpixels,
     }
 
@@ -2369,10 +2370,10 @@ def PGalinFoV_Space_NObs(
     result = {
         "SatTimes": SatTimes,
         "saa": saa,
-        "first_values": first_values,
         "first_values1": first_values1,
+        "first_values": first_values,
         "TestTime": TestTime,
-        "matching_tables": matching_tables,
+        "AvailablePixPerTime": AvailablePixPerTime,
         "Occultedpixels": Occultedpixels,
     }
 
