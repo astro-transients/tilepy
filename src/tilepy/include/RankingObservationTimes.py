@@ -703,10 +703,10 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
         prob = skymap.getMap("prob", obspar.HRnside)
 
         df = pd.read_csv(output_file, sep="\t")
-        ra = df["RA(deg)"].values
+        ra = df["RA[deg]"].values
         skycoords = SkyCoord(
-            ra=df["RA(deg)"].values * u.deg,
-            dec=df["DEC(deg)"].values * u.deg,
+            ra=df["RA[deg]"].values * u.deg,
+            dec=df["DEC[deg]"].values * u.deg,
             frame="icrs",
         )
         ranks = np.arange(len(ra))
@@ -754,8 +754,8 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
 
         # Coordinates
         pre_coords = SkyCoord(
-            ra=pre_df["RA(deg)"].values * u.deg,
-            dec=pre_df["DEC(deg)"].values * u.deg,
+            ra=pre_df["RA[deg]"].values * u.deg,
+            dec=pre_df["DEC[deg]"].values * u.deg,
             frame="icrs",
         )
 
@@ -816,7 +816,7 @@ def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
     df = pd.DataFrame(data)
 
     # Extract RA and DEC for clustering
-    coordinates = df[["RA(deg)", "DEC(deg)"]].to_numpy()
+    coordinates = df[["RA[deg]", "DEC[deg]"]].to_numpy()
 
     # Clustering with Agglomerative Clustering
     clustering = AgglomerativeClustering(
@@ -853,8 +853,8 @@ def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
 
         df = pd.read_csv(output_file, sep="\t")
         skycoords = SkyCoord(
-            ra=df["RA(deg)"].values * u.deg,
-            dec=df["DEC(deg)"].values * u.deg,
+            ra=df["RA[deg]"].values * u.deg,
+            dec=df["DEC[deg]"].values * u.deg,
             frame="icrs",
         )
         ranks = df["Rank"].values
