@@ -352,23 +352,23 @@ def GetUniversalSchedule(obspar):
                 PlotAccRegion(
                     skymap,
                     dirName,
-                    obspar[0],
+                    obspar[0].reducedNside,
                     result["Occultedpixels"],
                     result["first_values"],
                 )
             if obspar[0].doRank:
                 PlotAccRegionTimePix(
                     dirName,
-                    result["matching_tables"],
+                    result["AvailablePixPerTime"],
                     result["ProbaTime"],
                     result["TestTime"]
                 )
                 PlotAccRegionTimeRadec(
                     dirName,
-                    result["matching_tables"],
+                    result["AvailablePixPerTime"],
                     result["ProbaTime"],
                     result["TestTime"],
-                    obspar.reducedNside
+                    obspar[0].reducedNside
                 )
                 # PlotAccRegionTimePix(dirName, AvailablePixPerTime, ProbaTime, TestTime)
                 # PlotAccRegionTimeRadec(

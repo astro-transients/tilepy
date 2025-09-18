@@ -37,6 +37,7 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 from six.moves import configparser
 from sklearn.cluster import AgglomerativeClustering
+import matplotlib.dates as mdates
 
 from .PointingTools import FilterGalaxies, Tools
 
