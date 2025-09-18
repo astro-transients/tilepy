@@ -984,7 +984,7 @@ def PlotAccRegionTimePix(dirName, pixels_by_time, ProbaTime, times):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
     plt.gcf().autofmt_xdate()
 
-    plt.savefig(os.path.join(path, "Occ_Pointing_Times.png"), bbox_inches="tight")
+    plt.savefig(os.path.join(path, "Acc_Pointing_Times_Pix.png"), bbox_inches="tight")
     plt.close()
 
 
@@ -1034,5 +1034,5 @@ def PlotAccRegionTimeRadec(dirName, pixels_by_time, ProbaTime, times, nside):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
     plt.gcf().autofmt_xdate()
 
-    plt.savefig(os.path.join(path, "Occ_Pointing_Times_Radec.png"), bbox_inches="tight")
+    plt.savefig(os.path.join(path, "Acc_Pointing_Times_Radec.png"), bbox_inches="tight")
     plt.close()

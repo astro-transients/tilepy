@@ -2112,7 +2112,7 @@ def PGWinFoV_Space_NObs(
 
     SuggestedPointings = Table(
         [ObsName, RAarray, DECarray, P_GWarray],
-        names=["ObsName", "RA(deg)", "DEC(deg)", "PGW"],
+        names=["ObsName", "RA[deg]", "DEC[deg]", "PGW"],
     )
 
     result = {
@@ -2374,6 +2374,7 @@ def PGalinFoV_Space_NObs(
         "first_values": first_values,
         "TestTime": TestTime,
         "AvailablePixPerTime": AvailablePixPerTime,
+        "ProbaTime": ProbaTime,
         "Occultedpixels": Occultedpixels,
     }
 
