@@ -9,7 +9,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12190543.svg)](https://doi.org/10.5281/zenodo.12190543)
 [![Latest release](http://img.shields.io/pypi/v/tilepy.svg?text=version)](https://pypi.org/project/tilepy/)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/astro-transients/tilepy/blob/master/LICENSE.rst)
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPLv3-blue.svg)](https://github.com/astro-transients/tilepy/blob/master/LICENSE.rst)
 [![CLA assistant](https://cla-assistant.io/readme/badge/astro-transients/tilepy)](https://cla-assistant.io/astro-transients/tilepy)
 [![ApJS Published](https://img.shields.io/badge/ApJS-Published-Green.svg)](https://doi.org/10.3847/1538-4365/ad5bde)
 [![Documentation Status](https://readthedocs.org/projects/tilepy/badge/?version=latest)](https://tilepy.readthedocs.io/en/latest)
