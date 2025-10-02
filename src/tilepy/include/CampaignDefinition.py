@@ -101,6 +101,7 @@ class ObservationParameters(object):
         moonPhase=None,
         minMoonSourceSeparation=None,
         maxMoonSourceSeparation=None,
+        SAAThreshold = 0,
         maxZenith=None,
         FOV=None,
         maxRuns=None,
@@ -157,6 +158,7 @@ class ObservationParameters(object):
         self.moonPhase = moonPhase
         self.minMoonSourceSeparation = minMoonSourceSeparation
         self.maxMoonSourceSeparation = maxMoonSourceSeparation
+        self.SAAThreshold = SAAThreshold
         self.igrfcoeffs = igrfcoeffs
 
         # Operations
@@ -231,6 +233,7 @@ class ObservationParameters(object):
                 f"Visibility: {self.sunDown}, {self.moonDown}, {self.moonGrey}, {self.moonPhase}, {self.EarthDown}",
                 f"Min Moon Source Separation: {self.minMoonSourceSeparation}",
                 f"Max Moon Source Separation: {self.maxMoonSourceSeparation}",
+                f"Geomagnetic Threshold for SAA: {self.SAAThreshold}",
                 f"Max Zenith: {self.maxZenith}, Zenith Weighting: {self.zenithWeighting}",
                 f"FoV number of sides: {self.numberSides}, "
                 f"FoV rotation: {self.FoVRotation},"
@@ -244,7 +247,6 @@ class ObservationParameters(object):
                 f"DatasetDir: {self.datasetDir}",
                 f"Galaxy Catalog Name: {self.galcatName}",
                 f"Geomagnetic Coefficient Data Name: {self.igrfcoeffs}",
-                f"Geomagnetic Threshold for SAA: {self.SAAThreshold}",
                 f"Output Directory: {self.outDir}",
                 f"Pointings File: {self.pointingsFile}",
                 "============================================================",
