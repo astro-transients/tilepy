@@ -11,6 +11,8 @@ repos:
   hooks:
   - id: black
     stages: [pre-commit]
+  - id: black-jupyter
+    stages: [pre-commit]
 
 - repo: https://github.com/pycqa/isort
   rev: 6.0.0

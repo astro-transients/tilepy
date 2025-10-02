@@ -101,7 +101,7 @@ class ObservationParameters(object):
         moonPhase=None,
         minMoonSourceSeparation=None,
         maxMoonSourceSeparation=None,
-        SAAThreshold = 0,
+        SAAThreshold=0,
         maxZenith=None,
         FOV=None,
         maxRuns=None,
