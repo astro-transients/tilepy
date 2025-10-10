@@ -18,12 +18,10 @@ __all__ = ["Tiling_Observations"]
 
 
 def Tiling_Observations(obspar):
-
     GetSchedule(obspar)
 
 
 def main():
-
     start = time.time()
 
     time_now = Time.now()

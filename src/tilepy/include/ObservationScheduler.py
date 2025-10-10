@@ -27,14 +27,14 @@ from astropy.io import ascii
 from astropy.table import Table
 
 from .MapManagement import SkyMap, create_map_reader
-from .PointingPlotting import PointingPlotting, PlotAccRegion
+from .PointingPlotting import PlotAccRegion, PointingPlotting
 from .RankingObservationTimes import (
+    PlotAccRegionTimePix,
+    PlotAccRegionTimeRadec,
     Ranking_Space,
     Ranking_Space_AI,
     RankingTimes,
     RankingTimes_2D,
-    PlotAccRegionTimePix,
-    PlotAccRegionTimeRadec,
 )
 from .TilingDetermination import (
     GetBestTiles2D,
@@ -167,7 +167,6 @@ def GetSchedule(obspar):
             print("No observations are scheduled")
 
     else:
-
         print(
             "==========================================================================================="
         )

@@ -176,7 +176,6 @@ class MapReader(ABC):
                 break
 
             except HTTPError:
-
                 if i == (download_max_nb_try - 1):
                     logger.error("Issue to download map from url")
 
@@ -186,7 +185,6 @@ class MapReader(ABC):
                 time.sleep(time_wait_retry)
 
             except Exception as e:
-
                 if i == (download_max_nb_try - 1):
                     logger.error("Issue to download map from url")
 
@@ -594,7 +592,6 @@ class MapReaderLegacy:
         return SimpleHealpixMap(healpix_map, nside, ordering="nested")
 
     def generate_gaussian_map(self, obspar):
-
         ra_deg = float(obspar.raSource)
         dec_deg = float(obspar.decSource)
         sigma_deg = float(obspar.sigmaSource)
@@ -815,7 +812,6 @@ class MapReaderLegacy:
                 break
 
             except Exception as e:
-
                 print(f"Exception {e == HTTPError}")
                 if (
                     i == (download_max_nb_try - 1)
