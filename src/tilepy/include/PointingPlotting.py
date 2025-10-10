@@ -175,7 +175,6 @@ Colors = [
 
 
 def LoadPointingsGW(tpointingFile):
-
     print("Loading pointings from " + tpointingFile)
 
     time1, time2, ra, dec = np.genfromtxt(
@@ -207,7 +206,6 @@ def LoadPointingsGW(tpointingFile):
 
 
 def LoadPointingsGAL(tpointingFile):
-
     print("Loading pointings from " + tpointingFile)
     time1, time2, ra, dec, Pgw, Pgal = np.genfromtxt(
         tpointingFile,
@@ -301,7 +299,6 @@ def PlotPointings(
     doPlot = obspar.doPlot
 
     if doPlot:
-
         observatory = obspar.location
 
         dirName = "%s/Pointing_Plotting_%s" % (dirName, ObsArray)
@@ -363,9 +360,7 @@ def PlotPointings(
 def PlotPointingsTogether(
     prob, targetCoord1, targetCoord2, FOV1, FOV2, plotType, doPlot=True
 ):
-
     if doPlot:
-
         if plotType == "gnomonic":
             hp.gnomview(
                 prob,
@@ -440,14 +435,13 @@ def PlotPointingsTogether(
 
 
 def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
-
     print()
     print("-------------------   PLOTTING SCHEDULE   --------------------")
     print()
 
     UseObs = obspar.obs_name
     FOV = obspar.FOV
-    # Mask table if necesary
+    # Mask table if necessary
     maskClean = SuggestedPointings["ObsInfo"] == "True"
     SuggestedPointingsC = SuggestedPointings[maskClean]
     SuggestedPointingsC.remove_column("ObsInfo")

@@ -129,7 +129,6 @@ def flag_columns_converter(flag):
 
 
 def main(argv=None) -> int:
-
     # Define columns parameters for catalogs
     name_columns_catalog = [
         "no_GLADE",
@@ -329,7 +328,6 @@ def main(argv=None) -> int:
             args.output, index=False
         )
     else:
-
         # Define table structure hdf5
         class TableCatalog(tables.IsDescription):
             no_GLADE = tables.UInt32Col()

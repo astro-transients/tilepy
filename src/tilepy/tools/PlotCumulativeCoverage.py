@@ -8,7 +8,6 @@ colors = ["b", "g", "r", "c", "m", "y", "k", "#1f77b4", "#ff7f0e", "#2ca02c"]
 def ObtainCumulativeProbabilityPlot(
     folder_path, event_name, WhatToPlot, interactive=False
 ):
-
     # Initialize an empty DataFrame to store the cumulative 5th columns
     file_path = folder_path
 
@@ -94,7 +93,6 @@ def ObtainCumulativeProbabilityPlot(
 def ObtainCumulativeProbabilityPlotLog(
     folder_path, event_name, WhatToPlot, interactive=False
 ):
-
     # Initialize an empty DataFrame to store the cumulative 5th columns
     file_path = folder_path
 

@@ -34,12 +34,12 @@ import numpy as np
 import numpy.ma as ma
 import six
 from astropy import units as u
-from astropy.coordinates import AltAz, get_body, EarthLocation, SkyCoord
+from astropy.coordinates import AltAz, EarthLocation, SkyCoord, get_body
 from astropy.table import Table
 from astropy.time import Time
 from six.moves import configparser
-from .PointingTools import Tools, GetSatelliteTime, ComputePGalinFOV
 
+from .PointingTools import ComputePGalinFOV, GetSatelliteTime, Tools
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -193,7 +193,6 @@ def FulfillsRequirement(theseGals, obspar, UsePix):
         testedProba = "dp_dV_FOV"
 
     for minz_aux in range(maxz, 5, -5):
-
         tmpmask = alt > 90 - (minz_aux)
         tmpGals = theseGals.copy()
 
@@ -401,7 +400,6 @@ def GetBestGridPos2D(
     ipixlistHR,
     minProbcut,
 ):
-
     dp_dV_FOV = []
     ra = []
     dec = []
@@ -552,7 +550,6 @@ def GetBestGridPos3D(
     Occultedpixels,
     minProbCut,
 ):
-
     prob1 = prob[newpix]
     galpix = galpix[np.argsort(prob1)[::-1]]
     SelectedGals = galpix
