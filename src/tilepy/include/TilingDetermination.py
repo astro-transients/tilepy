@@ -30,21 +30,24 @@ import six
 from astropy import units as u
 from astropy.table import Table
 from six.moves import configparser
+
 from .MaskingTools import (
-    ZenithAngleCut,
-    VisibleAtTime,
     FulfillsRequirement,
     FulfillsRequirementGreyObservations,
     GetBestGridPos2D,
     GetBestGridPos3D,
     OccultationCut,
     SAA_Times,
+    VisibleAtTime,
+    ZenithAngleCut,
 )
 from .PointingTools import (
     ComputeProbability2D,
     ComputeProbGalTargeted,
     ComputeProbPGALIntegrateFoV,
     FilterGalaxies,
+    FindMatchingCoords,
+    FindMatchingPixList,
     Get90RegionPixReduced,
     GetBestNSIDE,
     GetSatelliteName,
@@ -60,12 +63,9 @@ from .PointingTools import (
     SubstractPointings,
     SubstractPointings2D,
     Tools,
-    TransformRADecToPix,
     TransformPixToRaDec,
-    FindMatchingPixList,
-    FindMatchingCoords,
+    TransformRADecToPix,
 )
-
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser

@@ -34,12 +34,12 @@ import numpy as np
 import numpy.ma as ma
 import six
 from astropy import units as u
-from astropy.coordinates import AltAz, get_body, EarthLocation, SkyCoord
+from astropy.coordinates import AltAz, EarthLocation, SkyCoord, get_body
 from astropy.table import Table
 from astropy.time import Time
 from six.moves import configparser
-from .PointingTools import Tools, GetSatelliteTime, ComputePGalinFOV
 
+from .PointingTools import ComputePGalinFOV, GetSatelliteTime, Tools
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
