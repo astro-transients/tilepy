@@ -32,6 +32,7 @@ import healpy as hp
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.ma as ma
+import pandas as pd
 import pytz
 import six
 import tables
@@ -45,7 +46,6 @@ from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
 from skyfield.api import E, N, load, wgs84
-import pandas as pd
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser

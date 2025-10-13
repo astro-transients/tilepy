@@ -16,8 +16,8 @@ from tilepy.include.PointingPlotting import (
     PlotPointingsTogether,
 )
 from tilepy.include.PointingTools import (
-    LoadPointings,
     Get90RegionPixReduced,
+    LoadPointings,
     NightDarkObservation,
     NightDarkObservationwithGreyTime,
     TransformRADec,

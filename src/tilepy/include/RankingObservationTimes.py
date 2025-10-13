@@ -26,6 +26,7 @@ import datetime
 import astropy.coordinates as co
 import healpy as hp
 import matplotlib.cm as cm
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -39,7 +40,6 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 from six.moves import configparser
 from sklearn.cluster import AgglomerativeClustering
-import matplotlib.dates as mdates
 
 from .PointingTools import FilterGalaxies, Tools
 
