@@ -281,7 +281,7 @@ def GetUniversalSchedule(obspar):
             )
 
     # SPACE
-    if base == "space":
+    elif base == "space":
         if skymap.is3D:
             print(
                 "==========================================================================================="
@@ -457,7 +457,7 @@ def GetUniversalSchedule(obspar):
         print()
         print(f"Resulting pointings file is {outfilename}")
 
-        if base in ["space", "grid"]:
+        if base in ["space"]:
             for j, obs in enumerate(obspar):
                 obspar1 = obspar[j]
                 SuggestedPointings_1 = SuggestedPointings[
@@ -499,6 +499,10 @@ def GetUniversalSchedule(obspar):
                             obspar[j],
                             skymap,
                         )
+
+        elif base in ["grid"]:
+            print("This is a grid and not observatory dependent")
+
 
         else:
             # for obspar in parameters:
