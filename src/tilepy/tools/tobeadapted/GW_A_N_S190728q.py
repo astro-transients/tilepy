@@ -2,7 +2,7 @@
 # Author: Halim Ashkar                                      #
 # Modified by: Monica Seglar-Arroyo                         #
 # WARNING: This file is included as a part of the package   #
-# but doesnt run in the same env, since it needs updated    #
+# but doesn't run in the same env, since it needs updated    #
 # versions of matplotlib, etc                               #
 # check the installation in the webside of ligo.skymap.plot #
 #############################################################
@@ -93,7 +93,7 @@ source = Circle(
 # source = Circle((232.418, 32.271), 0.1, edgecolor='green', facecolor='none', transform=ax_inset.get_transform('icrs'))
 ax_inset.add_patch(source)
 
-# neutrino fro S190728q
+# neutrino from S190728q
 # c = Circle((312.87, 5.85), 4.81, edgecolor='green', facecolor='none', transform=ax_inset.get_transform('icrs'), linestyle='dashed')
 # ax_inset.add_patch(c)
 

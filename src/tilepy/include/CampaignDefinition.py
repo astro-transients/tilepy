@@ -205,7 +205,7 @@ class ObservationParameters(object):
         self.downloadMaxRetry = downloadMaxRetry
         self.downloadWaitPeriodRetry = downloadWaitPeriodRetry
 
-        # Characterstics of the event
+        # Characteristics of the event
         self.MO = MO
 
         self.mode = mode or None

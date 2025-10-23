@@ -1,29 +1,62 @@
+# Pre-commit configuration for code quality and style enforcement.
+# This setup uses multiple hooks to check for common issues (merge conflicts, invalid JSON/TOML/YAML/XML, symlinks, trailing whitespace, etc.),
+# and ensures consistent formatting and linting for Python code using Ruff.
+# For more information about pre-commit hooks, see: https://pre-commit.com
+
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
     hooks:
-    -   id: check-yaml
-    -   id: end-of-file-fixer
-    -   id: trailing-whitespace
+      # Detects files with names that may conflict on case-insensitive filesystems
+      # (e.g., MacOS, Windows).
+      - id: check-case-conflict
+      # Validates the syntax of JSON files by attempting to load them.
+      - id: check-json
+      # Detects unresolved Git merge conflict markers in files.
+      - id: check-merge-conflict
+      # Detects symlinks that point to missing or invalid targets.
+      - id: check-symlinks
+       # Validates the syntax of TOML files by attempting to load them.
+      - id: check-toml
+      # Validates the syntax of XML files by attempting to parse them.
+      - id: check-xml
+      # Validates the syntax of YAML files. May need exclusions for specific internal files.
+      - id: check-yaml
+      # Detects accidentally committed private keys.
+      - id: detect-private-key
+      # Ensures that files end with a single newline.
+      - id: end-of-file-fixer
+        exclude_types: [csv]
+      # Removes trailing whitespace from the end of lines.
+      - id: trailing-whitespace
+        exclude_types: [python, jupyter] # Covered by Ruff W291.
 
-- repo: https://github.com/psf/black
-  rev: 25.1.0
-  hooks:
-  - id: black
-    stages: [pre-commit]
-  - id: black-jupyter
-    stages: [pre-commit]
+  # Ruff linter and formatter for Python.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.13.3
+    hooks:
+      # try to fix what is possible
+      - id: ruff
+        args: ["--extend-select", "I", "--fix"]
+      # perform formatting updates
+      - id: ruff-format
+      # validate if all is fine with preview mode
+      - id: ruff
 
-- repo: https://github.com/pycqa/isort
-  rev: 6.0.0
-  hooks:
-    - id: isort
-      name: isort (python)
-      args: ["--profile", "black", "--filter-files"]
+  # Like "Clear All Output"—keeps output locally but skips committing it to Git.
+  # This should be done before running "codespell" to prevent it from catching errors
+  # in output files (typically code images or other generated output).
+  # - repo: https://github.com/kynan/nbstripout
+  #   rev: 0.8.1
+  #   hooks:
+  #     - id: nbstripout
 
-- repo: https://github.com/pycqa/flake8
-  rev: '7.1.1'
-  hooks:
-  - id: flake8
-    args: ["--ignore=E501,W503"]
-    additional_dependencies: [Flake8-pyproject]
+  # Spell checker for code and documentation.
+  # Uses the codespell tool to find and correct common misspellings in source code, comments, and documentation.
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        args: ["--ignore-words=.codespell-ignore-words", -L, "nd,hist", "--skip", "*.ipynb"]
+        additional_dependencies:
+          - tomli

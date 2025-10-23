@@ -569,7 +569,6 @@ def EvolutionPlot(galPointing, tname, ObsArray):
 
 
 def RankingTimes(obspar, skymap, cat, dirName, PointingFile):
-
     ObservationTime = obspar.obsTime
     ObsArray = obspar.obs_name
     point = LoadPointingFile(PointingFile)
@@ -596,7 +595,6 @@ def RankingTimes(obspar, skymap, cat, dirName, PointingFile):
 
 
 def RankingTimes_2D(obspar, prob, dirName, PointingFile):
-
     ObservationTime = obspar.obsTime
     ObsArray = obspar.obs_name
 
@@ -701,7 +699,6 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
     rank_colors = [cmap_rank(1 - norm_rank(r)) for r in ranks]
 
     if obspar.doPlot:
-
         prob = skymap.getMap("prob", obspar.HRnside)
 
         df = pd.read_csv(output_file, sep="\t")
@@ -811,7 +808,6 @@ def read_ranked_pointings(file_path):
 
 
 def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
-
     # Convert to DataFrame for easier handling
     file_path = f"{PointingFile}"
     data = pd.read_csv(file_path, delim_whitespace=True)

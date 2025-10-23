@@ -167,7 +167,6 @@ def GetSchedule(obspar):
             print("No observations are scheduled")
 
     else:
-
         print(
             "==========================================================================================="
         )

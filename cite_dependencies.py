@@ -51,12 +51,12 @@ def get_authors_from_github(repo_path, title, url):
 def write_bibtex_to_file(data):
     author_string = " and ".join([f"{{{author}}}" for author in data["authors"]])
     bibtex_entry = f"""
-@software{{{data['title'].lower()},
+@software{{{data["title"].lower()},
   author = {{{author_string}}},
-  title = {{{data['title']}}},
-  url = {{{data['url']}}},
-  version = {{{data['version']}}},
-  date = {{{data['publication_year']}}},
+  title = {{{data["title"]}}},
+  url = {{{data["url"]}}},
+  version = {{{data["version"]}}},
+  date = {{{data["publication_year"]}}},
 }}
 """
     with open("output.bib", "a") as file:

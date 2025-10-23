@@ -17,7 +17,7 @@ Purpose
    |tilepy| addresses this challenge by generating optimized observation plans, starting from :doc:`IGWN-provided skymaps <userguide:tutorial/skymaps>` and incorporating realistic telescope-specific constraints.
    It currently includes ground-based facilities such as H.E.S.S., LST, and both CTA-South and CTA-North.
 
-   It accounts for constraints and bacground noise like:
+   It accounts for constraints and background noise like:
 
    .. tab-set::
 

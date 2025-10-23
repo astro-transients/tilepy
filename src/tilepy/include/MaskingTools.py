@@ -193,7 +193,6 @@ def FulfillsRequirement(theseGals, obspar, UsePix):
         testedProba = "dp_dV_FOV"
 
     for minz_aux in range(maxz, 5, -5):
-
         tmpmask = alt > 90 - (minz_aux)
         tmpGals = theseGals.copy()
 
@@ -401,7 +400,6 @@ def GetBestGridPos2D(
     ipixlistHR,
     minProbcut,
 ):
-
     dp_dV_FOV = []
     ra = []
     dec = []
@@ -552,7 +550,6 @@ def GetBestGridPos3D(
     Occultedpixels,
     minProbCut,
 ):
-
     prob1 = prob[newpix]
     galpix = galpix[np.argsort(prob1)[::-1]]
     SelectedGals = galpix
