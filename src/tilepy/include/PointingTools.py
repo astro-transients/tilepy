@@ -1425,7 +1425,7 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
     radius = obspar.FOV
 
     print("Subtracting pointings from " + tpointingFile)
-    raPointing, decPointing = np.genfromtxt(
+    ra, dec = np.genfromtxt(
         tpointingFile,
         usecols=(2, 3),
         dtype="str",
@@ -1433,12 +1433,24 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
         delimiter=" ",
         unpack=True,
     )  # ra, dec in degrees
-    raPointing = np.atleast_1d(raPointing)
-    decPointing = np.atleast_1d(decPointing)
 
-    coordinates = TransformRADec(raPointing, decPointing)
+    ra = np.atleast_1d(ra)
+    dec = np.atleast_1d(dec)
+
+    # only selecting unique pairs of ra-dec
+    # otherwise, if one applies np.unique directly to ra
+    # and dec, one may end up with different lengths
+    # because it may happen that there are pointings e.g.
+    # with the same ra but different dec
+    ra_dec_stacked = np.vstack((ra, dec)).T
+    _, idx = np.unique(ra_dec_stacked, axis=0, return_index=True)
+
+    ra = ra[np.sort(idx)]
+    dec = dec[np.sort(idx)]
+
+    coordinates = TransformRADec(ra, dec)
     P_GW = []
-    for i, valuei in enumerate(raPointing):
+    for i, valuei in enumerate(ra):
         t = 0.5 * np.pi - coordinates[i].dec.rad
         p = coordinates[i].ra.rad
         # Get the pixels for the ipix_disc (low res)
@@ -1453,9 +1465,9 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
 
         print(
             "Coordinates ra:",
-            raPointing[i],
+            ra[i],
             "dec:",
-            decPointing[i],
+            dec[i],
             "Pgw:",
             P_GW[i],
             "vs",
@@ -1467,7 +1479,7 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
             if valuek not in pixlistHR:
                 pixlistHR.append(valuek)
 
-    return pixlist, pixlistHR, np.sum(P_GW), len(raPointing)
+    return pixlist, pixlistHR, np.sum(P_GW), len(ra)
 
 
 def TransformRADec(vra, vdec):
@@ -1807,19 +1819,37 @@ def SubstractPointings(
         unpack=True,
     )  # ra, dec in degrees
 
+    rap = np.atleast_1d(rap)
+    decP = np.atleast_1d(decP)
+
+    # only selecting unique pairs of ra-dec
+    # otherwise, if one applies np.unique directly to ra
+    # and dec, one may end up with different lengths
+    # because it may happen that there are pointings e.g.
+    # with the same ra but different dec
+    ra_dec_stacked = np.vstack((rap, decP)).T
+    _, idx = np.unique(ra_dec_stacked, axis=0, return_index=True)
+
+    rap = rap[np.sort(idx)]
+    decP = decP[np.sort(idx)]
+
     coordinates = TransformRADec(rap, decP)
+
     ra = coordinates.ra.deg
     dec = coordinates.dec.deg
 
     PGW = []
     PGAL = []
     updatedGalaxies = galaxies
-    if np.isscalar(ra):
+
+    for i, coord in enumerate(coordinates):
+        ral = coord.ra.deg
+        decl = coord.dec.deg
         updatedGalaxies, pgwcircle, pgalcircle, talreadysumipixarray = (
             SubstractGalaxiesCircle(
                 updatedGalaxies,
-                ra,
-                dec,
+                ral,
+                decl,
                 talreadysumipixarray,
                 tsum_dP_dV,
                 FOV,
@@ -1830,36 +1860,15 @@ def SubstractPointings(
         PGW.append(pgwcircle)
         PGAL.append(pgalcircle)
         print(
-            "Coordinates ra:", ra, "dec:", dec, "Pgw:", pgwcircle, "PGAL:", pgalcircle
+            "Coordinates ra:",
+            ral,
+            "dec:",
+            decl,
+            "Pgw:",
+            pgwcircle,
+            "PGAL:",
+            pgalcircle,
         )
-    else:
-        for i, coord in enumerate(coordinates):
-            ra = coord.ra.deg
-            dec = coord.dec.deg
-            updatedGalaxies, pgwcircle, pgalcircle, talreadysumipixarray = (
-                SubstractGalaxiesCircle(
-                    updatedGalaxies,
-                    ra,
-                    dec,
-                    talreadysumipixarray,
-                    tsum_dP_dV,
-                    FOV,
-                    prob,
-                    nside,
-                )
-            )
-            PGW.append(pgwcircle)
-            PGAL.append(pgalcircle)
-            print(
-                "Coordinates ra:",
-                ra,
-                "dec:",
-                dec,
-                "Pgw:",
-                pgwcircle,
-                "PGAL:",
-                pgalcircle,
-            )
     return (
         ra,
         dec,
