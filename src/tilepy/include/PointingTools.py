@@ -1425,7 +1425,7 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
     radius = obspar.FOV
 
     print("Subtracting pointings from " + tpointingFile)
-    raPointing, decPointing = np.genfromtxt(
+    ra, dec = np.genfromtxt(
         tpointingFile,
         usecols=(2, 3),
         dtype="str",
@@ -1448,9 +1448,9 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
     ra = ra[np.sort(idx)]
     dec = dec[np.sort(idx)]
 
-    coordinates = TransformRADec(raPointing, decPointing)
+    coordinates = TransformRADec(ra, dec)
     P_GW = []
-    for i, valuei in enumerate(raPointing):
+    for i, valuei in enumerate(ra):
         t = 0.5 * np.pi - coordinates[i].dec.rad
         p = coordinates[i].ra.rad
         # Get the pixels for the ipix_disc (low res)
@@ -1465,9 +1465,9 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
 
         print(
             "Coordinates ra:",
-            raPointing[i],
+            ra[i],
             "dec:",
-            decPointing[i],
+            dec[i],
             "Pgw:",
             P_GW[i],
             "vs",
@@ -1479,7 +1479,7 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
             if valuek not in pixlistHR:
                 pixlistHR.append(valuek)
 
-    return pixlist, pixlistHR, np.sum(P_GW), len(raPointing)
+    return pixlist, pixlistHR, np.sum(P_GW), len(ra)
 
 
 def TransformRADec(vra, vdec):
