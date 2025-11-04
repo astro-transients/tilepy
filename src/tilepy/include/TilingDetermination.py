@@ -1,17 +1,17 @@
-#
-# Copyright (C) 2016-2024  tilepy developers (Monica Seglar-Arroyo, Halim Ashkar, Fabian Schussler, Mathieu de Bony)
+# Copyright (C) 2016-2025  tilepy developers
+# (Monica Seglar-Arroyo, Halim Ashkar, Fabian Schussler, Mathieu de Bony)
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
+# it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
+# You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 ##################################################################################################
@@ -31,16 +31,24 @@ from astropy import units as u
 from astropy.table import Table
 from six.moves import configparser
 
+from .MaskingTools import (
+    FulfillsRequirement,
+    FulfillsRequirementGreyObservations,
+    GetBestGridPos2D,
+    GetBestGridPos3D,
+    OccultationCut,
+    SAA_Times,
+    VisibleAtTime,
+    ZenithAngleCut,
+)
 from .PointingTools import (
     ComputeProbability2D,
     ComputeProbGalTargeted,
     ComputeProbPGALIntegrateFoV,
     FilterGalaxies,
-    FulfillsRequirement,
-    FulfillsRequirementGreyObservations,
+    FindMatchingCoords,
+    FindMatchingPixList,
     Get90RegionPixReduced,
-    GetBestGridPos2D,
-    GetBestGridPos3D,
     GetBestNSIDE,
     GetSatelliteName,
     GetSatellitePositions,
@@ -52,14 +60,11 @@ from .PointingTools import (
     NextWindowTools,
     NightDarkObservation,
     NightDarkObservationwithGreyTime,
-    OccultationCut,
-    PlotSpaceOcc,
-    SAA_Times,
     SubstractPointings,
     SubstractPointings2D,
     Tools,
-    VisibleAtTime,
-    ZenithAngleCut,
+    TransformPixToRaDec,
+    TransformRADecToPix,
 )
 
 if six.PY2:
@@ -89,20 +94,28 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     """
     Mid-level function that is called by GetSchedule to compute a observation schedule based on a 2D method.
 
-    :param skymap: The object containing the skympas
-    :type skymap: SkyMap
-    :param eventName: The name of the event
-    :type eventName: str
-    :param ObservationTime0: the desired time for scheduling to start
-    :type ObservationTime0: str
-    :param PointingFile: The path to the text file containing the pointings that have already been performed before the scheduling
-    :type PointingFile: str
-    :param obspar: Class containing the telescope configuration parameters to be used in the scheduling
-    :type obspar: Observation parameters class
-    :param dirName: Path to the output directory where the schedules and plots will eb saved
-    :type dirName: str
-    :return: SuggestedPointings, cat
-    rtype: ascii table, astropy table
+    Parameters
+    ----------
+    skymap : SkyMap
+        The object containing the sky maps.
+    nameEvent : str
+        The name of the event.
+    obspar : ObservationParameters
+        Observation parameters, including:
+        - obsTime (datetime): Desired time for scheduling to start.
+        - pointingsFile (str): Path to file with previous pointings.
+        - ... (other parameters as needed)
+        Class containing the telescope configuration parameters.
+    dirName : str
+        Output directory for schedules and plots.
+
+    Returns
+    -------
+    SuggestedPointings : astropy.table.Table
+        Table of scheduled pointings.
+    ObservationTime0 : str
+        the desired time for scheduling to start.
+
     """
 
     ObservationTime0 = obspar.obsTime
@@ -116,9 +129,9 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     RAarray = []
     DECarray = []
     pixlist = []
-    ipixlistHR = []
+    pixlistHR = []
     pixlist1 = []
-    ipixlistHR1 = []
+    pixlistHR1 = []
     P_GWarray = []
     ObservationTimearray = []
     Round = []
@@ -131,7 +144,6 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     print()
 
     # Retrieve maps
-    nside = obspar.reducedNside
     prob = skymap.getMap("prob", obspar.reducedNside)
     highres = skymap.getMap("prob", obspar.HRnside)
 
@@ -144,17 +156,16 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     # Add observed pixels to pixlist
     maxRuns = obspar.maxRuns
     if PointingFile is not None:
-        pixlist, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist
-        )
-
-        if obspar.countPrevious:
-            maxRuns = obspar.maxRuns - doneObs
         print(
             "==========================================================================================="
         )
-        print()
-        print(f": Total GW probability already covered: {sumPGW}")
+        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+            PointingFile, prob, obspar, pixlist, pixlistHR
+        )
+        if obspar.countPrevious:
+            maxRuns = obspar.maxRuns - doneObs
+
+        print(f"Total GW probability already covered: {sumPGW}")
         print(
             f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}"
@@ -176,57 +187,34 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     for j, NightDarkRun in enumerate(NightDarkRuns):
         if len(ObservationTimearray) < maxRuns:
             ObservationTime = NightDarkRun
-            ObsBool, yprob = ZenithAngleCut(
-                prob,
-                nside,
-                ObservationTime,
-                obspar.minProbcut,
-                obspar.maxZenith,
-                obspar.location,
-                obspar.minMoonSourceSeparation,
-                obspar.useGreytime,
-            )
+            ObsBool, yprob = ZenithAngleCut(prob, ObservationTime, obspar)
             if ObsBool:
                 # Round 1
-                P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(
+                P_GW, TC, pixlist, pixlistHR = ComputeProbability2D(
+                    obspar,
                     prob,
                     highres,
                     radecs,
-                    obspar.reducedNside,
-                    obspar.HRnside,
-                    obspar.minProbcut,
                     ObservationTime,
-                    obspar.location,
-                    obspar.maxZenith,
-                    obspar.FOV,
                     pixlist,
-                    ipixlistHR,
+                    pixlistHR,
                     counter,
                     dirName,
-                    obspar.useGreytime,
-                    obspar.doPlot,
                 )
                 if (P_GW <= obspar.minProbcut) and obspar.secondRound:
                     # Try Round 2
                     # print('The minimum probability cut being', minProbcut * 100, '% is, unfortunately, not reached.')
                     yprob1 = highres
-                    P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(
+                    P_GW, TC, pixlist1, pixlistHR1 = ComputeProbability2D(
+                        obspar,
                         prob,
                         yprob1,
                         radecs,
-                        obspar.reducedNside,
-                        obspar.HRnside,
-                        obspar.minProbcut,
                         ObservationTime,
-                        obspar.location,
-                        obspar.maxZenith,
-                        obspar.FOV,
                         pixlist1,
-                        ipixlistHR1,
+                        pixlistHR1,
                         counter,
                         dirName,
-                        obspar.useGreytime,
-                        obspar.doPlot,
                     )
                     if P_GW <= obspar.minProbcut:
                         print(
@@ -310,28 +298,38 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
 
 def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
     """
-    Mid-level function that is called by GetSchedule to compute a observation schedule based on a 3D method.
-    Depending on the user input in the configuration file and the telescope FoV the pointings use the targtet galaxy strategy or integrated galaxy probability strategy.
+    Compute an observation schedule based on a 3D (galaxy-weighted) method.
 
-    :param skymap: The object storing sky maps
-    :type skymap: SkyMap
-    :param nameEvent: The name of the event
-    :type nameEvent: str
-    :param ObservationTime0: the desired time for scheduling to start
-    :type ObservationTime0: str
-    :param PointingFile: The path to the text file containing the pointings that have already been performed before the scheduling
-    :type PointingFile: str
-    :param galFile: The path to the galaxy catalog
-    :type galFile: str
-    :param obspar: Class containing the telescope configuration parameters to be used in the scheduling
-    :type obspar: Observation parameters class
-    :param dirName: Path to the output directory where the schedules and plots will eb saved
-    :type dirName: str
-    :return: SuggestedPointings, cat
-    rtype: ascii table, astropy table
+    This mid-level function is called by :func:`tilepy.include.observationschedule.GetSchedule`
+    and produces a suggested schedule of pointings for the given observatory,
+    using either the target galaxy strategy or the integrated galaxy probability strategy,
+    depending on user input and the telescope field of view.
+
+    Parameters
+    ----------
+    skymap : SkyMap
+        The object storing sky maps.
+    nameEvent : str
+        The name of the event.
+    galFile : str
+        Path to the galaxy catalog.
+    obspar : ObservationParameters
+        Telescope configuration parameters used in the scheduling.
+    dirName : str
+        Path to the output directory where the schedules and plots will be saved.
+
+    Returns
+    -------
+    SuggestedPointings : astropy.table.Table
+        Table of suggested pointings (with time, coordinates, probability, etc.).
+    tGals0 : astropy.table.Table
+        Filtered and ranked list of galaxies for scheduling.
+
     """
 
+    # The desired time for scheduling to start
     ObservationTime0 = obspar.obsTime
+    # The path to the text file containing the pointings that have already been performed before the scheduling
     PointingFile = obspar.pointingsFile
 
     # Main Parameters
@@ -347,9 +345,9 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
     prob = skymap.getMap("prob", obspar.HRnside)
 
     if skymap.is3D:
-        print("Found a generic map without 3D information")
+        print("Skymap is 3D")
     else:
-        print("Found a 3D reconstruction")
+        print("Skymap is 2D")
 
     # correlate GW map with galaxy catalog, retrieve ordered list
     if not obspar.mangrove:
@@ -438,7 +436,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
             if len(ObservationTimearray) < maxRuns:
                 ObservationTime = NightDarkRun
                 visible, altaz, tGals_aux = VisibleAtTime(
-                    ObservationTime, tGals_aux, obspar.maxZenith, obspar.location
+                    ObservationTime, tGals_aux, obspar
                 )
                 if visible:
                     # select galaxies within the slightly enlarged visiblity window
@@ -450,10 +448,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                     mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
                     if obspar.useGreytime:
                         maskgrey = FulfillsRequirementGreyObservations(
-                            ObservationTime,
-                            visiGals,
-                            obspar.location,
-                            obspar.minMoonSourceSeparation,
+                            ObservationTime, visiGals, obspar
                         )
                         finalGals = visiGals[mask & maskgrey]
                     if not obspar.useGreytime:
@@ -467,10 +462,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                             and obspar.secondRound
                         ):
                             visible, altaz, tGals_aux2 = VisibleAtTime(
-                                ObservationTime,
-                                tGals_aux2,
-                                obspar.maxZenith,
-                                obspar.location,
+                                ObservationTime, tGals_aux2, obspar
                             )
                             if visible:
                                 visiMask = altaz.alt.value > 90 - (
@@ -487,10 +479,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
 
                                 if obspar.useGreytime:
                                     maskgrey = FulfillsRequirementGreyObservations(
-                                        ObservationTime,
-                                        visiGals2,
-                                        obspar.location,
-                                        obspar.minMoonSourceSeparation,
+                                        ObservationTime, visiGals2, obspar
                                     )
                                     finalGals2 = visiGals2[mask & maskgrey]
                                 if not obspar.useGreytime:
@@ -641,7 +630,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
             if len(ObservationTimearray) < maxRuns:
                 ObservationTime = NightDarkRun
                 visible, altaz, tGals_aux = VisibleAtTime(
-                    ObservationTime, tGals_aux, obspar.maxZenith, obspar.location
+                    ObservationTime, tGals_aux, obspar
                 )
                 if visible:
                     # select galaxies within the slightly enlarged visiblity window
@@ -650,10 +639,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                     mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
                     if obspar.useGreytime:
                         maskgrey = FulfillsRequirementGreyObservations(
-                            ObservationTime,
-                            visiGals,
-                            obspar.location,
-                            obspar.minMoonSourceSeparation,
+                            ObservationTime, visiGals, obspar
                         )
                         finalGals = visiGals[mask & maskgrey]
                     if not obspar.useGreytime:
@@ -667,10 +653,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                             and obspar.secondRound
                         ):
                             visible, altaz, tGals_aux2 = VisibleAtTime(
-                                ObservationTime,
-                                tGals_aux2,
-                                obspar.maxZenith,
-                                obspar.location,
+                                ObservationTime, tGals_aux2, obspar
                             )
                             if visible:
                                 visiMask = altaz.alt.value > 90 - (
@@ -683,10 +666,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
 
                                 if obspar.useGreytime:
                                     maskgrey = FulfillsRequirementGreyObservations(
-                                        ObservationTime,
-                                        visiGals2,
-                                        obspar.location,
-                                        obspar.minMoonSourceSeparation,
+                                        ObservationTime, visiGals2, obspar
                                     )
                                     finalGals2 = visiGals2[mask & maskgrey]
                                 if not obspar.useGreytime:
@@ -858,15 +838,31 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
 
 def ObservationStartperObs(obsparameters, ObservationTime0):
     """
-    Mid-level function that is called by Nobs Tiling functions for multiple telescopes to find the first observation time for each observatory involved.
+    Compute the first observation time for each observatory involved in the scheduling.
 
-    :param obsparameters: a list of sets of parameters for each observatory needed to launch the tiling scheduler
-    :type obsparameters: list of class ObservationParameters
-    :param ObservationTime0: the desired time for scheduling to start
-    :type ObservationTime0: str
-    :return: obs_time, SameNight, NewActiveObs, NewActiveObsStart
-    rtype: datetime, boolean, list, list
+    This mid-level function is called by Nobs Tiling functions to determine the first available observation
+    time for each observatory and whether each observatory can observe on the same night.
+
+    Parameters
+    ----------
+    obsparameters : list of ObservationParameters
+        A list of sets of parameters for each observatory needed to launch the tiling scheduler.
+    ObservationTime0 : sr
+        The desired start time for scheduling to begin.
+
+    Returns
+    -------
+    obs_time : datetime
+        The current observation time, possibly adjusted.
+    SameNight : numpy.ndarray of bool
+        An array indicating whether each observatory is available for observation on the same night.
+    NewActiveObs : list of ObservationParameters
+        A list of observatories that are available to observe.
+    NewActiveObsStart : numpy.ndarray of datetime
+        A sorted list of the first available observation times for each observatory.
+
     """
+
     print("ObservationTime0", ObservationTime0)
 
     print("obsparameters", len(obsparameters))
@@ -949,22 +945,34 @@ def PGWinFoV_NObs(
     skymap, nameEvent, ObservationTime0, PointingFile, obsparameters, dirName
 ):
     """
-    Mid-level function that is called by GetSchedule to compute a observation schedule for multiple telescopes/observartories based on a 2D method.
+    Compute an observation schedule for multiple telescopes/observatories based on a 2D method.
 
-    :param skymap: The object storing sky maps
-    :type skymap: SkyMap
-    :param nameEvent: The name of the event
-    :type nameEvent: str
-    :param ObservationTime0: the desired time for scheduling to start
-    :type ObservationTime0: str
-    :param PointingFile: The path to the text file containing the pointings that have already been performed before the scheduling
-    :type PointingFile: str
-    :param obsparameters: a list of sets of parameters for each observatory needed to launch the tiling scheduler
-    :type obsparameters: list of class ObservationParameters
-    :param dirName: Path to the output directory where the schedules and plots will eb saved
-    :type dirName: str
-    :return: SuggestedPointings, cat
-    rtype: ascii table, astropy table
+    This mid-level function is called by `GetSchedule` (see :func:`tilepy.include.ObservationScheduler.GetSchedule`)
+    and produces a suggested schedule of pointings for each observatory, given the input sky map,
+    pointings already performed, and observation parameters.
+
+    Parameters
+    ----------
+    skymap : SkyMap
+        The object storing sky maps.
+    nameEvent : str
+        The name of the event.
+    ObservationTime0 : str
+        The desired start time for scheduling.
+    PointingFile : str
+        Path to the text file containing pointings already performed before scheduling.
+    obsparameters : list of ObservationParameters
+        Parameters for each observatory needed to launch the tiling scheduler.
+    dirName : str
+        Path to the output directory where the schedules and plots will be saved.
+
+    Returns
+    -------
+    SuggestedPointings : astropy.table.Table
+        Table of suggested pointings for all observatories.
+    obsparameters : list of ObservationParameters
+        (Possibly updated) list of parameters for each observatory.
+
     """
 
     obs_time, SameNight, NewActiveObs, NewActiveObsStart = ObservationStartperObs(
@@ -977,9 +985,9 @@ def PGWinFoV_NObs(
     RAarray = []
     DECarray = []
     pixlist = []
-    ipixlistHR = []
+    pixlistHR = []
     pixlist1 = []
-    ipixlistHR1 = []
+    pixlistHR1 = []
     P_GWarray = []
     ObservationTimearray = []
     Round = []
@@ -990,7 +998,6 @@ def PGWinFoV_NObs(
     obspar = obsparameters[0]
 
     # Retrieve maps
-    nside = obspar.reducedNside
     prob = skymap.getMap("prob", obspar.reducedNside)
     highres = skymap.getMap("prob", obspar.HRnside)
 
@@ -1003,8 +1010,8 @@ def PGWinFoV_NObs(
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        pixlist, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist
+        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+            PointingFile, prob, obspar, pixlist, pixlistHR
         )
 
         if obspar.countPrevious:
@@ -1033,12 +1040,11 @@ def PGWinFoV_NObs(
     counter = 0
     i = 0
     couter_per_obs = np.zeros(len(NewActiveObs))
+    print("------NewActiveObsTime--------", NewActiveObs[0].obs_name)
     while (i < 500) & any(SameNight):
-        for j in range(len(NewActiveObs)):
+        for j, obs in enumerate(NewActiveObs):
             obspar = NewActiveObs[j]
-            # print(j)
-            # print(NewActiveObs[0].name)
-            # print(obspar.name)
+            print("Observatory: ", obspar.obs_name)
             ObservationTime = NewActiveObsTime[j]
             if ITERATION_OBS == len(obsparameters):
                 TIME_MIN_ALL = []
@@ -1052,78 +1058,52 @@ def PGWinFoV_NObs(
             if couter_per_obs[j] >= maxRuns:
                 SameNight[j] = False
             if (TIME_MIN >= NewActiveObsTime[j]) & SameNight[j]:
-                ipixlistHROcc = None
+                pixlistHROcc = None
                 if obspar.base == "space":
                     SatelliteTime = GetSatelliteTime(SatelliteName, ObservationTime)
-                    satellite_position, obspar.location = GetSatellitePositions(
+                    satellitePosition, satelliteLocation = GetSatellitePositions(
                         SatelliteName, SatelliteTime
                     )
-                    ObsBool, yprob, ipixlistHROcc = OccultationCut(
+                    ObsBool, yprob, pixlistHROcc = OccultationCut(
                         prob,
                         obspar.reducedNside,
                         ObservationTime,
-                        obspar.minProbcut,
-                        satellite_position,
-                        obspar.location,
-                        obspar.sunDown,
-                        obspar.moonDown,
+                        obspar,
+                        satellitePosition,
+                        satelliteLocation,
                     )
                 else:
-                    ObsBool, yprob = ZenithAngleCut(
-                        prob,
-                        nside,
-                        ObservationTime,
-                        obspar.minProbcut,
-                        obspar.maxZenith,
-                        obspar.location,
-                        obspar.minMoonSourceSeparation,
-                        obspar.useGreytime,
-                    )
+                    ObsBool, yprob = ZenithAngleCut(prob, ObservationTime, obspar)
 
                 if ObsBool:
                     # Round 1
-                    P_GW, TC, pixlist, ipixlistHR = ComputeProbability2D(
+                    P_GW, TC, pixlist, pixlistHR = ComputeProbability2D(
+                        obspar,
                         prob,
                         highres,
                         radecs,
-                        obspar.reducedNside,
-                        obspar.HRnside,
-                        obspar.minProbcut,
                         ObservationTime,
-                        obspar.location,
-                        obspar.maxZenith,
-                        obspar.FOV,
                         pixlist,
-                        ipixlistHR,
+                        pixlistHR,
                         counter,
                         dirName,
-                        obspar.useGreytime,
-                        obspar.doPlot,
-                        ipixlistHROcc,
+                        pixlistHROcc,
                     )
                     # print(P_GW, obspar.name)
                     if (P_GW <= obspar.minProbcut) and obspar.secondRound:
                         # Try Round 2
                         # print('The minimum probability cut being', minProbcut * 100, '% is, unfortunately, not reached.')
                         yprob1 = highres
-                        P_GW, TC, pixlist1, ipixlistHR1 = ComputeProbability2D(
+                        P_GW, TC, pixlist1, pixlistHR1 = ComputeProbability2D(
                             prob,
                             yprob1,
                             radecs,
-                            obspar.reducedNside,
-                            obspar.HRnside,
-                            obspar.minProbcut,
                             ObservationTime,
-                            obspar.location,
-                            obspar.maxZenith,
-                            obspar.FOV,
                             pixlist1,
-                            ipixlistHR1,
+                            pixlistHR1,
                             counter,
                             dirName,
-                            obspar.useGreytime,
-                            obspar.doPlot,
-                            ipixlistHROcc,
+                            pixlistHROcc,
                         )
                         if P_GW <= obspar.minProbcut:
                             print(
@@ -1225,8 +1205,8 @@ def PGWinFoV_NObs(
         ],
         names=[
             "Time[UTC]",
-            "RA(deg)",
-            "DEC(deg)",
+            "RA[deg]",
+            "DEC[deg]",
             "PGW",
             "Round",
             "ObsName",
@@ -1243,22 +1223,7 @@ def PGalinFoV_NObs(
     skymap, nameEvent, ObservationTime0, PointingFile, galFile, obsparameters, dirName
 ):
     """
-    Mid-level function that is called by GetSchedule to compute a observation schedule for multiple telescopes/observartories based on a 3D method.
-
-    :param skymap: The object storing skympas
-    :type skymap: SkyMap
-    :param ObservationTime0: the desired time for scheduling to start
-    :type ObservationTime0: str
-    :param PointingFile: The path to the text file containing the pointings that have already been performed before the scheduling
-    :type PointingFile: str
-    :param galFile: The path to the galaxy catalog
-    :type galFile: str
-    :param obsparameters: a list of sets of parameters for each observatory needed to launch the tiling scheduler
-    :type obsparameters: list of class ObservationParameters
-    :param dirName: Path to the output directory where the schedules and plots will eb saved
-    :type dirName: str
-    :return: SuggestedPointings, cat, obsparameters
-    rtype: ascii table, astropy table, list
+    Compute the optimal observation schedule based on galaxy probability and gravitational wave data for multiple observatories.
     """
 
     obs_time, SameNight, NewActiveObs, NewActiveObsStart = ObservationStartperObs(
@@ -1353,13 +1318,10 @@ def PGalinFoV_NObs(
     #################################################################################################################################################
 
     counter = 0
-    # print(SameNight)
-    # print(NewActiveObs[0].name, NewActiveObs[1].name, NewActiveObs[2].name)
-    # print(NewActiveObsTime)
     i = 0
     couter_per_obs = np.zeros(len(NewActiveObs))
     while (i < 5000) & any(SameNight):
-        for j in range(len(NewActiveObs)):
+        for j, obs in enumerate(NewActiveObs):
             obspar = NewActiveObs[j]
             ObservationTime = NewActiveObsTime[j]
             if ITERATION_OBS == len(obsparameters):
@@ -1373,7 +1335,7 @@ def PGalinFoV_NObs(
 
                 if obspar.strategy == "integrated":
                     visible, altaz, tGals_aux = VisibleAtTime(
-                        ObservationTime, tGals_aux, obspar.maxZenith, obspar.location
+                        ObservationTime, tGals_aux, obspar
                     )
 
                     if visible:
@@ -1390,10 +1352,7 @@ def PGalinFoV_NObs(
                         mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
                         if obspar.useGreytime:
                             maskgrey = FulfillsRequirementGreyObservations(
-                                ObservationTime,
-                                visiGals,
-                                obspar.location,
-                                obspar.minMoonSourceSeparation,
+                                ObservationTime, visiGals, obspar
                             )
                             finalGals = visiGals[mask & maskgrey]
                         if not obspar.useGreytime:
@@ -1409,10 +1368,7 @@ def PGalinFoV_NObs(
                             ):
                                 print("probability", finalGals["dp_dV_FOV"][:1])
                                 visible, altaz, tGals_aux2 = VisibleAtTime(
-                                    ObservationTime,
-                                    tGals_aux2,
-                                    obspar.maxZenith,
-                                    obspar.location,
+                                    ObservationTime, tGals_aux2, obspar
                                 )
                                 if visible:
                                     visiMask = altaz.alt.value > 90 - (
@@ -1429,10 +1385,7 @@ def PGalinFoV_NObs(
 
                                     if obspar.useGreytime:
                                         maskgrey = FulfillsRequirementGreyObservations(
-                                            ObservationTime,
-                                            visiGals2,
-                                            obspar.location,
-                                            obspar.minMoonSourceSeparation,
+                                            ObservationTime, visiGals2, obspar
                                         )
                                         finalGals2 = visiGals2[mask & maskgrey]
                                     if not obspar.useGreytime:
@@ -1561,7 +1514,7 @@ def PGalinFoV_NObs(
 
                 if obspar.strategy == "targeted":
                     visible, altaz, tGals_aux = VisibleAtTime(
-                        ObservationTime, tGals_aux, obspar.maxZenith, obspar.location
+                        ObservationTime, tGals_aux, obspar
                     )
                     if visible:
                         # select galaxies within the slightly enlarged visiblity window
@@ -1594,10 +1547,7 @@ def PGalinFoV_NObs(
                                 and obspar.secondRound
                             ):
                                 visible, altaz, tGals_aux2 = VisibleAtTime(
-                                    ObservationTime,
-                                    tGals_aux2,
-                                    obspar.maxZenith,
-                                    obspar.location,
+                                    ObservationTime, tGals_aux2, obspar
                                 )
                                 if visible:
                                     visiMask = altaz.alt.value > 90 - (
@@ -1610,10 +1560,7 @@ def PGalinFoV_NObs(
 
                                     if obspar.useGreytime:
                                         maskgrey = FulfillsRequirementGreyObservations(
-                                            ObservationTime,
-                                            visiGals2,
-                                            obspar.location,
-                                            obspar.minMoonSourceSeparation,
+                                            ObservationTime, visiGals2, obspar
                                         )
                                         finalGals2 = visiGals2[mask & maskgrey]
                                     if not obspar.useGreytime:
@@ -1794,8 +1741,8 @@ def PGalinFoV_NObs(
         ],
         names=[
             "Time[UTC]",
-            "RA(deg)",
-            "DEC(deg)",
+            "RA[deg]",
+            "DEC[deg]",
             "PGW",
             "Pgal",
             "Round",
@@ -1810,11 +1757,16 @@ def PGalinFoV_NObs(
 
 
 def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
+    """
+    Compute the best observation tiles based on a 2D method, considering galaxy probabilities and observatory constraints.
+    """
+
     random.seed()
     RAarray = []
     DECarray = []
     P_GWarray = []
     Occultedpixels = []
+    pixlistHR = []
     obspar = obsparameters[0]
 
     radius = obspar.FOV
@@ -1839,8 +1791,8 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
         print(
             PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist  # noqa: F821
         )
-        pixlist, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist  # noqa: F821
+        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+            PointingFile, prob, obspar, pixlist, pixlistHR  # noqa: F821
         )
 
         if obspar.countPrevious:
@@ -1858,12 +1810,7 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
             "==========================================================================================="
         )
 
-    pix_ra = radecs.ra.deg
-    pix_dec = radecs.dec.deg
-    phipix = np.deg2rad(pix_ra)
-    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
-    ipix = hp.ang2pix(reducedNside, thetapix, phipix)
-
+    ipix = TransformRADecToPix(radecs, reducedNside)
     newpix = ipix
 
     first_values = GetBestGridPos2D(
@@ -1877,6 +1824,9 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
         Occultedpixels,
         doPlot,
         dirName,
+        obspar.numberSides,
+        pixlistHR,
+        obspar.minProbcut,
     )
 
     # ObsName = [obspar.name for j in range(len(first_values))]
@@ -1885,17 +1835,22 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
     P_GWarray = [row["PIXFOVPROB"] for row in first_values]
 
     SuggestedPointings = Table(
-        [RAarray, DECarray, P_GWarray], names=["RA(deg)", "DEC(deg)", "PGW"]
+        [RAarray, DECarray, P_GWarray], names=["RA[deg]", "DEC[deg]", "PGW"]
     )
 
     return SuggestedPointings
 
 
 def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirName):
+    """
+    Compute the best observation tiles based on a 3D method for space-based observatories, considering galaxy probabilities and satellite constraints.
+    """
+
     random.seed()
     RAarray = []
     DECarray = []
     pixlist = []
+    pixlistHR = []
     ObsName = []
     Occultedpixels = []
 
@@ -1937,8 +1892,8 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        pixlist, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist
+        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+            PointingFile, prob, obspar, pixlist, pixlistHR
         )
 
         if obspar.countPrevious:
@@ -1954,18 +1909,11 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
         )
         print("========")
 
-    pix_ra = radecs.ra.deg
-    pix_dec = radecs.dec.deg
-    phipix = np.deg2rad(pix_ra)
-    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
-    ipix = hp.ang2pix(reducedNside, thetapix, phipix)
+    ipix = TransformRADecToPix(radecs, reducedNside)
     newpix = ipix
 
     # CONVERTING newpix to angles on the coordinate grid
-    tt, pp = hp.pix2ang(reducedNside, newpix)
-    ra2 = np.rad2deg(pp)
-    dec2 = np.rad2deg(0.5 * np.pi - tt)
-    pixradec = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+    pixradec = TransformPixToRaDec(newpix, reducedNside)
 
     first_values = GetBestGridPos3D(
         prob,
@@ -1975,12 +1923,13 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
         radius,
         sum_dP_dV,
         HRnside,
-        True,
+        obspar.numberSides,
         maxRuns,
         doPlot,
         dirName,
         reducedNside,
         Occultedpixels,
+        obspar.minProbcut,
     )
 
     ObsName = [obspar.obs_name for j in range(len(first_values))]
@@ -1990,7 +1939,7 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
 
     SuggestedPointings = Table(
         [ObsName, RAarray, DECarray, P_Galarray],
-        names=["ObsName", "RA(deg)", "DEC(deg)", "PGal"],
+        names=["ObsName", "RA[deg]", "DEC[deg]", "PGal"],
     )
     return SuggestedPointings
 
@@ -1998,10 +1947,18 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
 def PGWinFoV_Space_NObs(
     skymap, nameEvent, ObservationTime0, PointingFile, obsparameters, dirName
 ):
+    """
+    Compute an observation schedule for space-based observatories using a 3D method.
+
+    It calculates optimal observation times considering the galaxy catalog, GW probability map, and satellite constraints.
+    The function returns suggested pointings along with satellite visibility times and SAA status.
+    """
+
     random.seed()
     RAarray = []
     DECarray = []
     pixlist = []
+    pixlistHR = []
     P_GWarray = []
     ObsName = []
     Occultedpixels = []
@@ -2027,8 +1984,8 @@ def PGWinFoV_Space_NObs(
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        pixlist, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist
+        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+            PointingFile, prob, obspar, pixlist, pixlistHR
         )
 
         if obspar.countPrevious:
@@ -2046,11 +2003,7 @@ def PGWinFoV_Space_NObs(
             "==========================================================================================="
         )
 
-    pix_ra = radecs.ra.deg
-    pix_dec = radecs.dec.deg
-    phipix = np.deg2rad(pix_ra)
-    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
-    ipix = hp.ang2pix(reducedNside, thetapix, phipix)
+    ipix = TransformRADecToPix(radecs, reducedNside)
     newpix = ipix
 
     first_values1 = GetBestGridPos2D(
@@ -2064,6 +2017,9 @@ def PGWinFoV_Space_NObs(
         Occultedpixels,
         doPlot,
         dirName,
+        obspar.numberSides,
+        pixlistHR,
+        obspar.minProbcut,
     )
 
     # FOR SPACE ########################################################
@@ -2073,7 +2029,7 @@ def PGWinFoV_Space_NObs(
     saa = np.empty(obspar.maxRuns + 1, dtype=bool)
     SatTimes = np.empty(obspar.maxRuns + 1, dtype=bool)
 
-    # Iterate through time steps within the specified duration
+    # Iterate through time steps within the specified duration -> to be modified
     current_time = ObservationTime0
     start_time = ObservationTime0
     step = int(obspar.duration / obspar.maxRuns)
@@ -2091,30 +2047,52 @@ def PGWinFoV_Space_NObs(
         step,
         doPlot,
         dirName,
+        obspar.datasetDir,
+        obspar.SAAThreshold,
     )
 
     i = 0
     current_time = ObservationTime0
     start_time = ObservationTime0
+    AvailablePixPerTime = []
+    TestTime = []
+    RadecsVsTimes = []
+    matching_tables = []
+    ProbaTime = []
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         # Need to get a list of highest pixels
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
-        satellite_position, satellite_location = GetSatellitePositions(
+        satellitePosition, satelliteLocation = GetSatellitePositions(
             SatelliteName, SatelliteTime
         )
-        ObsBool, yprob, ipixlistRROcc = OccultationCut(
+        ObsBool, yprob, pixlistRROcc = OccultationCut(
             prob,
             reducedNside,
             current_time,
-            obspar.minProbcut,
-            satellite_position,
-            satellite_location,
-            obspar.sunDown,
-            obspar.moonDown,
+            obspar,
+            satellitePosition,
+            satelliteLocation,
         )
 
-        # WE COULD GET THE LIST OF OBSEEVABLE PIXELS AT THIS SPECIFIC TIME
-        Occultedpixels.append(ipixlistRROcc)
+        # Let's get the list of pixels available at each iteration
+        firstvalue1 = first_values1
+
+        matching_rows1 = FindMatchingCoords(1, firstvalue1, pixlistRROcc, reducedNside)
+        matching_tables.append(matching_rows1)
+
+        radectime = co.SkyCoord(
+            ra=matching_rows1["PIXRA"] * u.deg, dec=matching_rows1["PIXDEC"] * u.deg
+        )
+        pix_idx = TransformRADecToPix(radectime, reducedNside)
+        pix_proba = matching_rows1["PIXFOVPROB"]
+
+        RadecsVsTimes.append(radectime)
+        AvailablePixPerTime.append(pix_idx)
+        TestTime.append(current_time)
+        ProbaTime.append(pix_proba)
+
+        # List of all cculted pixels
+        Occultedpixels.append(pixlistRROcc)
         current_time += step
         i += 1
 
@@ -2125,14 +2103,7 @@ def PGWinFoV_Space_NObs(
     newpix = OldPix[searchpix]
 
     # Find common pixels
-    pix_values = first_values1["PIX"]
-    common_pix = set(newpix).intersection(pix_values)
-    filtered_rows = first_values1[[pix in common_pix for pix in pix_values]]
-
-    first_values = filtered_rows
-
-    if obspar.doPlot:
-        PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
+    first_values = FindMatchingPixList(newpix, first_values1)
 
     ObsName = [obspar.obs_name for j in range(len(first_values))]
     RAarray = [row["PIXRA"] for row in first_values]
@@ -2141,19 +2112,65 @@ def PGWinFoV_Space_NObs(
 
     SuggestedPointings = Table(
         [ObsName, RAarray, DECarray, P_GWarray],
-        names=["ObsName", "RA(deg)", "DEC(deg)", "PGW"],
+        names=["ObsName", "RA[deg]", "DEC[deg]", "PGW"],
     )
 
-    return SuggestedPointings, SatTimes, saa
+    result = {
+        "SatTimes": SatTimes,
+        "saa": saa,
+        "first_values1": first_values1,
+        "first_values": first_values,
+        "TestTime": TestTime,
+        "AvailablePixPerTime": AvailablePixPerTime,
+        "ProbaTime": ProbaTime,
+        "Occultedpixels": Occultedpixels,
+    }
+
+    return SuggestedPointings, result
 
 
 def PGalinFoV_Space_NObs(
     skymap, nameEvent, ObservationTime0, PointingFile, galFile, obsparameters, dirName
 ):
+    """
+    Compute an observation schedule for space-based observatories using a 3D method.
+
+    Called by :func:`tilepy.include.observationschedule.GetSchedule`, this function generates a schedule of pointings for each observatory,
+    considering the field of view (FoV), galaxy catalog, and satellite position with occultation constraints.
+
+    Parameters
+    ----------
+    skymap : SkyMap
+        The object storing sky maps.
+    nameEvent : str
+        The name of the event.
+    ObservationTime0 : datetime
+        The desired start time for scheduling to begin.
+    PointingFile : str, optional
+        Path to the text file containing the pointings that have already been performed.
+    galFile : str
+        Path to the galaxy catalog file.
+    obsparameters : list of ObservationParameters
+        A list of sets of parameters for each observatory needed to launch the tiling scheduler.
+    dirName : str
+        Path to the output directory where the schedules and plots will be saved.
+
+    Returns
+    -------
+    SuggestedPointings : astropy.table.Table
+        Table of suggested pointings with their RA, DEC, and galaxy probability.
+    SatTimes : numpy.ndarray
+        Array of satellite observation times.
+    saa : numpy.ndarray
+        Array indicating the satellite's South Atlantic Anomaly (SAA) status at each time step.
+
+    """
+
     random.seed()
     RAarray = []
     DECarray = []
     pixlist = []
+    pixlistHR = []
     ObsName = []
     Occultedpixels = []
 
@@ -2194,8 +2211,8 @@ def PGalinFoV_Space_NObs(
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, reducedNside, radius, pixlist)
-        pixlist, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist
+        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+            PointingFile, prob, obspar, pixlist, pixlistHR
         )
 
         if obspar.countPrevious:
@@ -2213,12 +2230,7 @@ def PGalinFoV_Space_NObs(
             "==========================================================================================="
         )
 
-    pix_ra = radecs.ra.deg
-    pix_dec = radecs.dec.deg
-    phipix = np.deg2rad(pix_ra)
-    thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
-    ipix = hp.ang2pix(reducedNside, thetapix, phipix)
-
+    ipix = TransformRADecToPix(radecs, reducedNside)
     newpix = ipix
     pixradec = radecs
 
@@ -2227,15 +2239,16 @@ def PGalinFoV_Space_NObs(
         tGals0,
         pixradec,
         newpix,
-        radecs,
+        radius,
         sum_dP_dV,
         HRnside,
-        True,
+        obspar.numberSides,
         maxRuns,
         doPlot,
         dirName,
         reducedNside,
         Occultedpixels,
+        obspar.minProbcut,
     )
 
     # FOR SPACE ######################################################
@@ -2263,64 +2276,84 @@ def PGalinFoV_Space_NObs(
         step,
         doPlot,
         dirName,
+        obspar.datasetDir,
+        obspar.SAAThreshold,
     )
 
     i = 0
     current_time = ObservationTime0
     start_time = ObservationTime0
+    AvailablePixPerTime = []
+    TestTime = []
+    RadecsVsTimes = []
+    matching_tables = []
+    ProbaTime = []
     while current_time <= start_time + datetime.timedelta(minutes=duration):
         # Need to get a list of highest pixels
         SatelliteTime = GetSatelliteTime(SatelliteName, current_time)
-        satellite_position, satellite_location = GetSatellitePositions(
+        satellitePosition, satelliteLocation = GetSatellitePositions(
             SatelliteName, SatelliteTime
         )
-        ObsBool, yprob, ipixlistRROcc = OccultationCut(
+        ObsBool, yprob, pixlistRROcc = OccultationCut(
             prob,
             reducedNside,
             current_time,
-            obspar.minProbcut,
-            satellite_position,
-            satellite_location,
-            obspar.sunDown,
-            obspar.moonDown,
+            obspar,
+            satellitePosition,
+            satelliteLocation,
         )
 
-        # WE COULD GET THE LIST OF OBSEEVABLE PIXELS AT THIS SPECIFIC TIME
-        Occultedpixels.append(ipixlistRROcc)
+        # Let's get the list of pixels available at each iteration
+        firstvalue1 = first_values1
+
+        matching_rows1 = FindMatchingCoords(1, firstvalue1, pixlistRROcc, reducedNside)
+        matching_tables.append(matching_rows1)
+
+        radectime = co.SkyCoord(
+            ra=matching_rows1["PIXRA"] * u.deg, dec=matching_rows1["PIXDEC"] * u.deg
+        )
+        theta = np.radians(90.0 - matching_rows1["PIXDEC"])
+        phi = np.radians(matching_rows1["PIXRA"])  # phi = longitude
+        pix_idx = hp.ang2pix(reducedNside, theta, phi, nest=False)
+
+        pix_proba = matching_rows1["PIXFOVPROB"]
+
+        RadecsVsTimes.append(radectime)
+        AvailablePixPerTime.append(pix_idx)
+        TestTime.append(current_time)
+        ProbaTime.append(pix_proba)
+
+        # List of all cculted pixels
+        Occultedpixels.append(pixlistRROcc)
         current_time += step
         i += 1
 
-    # WE CAN GET THE LIST OF PIXELS AVAILABLE AT ALL TIMES
+    # WE CAN GET THE LIST OF PIXELS AVAILABLE AT ALL TIMES --> here we are getting them for all the 90% region... we can only get then for furst value if we want
     Occultedpixels = [item for sublist in Occultedpixels for item in sublist]
     OldPix = ipix
     searchpix = np.isin(OldPix, Occultedpixels, invert=True)
     newpix = OldPix[searchpix]
 
     # CONVERTING newpix to angles on the coordinate grid
-    tt, pp = hp.pix2ang(reducedNside, newpix)
-    ra2 = np.rad2deg(pp)
-    dec2 = np.rad2deg(0.5 * np.pi - tt)
-    pixradec = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+    pixradec = TransformPixToRaDec(newpix, reducedNside)
 
-    # Finding the common radec betweem vosoble pixels and the grid
+    # Finding the common radec betweem visible pixels and the grid
     first_values_coords = co.SkyCoord(
         ra=first_values1["PIXRA"], dec=first_values1["PIXDEC"], unit="deg"
     )
 
     matching_rows = []
     for coord in pixradec:
-        # Check which rows in first_values match the coord
-        matches = np.where(first_values_coords.ra == coord.ra)[0]
-        matches = [m for m in matches if first_values_coords.dec[m] == coord.dec]
+        sep = first_values_coords.separation(coord)
+        matches = np.where(sep < 1e-2 * u.deg)[0]  # adjust tolerance as needed
 
-        # Append the matching rows to the result
         matching_rows.extend(first_values1[matches])
 
-    # Convert the list of matching rows back to an Astropy Table
-    first_values = Table(rows=matching_rows, names=first_values1.colnames)
-
-    if obspar.doPlot:
-        PlotSpaceOcc(prob, dirName, reducedNside, Occultedpixels, first_values)
+    if matching_rows:
+        first_values = Table(rows=matching_rows, names=first_values1.colnames)
+    else:
+        print("No coordinates matched within the tolerance.")
+        first_values = Table(names=first_values1.colnames)
 
     # FOR TARGETED HERE TRY TO FIND OUT WHICH GALAXIES ARE IN THE VISIBLE PART. Then choose the highest 10 betwee nthem
 
@@ -2331,6 +2364,18 @@ def PGalinFoV_Space_NObs(
 
     SuggestedPointings = Table(
         [ObsName, RAarray, DECarray, P_Galarray],
-        names=["ObsName", "RA(deg)", "DEC(deg)", "PGal"],
+        names=["ObsName", "RA[deg]", "DEC[deg]", "PGal"],
     )
-    return SuggestedPointings, SatTimes, saa
+
+    result = {
+        "SatTimes": SatTimes,
+        "saa": saa,
+        "first_values1": first_values1,
+        "first_values": first_values,
+        "TestTime": TestTime,
+        "AvailablePixPerTime": AvailablePixPerTime,
+        "ProbaTime": ProbaTime,
+        "Occultedpixels": Occultedpixels,
+    }
+
+    return SuggestedPointings, result

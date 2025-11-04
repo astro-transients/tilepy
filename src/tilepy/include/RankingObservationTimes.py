@@ -1,19 +1,21 @@
-#
-# Copyright (C) 2016-2024  tilepy developers (Monica Seglar-Arroyo, Halim Ashkar, Fabian Schussler, Mathieu de Bony)
+# Copyright (C) 2016-2025  tilepy developers
+# (Monica Seglar-Arroyo, Halim Ashkar, Fabian Schussler, Mathieu de Bony)
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
+# it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
+# You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
+
+
 ##################################################################################################
 #           Tools to rank the observations from the largest to the lowest probability covered,
 #           adding the observability window of each of them, which gives a comprehensive view
@@ -23,6 +25,8 @@ import datetime
 
 import astropy.coordinates as co
 import healpy as hp
+import matplotlib.cm as cm
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -32,6 +36,8 @@ from astropy.coordinates import AltAz, SkyCoord, get_body
 from astropy.io import ascii
 from astropy.table import Table
 from astropy.time import Time
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import Normalize
 from six.moves import configparser
 from sklearn.cluster import AgglomerativeClustering
 
@@ -41,14 +47,15 @@ if six.PY2:
     ConfigParser = configparser.SafeConfigParser
 else:
     ConfigParser = configparser.ConfigParser
-
+import os
+import re
 
 # iers_file = os.path.join(os.path.abspath(
 #    os.path.dirname(__file__)), '../dataset/finals2000A.all')
 # iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
 __all__ = [
-    "load_pointingFile",
+    "LoadPointingFile",
     "VisibilityWindow",
     "GetObservationPeriod",
     "GetVisibility",
@@ -60,11 +67,40 @@ __all__ = [
     "EvolutionPlot",
     "RankingTimes",
     "RankingTimes_2D",
+    "PlotAccRegionTimePix",
+    "PlotAccRegionTimeRadec",
+    "Ranking_Space",
+    "Ranking_Space_AI",
 ]
 
 
-def load_pointingFile(tpointingFile):
-    # Read PointingsFile
+def LoadPointingFile(tpointingFile):
+    """
+    Load pointings from a file.
+
+    Reads a pointings file with columns for time, RA, and Dec, returning an
+    astropy Table with the loaded pointings.
+
+    Parameters
+    ----------
+    tpointingFile : str
+        Path to the pointing file to load.
+
+    Returns
+    -------
+    Pointings : astropy.table.Table
+        Table containing the pointings with columns: 'Pointing', 'Time',
+        'RA[deg]', and 'DEC[deg]'.
+
+    Notes
+    -----
+    The input file should contain the following columns (whitespace-delimited):
+        - time1: Date part of the timestamp (string)
+        - time2: Time part of the timestamp (string, may include fractional seconds)
+        - ra: Right ascension in degrees (string/float)
+        - dec: Declination in degrees (string/float)
+
+    """
 
     print("Loading pointings from " + tpointingFile)
     (
@@ -87,12 +123,10 @@ def load_pointingFile(tpointingFile):
     dec = np.atleast_1d(dec)
 
     time = []
-
-    for i in range(len(time1)):
+    for i, t1 in enumerate(time1):
+        t2 = time2[i]
         time.append(
-            (
-                time1[i] + " " + time2[i].split(":")[0] + ":" + time2[i].split(":")[1]
-            ).split('"')[1]
+            (t1 + " " + t2.split(":")[0] + ":" + t2.split(":")[1]).split('"')[1]
         )
 
     ra = ra.astype(float)
@@ -100,20 +134,41 @@ def load_pointingFile(tpointingFile):
 
     index_list = list(range(len(ra)))
     Pointings = Table(
-        [index_list, time, ra, dec], names=("Pointing", "Time", "RAJ2000", "DEJ2000")
+        [index_list, time, ra, dec], names=("Pointing", "Time", "RA[deg]", "DEC[deg]")
     )
 
     return Pointings
 
 
 def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
+    """
+    Compute visibility windows and zenith angles for each pointing.
+
+    Parameters
+    ----------
+    ObservationTime : datetime.datetime
+        The time to compute visibility for.
+    Pointing : astropy.table.Table
+        Table with pointing information (columns: 'Time', 'RA[deg]', 'DEC[deg]').
+    obspar : object
+        Observation parameters (must have 'duration', 'maxZenith', 'location').
+    dirName : str
+        Output directory name.
+
+    Returns
+    -------
+    Pointing : astropy.table.Table
+        The input Table with added columns:
+        'Observation window', 'Array of zenith angles', 'Zenith angles in steps'.
+
+    """
 
     source = SkyCoord(
-        Pointing["RAJ2000"], Pointing["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
+        Pointing["RA[deg]"], Pointing["DEC[deg]"], frame="icrs", unit=(u.deg, u.deg)
     )
-    WINDOW = []
-    ZENITH = []
-    SZENITH = []
+    window_arr = []
+    zenith_arr = []
+    szenith_arr = []
 
     try:
         auxtime = datetime.datetime.strptime(
@@ -128,23 +183,21 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
             auxtime = datetime.datetime.strptime(Pointing["Time"][0], "%Y-%m-%d %H:%M")
 
     # frame = co.AltAz(obstime=auxtime, location=observatory)
-    timeInitial = auxtime - datetime.timedelta(minutes=30)
-    for i in range(0, len(source)):
+    timeInitial = auxtime - datetime.timedelta(minutes=obspar.duration)
+    for i, s in enumerate(source):
         NonValidwindow, Stepzenith = GetVisibility(
-            Pointing["Time"], source[i], obspar.maxZenith, obspar.location
+            Pointing["Time"], s, obspar.maxZenith, obspar.location
         )
-        window, zenith = GetObservationPeriod(
-            timeInitial, source[i], obspar, i, dirName, False
-        )
-        WINDOW.append(window)
-        ZENITH.append(zenith)
-        SZENITH.append(Stepzenith)
+        window, zenith = GetObservationPeriod(timeInitial, s, obspar, i, dirName, False)
+        window_arr.append(window)
+        zenith_arr.append(zenith)
+        szenith_arr.append(Stepzenith)
 
         # At input ObservationTime the night is over, the scheduling has been computed for the next night (with the condition <24h holding)
         if not Tools.IsGreyness(ObservationTime, obspar):
             window, zenith = GetObservationPeriod(
                 ObservationTime + datetime.timedelta(hours=12),
-                source[i],
+                s,
                 obspar,
                 i,
                 dirName,
@@ -152,18 +205,17 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
             )
         else:
             window, zenith = GetObservationPeriod(
-                ObservationTime, source[i], obspar, i, dirName, True
+                ObservationTime, s, obspar, i, dirName, True
             )
 
-    Pointing["Observation window"] = WINDOW
-    Pointing["Array of zenith angles"] = ZENITH
-    Pointing["Zenith angles in steps"] = SZENITH
+    Pointing["Observation window"] = window_arr
+    Pointing["Array of zenith angles"] = zenith_arr
+    Pointing["Zenith angles in steps"] = szenith_arr
 
     return Pointing
 
 
 def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlot):
-
     AltitudeCut = 90 - obspar.maxZenith
     nights = obspar.maxNights
     useGreytime = obspar.useGreytime
@@ -229,9 +281,9 @@ def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlo
                 NightsCounter,
             ],
             names=[
-                "Time UTC",
-                "Alt Source",
-                "Alt Sun",
+                "TimeUTC",
+                "AltSource",
+                "AltSun",
                 "AltMoon",
                 "moonPhase",
                 "MoonDistance",
@@ -240,36 +292,36 @@ def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlo
         )
         # selectedTimes=Altitudes['Time UTC']
         selection = (
-            (Altitudes["Alt Sun"] < -18.0)
-            & (Altitudes["Alt Source"] > AltitudeCut)
+            (Altitudes["AltSun"] < -18.0)
+            & (Altitudes["AltSource"] > AltitudeCut)
             & (Altitudes["AltMoon"] < -0.5)
         )
         DTaltitudes = Altitudes[selection]
         newtimes = []
-        newtimes.extend(DTaltitudes["Time UTC"].mjd)
+        newtimes.extend(DTaltitudes["TimeUTC"].mjd)
         selectionGreyness = (
             (Altitudes["AltMoon"] < moonGrey)
             & (Altitudes["AltMoon"] > moonDown)
             & (Altitudes["moonPhase"] < moonPhase)
-            & (Altitudes["Alt Sun"] < sunDown)
+            & (Altitudes["AltSun"] < sunDown)
             & (Altitudes["MoonDistance"] > minMoonSourceSeparation)
             & (Altitudes["MoonDistance"] < maxMoonSourceSeparation)
-            & (Altitudes["Alt Source"] > AltitudeCut)
+            & (Altitudes["AltSource"] > AltitudeCut)
         )
         GTaltitudes = Altitudes[selectionGreyness]
-        newtimes.extend(GTaltitudes["Time UTC"].mjd)
+        newtimes.extend(GTaltitudes["TimeUTC"].mjd)
         newtimes = sorted(newtimes)
         ScheduledTimes = Time(newtimes, format="mjd").iso
 
     else:
         Altitudes = Table(
             [times, msourcealtazs.alt, sunaltazs.alt, moonaltazs.alt, NightsCounter],
-            names=["Time UTC", "Alt Source", "Alt Sun", "AltMoon", "NightsCounter"],
+            names=["TimeUTC", "AltSource", "AltSun", "AltMoon", "NightsCounter"],
         )
-        Times = Altitudes["Time UTC"]
+        Times = Altitudes["TimeUTC"]
         selection = (
-            (Altitudes["Alt Sun"] < -18.0)
-            & (Altitudes["Alt Source"] > AltitudeCut)
+            (Altitudes["AltSun"] < -18.0)
+            & (Altitudes["AltSource"] > AltitudeCut)
             & (Altitudes["AltMoon"] < -0.5)
         )
         ScheduledTimes = Time(Times[selection], format="mjd").iso
@@ -288,7 +340,6 @@ def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlo
 
 
 def GetVisibility(time, radecs, maxZenith, obsLoc):
-
     visibility = []
     altitude = []
 
@@ -329,9 +380,8 @@ def GetVisibility(time, radecs, maxZenith, obsLoc):
 
 
 def ProbabilitiesinPointings3D(cat, galPointing, FOV, totaldPdV, prob, nside):
-
-    ra = galPointing["RAJ2000"]
-    dec = galPointing["DEJ2000"]
+    ra = galPointing["RA[deg]"]
+    dec = galPointing["DEC[deg]"]
     PGW = []
     PGAL = []
 
@@ -350,9 +400,8 @@ def ProbabilitiesinPointings3D(cat, galPointing, FOV, totaldPdV, prob, nside):
 
 
 def PGGPGalinFOV(cat, ra, dec, prob, totaldPdV, FOV, nside):
-
     targetCoordcat = co.SkyCoord(
-        cat["RAJ2000"], cat["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
+        cat["RA[deg]"], cat["DEC[deg]"], frame="icrs", unit=(u.deg, u.deg)
     )
     targetCoordpointing = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
     dp_dV = cat["dp_dV"]
@@ -377,9 +426,8 @@ def PGGPGalinFOV(cat, ra, dec, prob, totaldPdV, FOV, nside):
 
 
 def ProbabilitiesinPointings2D(Pointing, FOV, prob, nside):
-
-    ra = Pointing["RAJ2000"]
-    dec = Pointing["DEJ2000"]
+    ra = Pointing["RA[deg]"]
+    dec = Pointing["DEC[deg]"]
     PGW = []
     PGAL = []
     for i in range(0, len(ra)):
@@ -394,7 +442,6 @@ def ProbabilitiesinPointings2D(Pointing, FOV, prob, nside):
 
 
 def PGinFOV(ra, dec, prob, radius, nside):
-
     targetCoordpointing = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
 
     # Array of indices of pixels inside circle of FoV
@@ -412,11 +459,10 @@ def PGinFOV(ra, dec, prob, radius, nside):
 
 
 def Sortingby(galPointing, name, exposure):
-
     gggalPointing = galPointing[np.flipud(np.argsort(galPointing["Pgal"]))]
     prioritygal = list(range(len(galPointing["Pgal"])))
-    ra = gggalPointing["RAJ2000"]
-    dec = gggalPointing["DEJ2000"]
+    ra = gggalPointing["RA[deg]"]
+    dec = gggalPointing["DEC[deg]"]
     coord = SkyCoord(ra, dec, unit="deg")
     # print(coord.to_string('hmsdms'))
     gggalPointing["RA(HH:MM:SS) Dec (DD:MM:SS)"] = coord.to_string("hmsdms")
@@ -464,9 +510,9 @@ def Sortingby(galPointing, name, exposure):
     gwgalPointing["Duration"] = exposure
 
     gwgalPointing_TH = gwgalPointing[
-        "Target", "Id", "RAJ2000", "DEJ2000", "Time", "Duration"
+        "Target", "Id", "RA[deg]", "DEC[deg]", "Time", "Duration"
     ]
-    # new_order = ['Target', 'Id', 'RAJ2000','DEJ2000']  # List or tuple
+
     # gwgalPointing_TH = gwgalPointing[new_order]
     outfilename = "%s/RankingObservationTimes_forAlerter.txt" % name
     ascii.write(
@@ -477,11 +523,10 @@ def Sortingby(galPointing, name, exposure):
 
 
 def EvolutionPlot(galPointing, tname, ObsArray):
-
     fig = plt.figure(figsize=(18, 10))
     ax = fig.add_axes([0.1, 0.1, 0.6, 0.8])
-    ra = galPointing["RAJ2000"]
-    dec = galPointing["DEJ2000"]
+    ra = galPointing["RA[deg]"]
+    dec = galPointing["DEC[deg]"]
     pgw = galPointing["Pgw"]
     pgal = galPointing["Pgal"]
     time = galPointing["Time"]
@@ -523,9 +568,11 @@ def EvolutionPlot(galPointing, tname, ObsArray):
     plt.savefig("%s/AltitudevsTime_%s.png" % (tname, ObsArray))
 
 
-def RankingTimes(ObservationTime, skymap, cat, obspar, dirName, PointingFile, ObsArray):
+def RankingTimes(obspar, skymap, cat, dirName, PointingFile):
 
-    point = load_pointingFile(PointingFile)
+    ObservationTime = obspar.obsTime
+    ObsArray = obspar.obs_name
+    point = LoadPointingFile(PointingFile)
 
     ################################################################
 
@@ -548,9 +595,12 @@ def RankingTimes(ObservationTime, skymap, cat, obspar, dirName, PointingFile, Ob
     Sortingby(point, dirName, obspar.duration)
 
 
-def RankingTimes_2D(ObservationTime, prob, obspar, dirName, PointingFile, ObsArray):
+def RankingTimes_2D(obspar, prob, dirName, PointingFile):
 
-    point = load_pointingFile(PointingFile)
+    ObservationTime = obspar.obsTime
+    ObsArray = obspar.obs_name
+
+    point = LoadPointingFile(PointingFile)
 
     ################################################################
 
@@ -573,8 +623,8 @@ def RankingTimes_2D(ObservationTime, prob, obspar, dirName, PointingFile, ObsArr
 
 # Function to compute 2D distance between two rows
 def distance(entry1, entry2):
-    ra1, dec1 = entry1["RA(deg)"], entry1["DEC(deg)"]
-    ra2, dec2 = entry2["RA(deg)"], entry2["DEC(deg)"]
+    ra1, dec1 = entry1["RA[deg]"], entry1["DEC[deg]"]
+    ra2, dec2 = entry2["RA[deg]"], entry2["DEC[deg]"]
 
     # Handle circular distance for RA
     delta_ra = min(abs(ra1 - ra2), 360 - abs(ra1 - ra2))
@@ -585,7 +635,7 @@ def distance(entry1, entry2):
 
 
 # Ranking function
-def Ranking_Space(dirName, PointingFile):
+def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
     # Read the data from the pointing file
     file_path = f"{PointingFile}"
     data = pd.read_csv(file_path, delim_whitespace=True)
@@ -603,14 +653,26 @@ def Ranking_Space(dirName, PointingFile):
     # Iteratively find the closest entry
     while not data.empty:
         last_entry = ranked[-1]
-        # Compute distances to the last entry
-        data["distance"] = data.apply(lambda row: distance(last_entry, row), axis=1)
-        # Find the closest entry
-        closest_idx = data["distance"].idxmin()
-        closest_entry = data.loc[closest_idx]
-        ranked.append(closest_entry)
-        # Remove the closest entry from the dataset
-        data = data.drop(index=closest_idx).reset_index(drop=True)
+
+        # Normalize distance and PGW to 0-1 scale
+        distances = data.apply(lambda row: distance(last_entry, row), axis=1)
+        pgw_values = data["PGW"] if "PGW" in data.columns else data["PGal"]
+
+        max_dist = distances.max()
+        max_pgw = pgw_values.max()
+
+        data["distance_norm"] = distances / max_dist
+        data["pgw_norm"] = pgw_values / max_pgw
+
+        # Cost function: prioritize close and high probability
+        α, β = alphaR, betaR  # tune as needed
+        data["score"] = α * data["distance_norm"] - β * data["pgw_norm"]
+
+        best_idx = data["score"].idxmin()
+        best_entry = data.loc[best_idx]
+
+        ranked.append(best_entry)
+        data = data.drop(index=best_idx).reset_index(drop=True)
 
     # Output the ranked list
     print("Ranked List:")
@@ -622,15 +684,141 @@ def Ranking_Space(dirName, PointingFile):
     pd.DataFrame(ranked).to_csv(output_file, index=False, sep="\t")
     print(f"Ranked file saved to {output_file}")
 
+    # Read pre- and post-optimization data
+    pre_df = pd.read_csv(file_path, delim_whitespace=True)
+    # For probability coloring (before optimization)
+    prob_column = "PGW" if "PGW" in pre_df.columns else "PGal"
+    norm_prob = Normalize(
+        vmin=np.min(pre_df[prob_column]), vmax=np.max(pre_df[prob_column])
+    )
+    cmap_prob = cm.autumn
+    pre_colors = [cmap_prob(norm_prob(p)) for p in pre_df[prob_column]]
 
-def Ranking_Space_AI(dirName, PointingFile):
+    ranks = np.arange(len(ranked))
+    # For rank coloring (after optimization)
+    norm_rank = Normalize(vmin=np.min(ranks), vmax=np.max(ranks))
+    cmap_rank = cm.autumn
+    rank_colors = [cmap_rank(1 - norm_rank(r)) for r in ranks]
+
+    if obspar.doPlot:
+
+        prob = skymap.getMap("prob", obspar.HRnside)
+
+        df = pd.read_csv(output_file, sep="\t")
+        ra = df["RA[deg]"].values
+        skycoords = SkyCoord(
+            ra=df["RA[deg]"].values * u.deg,
+            dec=df["DEC[deg]"].values * u.deg,
+            frame="icrs",
+        )
+        ranks = np.arange(len(ra))
+
+        fig = plt.figure(figsize=(10, 6))
+        # Plot HEALPix map with its own color map
+        hp.gnomview(
+            prob, rot=(skycoords[0].ra.deg, skycoords[0].dec.deg), xsize=500, ysize=500
+        )
+
+        # Plot each pointing using rank-based color
+        for coord, color, rank in zip(skycoords, rank_colors, ranks):
+            hp.visufunc.projplot(
+                coord.ra.deg,
+                coord.dec.deg,
+                "o",
+                lonlat=True,
+                color=color,
+                markersize=5,
+                markeredgecolor="black",
+                markeredgewidth=0.3,
+            )
+
+        # Rank colorbar
+        sm_rank = ScalarMappable(cmap=cmap_rank, norm=norm_rank)
+        sm_rank.set_array([])
+        cax_rank = fig.add_axes([0.15, 0.05, 0.7, 0.03])
+        cbar_rank = fig.colorbar(sm_rank, cax=cax_rank, orientation="horizontal")
+        cbar_rank.set_label("Pointing Rank")
+
+        hp.graticule()
+
+        output_dir_rank = os.path.join(dirName, "Ranked_grid")
+        os.makedirs(output_dir_rank, exist_ok=True)
+
+        # Save the plot
+        plt.savefig(os.path.join(output_dir_rank, "RankingObservations_Space.png"))
+        plt.close()
+
+    if obspar.doPlot:
+        try:
+            prob_column = "PGW" if "PGW" in pre_df.columns else "PGal"
+        except Exception:
+            raise ValueError("Neither PGW nor PGal column found")
+
+        # Coordinates
+        pre_coords = SkyCoord(
+            ra=pre_df["RA[deg]"].values * u.deg,
+            dec=pre_df["DEC[deg]"].values * u.deg,
+            frame="icrs",
+        )
+
+        # Create side-by-side subplots with same projection
+        fig = plt.figure(figsize=(14, 6))
+
+        for i, (coords, colors, title) in enumerate(
+            [(pre_coords, pre_colors, "Before Optimization")]
+        ):
+            fig.add_subplot(1, 2, i + 1, projection="mollweide")
+            hp.gnomview(prob, rot=(144.844, 11.111), xsize=500, ysize=500)
+
+            for coord, color in zip(coords, colors):
+                hp.projplot(
+                    coord.ra.deg,
+                    coord.dec.deg,
+                    lonlat=True,
+                    marker="o",
+                    markersize=5,
+                    color=color,
+                    markeredgecolor="black",
+                    markeredgewidth=0.3,
+                )
+
+        # Probability colorbar
+        sm_prob = ScalarMappable(cmap=cmap_prob, norm=norm_prob)
+        sm_prob.set_array([])
+        cax_prob = fig.add_axes([0.25, 0.07, 0.5, 0.03])
+        cbar_prob = fig.colorbar(sm_prob, cax=cax_prob, orientation="horizontal")
+        cbar_prob.set_label(f"Probability ({prob_column})")
+
+        hp.graticule()
+
+        output_dir_rank = os.path.join(dirName, "Ranked_grid")
+        os.makedirs(output_dir_rank, exist_ok=True)
+
+        # Save the plot
+        plt.savefig(os.path.join(output_dir_rank, "Ranking_BeforeOptimization.png"))
+        plt.close()
+
+
+def read_ranked_pointings(file_path):
+    ranked_pointings = []
+    with open(file_path, "r") as file:
+        for line in file:
+            match = re.search(r"Rank\s+\d+:\s+(?P<info>\{.*\})", line)
+            if match:
+                entry = eval(match.group("info"))  # Turn string dict into actual dict
+                ranked_pointings.append(entry)
+    return ranked_pointings
+
+
+def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
+
     # Convert to DataFrame for easier handling
     file_path = f"{PointingFile}"
     data = pd.read_csv(file_path, delim_whitespace=True)
     df = pd.DataFrame(data)
 
     # Extract RA and DEC for clustering
-    coordinates = df[["RA(deg)", "DEC(deg)"]].to_numpy()
+    coordinates = df[["RA[deg]", "DEC[deg]"]].to_numpy()
 
     # Clustering with Agglomerative Clustering
     clustering = AgglomerativeClustering(
@@ -651,10 +839,202 @@ def Ranking_Space_AI(dirName, PointingFile):
             )
         ranked_data.append(cluster_data)
 
-    # Combine ranked clusters
-    final_ranked = pd.concat(ranked_data)
+    # Combine ranked clusters and reset index
+    final_ranked = pd.concat(ranked_data).reset_index(drop=True)
+
+    # Assign global rank starting from 1
+    final_ranked["Rank"] = final_ranked.index + 1
 
     # Save the ranked list to a file
     output_file = "%s/RankingObservations_AI_Space.txt" % dirName
     pd.DataFrame(final_ranked).to_csv(output_file, index=False, sep="\t")
     print(f"Ranked file saved to {output_file}")
+
+    if obspar.doPlot:
+        prob = skymap.getMap("prob", obspar.HRnside)
+
+        df = pd.read_csv(output_file, sep="\t")
+        skycoords = SkyCoord(
+            ra=df["RA[deg]"].values * u.deg,
+            dec=df["DEC[deg]"].values * u.deg,
+            frame="icrs",
+        )
+        ranks = df["Rank"].values
+
+        fig = plt.figure(figsize=(10, 6))
+        # Plot HEALPix map with its own color map
+        hp.gnomview(
+            prob, rot=(skycoords.ra.deg[0], skycoords.dec.deg[0]), xsize=500, ysize=500
+        )
+
+        # Normalize ranks for colormap
+        norm = Normalize(vmin=min(ranks), vmax=max(ranks))
+        colors = [cm.autumn(norm(rank)) for rank in ranks]
+
+        # Plot each pointing using rank-based color
+        for coord, color, rank in zip(skycoords, colors, ranks):
+            hp.visufunc.projplot(
+                coord.ra.deg,
+                coord.dec.deg,
+                "o",
+                lonlat=True,
+                color=color,
+                markersize=5,
+                markeredgecolor="black",
+                markeredgewidth=0.3,
+            )
+            # x, y = hp.proj_to_xy(coord.ra.deg, coord.dec.deg, lonlat=True)
+            # plt.text(x, y, str(rank), fontsize=6, ha='center', va='center', color='black')
+            # hp.projtext(
+            #    coord.ra.deg,
+            #    coord.dec.deg,
+            #    str(rank),
+            #    lonlat=True,
+            #    ha='center',
+            #    va='center',
+            #    color='black'
+            # )
+
+        # Add colorbar
+        sm = ScalarMappable(cmap=cm.autumn, norm=norm)
+        sm.set_array([])
+
+        cax = fig.add_axes([0.15, 0.05, 0.7, 0.03])
+        cbar = fig.colorbar(sm, cax=cax, orientation="horizontal")
+        cbar.set_label("Pointing Rank")
+
+        hp.graticule()
+
+        output_dir_rank = os.path.join(dirName, "Ranked_grid")
+        os.makedirs(output_dir_rank, exist_ok=True)
+
+        # Save the plot
+        plt.savefig(
+            os.path.join(output_dir_rank, "RankingObservations_SpaceClustering.png")
+        )
+        plt.close()
+
+
+def map_pixel_availability(pixels_by_time, probs_by_time, times):
+    """
+    Map each pixel to a list of available times and a single aggregated probability.
+
+    Args:
+        pixels_by_time: list of lists of pixels available at each time step
+        probs_by_time: list of lists of probabilities associated with each pixel at each time step
+        times: list of times corresponding to each pixel list
+
+    Returns:
+        dict: {pixel: {'times': [time1, time2, ...], 'prob': aggregated_probability}, ...}
+    """
+    pixel_data = {}
+
+    for time, pixel_list, prob_list in zip(times, pixels_by_time, probs_by_time):
+        for pixel, prob in zip(pixel_list, prob_list):
+            if pixel not in pixel_data:
+                pixel_data[pixel] = {"times": [], "probs": []}
+            pixel_data[pixel]["times"].append(time)
+            pixel_data[pixel]["probs"].append(prob)
+
+    # Aggregate probabilities (e.g., average)
+    for pixel in pixel_data:
+        probs = pixel_data[pixel]["probs"]
+        avg_prob = sum(probs) / len(probs)
+        pixel_data[pixel]["prob"] = avg_prob
+        del pixel_data[pixel]["probs"]  # Remove raw list to keep only aggregated value
+
+    return pixel_data
+
+
+def PlotAccRegionTimePix(dirName, pixels_by_time, ProbaTime, times):
+    path = dirName + "/Occ_Space_Obs"
+    if not os.path.exists(path):
+        os.mkdir(path, 493)
+
+    pixel_availability = map_pixel_availability(pixels_by_time, ProbaTime, times)
+
+    sorted_pixels = sorted(pixel_availability.items(), key=lambda x: x[1]["prob"])
+
+    plt.figure(figsize=(10, 6))
+
+    # Collect all times where any pixel is available
+    all_times = set()
+    for pixel, data in sorted_pixels:
+        all_times.update(data["times"])
+    all_times = sorted(all_times)
+
+    # Plot pixels
+    colors = plt.cm.tab20(np.linspace(0, 1, len(sorted_pixels)))
+    for y_index, (pixel, data) in enumerate(sorted_pixels):
+        times = data["times"]
+        color = colors[y_index]
+        y_values = [y_index] * len(times)
+        plt.scatter(times, y_values, color=color, s=20)
+
+    # Y-axis labels
+    plt.yticks(
+        range(len(sorted_pixels)),
+        [f"{pixel} (p={data['prob']:.2f})" for pixel, data in sorted_pixels],
+    )
+    plt.xlabel("Time")
+    plt.ylabel("Pixels sorted by ascending probability")
+    # plt.title("Pixel Availability with Occulted Regions")
+    plt.grid(True)
+    plt.tight_layout()
+
+    # Format x-axis to show only time (HH:MM)
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+    plt.gcf().autofmt_xdate()
+
+    plt.savefig(os.path.join(path, "Acc_Pointing_Times_Pix.png"), bbox_inches="tight")
+    plt.close()
+
+
+def PlotAccRegionTimeRadec(dirName, pixels_by_time, ProbaTime, times, nside):
+    path = os.path.join(dirName, "Occ_Space_Obs")
+    os.makedirs(path, mode=0o755, exist_ok=True)
+
+    # Map pixel availability with times and probabilities
+    pixel_availability = map_pixel_availability(pixels_by_time, ProbaTime, times)
+    sorted_pixels = sorted(pixel_availability.items(), key=lambda x: x[1]["prob"])
+
+    plt.figure(figsize=(10, 6))
+
+    # Collect all times where any pixel is available
+    all_times = set()
+    for _, data in sorted_pixels:
+        all_times.update(data["times"])
+    all_times = sorted(all_times)
+
+    yticks = []
+    yticklabels = []
+
+    colors = plt.cm.tab20(np.linspace(0, 1, len(sorted_pixels)))
+
+    for y_index, (pixel, data) in enumerate(sorted_pixels):
+        theta, phi = hp.pix2ang(nside, pixel, nest=False)
+        ra = np.degrees(phi)
+        dec = 90 - np.degrees(theta)
+
+        times = data["times"]
+        color = colors[y_index]
+        y_values = [y_index] * len(times)
+
+        plt.scatter(times, y_values, color=color, s=20)
+
+        yticks.append(y_index)
+        yticklabels.append(f"{ra:.1f}, {dec:.1f} (p={data['prob']:.2f})")
+
+    plt.yticks(yticks, yticklabels)
+    plt.xlabel("Time of Day")
+    plt.ylabel("RA, Dec of Pixels (sorted by ascending probability)")
+    # plt.title("Pixel Availability with Occulted Regions")
+    plt.grid(True)
+    plt.tight_layout()
+
+    # Format x-axis to only show time (HH:MM)
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+    plt.gcf().autofmt_xdate()
+
+    plt.savefig(os.path.join(path, "Acc_Pointing_Times_Radec.png"), bbox_inches="tight")
+    plt.close()

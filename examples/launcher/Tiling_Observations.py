@@ -9,8 +9,8 @@ import datetime
 import os
 import time
 
+from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.include.ObservationScheduler import GetSchedule
-from tilepy.include.PointingTools import ObservationParameters
 
 start = time.time()
 

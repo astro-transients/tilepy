@@ -18,7 +18,7 @@ maintainers = [
 license = {file = "LICENSE.rst"}
 classifiers = [
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -33,11 +33,11 @@ requires-python = ">=3.9"
 dependencies = [
           'astropy',
           'scipy<1.14.0',
+          'numpy',
           'healpy==1.16.2',
           'ipython',
           'matplotlib<3.9.0',
           'MOCpy',
-          'numpy',
           'pandas',
           'pytz',
           'ephem',
@@ -54,14 +54,33 @@ dependencies = [
 tests = [
     "pytest >= 7.0",
     "pytest-cov",
+    "pytest-doctestplus",
     "tomli",
     "nbmake>=1.5.5",
+]
+
+docs = [
+    "numpy<2",
+    "python-ligo-lw",
+    "sphinx>=1.6",
+    "sphinx-astropy[confv2]",
+    "sphinxcontrib-typer",
+    "sphinxcontrib-bibtex",
+    "sphinx-design",
+    "ipykernel",
+    "nbsphinx",
+    "sphinx-gallery",
+    "astropy-sphinx-theme @ git+https://github.com/astropy/sphinx-astropy-theme.git",
+    "sphinx-automodapi @ git+https://github.com/astropy/sphinx-automodapi",
 ]
 
 dev = [
     "setuptools_scm[toml]",
     "pre-commit>=4.1.0",
     "flake8>=7.1.2",
+    "black>=25.1.0",
+    "sphinxcontrib-bibtex",
+    "pytest-astropy",
 ]
 
 all = [
@@ -72,10 +91,16 @@ all = [
 [project.scripts]
 Tiling_Observations = "tilepy.scripts.Tiling_Observations:main"
 PlottingTwoCampaigns = "tilepy.scripts.PlottingTwoCampaigns:main"
+ConvertGalaxyCatalog = "tilepy.tools.ConvertGalaxyCatalog:main"
+
 
 [project.urls]
 repository = "https://github.com/astro-transients/tilepy"
 documentation = "https://github.com/astro-transients/tilepy"
+Homepage = "https://tilepy.readthedocs.io/"
+"Bug Tracker" = "https://github.com/astro-transients/tilepy/issues"
+"Documentation" = "https://tilepy.readthedocs.io/"
+"GitHub" = "https://github.com/astro-transients/tilepy"
 
 [tool.setuptools]
 include-package-data = false
@@ -88,3 +113,59 @@ exclude = [
 
 [tool.setuptools_scm]
 write_to = "src/tilepy/_version.py"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+   #"src/tilepy",
+    "docs",
+]
+
+norecursedirs = [
+    "_build",
+]
+astropy_header = true
+doctest_plus = "enabled"
+text_file_format = "rst"
+addopts = [
+    "--doctest-rst",
+    "--ignore=docs/_build",
+]
+doctest_optionflags = [
+    "FLOAT_CMP",
+    "IGNORE_EXCEPTION_DETAIL",
+]
+
+[tool.coverage.run]
+omit = [
+    "src/tilepy/_dev_version*",
+    "*/tilepy/_dev_version*",
+]
+
+[tool.coverage.report]
+exclude_also = [
+    # Don't complain about packages we have installed
+    "except ImportError",
+    # Don't complain if tests don't hit assertions
+    "raise AssertionError",
+    "raise NotImplementedError",
+    # Don't complain about script hooks
+    "def main\\(.*\\):",
+    # Ignore branches that don't pertain to this version of Python
+    "pragma: py{ignore_python_version}",
+    # Don't complain about IPython completion helper
+    "def _ipython_key_completions_",
+]
+
+[tool.mypy]
+exclude = ["^docs/"]
+ignore_missing_imports = true
+
+[tool.codespell]
+ignore-words-list = """
+    aas,
+    sav,
+    ser,
+    ToO,
+    ToOs,
+"""

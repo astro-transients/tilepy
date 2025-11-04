@@ -1,17 +1,17 @@
-#
-# Copyright (C) 2016-2024  tilepy developers (Monica Seglar-Arroyo, Halim Ashkar, Fabian Schussler, Mathieu de Bony)
+# Copyright (C) 2016-2025  tilepy developers
+# (Monica Seglar-Arroyo, Halim Ashkar, Fabian Schussler, Mathieu de Bony)
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
+# it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
+# You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
@@ -26,9 +26,11 @@ import astropy.units as u
 from astropy.io import ascii
 from astropy.table import Table
 
-from .MapManagement import MapReader, SkyMap
-from .PointingPlotting import PointingPlotting
+from .MapManagement import SkyMap, create_map_reader
+from .PointingPlotting import PlotAccRegion, PointingPlotting
 from .RankingObservationTimes import (
+    PlotAccRegionTimePix,
+    PlotAccRegionTimeRadec,
     Ranking_Space,
     Ranking_Space_AI,
     RankingTimes,
@@ -53,18 +55,39 @@ __all__ = [
 
 def GetSchedule(obspar):
     """
-    Top level function that is called by the user with specific arguments and creates a folder
-    with the tiling schedules for a single telescope and visibility plots.
+    Generates a tiling schedule and visibility plots for a single telescope.
 
-    :param obspar: the set of parameters needed to launch the tiling scheduler
-    :type obspar: class ObservationParameters
+    This top level function takes the observation parameters, computes the optimal tiling
+    and creates a dedicated output folder containing the scheduled pointings and optional plots.
+
+    Parameters
+    ----------
+    obspar : ObservationParameters
+        The set of parameters needed to launch the tiling scheduler.
+
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    If the 90% localization area is larger than the configured maximum (`locCut90`), no schedule is generated.
+
+    Examples
+    --------
+    >>> GetSchedule(obspar)
+
     """
 
-    raw_map = MapReader(obspar)
+    raw_map = create_map_reader(obspar)
     skymap = SkyMap(obspar, raw_map)
 
+    area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
+    area_50 = skymap.getArea(0.5).to_value(u.deg * u.deg)
+
     if obspar.locCut90 is not None:
-        area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
+        # FIXME : a repetitive calculation
+        # area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
         if obspar.locCut90 < area_90:
             print(
                 "The 90% area ("
@@ -75,6 +98,8 @@ def GetSchedule(obspar):
             )
             return
 
+    # FIXME : Not necessary but could ovoid to have along "==" in the code
+    # print("=" * 91)
     print(
         "==========================================================================================="
     )
@@ -89,6 +114,8 @@ def GetSchedule(obspar):
 
     if not os.path.exists(dirName):
         os.makedirs(dirName)
+    # FIXME:
+    # os.makedirs(dirName, exist_ok=True)
 
     if skymap.is3D:
         print(
@@ -101,6 +128,7 @@ def GetSchedule(obspar):
         print("Catalog: ", galaxies)
         print("Dataset: ", obspar.datasetDir)
         print("Output: ", outputDir)
+        print(f"90% area = {area_90}. 50% area = {area_50}")
         print(
             "==========================================================================================="
         )
@@ -119,13 +147,11 @@ def GetSchedule(obspar):
             print(f"Resulting pointings file is {outfilename}")
             if obspar.doRank:
                 RankingTimes(
-                    obspar.obsTime,
+                    obspar,
                     skymap,
                     cat,
-                    obspar,
                     dirName,
                     "%s/SuggestedPointings_GalProbOptimisation.txt" % dirName,
-                    obspar.obs_name,
                 )
             if obspar.doPlot:
                 PointingPlotting(
@@ -151,6 +177,7 @@ def GetSchedule(obspar):
         print("Previous pointings: ", obspar.pointingsFile)
         print("Dataset: ", obspar.datasetDir)
         print("Output: ", outputDir)
+        print(f"90% area = {area_90}. 50% area = {area_50}")
         print(
             "==========================================================================================="
         )
@@ -168,12 +195,10 @@ def GetSchedule(obspar):
             print(f"Resulting pointings file is {outfilename}")
             if obspar.doRank:
                 RankingTimes_2D(
-                    obspar.obsTime,
-                    skymap.getMap("prob", obspar.HRnside),
                     obspar,
+                    skymap.getMap("prob", obspar.HRnside),
                     dirName,
                     "%s/SuggestedPointings_2DProbOptimisation.txt" % dirName,
-                    obspar.obs_name,
                 )
             if obspar.doPlot:
                 PointingPlotting(
@@ -191,23 +216,46 @@ def GetSchedule(obspar):
 
 def GetUniversalSchedule(obspar):
     """
-    Top level function that is called by the user with specific arguments and creates a folder
-    with the tiling schedules for multiple telescopes/observartories and visibility plots.
+    Generates tiling schedules and visibility plots for multiple telescopes/observatories.
 
-    :param obspar: a list of sets of parameters for each observatory needed to launch the tiling scheduler
-    :type obsparameters: list of class ObservationParameters
+    This top-level function takes as input a list of observation parameter sets (one per observatory),
+    computes optimal tilings according to the skymap, and saves the results in output folders.
+    Optionally, it produces ranked pointings and plots if requested in the input parameters.
+
+    Parameters
+    ----------
+    obspar : list of ObservationParameters
+        List of parameter objects, one for each observatory, defining the scheduling configuration.
+
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    The function creates necessary output folders and writes results to disk. If no suitable
+    schedule can be generated for any observatory, no output file is created for that observatory.
+
+    Examples
+    --------
+    >>> GetUniversalSchedule([obspar1, obspar2])
+
     """
 
-    raw_map = MapReader(obspar[0])
+    raw_map = create_map_reader(obspar[0])
     skymap = SkyMap(obspar[0], raw_map)
+
+    area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
+    area_50 = skymap.getArea(0.5).to_value(u.deg * u.deg)
+
     base = obspar[0].base
 
-    print(
-        "==========================================================================================="
-    )
     ObservationTime = obspar[0].obsTime
     outputDir = "%s/%s" % (obspar[0].outDir, raw_map.name_event)
-    galaxies = obspar[0].datasetDir + obspar[0].galcatName
+
+    if skymap.is3D:
+        galaxies = obspar[0].datasetDir + obspar[0].galcatName
+
     cat = None
 
     if base == "grid":
@@ -233,7 +281,7 @@ def GetUniversalSchedule(obspar):
             )
 
     # SPACE
-    if base == "space":
+    elif base == "space":
         if skymap.is3D:
             print(
                 "==========================================================================================="
@@ -246,6 +294,7 @@ def GetUniversalSchedule(obspar):
             print("Catalog: ", obspar[0].galcatName)
             print("Dataset: ", obspar[0].datasetDir)
             print("Output: ", outputDir)
+            print(f"90% area = {area_90}. 50% area = {area_50}")
             print(
                 "==========================================================================================="
             )
@@ -254,7 +303,7 @@ def GetUniversalSchedule(obspar):
             if not os.path.exists(dirName):
                 os.makedirs(dirName)
             galaxies = obspar[0].datasetDir + obspar[0].galcatName
-            SuggestedPointings, SatTimes, SAA = PGalinFoV_Space_NObs(
+            SuggestedPointings, result = PGalinFoV_Space_NObs(
                 skymap,
                 raw_map.name_event,
                 ObservationTime,
@@ -263,7 +312,28 @@ def GetUniversalSchedule(obspar):
                 obspar,
                 dirName,
             )
-            print(SatTimes, SAA)
+            if obspar[0].doPlot and len(result["first_values1"]) > 0:
+                PlotAccRegion(
+                    skymap,
+                    dirName,
+                    obspar[0].reducedNside,
+                    result["Occultedpixels"],
+                    result["first_values"],
+                )
+            if obspar[0].doRank:
+                PlotAccRegionTimePix(
+                    dirName,
+                    result["AvailablePixPerTime"],
+                    result["ProbaTime"],
+                    result["TestTime"],
+                )
+                PlotAccRegionTimeRadec(
+                    dirName,
+                    result["AvailablePixPerTime"],
+                    result["ProbaTime"],
+                    result["TestTime"],
+                    obspar[0].reducedNside,
+                )
 
         else:
             print(
@@ -276,6 +346,7 @@ def GetUniversalSchedule(obspar):
             print("Date: ", obspar[0].obsTime)
             print("Dataset: ", obspar[0].datasetDir)
             print("Output: ", outputDir)
+            print(f"90% area = {area_90}. 50% area = {area_50}")
             print(
                 "==========================================================================================="
             )
@@ -283,7 +354,7 @@ def GetUniversalSchedule(obspar):
             dirName = "%s/PGWinFoV_Space_NObs" % outputDir
             if not os.path.exists(dirName):
                 os.makedirs(dirName)
-            SuggestedPointings, SatTimes, SAA = PGWinFoV_Space_NObs(
+            SuggestedPointings, result = PGWinFoV_Space_NObs(
                 skymap,
                 raw_map.name_event,
                 ObservationTime,
@@ -291,6 +362,32 @@ def GetUniversalSchedule(obspar):
                 obspar,
                 dirName,
             )
+            if obspar[0].doPlot and len(result["first_values1"]) > 0:
+                PlotAccRegion(
+                    skymap,
+                    dirName,
+                    obspar[0].reducedNside,
+                    result["Occultedpixels"],
+                    result["first_values"],
+                )
+            if obspar[0].doRank:
+                PlotAccRegionTimePix(
+                    dirName,
+                    result["AvailablePixPerTime"],
+                    result["ProbaTime"],
+                    result["TestTime"],
+                )
+                PlotAccRegionTimeRadec(
+                    dirName,
+                    result["AvailablePixPerTime"],
+                    result["ProbaTime"],
+                    result["TestTime"],
+                    obspar[0].reducedNside,
+                )
+                # PlotAccRegionTimePix(dirName, AvailablePixPerTime, ProbaTime, TestTime)
+                # PlotAccRegionTimeRadec(
+                #    dirName, AvailablePixPerTime, ProbaTime, result["TestTime"], reducedNside
+                # )
 
     else:
         # GROUND
@@ -306,6 +403,7 @@ def GetUniversalSchedule(obspar):
             print("Catalog: ", obspar[0].galcatName)
             print("Dataset: ", obspar[0].datasetDir)
             print("Output: ", outputDir)
+            print(f"90% area = {area_90}. 50% area = {area_50}")
             print(
                 "==========================================================================================="
             )
@@ -323,6 +421,7 @@ def GetUniversalSchedule(obspar):
                 obspar,
                 dirName,
             )
+
         else:
             print(
                 "==========================================================================================="
@@ -334,6 +433,7 @@ def GetUniversalSchedule(obspar):
             print("Date: ", obspar[0].obsTime)
             print("Dataset: ", obspar[0].datasetDir)
             print("Output: ", outputDir)
+            print(f"90% area = {area_90}. 50% area = {area_50}")
             print(
                 "==========================================================================================="
             )
@@ -357,15 +457,17 @@ def GetUniversalSchedule(obspar):
         print()
         print(f"Resulting pointings file is {outfilename}")
 
-        if base in ["space", "grid"]:
-            for j in range(len(obspar)):
+        if base in ["space"]:
+            for j, obs in enumerate(obspar):
                 obspar1 = obspar[j]
                 SuggestedPointings_1 = SuggestedPointings[
-                    SuggestedPointings["ObsName"] == obspar1.obs_name
+                    SuggestedPointings["ObsName"] == obspar[j].obs_name
                 ]
                 print(SuggestedPointings_1)
                 if base == "space":
-                    time_table = Table([SatTimes, SAA], names=("SatTimes", "SAA"))
+                    time_table = Table(
+                        [result["SatTimes"], result["saa"]], names=("SatTimes", "SAA")
+                    )
                     ascii.write(
                         time_table,
                         "%s/SAA_Times_%s.txt" % (dirName, obspar[j].obs_name),
@@ -380,20 +482,30 @@ def GetUniversalSchedule(obspar):
                         overwrite=True,
                         fast_writer=False,
                     )
-                    Ranking_Space(
-                        dirName,
-                        "%s/SuggestedPointings_GWOptimisation_%s.txt"
-                        % (dirName, obspar[j].obs_name),
-                    )
-                    Ranking_Space_AI(
-                        dirName,
-                        "%s/SuggestedPointings_GWOptimisation_%s.txt"
-                        % (dirName, obspar[j].obs_name),
-                    )
+                    if obspar[j].doRank:
+                        Ranking_Space(
+                            dirName,
+                            "%s/SuggestedPointings_GWOptimisation_%s.txt"
+                            % (dirName, obspar[j].obs_name),
+                            obspar[j],
+                            obspar[j].alphaR,
+                            obspar[j].betaR,
+                            skymap,
+                        )
+                        Ranking_Space_AI(
+                            dirName,
+                            "%s/SuggestedPointings_GWOptimisation_%s.txt"
+                            % (dirName, obspar[j].obs_name),
+                            obspar[j],
+                            skymap,
+                        )
+
+        elif base in ["grid"]:
+            print("This is a grid and not observatory dependent")
 
         else:
             # for obspar in parameters:
-            for j in range(len(obspar)):
+            for j, obs in enumerate(obspar):
                 obspar1 = obspar[j]
                 SuggestedPointings_1 = SuggestedPointings[
                     SuggestedPointings["ObsName"] == obspar1.obs_name
@@ -407,34 +519,35 @@ def GetUniversalSchedule(obspar):
                         overwrite=True,
                         fast_writer=False,
                     )
-                    RankingTimes_2D(
-                        ObservationTime,
-                        skymap.getMap("prob", obspar[j].HRnside),
-                        obspar[j],
-                        dirName,
-                        "%s/SuggestedPointings_GWOptimisation_%s.txt"
-                        % (dirName, obspar[j].obs_name),
-                        obspar[j].obs_name,
-                    )
-                    PointingPlotting(
-                        skymap.getMap("prob", obspar[j].HRnside),
-                        obspar[j],
-                        obspar[j].obs_name,
-                        dirName,
-                        "%s/SuggestedPointings_GWOptimisation_%s.txt"
-                        % (dirName, obspar[j].obs_name),
-                        obspar[j].obs_name,
-                        cat,
-                    )
-            PointingPlotting(
-                skymap.getMap("prob", obspar[j].HRnside),
-                obspar[0],
-                "all",
-                dirName,
-                "%s/SuggestedPointings_GWOptimisation.txt" % dirName,
-                "all",
-                cat,
-            )
+                    if obspar[j].doRank:
+                        RankingTimes_2D(
+                            obspar[j],
+                            skymap.getMap("prob", obspar[j].HRnside),
+                            dirName,
+                            "%s/SuggestedPointings_GWOptimisation_%s.txt"
+                            % (dirName, obspar[j].obs_name),
+                        )
+                    if obspar[j].doPlot:
+                        PointingPlotting(
+                            skymap.getMap("prob", obspar[j].HRnside),
+                            obspar[j],
+                            obspar[j].obs_name,
+                            dirName,
+                            "%s/SuggestedPointings_GWOptimisation_%s.txt"
+                            % (dirName, obspar[j].obs_name),
+                            obspar[j].obs_name,
+                            cat,
+                        )
+            if obspar[j].doPlot:
+                PointingPlotting(
+                    skymap.getMap("prob", obspar[j].HRnside),
+                    obspar[0],
+                    "all",
+                    dirName,
+                    "%s/SuggestedPointings_GWOptimisation.txt" % dirName,
+                    "all",
+                    cat,
+                )
 
     else:
         print("No observations are scheduled")

@@ -1,19 +1,20 @@
-#
-# Copyright (C) 2016-2024  tilepy developers (Monica Seglar-Arroyo, Halim Ashkar, Fabian Schussler, Mathieu de Bony)
+# Copyright (C) 2016-2025  tilepy developers
+# (Monica Seglar-Arroyo, Halim Ashkar, Fabian Schussler, Mathieu de Bony)
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
+# it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
+# You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
+
 ##################################################################################################
 #                        Various plotting tools to obtain plots with the scheduling              #
 ##################################################################################################
@@ -41,6 +42,7 @@ else:
     ConfigParser = configparser.ConfigParser
 
 import matplotlib.colors as mcolors
+import matplotlib.dates as mdates
 from matplotlib.patches import Circle
 
 __all__ = [
@@ -52,6 +54,7 @@ __all__ = [
     "PlotPointingsTogether",
     "PointingPlottingGWCTA",
     "PlotPointings_Pretty",
+    "PlotAccRegion",
 ]
 
 
@@ -182,7 +185,7 @@ def LoadPointingsGW(tpointingFile):
         skip_header=1,
         delimiter=" ",
         unpack=True,
-    )  # ra, dec in degrees
+    )
 
     time1 = np.atleast_1d(time1)
     time2 = np.atleast_1d(time2)
@@ -196,10 +199,10 @@ def LoadPointingsGW(tpointingFile):
     ra = ra.astype(float)
     dec = dec.astype(float)
     coordinates = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
-    # pgw = Pgw.astype(float)
     pgw = np.genfromtxt(
         tpointingFile, usecols=4, skip_header=1, delimiter=" ", unpack=True
     )
+    pgw = np.atleast_1d(pgw)
     return time, coordinates, pgw
 
 
@@ -357,7 +360,9 @@ def PlotPointings(
             plt.savefig("%s/Pointings%s.png" % (dirName, j))
 
 
-def PlotPointingsTogether(prob, targetCoord1, targetCoord2, FOV, plotType, doPlot=True):
+def PlotPointingsTogether(
+    prob, targetCoord1, targetCoord2, FOV1, FOV2, plotType, doPlot=True
+):
 
     if doPlot:
 
@@ -367,7 +372,7 @@ def PlotPointingsTogether(prob, targetCoord1, targetCoord2, FOV, plotType, doPlo
                 xsize=1000,
                 ysize=1000,
                 rot=[targetCoord1[0].ra.deg, targetCoord1[0].dec.deg],
-                reso=5.0,
+                reso=1.0,
             )
         if plotType == "mollweide":
             hp.mollview(prob, title="GW prob map (Equatorial)", coord="C")
@@ -389,8 +394,8 @@ def PlotPointingsTogether(prob, targetCoord1, targetCoord2, FOV, plotType, doPlo
         )
 
         npoints = 400
-        Fov_array = np.empty(npoints)
-        Fov_array.fill(FOV)
+        Fov_array1 = np.empty(npoints)
+        Fov_array1.fill(FOV1)
 
         theta = np.random.rand(npoints) * 360
         tarcoordra1 = np.empty(npoints)
@@ -399,8 +404,8 @@ def PlotPointingsTogether(prob, targetCoord1, targetCoord2, FOV, plotType, doPlo
         for j in range(0, len(targetCoord1.ra)):
             tarcoordra1.fill(targetCoord1[j].ra.deg)
             tarcoorddec1.fill(targetCoord1[j].dec.deg)
-            racoord1 = tarcoordra1 + Fov_array * np.cos(theta)
-            deccoord1 = tarcoorddec1 + Fov_array * np.sin(theta)
+            racoord1 = tarcoordra1 + Fov_array1 * np.cos(theta)
+            deccoord1 = tarcoorddec1 + Fov_array1 * np.sin(theta)
             hp.visufunc.projscatter(
                 racoord1, deccoord1, lonlat=True, marker=".", color=Colors[2]
             )
@@ -411,14 +416,17 @@ def PlotPointingsTogether(prob, targetCoord1, targetCoord2, FOV, plotType, doPlo
                 lonlat=True,
                 color=Colors[1],
             )
+
+        Fov_array2 = np.empty(npoints)
+        Fov_array2.fill(FOV2)
         tarcoordra2 = np.empty(npoints)
 
         tarcoorddec2 = np.empty(npoints)
         for j in range(0, len(targetCoord2.ra)):
             tarcoordra2.fill(targetCoord2[j].ra.deg)
             tarcoorddec2.fill(targetCoord2[j].dec.deg)
-            racoord2 = tarcoordra2 + Fov_array * np.cos(theta)
-            deccoord2 = tarcoorddec2 + Fov_array * np.sin(theta)
+            racoord2 = tarcoordra2 + Fov_array2 * np.cos(theta)
+            deccoord2 = tarcoorddec2 + Fov_array2 * np.sin(theta)
             hp.visufunc.projscatter(
                 racoord2, deccoord2, lonlat=True, marker=".", color=Colors[1]
             )
@@ -714,4 +722,79 @@ def PlotPointings_Pretty(
     plt.savefig(
         "%s/Plot_PrettyMap_%s.png" % (dirName, name), dpi=300, bbox_inches="tight"
     )
+    plt.close()
+
+
+def plot_pixel_availability_healpix(dirName, pixels_by_time, times, nside):
+    path = dirName + "/Occ_Space_Obs"
+    if not os.path.exists(path):
+        os.mkdir(path, 493)
+    fig = plt.figure(figsize=(10, 7))
+    ax = fig.add_subplot(111, projection="3d")
+
+    # Construct arrays with the dimensions for the 16 bars.
+    dx = dy = dz = 0.1
+
+    time_float = mdates.date2num(times)
+    for i in range(len(pixels_by_time)):
+        theta, phi = hp.pix2ang(nside, pixels_by_time[i])
+        ra = np.rad2deg(phi)
+        dec = np.rad2deg(0.5 * np.pi - theta)
+        radec = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+
+        ax.bar3d(
+            radec.ra.deg, radec.dec.deg, time_float[i], dx, dy, dz, zsort="average"
+        )
+
+    ax.set_xlabel("RA (deg)")
+    ax.set_ylabel("Dec (deg)")
+    ax.set_zlabel("Time")
+    ax.set_title("HEALPix Pixel Availability Wireframe")
+
+    ax.zaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d\n%H:%M"))
+    plt.savefig("%s/Occ_Pointing_Times_Vis.png" % (path))
+    plt.close()
+
+
+def PlotAccRegion(skymap, dirName, reducedNside, Occultedpixels, first_values):
+    prob = skymap.getMap("prob", reducedNside)
+
+    path = dirName + "/Occ_Space_Obs"
+    if not os.path.exists(path):
+        os.mkdir(path, 493)
+
+    # mpl.rcParams.update({'font.size':14})
+    # hp.mollview(prob)
+    hp.gnomview(
+        prob,
+        rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]),
+        xsize=500,
+        ysize=500,
+    )
+    hp.graticule()
+    try:
+        tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
+        ra2 = np.rad2deg(pp)
+        dec2 = np.rad2deg(0.5 * np.pi - tt)
+        skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+        hp.visufunc.projplot(
+            skycoord.ra.deg,
+            skycoord.dec.deg,
+            "g.",
+            lonlat=True,
+            coord="C",
+            linewidth=0.1,
+        )
+    except Exception:
+        print("No pcculted pix")
+
+    hp.visufunc.projplot(
+        first_values["PIXRA"],
+        first_values["PIXDEC"],
+        "b.",
+        lonlat=True,
+        coord="C",
+        linewidth=0.1,
+    )
+    plt.savefig("%s/Occ_Pointing.png" % (path), bbox_inches="tight")
     plt.close()

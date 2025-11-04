@@ -1,8 +1,25 @@
-# Tilepy
+<p align="center">
+  <a href="" rel="noopener">
+ <img style="width: 400px; height: 200px; max-width: 100%;" src="image/tilepy_logo.png" src="image/tilepy_logo.png" alt="tilepy logo"
+ ></a>
+</p>
+
+<div align="center">
+
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12190543.svg)](https://doi.org/10.5281/zenodo.12190543)
+[![Latest release](http://img.shields.io/pypi/v/tilepy.svg?text=version)](https://pypi.org/project/tilepy/)
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPLv3-blue.svg)](https://github.com/astro-transients/tilepy/blob/master/LICENSE.rst)
+[![CLA assistant](https://cla-assistant.io/readme/badge/astro-transients/tilepy)](https://cla-assistant.io/astro-transients/tilepy)
+[![ApJS Published](https://img.shields.io/badge/ApJS-Published-Green.svg)](https://doi.org/10.3847/1538-4365/ad5bde)
+[![Documentation Status](https://readthedocs.org/projects/tilepy/badge/?version=latest)](https://tilepy.readthedocs.io/en/latest)
+
+
+</div>
 
 ## Installation
 
-We clone the repo, create an environment to work, activate the environment and install the package.
+We clone the repo, create an environment to work, activate the environment and install the package. You can use conda or mamba for this.
 
 ```python
 git clone git@github.com:astro-transients/tilepy.git
@@ -52,16 +69,20 @@ python ConvertGalaxyCatalog.py --input GLADE+.txt --output Gladeplus.h5 --max-lu
 
 Package including functions to perform GW follow-up scheduling and simulations in IACTS. The package can be found in the folder tilepy, which contains the following folders:
 
-- tilepy: Folder including the package
+- src/tilepy: Folder including the python package
+    - tilepy.include: The main files were functions are placed. In the usual case, the manager script is ObservationScheduler.py. At the following level, we have TilingDetermination.py. And the base set of functions are in CampaignDefinition.py, Observatories.py, PointingPlotting.py, PointingTools.py and RankingObservationTimes.py.
     - tilepy.tools: Includes several scripts that have been used so far for different aims related to visualization and catalog cleaning
-    - tilepy.include: The main functions used by the two main scripts are in this folder. It includes the Pointing Tools specifically for CTA (the others are in GWHESSPointing tool which is imported by GWCTAPointingTools), the CTA observation scheduler, simulation tools and analysis tools (both using gammapy)
-    - tilepy.dataset: This is a folder where we recommend to put files as finals2000.all. You will see it empty.
+    - tilepy.scripts: Further support scripts
 
-- relics: Old scripts that may be useful in the future
+- github/workflows: a series of workflows are enabled and triggered via GitHub Actions.
+- docs: files to create a documentation [dev ongoing]
 
 - examples: Examples on how to use tilepy, see dedicated <a href="examples/README.md">README</a>
     - launcher: Jupyter notebooks and .py scripts to run observation schedules for various use-cases. We recommend to use the Jupyter notebooks as these are more comprehensive, specially with the inputs given.
-    - config: three examples of configuration files, used in the notebooks to run the scripts. The format is the following:
+    - paperplots: Precise plots of ApJS Series, Volume 274 Number 1 (11pp), 2024 September
+    - sciencecases: Support material and extra plots connected to those of the paper ApJS Series, Volume 274 Number 1 (11pp), 2024 September
+    - visualization: Several notebooks to improve the visualization of observation campaigns
+    - config: various examples of configuration files, used in the notebooks to run the scripts. The format is the following:
        - [observatory]
           - name: name of the observatory (it is not critical, you can use any name)
           - lat: lat coordinates of the observatory

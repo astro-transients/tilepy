@@ -9,17 +9,17 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
+from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.include.Observatories import CTANorthObservatory, HESSObservatory
 from tilepy.include.PointingPlotting import (
-    LoadPointings,
     PlotPointings_Pretty,
     PlotPointingsTogether,
 )
 from tilepy.include.PointingTools import (
     Get90RegionPixReduced,
+    LoadPointings,
     NightDarkObservation,
     NightDarkObservationwithGreyTime,
-    ObservationParameters,
     TransformRADec,
     getdate,
 )
@@ -278,7 +278,7 @@ def Time_DarkTime_GreyTime(
 
 
 def CompareTwoTilings(
-    filename, PointingsFile1=False, PointingsFile2=False, FOV=2, plotType="mollweide"
+    filename, PointingsFile1=False, PointingsFile2=False, plotType="mollweide"
 ):
     # Format of Pointing Files should be YYYY-MM-DD hh:mm:ss RAarray DECarray P_GWarray P_Galarray Round)
 
@@ -359,7 +359,8 @@ def CompareTwoTilings(
             prob,
             Coordinates1,
             Coordinates2,
-            FOV,
+            df1["FoV"][0],
+            df2["FoV"][0],
             plotType,
             doPlot=True,
         )
