@@ -97,7 +97,7 @@ def main():
 
     obspar = ObservationParameters()
     obspar.add_parsed_args(
-        skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, eventName
+        skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, None, eventName
     )
     obspar.from_configfile(cfgFile)
 
