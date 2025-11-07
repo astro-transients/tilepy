@@ -91,7 +91,7 @@ def GetSchedule(obspar):
         # area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
         if obspar.locCut < area_percentage:
             print(
-                f"The {obspar.percentageMOC*100:.1f}% area ({area_percentage:.2f} deg^2) is larger than the maximum allowed in the configuration ({str(obspar.locCut)} deg^2)"
+                f"The {obspar.percentageMOC * 100:.1f}% area ({area_percentage:.2f} deg^2) is larger than the maximum allowed in the configuration ({str(obspar.locCut)} deg^2)"
             )
             return
 
