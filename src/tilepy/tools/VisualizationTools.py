@@ -16,7 +16,7 @@ from tilepy.include.PointingPlotting import (
     PlotPointingsTogether,
 )
 from tilepy.include.PointingTools import (
-    Get90RegionPixReduced,
+    GetRegionPixReduced,
     LoadPointings,
     NightDarkObservation,
     NightDarkObservationwithGreyTime,
@@ -32,7 +32,7 @@ def LocateSource(filename, ra, dec, PercentCov=90):
     npix = len(prob)
     nside = hp.npix2nside(npix)
 
-    pix_ra1, pix_dec1, _ = Get90RegionPixReduced(prob, PercentCov, nside)
+    pix_ra1, pix_dec1, _ = GetRegionPixReduced(prob, PercentCov, nside)
 
     reduced_nside = 512
     coordinates = TransformRADec(ra, dec)
