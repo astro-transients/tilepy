@@ -345,7 +345,7 @@ class ObservationParameters(object):
         self.doPlot = parser.getboolean(section, "doPlot", fallback=None)
         self.secondRound = parser.getboolean(section, "secondRound", fallback=None)
         self.zenithWeighting = float(parser.get(section, "zenithWeighting", fallback=0))
-        self.percentageMOC = float(parser.get(section, "percentageMOC", fallback=0))
+        self.percentageMOC = float(parser.get(section, "percentageMOC", fallback=0.90))
         try:
             self.reducedNside = int(parser.get(section, "reducedNside", fallback=0))
         except Exception:
