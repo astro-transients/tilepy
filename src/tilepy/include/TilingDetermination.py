@@ -147,7 +147,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     prob = skymap.getMap("prob", obspar.reducedNside)
     highres = skymap.getMap("prob", obspar.HRnside)
 
-    # Create table for 2D probability at 90% containment
+    # Create table for 2D probability at percentageMOC containment
     rapix, decpix, areapix = GetRegionPixReduced(
         prob, obspar.percentageMOC, obspar.reducedNside
     )
@@ -1006,7 +1006,7 @@ def PGWinFoV_NObs(
     prob = skymap.getMap("prob", obspar.reducedNside)
     highres = skymap.getMap("prob", obspar.HRnside)
 
-    # Create table for 2D probability at 90% containment
+    # Create table for 2D probability at percentageMOC containment
     rapix, decpix, areapix = GetRegionPixReduced(
         prob, obspar.percentageMOC, obspar.reducedNside
     )
@@ -1781,7 +1781,7 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
     prob = skymap.getMap("prob", reducedNside)
     highres = skymap.getMap("prob", HRnside)
 
-    # Create table for 2D probability at 90% containment
+    # Create table for 2D probability at percentageMOC containment
     rapix, decpix, _ = GetRegionPixReduced(prob, obspar.percentageMOC, reducedNside)
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
     maxRuns = obspar.maxRuns
@@ -1868,7 +1868,7 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
     # Retrieve maps
     prob = skymap.getMap("prob", reducedNside)
 
-    # Create table for 2D probability at 90% containment
+    # Create table for 2D probability at percentageMOC containment
     rapix, decpix, areapix = GetRegionPixReduced(
         prob, obspar.percentageMOC, reducedNside
     )
@@ -1977,7 +1977,7 @@ def PGWinFoV_Space_NObs(
     prob = skymap.getMap("prob", reducedNside)
     highres = skymap.getMap("prob", HRnside)
 
-    # Create table for 2D probability at 90% containment
+    # Create table for 2D probability at percentageMOC containment
     rapix, decpix, areapix = GetRegionPixReduced(
         prob, obspar.percentageMOC, reducedNside
     )
@@ -2187,7 +2187,7 @@ def PGalinFoV_Space_NObs(
     # Retrieve maps
     prob = skymap.getMap("prob", reducedNside)
 
-    # Create table for 2D probability at 90% containment
+    # Create table for 2D probability at percentageMOC containment
     rapix, decpix, areapix = GetRegionPixReduced(
         prob, obspar.percentageMOC, reducedNside
     )
@@ -2333,7 +2333,7 @@ def PGalinFoV_Space_NObs(
         current_time += step
         i += 1
 
-    # WE CAN GET THE LIST OF PIXELS AVAILABLE AT ALL TIMES --> here we are getting them for all the 90% region... we can only get then for furst value if we want
+    # WE CAN GET THE LIST OF PIXELS AVAILABLE AT ALL TIMES --> here we are getting them for all the percentageMOC region... we can only get then for first value if we want
     Occultedpixels = [item for sublist in Occultedpixels for item in sublist]
     OldPix = ipix
     searchpix = np.isin(OldPix, Occultedpixels, invert=True)
