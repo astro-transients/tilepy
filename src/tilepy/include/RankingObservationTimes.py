@@ -401,7 +401,7 @@ def ProbabilitiesinPointings3D(cat, galPointing, FOV, totaldPdV, prob, nside):
 
 def PGGPGalinFOV(cat, ra, dec, prob, totaldPdV, FOV, nside):
     targetCoordcat = co.SkyCoord(
-        cat["RA[deg]"], cat["DEC[deg]"], frame="icrs", unit=(u.deg, u.deg)
+        cat["RAJ2000"], cat["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
     targetCoordpointing = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
     dp_dV = cat["dp_dV"]
