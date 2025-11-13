@@ -26,7 +26,6 @@ from tilepy.include.PointingTools import (
 
 
 def LocateSource(filename, ra, dec, PercentCov=90):
-
     skymap_OD = lf.read_sky_map(filename)
     prob = skymap_OD[0]
     npix = len(prob)
@@ -316,7 +315,7 @@ def CompareTwoTilings(
             len(df1["PGW"]),
         )
         print(
-            "Summary of 2st file: sum(PW)=",
+            "Summary of 2nd file: sum(PW)=",
             sum(df2["PGW"]),
             "sum(PGAL)=",
             sum(df2["Pgal"]),
@@ -334,7 +333,7 @@ def CompareTwoTilings(
             len(df1["PGW"]),
         )
         print(
-            "Summary of 2st file: sum(PW)=",
+            "Summary of 2nd file: sum(PW)=",
             sum(df2["PGW"]),
             "total pointings",
             len(df2["PGW"]),

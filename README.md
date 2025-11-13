@@ -98,7 +98,7 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - maxMoonSourceSeparation: max separation Source-Moon in deg to define greyness conditions
 
         - [operations]
-          - maxZenith: max zenith angle which will be considered as accesible sky
+          - maxZenith: max zenith angle which will be considered as accessible sky
           - FOV: radius of the circular FoV defining the tiles
           - maxRuns: maximum number of tiles that will be scheduled
           - maxNights: total number of nights considered

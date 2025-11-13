@@ -1080,7 +1080,6 @@ def get_lvk_uniq_maps(sky_map, Order, map_names="all"):
     # print np.min(order), np.max(order)
 
     for ii in range(np.max(order), np.min(order) - 1, -1):
-
         nside = 2**ii
         npix = hp.nside2npix(nside)
         bl = order == ii
@@ -1179,7 +1178,6 @@ def GetSatellitePositions(satellite_name, t):
 
 
 def GetBestNSIDE(ReducedNSIDE, HRnside, fov):
-
     if isinstance(HRnside, int) and HRnside > 0 and (HRnside & (HRnside - 1)) == 0:
         max_nside = HRnside
     else:
@@ -1513,7 +1511,6 @@ def FindMatchingPixList(pix1, list2):
 
 
 def FindMatchingCoords(option, radec1, radec2, reducedNside):
-
     if option == 1:
         firstvalue1_coords = co.SkyCoord(
             ra=radec1["PIXRA"] * u.deg, dec=radec1["PIXDEC"] * u.deg
@@ -1693,7 +1690,7 @@ def ComputeProbGalTargeted(
     effectiveipix_disc = []
 
     for j in range(0, len(ipix_disc)):
-        if not (ipix_disc[j] in talreadysumipixarray):
+        if ipix_disc[j] not in talreadysumipixarray:
             effectiveipix_disc.append(ipix_disc[j])
         talreadysumipixarray.append(ipix_disc[j])
 
@@ -1705,7 +1702,6 @@ def ComputeProbGalTargeted(
     noncircleGal = allGals[targetCoord3.separation(targetCoord).deg > radius]
 
     if doPlot:
-
         path = dirName + "/EvolutionPlot"
         if not os.path.exists(path):
             os.mkdir(path, 493)
@@ -1889,7 +1885,7 @@ def SubstractGalaxiesCircle(
     effectiveipix_disc = []
 
     for j in range(0, len(ipix_disc)):
-        if not (ipix_disc[j] in talreadysumipixarray):
+        if ipix_disc[j] not in talreadysumipixarray:
             effectiveipix_disc.append(ipix_disc[j])
         talreadysumipixarray.append(ipix_disc[j])
 
@@ -1979,7 +1975,7 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, n_sides, UsePix):
 
 def ModifyCatalogue(prob, cat, FOV, totaldPdV, nside):
     """
-    Computes the integrated Pgal in FoV for a list of calues using Pgal in FoV and sorts the catalog
+    Computes the integrated Pgal in FoV for a list of values using Pgal in FoV and sorts the catalog
     using that quantity as a criteria
     """
     lengthSG = 100
@@ -2078,7 +2074,7 @@ def ComputeProbPGALIntegrateFoV(
     effectiveipix_disc = []
 
     for j in range(0, len(ipix_disc)):
-        if not (ipix_disc[j] in talreadysumipixarray):
+        if ipix_disc[j] not in talreadysumipixarray:
             effectiveipix_disc.append(ipix_disc[j])
         talreadysumipixarray.append(ipix_disc[j])
 
@@ -2095,7 +2091,6 @@ def ComputeProbPGALIntegrateFoV(
     noncircleGal = allGalsaftercuts[targetCoord3.separation(targetCoord).deg > radius]
 
     if doPlot:
-
         path = dirName + "/EvolutionPlot"
         if not os.path.exists(path):
             os.mkdir(path, 493)
@@ -2312,7 +2307,6 @@ def FillSummary(
 
 
 class NextWindowTools:
-
     @classmethod
     def CheckWindowCreateArray(cls, time, obsSite, WindowDurations):
         FullWindow = datetime.timedelta(seconds=np.float64(WindowDurations[-1]))

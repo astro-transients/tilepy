@@ -367,9 +367,8 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
     maxRuns = obspar.maxRuns
     if PointingFile is None:
         tGals = tGals0
-        print("No pointings were given to be substracted")
+        print("No pointings were given to be subtracted")
     else:
-
         (
             ra,
             dec,
@@ -439,7 +438,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                     ObservationTime, tGals_aux, obspar
                 )
                 if visible:
-                    # select galaxies within the slightly enlarged visiblity window
+                    # select galaxies within the slightly enlarged visibility window
                     visiMask = altaz.alt.value > 90 - (obspar.maxZenith + obspar.FOV)
                     visiGals = tGals_aux[visiMask]
                     visiGals = ModifyCatalogue(
@@ -638,7 +637,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                     ObservationTime, tGals_aux, obspar
                 )
                 if visible:
-                    # select galaxies within the slightly enlarged visiblity window
+                    # select galaxies within the slightly enlarged visibility window
                     visiMask = altaz.alt.value > 90 - (obspar.maxZenith + obspar.FOV)
                     visiGals = tGals_aux[visiMask]
                     mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
@@ -921,7 +920,7 @@ def ObservationStartperObs(obsparameters, ObservationTime0):
                     FirstDark_Flag[j] = True
         j += 1
 
-    # Checking which observatories are availabe for observations and saving their start time
+    # Checking which observatories are available for observations and saving their start time
     ActiveObsStart = []
     ActiveObs = []
     SameNight = np.full(len(obsparameters), False, dtype=bool)
@@ -1275,7 +1274,7 @@ def PGalinFoV_NObs(
     maxRuns = obspar.maxRuns
     if PointingFile is None:
         tGals = tGals0
-        print("No pointings were given to be substracted")
+        print("No pointings were given to be subtracted")
     else:
         # tGals_aux = tGals
         (
@@ -1337,15 +1336,13 @@ def PGalinFoV_NObs(
             if couter_per_obs[j] >= maxRuns:
                 SameNight[j] = False
             if (TIME_MIN >= NewActiveObsTime[j]) & SameNight[j]:
-
                 if obspar.strategy == "integrated":
                     visible, altaz, tGals_aux = VisibleAtTime(
                         ObservationTime, tGals_aux, obspar
                     )
 
                     if visible:
-
-                        # select galaxies within the slightly enlarged visiblity window
+                        # select galaxies within the slightly enlarged visibility window
                         visiMask = altaz.alt.value > 90 - (
                             obspar.maxZenith + obspar.FOV
                         )
@@ -1522,7 +1519,7 @@ def PGalinFoV_NObs(
                         ObservationTime, tGals_aux, obspar
                     )
                     if visible:
-                        # select galaxies within the slightly enlarged visiblity window
+                        # select galaxies within the slightly enlarged visibility window
                         visiMask = altaz.alt.value > 90 - (
                             obspar.maxZenith + obspar.FOV
                         )
@@ -1790,14 +1787,21 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
 
     # Add observed pixels to pixlist
     if PointingFile is not None:
-
         # FIXME: pixlist is undefined in this scope
         # The program will crash is the if branch is executed
         print(
-            PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist  # noqa: F821
+            PointingFile,
+            prob,
+            obspar.reducedNside,
+            obspar.FOV,
+            pixlist,  # noqa: F821
         )
         pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist, pixlistHR  # noqa: F821
+            PointingFile,
+            prob,
+            obspar,
+            pixlist,  # noqa: F821
+            pixlistHR,  # noqa: F821
         )
 
         if obspar.countPrevious:
@@ -2333,7 +2337,7 @@ def PGalinFoV_Space_NObs(
         current_time += step
         i += 1
 
-    # WE CAN GET THE LIST OF PIXELS AVAILABLE AT ALL TIMES --> here we are getting them for all the 90% region... we can only get then for furst value if we want
+    # WE CAN GET THE LIST OF PIXELS AVAILABLE AT ALL TIMES --> here we are getting them for all the 90% region... we can only get then for first value if we want
     Occultedpixels = [item for sublist in Occultedpixels for item in sublist]
     OldPix = ipix
     searchpix = np.isin(OldPix, Occultedpixels, invert=True)
@@ -2342,7 +2346,7 @@ def PGalinFoV_Space_NObs(
     # CONVERTING newpix to angles on the coordinate grid
     pixradec = TransformPixToRaDec(newpix, reducedNside)
 
-    # Finding the common radec betweem visible pixels and the grid
+    # Finding the common radec between visible pixels and the grid
     first_values_coords = co.SkyCoord(
         ra=first_values1["PIXRA"], dec=first_values1["PIXDEC"], unit="deg"
     )
@@ -2360,7 +2364,7 @@ def PGalinFoV_Space_NObs(
         print("No coordinates matched within the tolerance.")
         first_values = Table(names=first_values1.colnames)
 
-    # FOR TARGETED HERE TRY TO FIND OUT WHICH GALAXIES ARE IN THE VISIBLE PART. Then choose the highest 10 betwee nthem
+    # FOR TARGETED HERE TRY TO FIND OUT WHICH GALAXIES ARE IN THE VISIBLE PART. Then choose the highest 10 between nthem
 
     ObsName = [obspar.obs_name for j in range(len(first_values))]
     RAarray = [row["PIXRA"] for row in first_values]
