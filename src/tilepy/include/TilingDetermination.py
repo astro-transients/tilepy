@@ -648,6 +648,11 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                         finalGals = visiGals[mask & maskgrey]
                     if not obspar.useGreytime:
                         finalGals = visiGals[mask]
+                    if not len(finalGals["dp_dV"]):
+                        print(
+                            f"Condition not met at {ObservationTime}: no surviving galaxies."
+                        )
+                        continue
                     # print('finalGals', finalGals,tGals['dp_dV'][:1]*obspar.minProbcut)
                     if finalGals["dp_dV"][0] > tGals["dp_dV"][0] * obspar.minProbcut:
                         # print(f"Condition met at {ObservationTime}: dp/dV_FOV = {finalGals['dp_dV'][0]} is greater than {obspar.minProbcut}")
