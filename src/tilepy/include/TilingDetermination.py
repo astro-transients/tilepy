@@ -1780,6 +1780,7 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
     DECarray = []
     P_GWarray = []
     Occultedpixels = []
+    pixlist = []
     pixlistHR = []
     obspar = obsparameters[0]
 
@@ -1799,7 +1800,6 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
 
     # Add observed pixels to pixlist
     if PointingFile is not None:
-        # FIXME: pixlist is undefined in this scope
         # The program will crash is the if branch is executed
         print(
             PointingFile,
