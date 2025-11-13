@@ -63,7 +63,7 @@ __all__ = [
     "NightDarkObservation",
     "NightDarkObservationwithGreyTime",
     "ComputeProbability2D",
-    "SubstractPointings2D",
+    "SubtractPointings2D",
     "TransformRADec",
     "TransformRADecToPix",
     "TransformPixToRaDec",
@@ -72,8 +72,8 @@ __all__ = [
     "LoadGalaxies",
     "LoadGalaxies_SteMgal",
     "ComputeProbGalTargeted",
-    "SubstractPointings",
-    "SubstractGalaxiesCircle",
+    "SubtractPointings",
+    "SubtractGalaxiesCircle",
     "ComputePGalinFOV",
     "ModifyCatalogue",
     "ComputeProbPGALIntegrateFoV",
@@ -1420,7 +1420,7 @@ def ComputeProbability2D(
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
 
-def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
+def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
     nside = obspar.reducedNside
     radius = obspar.FOV
 
@@ -1787,7 +1787,7 @@ def ComputeProbGalTargeted(
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
 
 
-def SubstractPointings(
+def SubtractPointings(
     tpointingFile, galaxies, talreadysumipixarray, tsum_dP_dV, prob, obspar, nside
 ):
     FOV = obspar.FOV
@@ -1816,7 +1816,7 @@ def SubstractPointings(
     updatedGalaxies = galaxies
     if np.isscalar(ra):
         updatedGalaxies, pgwcircle, pgalcircle, talreadysumipixarray = (
-            SubstractGalaxiesCircle(
+            SubtractGalaxiesCircle(
                 updatedGalaxies,
                 ra,
                 dec,
@@ -1837,7 +1837,7 @@ def SubstractPointings(
             ra = coord.ra.deg
             dec = coord.dec.deg
             updatedGalaxies, pgwcircle, pgalcircle, talreadysumipixarray = (
-                SubstractGalaxiesCircle(
+                SubtractGalaxiesCircle(
                     updatedGalaxies,
                     ra,
                     dec,
@@ -1871,7 +1871,7 @@ def SubstractPointings(
     )
 
 
-def SubstractGalaxiesCircle(
+def SubtractGalaxiesCircle(
     galaux, ra, dec, talreadysumipixarray, tsum_dP_dV, FOV, prob, nside
 ):
     radius = FOV

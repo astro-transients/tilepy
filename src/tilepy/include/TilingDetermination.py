@@ -60,8 +60,8 @@ from .PointingTools import (
     NextWindowTools,
     NightDarkObservation,
     NightDarkObservationwithGreyTime,
-    SubstractPointings,
-    SubstractPointings2D,
+    SubtractPointings,
+    SubtractPointings2D,
     Tools,
     TransformPixToRaDec,
     TransformRADecToPix,
@@ -159,7 +159,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
         print(
             "==========================================================================================="
         )
-        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+        pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
             PointingFile, prob, obspar, pixlist, pixlistHR
         )
         if obspar.countPrevious:
@@ -367,7 +367,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
     maxRuns = obspar.maxRuns
     if PointingFile is None:
         tGals = tGals0
-        print("No pointings were given to be substracted")
+        print("No pointings were given to be subtracted")
     else:
 
         (
@@ -378,13 +378,13 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
             AlreadyObservedPgal,
             alreadysumipixarray1,
             doneObs,
-        ) = SubstractPointings(
+        ) = SubtractPointings(
             PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, prob, obspar, nside
         )
         sumPGW = sum(AlreadyObservedPgw)
         sumPGAL = sum(AlreadyObservedPgal)
         # for second round
-        # ra, dec, tGals, AlreadyObservedPgw, AlreadyObservedPgal,alreadysumipixarray2, doneObs = SubstractPointings(PointingFile, tGals0,alreadysumipixarray1,sum_dP_dV,prob, obspar, nside)
+        # ra, dec, tGals, AlreadyObservedPgw, AlreadyObservedPgal,alreadysumipixarray2, doneObs = SubtractPointings(PointingFile, tGals0,alreadysumipixarray1,sum_dP_dV,prob, obspar, nside)
         if obspar.countPrevious:
             maxRuns = obspar.maxRuns - doneObs
         print(
@@ -1015,7 +1015,7 @@ def PGWinFoV_NObs(
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+        pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
             PointingFile, prob, obspar, pixlist, pixlistHR
         )
 
@@ -1275,7 +1275,7 @@ def PGalinFoV_NObs(
     maxRuns = obspar.maxRuns
     if PointingFile is None:
         tGals = tGals0
-        print("No pointings were given to be substracted")
+        print("No pointings were given to be subtracted")
     else:
         # tGals_aux = tGals
         (
@@ -1286,7 +1286,7 @@ def PGalinFoV_NObs(
             AlreadyObservedPgal,
             alreadysumipixarray1,
             doneObs,
-        ) = SubstractPointings(
+        ) = SubtractPointings(
             PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, prob, obspar, nside
         )
         maxRuns = obspar.maxRuns - len(ra)
@@ -1796,7 +1796,7 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
         print(
             PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist  # noqa: F821
         )
-        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+        pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
             PointingFile, prob, obspar, pixlist, pixlistHR  # noqa: F821
         )
 
@@ -1897,7 +1897,7 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+        pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
             PointingFile, prob, obspar, pixlist, pixlistHR
         )
 
@@ -1989,7 +1989,7 @@ def PGWinFoV_Space_NObs(
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+        pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
             PointingFile, prob, obspar, pixlist, pixlistHR
         )
 
@@ -2216,7 +2216,7 @@ def PGalinFoV_Space_NObs(
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, reducedNside, radius, pixlist)
-        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+        pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
             PointingFile, prob, obspar, pixlist, pixlistHR
         )
 
