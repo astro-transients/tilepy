@@ -344,6 +344,12 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
     nside = obspar.HRnside
     prob = skymap.getMap("prob", obspar.HRnside)
 
+    # Create table for 2D probability at percentageMOC containment
+    rapix, decpix, areapix = GetRegionPixReduced(
+        prob, obspar.percentageMOC, obspar.reducedNside
+    )
+    radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
+
     if skymap.is3D:
         print("Skymap is 3D")
     else:
@@ -378,7 +384,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
             alreadysumipixarray1,
             doneObs,
         ) = SubtractPointings(
-            PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, prob, obspar, nside
+            PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, prob, obspar, nside, radecs
         )
         sumPGW = sum(AlreadyObservedPgw)
         sumPGAL = sum(AlreadyObservedPgal)
@@ -1015,7 +1021,7 @@ def PGWinFoV_NObs(
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
         pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
-            PointingFile, prob, obspar, pixlist, pixlistHR
+            PointingFile, prob, obspar, pixlist, pixlistHR, radecs
         )
 
         if obspar.countPrevious:
@@ -1253,6 +1259,12 @@ def PGalinFoV_NObs(
     nside = obspar.HRnside
     prob = skymap.getMap("prob", obspar.HRnside)
 
+    # Create table for 2D probability at percentageMOC containment
+    rapix, decpix, areapix = GetRegionPixReduced(
+        prob, obspar.percentageMOC, obspar.reducedNside
+    )
+    radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
+
     # load galaxy catalogue
     if not obspar.mangrove:
         cat = LoadGalaxies(galFile)
@@ -1286,7 +1298,7 @@ def PGalinFoV_NObs(
             alreadysumipixarray1,
             doneObs,
         ) = SubtractPointings(
-            PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, prob, obspar, nside
+            PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, prob, obspar, nside, radecs
         )
         maxRuns = obspar.maxRuns - len(ra)
         sumPGW = sum(AlreadyObservedPgw)
@@ -1802,6 +1814,7 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
             obspar,
             pixlist,
             pixlistHR,  # noqa: F821
+            radecs,
         )
 
         if obspar.countPrevious:
@@ -1902,7 +1915,7 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
         pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
-            PointingFile, prob, obspar, pixlist, pixlistHR
+            PointingFile, prob, obspar, pixlist, pixlistHR, radecs
         )
 
         if obspar.countPrevious:
@@ -1994,7 +2007,7 @@ def PGWinFoV_Space_NObs(
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
         pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
-            PointingFile, prob, obspar, pixlist, pixlistHR
+            PointingFile, prob, obspar, pixlist, pixlistHR, radecs
         )
 
         if obspar.countPrevious:
@@ -2221,7 +2234,7 @@ def PGalinFoV_Space_NObs(
     if PointingFile is not None:
         print(PointingFile, prob, reducedNside, radius, pixlist)
         pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
-            PointingFile, prob, obspar, pixlist, pixlistHR
+            PointingFile, prob, obspar, pixlist, pixlistHR, radecs
         )
 
         if obspar.countPrevious:
