@@ -110,7 +110,7 @@ class ObservationParameters(object):
         minDuration=None,
         useGreytime=None,
         minSlewing=0,
-        locCut90=None,
+        locCut=None,
         minimumProbCutForCatalogue=None,
         minProbcut=None,
         distCut=None,
@@ -175,7 +175,7 @@ class ObservationParameters(object):
         self.numberSides = (numberSides,)
 
         # Tiling
-        self.locCut90 = locCut90
+        self.locCut = locCut
         self.minimumProbCutForCatalogue = minimumProbCutForCatalogue
         self.minProbcut = minProbcut
         self.distCut = distCut
@@ -336,7 +336,7 @@ class ObservationParameters(object):
         self.FoVRotation = int(parser.get(section, "FoVRotation", fallback=0))
 
         section = "tiling"
-        self.locCut90 = float(parser.get(section, "locCut90", fallback=99999))
+        self.locCut = float(parser.get(section, "locCut", fallback=99999))
         self.minimumProbCutForCatalogue = float(
             parser.get(section, "minimumprobcutforcatalogue", fallback=0)
         )
@@ -345,7 +345,7 @@ class ObservationParameters(object):
         self.doPlot = parser.getboolean(section, "doPlot", fallback=None)
         self.secondRound = parser.getboolean(section, "secondRound", fallback=None)
         self.zenithWeighting = float(parser.get(section, "zenithWeighting", fallback=0))
-        self.percentageMOC = float(parser.get(section, "percentageMOC", fallback=0))
+        self.percentageMOC = float(parser.get(section, "percentageMOC", fallback=0.90))
         try:
             self.reducedNside = int(parser.get(section, "reducedNside", fallback=0))
         except Exception:

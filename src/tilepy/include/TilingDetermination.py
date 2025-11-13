@@ -48,8 +48,8 @@ from .PointingTools import (
     FilterGalaxies,
     FindMatchingCoords,
     FindMatchingPixList,
-    Get90RegionPixReduced,
     GetBestNSIDE,
+    GetRegionPixReduced,
     GetSatelliteName,
     GetSatellitePositions,
     GetSatelliteTime,
@@ -148,7 +148,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     highres = skymap.getMap("prob", obspar.HRnside)
 
     # Create table for 2D probability at 90% containment
-    rapix, decpix, areapix = Get90RegionPixReduced(
+    rapix, decpix, areapix = GetRegionPixReduced(
         prob, obspar.percentageMOC, obspar.reducedNside
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
@@ -1002,7 +1002,7 @@ def PGWinFoV_NObs(
     highres = skymap.getMap("prob", obspar.HRnside)
 
     # Create table for 2D probability at 90% containment
-    rapix, decpix, areapix = Get90RegionPixReduced(
+    rapix, decpix, areapix = GetRegionPixReduced(
         prob, obspar.percentageMOC, obspar.reducedNside
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
@@ -1777,7 +1777,7 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
     highres = skymap.getMap("prob", HRnside)
 
     # Create table for 2D probability at 90% containment
-    rapix, decpix, _ = Get90RegionPixReduced(prob, obspar.percentageMOC, reducedNside)
+    rapix, decpix, _ = GetRegionPixReduced(prob, obspar.percentageMOC, reducedNside)
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
     maxRuns = obspar.maxRuns
 
@@ -1864,7 +1864,7 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
     prob = skymap.getMap("prob", reducedNside)
 
     # Create table for 2D probability at 90% containment
-    rapix, decpix, areapix = Get90RegionPixReduced(
+    rapix, decpix, areapix = GetRegionPixReduced(
         prob, obspar.percentageMOC, reducedNside
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
@@ -1973,7 +1973,7 @@ def PGWinFoV_Space_NObs(
     highres = skymap.getMap("prob", HRnside)
 
     # Create table for 2D probability at 90% containment
-    rapix, decpix, areapix = Get90RegionPixReduced(
+    rapix, decpix, areapix = GetRegionPixReduced(
         prob, obspar.percentageMOC, reducedNside
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
@@ -2183,7 +2183,7 @@ def PGalinFoV_Space_NObs(
     prob = skymap.getMap("prob", reducedNside)
 
     # Create table for 2D probability at 90% containment
-    rapix, decpix, areapix = Get90RegionPixReduced(
+    rapix, decpix, areapix = GetRegionPixReduced(
         prob, obspar.percentageMOC, reducedNside
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))

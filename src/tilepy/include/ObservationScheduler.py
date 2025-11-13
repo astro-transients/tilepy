@@ -71,7 +71,7 @@ def GetSchedule(obspar):
 
     Notes
     -----
-    If the 90% localization area is larger than the configured maximum (`locCut90`), no schedule is generated.
+    If the 90% localization area is larger than the configured maximum (`locCut`), no schedule is generated.
 
     Examples
     --------
@@ -84,17 +84,14 @@ def GetSchedule(obspar):
 
     area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
     area_50 = skymap.getArea(0.5).to_value(u.deg * u.deg)
+    area_percentage = skymap.getArea(obspar.percentageMOC).to_value(u.deg * u.deg)
 
-    if obspar.locCut90 is not None:
+    if obspar.locCut is not None:
         # FIXME : a repetitive calculation
         # area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
-        if obspar.locCut90 < area_90:
+        if obspar.locCut < area_percentage:
             print(
-                "The 90% area ("
-                + str(area_90)
-                + " deg^2) is larger than the maximum allowed in the configuration ("
-                + str(obspar.locCut90)
-                + " deg^2)"
+                f"The {obspar.percentageMOC * 100:.1f}% area ({area_percentage:.2f} deg^2) is larger than the maximum allowed in the configuration ({str(obspar.locCut)} deg^2)"
             )
             return
 

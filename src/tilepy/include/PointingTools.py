@@ -77,8 +77,8 @@ __all__ = [
     "ComputePGalinFOV",
     "ModifyCatalogue",
     "ComputeProbPGALIntegrateFoV",
-    "Get90RegionPixReduced",
-    "Get90RegionPixGal",
+    "GetRegionPixReduced",
+    "GetRegionPixGal",
     "IsSourceInside",
     "FillSummary",
     "GetSatelliteName",
@@ -2163,7 +2163,7 @@ def ComputeProbPGALIntegrateFoV(
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
 
 
-def Get90RegionPixReduced(hpxx, percentage, Nnside):
+def GetRegionPixReduced(hpxx, percentage, Nnside):
     nside = Nnside  # size of map used for contour determination
     hpx = hp.ud_grade(
         hpxx, nside_out=nside, power=-2, order_in="Nested", order_out="Nested"
@@ -2205,7 +2205,7 @@ def Get90RegionPixReduced(hpxx, percentage, Nnside):
     return ra, dec, area
 
 
-def Get90RegionPixGal(hpxx, percentage, Nside):
+def GetRegionPixGal(hpxx, percentage, Nside):
     hpx = hpxx
     sort = sorted(hpx, reverse=True)
     cumsum = np.cumsum(sort)
