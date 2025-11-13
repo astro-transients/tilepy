@@ -79,7 +79,7 @@ obsparameters = []
 for j in range(len(parameters)):
     obspar = ObservationParameters()
     obspar.add_parsed_args(
-        skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, eventName
+        skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, None, eventName
     )
     obspar.from_configfile(parameters[j])
     obsparameters.append(obspar)

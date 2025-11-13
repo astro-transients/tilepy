@@ -145,6 +145,7 @@ def main():
         galcatName,
         outDir,
         pointingsFile,
+        None,
         eventName,
         mode,
         ra,
