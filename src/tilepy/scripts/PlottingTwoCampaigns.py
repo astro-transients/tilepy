@@ -20,7 +20,6 @@ def PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2):
 
 
 def main():
-
     start = time.time()
 
     parser = argparse.ArgumentParser(
