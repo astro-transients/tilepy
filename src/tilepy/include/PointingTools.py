@@ -1435,14 +1435,16 @@ def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, radecs)
     decPointing = np.atleast_1d(decPointing)
 
     pointings_subtracted = 0
-    max_separation = 0.1*u.deg
+    max_separation = 0.1 * u.deg
 
     coordinates = TransformRADec(raPointing, decPointing)
     P_GW = []
     for i, _ in enumerate(raPointing):
         separations = coordinates[i].separation(radecs)
         if len(separations[separations < max_separation]) == 0:
-            print(f"Not subtracting RA: {raPointing[i]} Dec: {decPointing[i]} as it is outside of the {obspar.percentageMOC * 100}% area")
+            print(
+                f"Not subtracting RA: {raPointing[i]} Dec: {decPointing[i]} as it is outside of the {obspar.percentageMOC * 100}% area"
+            )
             continue
         pointings_subtracted += 1
         # if (coordinates[i].separation(radecs))
@@ -1793,7 +1795,14 @@ def ComputeProbGalTargeted(
 
 
 def SubtractPointings(
-    tpointingFile, galaxies, talreadysumipixarray, tsum_dP_dV, prob, obspar, nside, radecs
+    tpointingFile,
+    galaxies,
+    talreadysumipixarray,
+    tsum_dP_dV,
+    prob,
+    obspar,
+    nside,
+    radecs,
 ):
     FOV = obspar.FOV
 
@@ -1829,7 +1838,9 @@ def SubtractPointings(
     for i, coord in enumerate(coordinates):
         separations = coord.separation(radecs)
         if len(separations[separations < max_separation]) == 0:
-            print(f"Not subtracting RA: {coord[i].ra} Dec: {coord[i].dec} as it is outside of the {obspar.percentageMOC * 100}% area")
+            print(
+                f"Not subtracting RA: {coord[i].ra} Dec: {coord[i].dec} as it is outside of the {obspar.percentageMOC * 100}% area"
+            )
             continue
         pointings_subtracted += 1
         ra = coord.ra.deg

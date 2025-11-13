@@ -1797,7 +1797,11 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
             pixlist,  # noqa: F821
         )
         pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
-            PointingFile, prob, obspar, pixlist, pixlistHR  # noqa: F821
+            PointingFile,
+            prob,
+            obspar,
+            pixlist,
+            pixlistHR,  # noqa: F821
         )
 
         if obspar.countPrevious:
