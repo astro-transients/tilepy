@@ -384,7 +384,14 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
             alreadysumipixarray1,
             doneObs,
         ) = SubtractPointings(
-            PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, prob, obspar, nside, radecs
+            PointingFile,
+            tGals0,
+            alreadysumipixarray1,
+            sum_dP_dV,
+            prob,
+            obspar,
+            nside,
+            radecs,
         )
         sumPGW = sum(AlreadyObservedPgw)
         sumPGAL = sum(AlreadyObservedPgal)
@@ -1298,7 +1305,14 @@ def PGalinFoV_NObs(
             alreadysumipixarray1,
             doneObs,
         ) = SubtractPointings(
-            PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, prob, obspar, nside, radecs
+            PointingFile,
+            tGals0,
+            alreadysumipixarray1,
+            sum_dP_dV,
+            prob,
+            obspar,
+            nside,
+            radecs,
         )
         maxRuns = obspar.maxRuns - len(ra)
         sumPGW = sum(AlreadyObservedPgw)
