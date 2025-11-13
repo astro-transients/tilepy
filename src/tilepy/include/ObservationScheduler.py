@@ -71,7 +71,7 @@ def GetSchedule(obspar):
 
     Notes
     -----
-    If the 90% localization area is larger than the configured maximum (`locCut`), no schedule is generated.
+    If the localization area at the confidence level specified by the user (`percentageMOC`) is larger than the configured maximum (`locCut`), no schedule is generated.
 
     Examples
     --------

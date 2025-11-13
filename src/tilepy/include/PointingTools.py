@@ -63,7 +63,7 @@ __all__ = [
     "NightDarkObservation",
     "NightDarkObservationwithGreyTime",
     "ComputeProbability2D",
-    "SubstractPointings2D",
+    "SubtractPointings2D",
     "TransformRADec",
     "TransformRADecToPix",
     "TransformPixToRaDec",
@@ -72,8 +72,8 @@ __all__ = [
     "LoadGalaxies",
     "LoadGalaxies_SteMgal",
     "ComputeProbGalTargeted",
-    "SubstractPointings",
-    "SubstractGalaxiesCircle",
+    "SubtractPointings",
+    "SubtractGalaxiesCircle",
     "ComputePGalinFOV",
     "ModifyCatalogue",
     "ComputeProbPGALIntegrateFoV",
@@ -1418,7 +1418,7 @@ def ComputeProbability2D(
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
 
-def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
+def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, radecs):
     nside = obspar.reducedNside
     radius = obspar.FOV
 
@@ -1434,9 +1434,20 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
     raPointing = np.atleast_1d(raPointing)
     decPointing = np.atleast_1d(decPointing)
 
+    pointings_subtracted = 0
+    max_separation = 0.1 * u.deg
+
     coordinates = TransformRADec(raPointing, decPointing)
     P_GW = []
-    for i, valuei in enumerate(raPointing):
+    for i, _ in enumerate(raPointing):
+        separations = coordinates[i].separation(radecs)
+        if len(separations[separations < max_separation]) == 0:
+            print(
+                f"Not subtracting RA: {raPointing[i]} Dec: {decPointing[i]} as it is outside of the {obspar.percentageMOC * 100}% area"
+            )
+            continue
+        pointings_subtracted += 1
+        # if (coordinates[i].separation(radecs))
         t = 0.5 * np.pi - coordinates[i].dec.rad
         p = coordinates[i].ra.rad
         # Get the pixels for the ipix_disc (low res)
@@ -1465,7 +1476,7 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
             if valuek not in pixlistHR:
                 pixlistHR.append(valuek)
 
-    return pixlist, pixlistHR, np.sum(P_GW), len(raPointing)
+    return pixlist, pixlistHR, np.sum(P_GW), pointings_subtracted
 
 
 def TransformRADec(vra, vdec):
@@ -1783,8 +1794,15 @@ def ComputeProbGalTargeted(
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
 
 
-def SubstractPointings(
-    tpointingFile, galaxies, talreadysumipixarray, tsum_dP_dV, prob, obspar, nside
+def SubtractPointings(
+    tpointingFile,
+    galaxies,
+    talreadysumipixarray,
+    tsum_dP_dV,
+    prob,
+    obspar,
+    nside,
+    radecs,
 ):
     FOV = obspar.FOV
 
@@ -1803,6 +1821,12 @@ def SubstractPointings(
         unpack=True,
     )  # ra, dec in degrees
 
+    rap = np.atleast_1d(rap)
+    decP = np.atleast_1d(decP)
+
+    pointings_subtracted = 0
+    max_separation = 0.1 * u.deg
+
     coordinates = TransformRADec(rap, decP)
     ra = coordinates.ra.deg
     dec = coordinates.dec.deg
@@ -1810,9 +1834,19 @@ def SubstractPointings(
     PGW = []
     PGAL = []
     updatedGalaxies = galaxies
-    if np.isscalar(ra):
+
+    for i, coord in enumerate(coordinates):
+        separations = coord.separation(radecs)
+        if len(separations[separations < max_separation]) == 0:
+            print(
+                f"Not subtracting RA: {coord[i].ra} Dec: {coord[i].dec} as it is outside of the {obspar.percentageMOC * 100}% area"
+            )
+            continue
+        pointings_subtracted += 1
+        ra = coord.ra.deg
+        dec = coord.dec.deg
         updatedGalaxies, pgwcircle, pgalcircle, talreadysumipixarray = (
-            SubstractGalaxiesCircle(
+            SubtractGalaxiesCircle(
                 updatedGalaxies,
                 ra,
                 dec,
@@ -1826,36 +1860,15 @@ def SubstractPointings(
         PGW.append(pgwcircle)
         PGAL.append(pgalcircle)
         print(
-            "Coordinates ra:", ra, "dec:", dec, "Pgw:", pgwcircle, "PGAL:", pgalcircle
+            "Coordinates ra:",
+            ra,
+            "dec:",
+            dec,
+            "Pgw:",
+            pgwcircle,
+            "PGAL:",
+            pgalcircle,
         )
-    else:
-        for i, coord in enumerate(coordinates):
-            ra = coord.ra.deg
-            dec = coord.dec.deg
-            updatedGalaxies, pgwcircle, pgalcircle, talreadysumipixarray = (
-                SubstractGalaxiesCircle(
-                    updatedGalaxies,
-                    ra,
-                    dec,
-                    talreadysumipixarray,
-                    tsum_dP_dV,
-                    FOV,
-                    prob,
-                    nside,
-                )
-            )
-            PGW.append(pgwcircle)
-            PGAL.append(pgalcircle)
-            print(
-                "Coordinates ra:",
-                ra,
-                "dec:",
-                dec,
-                "Pgw:",
-                pgwcircle,
-                "PGAL:",
-                pgalcircle,
-            )
     return (
         ra,
         dec,
@@ -1863,11 +1876,11 @@ def SubstractPointings(
         PGW,
         PGAL,
         talreadysumipixarray,
-        len(np.atleast_1d(ra)),
+        pointings_subtracted,
     )
 
 
-def SubstractGalaxiesCircle(
+def SubtractGalaxiesCircle(
     galaux, ra, dec, talreadysumipixarray, tsum_dP_dV, FOV, prob, nside
 ):
     radius = FOV
