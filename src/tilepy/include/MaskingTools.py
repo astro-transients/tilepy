@@ -26,6 +26,7 @@ import datetime
 #####################################################################
 # Packages
 import os
+import logging
 
 import astropy.coordinates as co
 import healpy as hp
@@ -59,6 +60,10 @@ __all__ = [
     "GetBestGridPos2D",
     "GetBestGridPos3D",
 ]
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 
 def ZenithAngleCut(prob, time, obspar):
@@ -450,7 +455,7 @@ def GetBestGridPos2D(
             dec.append(90 - np.degrees(theta))
 
     if len(dp_dV_FOV) > 0:
-        print("sum_PGW", sum(sum_PGW))
+        logger.info(f"Sum_PGW: {sum(sum_PGW)}")
         cat_pix = Table(
             [newpixfinal, ra, dec, dp_dV_FOV],
             names=("PIX", "PIXRA", "PIXDEC", "PIXFOVPROB"),
@@ -516,8 +521,8 @@ def GetBestGridPos2D(
                 coord="C",
                 linewidth=0.1,
             )
-        except Exception:
-            print("No occulted pix")
+        except Exception as e:
+            logger.error(f"{e}: no occulted pix")
 
         hp.visufunc.projplot(
             first_values["PIXRA"],
@@ -579,7 +584,7 @@ def GetBestGridPos3D(
             cat = galax
 
     if len(dp_dV_FOV) > 0:
-        print("sum(dp_dV_FOV)", sum(dp_dV_FOV))
+        logger.info(f"sum(dp_dV_FOV) {sum(dp_dV_FOV)}")
         cat_pix = Table(
             [BestGalsRA, BestGalsDec, dp_dV_FOV],
             names=("PIXRA", "PIXDEC", "PIXFOVPROB"),
@@ -639,8 +644,8 @@ def GetBestGridPos3D(
                 linewidth=0.1,
             )
 
-        except Exception:
-            print("No occulted pix")
+        except Exception as e:
+            logger.error(f"{e}: No occulted pix")
 
         hp.visufunc.projplot(
             first_values["PIXRA"],

@@ -22,6 +22,7 @@
 ##################################################################################################
 
 import datetime
+import logging
 
 import astropy.coordinates as co
 import healpy as hp
@@ -73,6 +74,10 @@ __all__ = [
     "Ranking_Space_AI",
 ]
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
+
 
 def LoadPointingFile(tpointingFile):
     """
@@ -102,7 +107,7 @@ def LoadPointingFile(tpointingFile):
 
     """
 
-    print("Loading pointings from " + tpointingFile)
+    logger.info(f"Loading pointings from {tpointingFile}")
     (
         time1,
         time2,
@@ -499,7 +504,7 @@ def Sortingby(galPointing, name, exposure):
 
     gwgalPointing.remove_column("Observation window")
     gwgalPointing.remove_column("Priority")
-    print(name)
+    logger.info(f"Name: {name}")
 
     target = [
         (name.split("/")[2] + "_{0}").format(element)
@@ -575,11 +580,9 @@ def RankingTimes(obspar, skymap, cat, dirName, PointingFile):
 
     ################################################################
 
-    print()
-    print(
-        "---------  RANKING THE OBSERVATIONS AND PRODUCING THE OUTPUT FILES   ----------"
+    logger.info(
+        "\n---------  RANKING THE OBSERVATIONS AND PRODUCING THE OUTPUT FILES   ----------\n"
     )
-    print()
 
     nside = obspar.HRnside
     prob = skymap.getMap("prob", obspar.HRnside)
@@ -602,11 +605,9 @@ def RankingTimes_2D(obspar, prob, dirName, PointingFile):
 
     ################################################################
 
-    print()
-    print(
-        "---------  RANKING THE OBSERVATIONS AND PRODUCING THE OUTPUT FILES   ----------"
+    logger.info(
+        "\n---------  RANKING THE OBSERVATIONS AND PRODUCING THE OUTPUT FILES   ----------\n"
     )
-    print()
 
     npix = len(prob)
     nside = hp.npix2nside(npix)
@@ -673,14 +674,14 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
         data = data.drop(index=best_idx).reset_index(drop=True)
 
     # Output the ranked list
-    print("Ranked List:")
+    logger.info("Ranked List:")
     for idx, entry in enumerate(ranked, start=1):
-        print(f"Rank {idx}: {entry.to_dict()}")
+        logger.info(f"Rank {idx}: {entry.to_dict()}")
 
     # Save the ranked list to a file
     output_file = "%s/RankingObservations_Space.txt" % dirName
     pd.DataFrame(ranked).to_csv(output_file, index=False, sep="\t")
-    print(f"Ranked file saved to {output_file}")
+    logger.info(f"Ranked file saved to {output_file}")
 
     # Read pre- and post-optimization data
     pre_df = pd.read_csv(file_path, delim_whitespace=True)
@@ -844,7 +845,7 @@ def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
     # Save the ranked list to a file
     output_file = "%s/RankingObservations_AI_Space.txt" % dirName
     pd.DataFrame(final_ranked).to_csv(output_file, index=False, sep="\t")
-    print(f"Ranked file saved to {output_file}")
+    logger.info(f"Ranked file saved to {output_file}")
 
     if obspar.doPlot:
         prob = skymap.getMap("prob", obspar.HRnside)

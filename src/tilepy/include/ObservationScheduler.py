@@ -21,6 +21,7 @@
 
 
 import os
+import logging
 
 import astropy.units as u
 from astropy.io import ascii
@@ -51,6 +52,10 @@ __all__ = [
     "GetSchedule",
     "GetUniversalSchedule",
 ]
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 
 def GetSchedule(obspar):
@@ -90,14 +95,14 @@ def GetSchedule(obspar):
         # FIXME : a repetitive calculation
         # area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
         if obspar.locCut < area_percentage:
-            print(
+            logger.info(
                 f"The {obspar.percentageMOC * 100:.1f}% area ({area_percentage:.2f} deg^2) is larger than the maximum allowed in the configuration ({str(obspar.locCut)} deg^2)"
             )
             return
 
     # FIXME : Not necessary but could ovoid to have along "==" in the code
     # print("=" * 91)
-    print(
+    logger.info(
         "==========================================================================================="
     )
 
@@ -115,21 +120,20 @@ def GetSchedule(obspar):
     # os.makedirs(dirName, exist_ok=True)
 
     if skymap.is3D:
-        print(
+        logger.info(
             "==========================================================================================="
         )
-        print("Starting the 3D pointing calculation with the following parameters\n")
-        print("Filename: ", raw_map.name_event)
-        print("Date: ", obspar.obsTime)
-        print("Previous pointings: ", obspar.pointingsFile)
-        print("Catalog: ", galaxies)
-        print("Dataset: ", obspar.datasetDir)
-        print("Output: ", outputDir)
-        print(f"90% area = {area_90}. 50% area = {area_50}")
-        print(
-            "==========================================================================================="
+        logger.info("Starting the 3D pointing calculation with the following parameters\n")
+        logger.info(f"Filename:  {raw_map.name_event}")
+        logger.info(f"Date: {obspar.obsTime}")
+        logger.info(f"Previous pointings: {obspar.pointingsFile}")
+        logger.info(f"Catalog: {galaxies}")
+        logger.info(f"Dataset: {obspar.datasetDir}")
+        logger.info(f"Output: {outputDir}")
+        logger.info(f"90% area = {area_90}. 50% area = {area_50}")
+        logger.info(
+            "===========================================================================================\n"
         )
-        print()
 
         SuggestedPointings, cat = PGalinFoV(
             skymap, raw_map.name_event, galaxies, obspar, dirName
@@ -140,8 +144,7 @@ def GetSchedule(obspar):
             ascii.write(
                 SuggestedPointings, outfilename, overwrite=True, fast_writer=False
             )
-            print()
-            print(f"Resulting pointings file is {outfilename}")
+            logger.info(f"\nResulting pointings file is {outfilename}")
             if obspar.doRank:
                 RankingTimes(
                     obspar,
@@ -161,23 +164,23 @@ def GetSchedule(obspar):
                     cat,
                 )
         else:
-            print("No observations are scheduled")
+            logger.info("No observations are scheduled")
 
     else:
-        print(
+        logger.info(
             "==========================================================================================="
         )
-        print("Starting the 2D pointing calculation with the following parameters\n")
-        print("Filename: ", raw_map.name_event)
-        print("Date: ", obspar.obsTime)
-        print("Previous pointings: ", obspar.pointingsFile)
-        print("Dataset: ", obspar.datasetDir)
-        print("Output: ", outputDir)
-        print(f"90% area = {area_90}. 50% area = {area_50}")
-        print(
-            "==========================================================================================="
+        logger.info("Starting the 2D pointing calculation with the following parameters\n")
+        logger.info(f"Filename:  {raw_map.name_event}")
+        logger.info(f"Date: {obspar.obsTime}")
+        logger.info(f"Previous pointings: {obspar.pointingsFile}")
+        logger.info(f"Catalog: {galaxies}")
+        logger.info(f"Dataset: {obspar.datasetDir}")
+        logger.info(f"Output: {outputDir}")
+        logger.info(f"90% area = {area_90}. 50% area = {area_50}")
+        logger.info(
+            "===========================================================================================\n"
         )
-        print()
 
         SuggestedPointings, t0 = PGWinFoV(skymap, raw_map.name_event, obspar, dirName)
 
@@ -187,8 +190,7 @@ def GetSchedule(obspar):
             ascii.write(
                 SuggestedPointings, outfilename, overwrite=True, fast_writer=False
             )
-            print()
-            print(f"Resulting pointings file is {outfilename}")
+            logger.info(f"Resulting pointings file is {outfilename}")
             if obspar.doRank:
                 RankingTimes_2D(
                     obspar,
@@ -207,7 +209,7 @@ def GetSchedule(obspar):
                     gal,
                 )
         else:
-            print("No observations are scheduled")
+            logger.info("No observations are scheduled")
 
 
 def GetUniversalSchedule(obspar):
@@ -279,22 +281,22 @@ def GetUniversalSchedule(obspar):
     # SPACE
     elif base == "space":
         if skymap.is3D:
-            print(
+            logger.info(
                 "==========================================================================================="
             )
-            print(
+            logger.info(
                 "Starting the 3D pointing calculation with the following parameters\n"
             )
-            print("Filename: ", raw_map.name_event)
-            print("Date: ", obspar[0].obsTime)
-            print("Catalog: ", obspar[0].galcatName)
-            print("Dataset: ", obspar[0].datasetDir)
-            print("Output: ", outputDir)
-            print(f"90% area = {area_90}. 50% area = {area_50}")
-            print(
-                "==========================================================================================="
+            logger.info(f"Filename:  {raw_map.name_event}")
+            logger.info(f"Date: {obspar[0].obsTime}")
+            logger.info(f"Previous pointings: {obspar[0].pointingsFile}")
+            logger.info(f"Catalog: {galaxies}")
+            logger.info(f"Dataset: {obspar[0].datasetDir}")
+            logger.info(f"Output: {outputDir}")
+            logger.info(f"90% area = {area_90}. 50% area = {area_50}")
+            logger.info(
+                "===========================================================================================\n"
             )
-            print()
             dirName = "%s/PGalinFoV_NObs_Space" % outputDir
             if not os.path.exists(dirName):
                 os.makedirs(dirName)
@@ -332,21 +334,22 @@ def GetUniversalSchedule(obspar):
                 )
 
         else:
-            print(
+            logger.info(
                 "==========================================================================================="
             )
-            print(
+            logger.info(
                 "Starting the 2D pointing calculation with the following parameters\n"
             )
-            print("Filename: ", raw_map.name_event)
-            print("Date: ", obspar[0].obsTime)
-            print("Dataset: ", obspar[0].datasetDir)
-            print("Output: ", outputDir)
-            print(f"90% area = {area_90}. 50% area = {area_50}")
-            print(
-                "==========================================================================================="
+            logger.info(f"Filename:  {raw_map.name_event}")
+            logger.info(f"Date: {obspar[0].obsTime}")
+            logger.info(f"Previous pointings: {obspar[0].pointingsFile}")
+            logger.info(f"Catalog: {galaxies}")
+            logger.info(f"Dataset: {obspar[0].datasetDir}")
+            logger.info(f"Output: {outputDir}")
+            logger.info(f"90% area = {area_90}. 50% area = {area_50}")
+            logger.info(
+                "===========================================================================================\n"
             )
-            print()
             dirName = "%s/PGWinFoV_Space_NObs" % outputDir
             if not os.path.exists(dirName):
                 os.makedirs(dirName)
@@ -388,22 +391,22 @@ def GetUniversalSchedule(obspar):
     else:
         # GROUND
         if skymap.is3D:
-            print(
+            logger.info(
                 "==========================================================================================="
             )
-            print(
+            logger.info(
                 "Starting the 3D pointing calculation with the following parameters\n"
             )
-            print("Filename: ", raw_map.name_event)
-            print("Date: ", obspar[0].obsTime)
-            print("Catalog: ", obspar[0].galcatName)
-            print("Dataset: ", obspar[0].datasetDir)
-            print("Output: ", outputDir)
-            print(f"90% area = {area_90}. 50% area = {area_50}")
-            print(
-                "==========================================================================================="
+            logger.info(f"Filename:  {raw_map.name_event}")
+            logger.info(f"Date: {obspar[0].obsTime}")
+            logger.info(f"Previous pointings: {obspar[0].pointingsFile}")
+            logger.info(f"Catalog: {galaxies}")
+            logger.info(f"Dataset: {obspar[0].datasetDir}")
+            logger.info(f"Output: {outputDir}")
+            logger.info(f"90% area = {area_90}. 50% area = {area_50}")
+            logger.info(
+                "===========================================================================================\n"
             )
-            print()
             dirName = "%s/PGalinFoV_NObs" % outputDir
             galaxies = obspar[0].datasetDir + obspar[0].galcatName
             if not os.path.exists(dirName):
@@ -419,21 +422,22 @@ def GetUniversalSchedule(obspar):
             )
 
         else:
-            print(
+            logger.info(
                 "==========================================================================================="
             )
-            print(
+            logger.info(
                 "Starting the 2D pointing calculation with the following parameters\n"
             )
-            print("Filename: ", raw_map.name_event)
-            print("Date: ", obspar[0].obsTime)
-            print("Dataset: ", obspar[0].datasetDir)
-            print("Output: ", outputDir)
-            print(f"90% area = {area_90}. 50% area = {area_50}")
-            print(
-                "==========================================================================================="
+            logger.info(f"Filename:  {raw_map.name_event}")
+            logger.info(f"Date: {obspar[0].obsTime}")
+            logger.info(f"Previous pointings: {obspar[0].pointingsFile}")
+            logger.info(f"Catalog: {galaxies}")
+            logger.info(f"Dataset: {obspar[0].datasetDir}")
+            logger.info(f"Output: {outputDir}")
+            logger.info(f"90% area = {area_90}. 50% area = {area_50}")
+            logger.info(
+                "===========================================================================================\n"
             )
-            print()
             dirName = "%s/PGWinFoV_NObs" % outputDir
             if not os.path.exists(dirName):
                 os.makedirs(dirName)
@@ -447,11 +451,10 @@ def GetUniversalSchedule(obspar):
             )
 
     if len(SuggestedPointings) != 0:
-        print(SuggestedPointings)
+        logger.info(f"Suggested pointings: {SuggestedPointings}")
         outfilename = "%s/SuggestedPointings_GWOptimisation.txt" % dirName
         ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
-        print()
-        print(f"Resulting pointings file is {outfilename}")
+        logger.info(f"Resulting pointings file is {outfilename}")
 
         if base in ["space"]:
             for j, obs in enumerate(obspar):
@@ -459,7 +462,9 @@ def GetUniversalSchedule(obspar):
                 SuggestedPointings_1 = SuggestedPointings[
                     SuggestedPointings["ObsName"] == obspar[j].obs_name
                 ]
-                print(SuggestedPointings_1)
+                logger.info(
+                    f"Suggested pointings for {obspar[j].obs_name}: {SuggestedPointings_1}"
+                )
                 if base == "space":
                     time_table = Table(
                         [result["SatTimes"], result["saa"]], names=("SatTimes", "SAA")
@@ -497,7 +502,7 @@ def GetUniversalSchedule(obspar):
                         )
 
         elif base in ["grid"]:
-            print("This is a grid and not observatory dependent")
+            logger.info("This is a grid and not observatory dependent")
 
         else:
             # for obspar in parameters:
@@ -506,7 +511,9 @@ def GetUniversalSchedule(obspar):
                 SuggestedPointings_1 = SuggestedPointings[
                     SuggestedPointings["ObsName"] == obspar1.obs_name
                 ]
-                print(SuggestedPointings_1)
+                logger.info(
+                    f"Suggested pointings for {obspar1.obs_name}: {SuggestedPointings_1}"
+                )
                 if len(SuggestedPointings_1) != 0:
                     ascii.write(
                         SuggestedPointings_1,
@@ -546,4 +553,4 @@ def GetUniversalSchedule(obspar):
                 )
 
     else:
-        print("No observations are scheduled")
+        logger.info("No observations are scheduled")

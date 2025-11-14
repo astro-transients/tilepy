@@ -7,6 +7,7 @@
 import argparse
 import os
 import time
+import logging
 
 from astropy.time import Time
 
@@ -15,6 +16,10 @@ from tilepy.include.ObservationScheduler import GetSchedule
 from tilepy.include.PointingTools import getdate
 
 __all__ = ["Tiling_Observations"]
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 
 def Tiling_Observations(obspar):
@@ -156,7 +161,7 @@ def main():
     Tiling_Observations(obspar)
 
     end = time.time()
-    print("Execution time: ", end - start)
+    logger.info(f"Execution time: {end - start:.0f} [sec]\n")
 
 
 if __name__ == "__main__":

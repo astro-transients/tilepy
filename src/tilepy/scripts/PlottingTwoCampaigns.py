@@ -1,11 +1,16 @@
 import argparse
 import os
 import time
+import logging
 
 from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.tools.VisualizationTools import CompareTwoTilings
 
 __all__ = ["PlottingTwoCampaigns"]
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 
 def PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2):
@@ -103,7 +108,7 @@ def main():
     PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2)
 
     end = time.time()
-    print("Execution time: ", end - start)
+    logger.info(f"Execution time: {end - start:.0f} [sec]\n")
 
 
 if __name__ == "__main__":
