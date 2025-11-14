@@ -20,8 +20,8 @@
 ##################################################################################################
 
 import datetime
-import os
 import logging
+import os
 
 import astropy.coordinates as co
 import healpy as hp
@@ -463,9 +463,7 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
     Probarray = np.atleast_1d(Probarray)
 
     logger.info("----------   BUILDING A MAP   ----------")
-    logger.info(
-        f"Total probability of map 1 that maximises PGW= {sum(Probarray):.5f}"
-    )
+    logger.info(f"Total probability of map 1 that maximises PGW= {sum(Probarray):.5f}")
 
     converted_time = []
     for _, time in enumerate(ObservationTimearray):

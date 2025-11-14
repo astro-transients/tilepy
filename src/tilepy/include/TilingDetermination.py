@@ -20,8 +20,8 @@
 
 
 import datetime
-import random
 import logging
+import random
 
 import astropy.coordinates as co
 import healpy as hp
@@ -1360,7 +1360,9 @@ def PGalinFoV_NObs(
                                 and (sum(P_GWarray) > 0.40)
                                 and obspar.secondRound
                             ):
-                                logger.info(f"Probability: {finalGals['dp_dV_FOV'][:1]}")
+                                logger.info(
+                                    f"Probability: {finalGals['dp_dV_FOV'][:1]}"
+                                )
                                 visible, altaz, tGals_aux2 = VisibleAtTime(
                                     ObservationTime, tGals_aux2, obspar
                                 )

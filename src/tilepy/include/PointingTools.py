@@ -21,11 +21,11 @@
 
 
 import datetime
+import logging
 
 #####################################################################
 # Packages
 import os
-import logging
 
 import astropy.coordinates as co
 import ephem

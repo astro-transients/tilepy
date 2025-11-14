@@ -1,7 +1,7 @@
 import argparse
+import logging
 import os
 import time
-import logging
 
 from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.tools.VisualizationTools import CompareTwoTilings

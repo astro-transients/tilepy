@@ -20,8 +20,8 @@
 ##################################################################################################
 
 
-import os
 import logging
+import os
 
 import astropy.units as u
 from astropy.io import ascii
@@ -123,7 +123,9 @@ def GetSchedule(obspar):
         logger.info(
             "==========================================================================================="
         )
-        logger.info("Starting the 3D pointing calculation with the following parameters\n")
+        logger.info(
+            "Starting the 3D pointing calculation with the following parameters\n"
+        )
         logger.info(f"Filename:  {raw_map.name_event}")
         logger.info(f"Date: {obspar.obsTime}")
         logger.info(f"Previous pointings: {obspar.pointingsFile}")
@@ -170,7 +172,9 @@ def GetSchedule(obspar):
         logger.info(
             "==========================================================================================="
         )
-        logger.info("Starting the 2D pointing calculation with the following parameters\n")
+        logger.info(
+            "Starting the 2D pointing calculation with the following parameters\n"
+        )
         logger.info(f"Filename:  {raw_map.name_event}")
         logger.info(f"Date: {obspar.obsTime}")
         logger.info(f"Previous pointings: {obspar.pointingsFile}")
