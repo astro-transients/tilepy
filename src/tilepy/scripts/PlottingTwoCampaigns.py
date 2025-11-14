@@ -83,6 +83,11 @@ def main():
     parser.add_argument(
         "-eventName", metavar="Name of the observed event", default=None
     )
+    parser.add_argument(
+        "-logname",
+        metavar="Name of the output log file.",
+        default="plotting_two_campaigns.log",
+    )
 
     args = parser.parse_args()
     skymap = args.skymap
@@ -95,9 +100,12 @@ def main():
     galcatName = args.galcatName
     pointingsFile = args.tiles
     eventName = args.eventName
+    logname = args.logname
 
     if not os.path.exists(outDir):
         os.makedirs(outDir)
+
+    logging.basicConfig(filename=f"{outDir}/{logname}")
 
     obspar = ObservationParameters()
     obspar.add_parsed_args(

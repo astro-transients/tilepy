@@ -104,7 +104,9 @@ def main():
         "-eventName", metavar="Name of the observed event", default=None
     )
     parser.add_argument(
-        "-logname", metavar="Name of the output log file.", default="tiling_observations.log"
+        "-logname",
+        metavar="Name of the output log file.",
+        default="tiling_observations.log",
     )
 
     args = parser.parse_args()
