@@ -21,6 +21,7 @@
 
 import datetime
 import random
+import logging
 
 import astropy.coordinates as co
 import healpy as hp
@@ -89,6 +90,10 @@ __all__ = [
     "PGWinFoV_Space_NObs",
 ]
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
+
 
 def PGWinFoV(skymap, nameEvent, obspar, dirName):
     """
@@ -122,7 +127,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     PointingFile = obspar.pointingsFile
     # Main parameters
 
-    print(obspar)
+    logger.info(f"Obspar:\n{obspar}")
 
     random.seed()
 
@@ -139,9 +144,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     ObsName = []
     Duration = []
 
-    print()
-    print("-------------------   NEW EVENT   --------------------")
-    print()
+    logger.info("\n-------------------   NEW EVENT   --------------------\n")
 
     # Retrieve maps
     prob = skymap.getMap("prob", obspar.reducedNside)
@@ -156,7 +159,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     # Add observed pixels to pixlist
     maxRuns = obspar.maxRuns
     if PointingFile is not None:
-        print(
+        logger.info(
             "==========================================================================================="
         )
         pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
@@ -165,18 +168,18 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
         if obspar.countPrevious:
             maxRuns = obspar.maxRuns - doneObs
 
-        print(f"Total GW probability already covered: {sumPGW}")
-        print(
+        logger.info(f"Total GW probability already covered: {sumPGW}")
+        logger.info(
             f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}"
         )
-        print(
+        logger.info(
             "==========================================================================================="
         )
 
     #######################################################
 
-    print("----------   NEW FOLLOW-UP ATTEMPT   ----------")
+    logger.info("----------   NEW FOLLOW-UP ATTEMPT   ----------")
 
     if obspar.useGreytime:
         NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0, obspar)
@@ -217,12 +220,8 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
                         dirName,
                     )
                     if P_GW <= obspar.minProbcut:
-                        print(
-                            "Tile Pgw= ",
-                            P_GW,
-                            " is smaller than the minProbCut (",
-                            obspar.minProbcut,
-                            ") => skip this tile",
+                        logger.info(
+                            "Tile Pgw= {P_GW} is smaller than the minProbCut ({obspar.minProbcut}) => skip this tile"
                         )
                     else:
                         Round.append(2)
@@ -251,7 +250,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
         else:
             break
 
-    print(
+    logger.info(
         "\nTotal GW probability covered: ",
         float("{:1.4f}".format(float(sum(P_GWarray)))),
         "Number of runs that fulfill darkness condition  :",
@@ -285,14 +284,14 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     )
 
     if len(SuggestedPointings) != 0:
-        print(
+        logger.info(
             "\n================================= Tiling found ============================================="
         )
-        print(SuggestedPointings)
-        print(
+        logger.info(SuggestedPointings)
+        logger.info(
             "============================================================================================\n"
         )
-        print(f"The total probability PGW: {np.sum(P_GWarray):.4f}")
+        logger.info(f"The total probability PGW: {np.sum(P_GWarray):.4f}")
     return (SuggestedPointings, ObservationTime0)
 
 
@@ -333,7 +332,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
     PointingFile = obspar.pointingsFile
 
     # Main Parameters
-    print(obspar)
+    logger.info(f"Obspar:\n{obspar}")
 
     # load galaxy catalog from local file
     if not obspar.mangrove:
@@ -345,9 +344,9 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
     prob = skymap.getMap("prob", obspar.HRnside)
 
     if skymap.is3D:
-        print("Skymap is 3D")
+        logger.info("Skymap is 3D")
     else:
-        print("Skymap is 2D")
+        logger.info("Skymap is 2D")
 
     # correlate GW map with galaxy catalog, retrieve ordered list
     if not obspar.mangrove:
@@ -367,7 +366,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
     maxRuns = obspar.maxRuns
     if PointingFile is None:
         tGals = tGals0
-        print("No pointings were given to be subtracted")
+        logger.info("No pointings were given to be subtracted")
     else:
         (
             ra,
@@ -386,19 +385,18 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
         # ra, dec, tGals, AlreadyObservedPgw, AlreadyObservedPgal,alreadysumipixarray2, doneObs = SubstractPointings(PointingFile, tGals0,alreadysumipixarray1,sum_dP_dV,prob, obspar, nside)
         if obspar.countPrevious:
             maxRuns = obspar.maxRuns - doneObs
-        print(
+        logger.info(
             "==========================================================================================="
         )
-        print()
-        print(
+        logger.info(
             f"Total GW probability already covered: {sumPGW}, "
             f"Total Gal probability already covered: {sumPGAL}"
         )
-        print(
+        logger.info(
             f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}"
         )
-        print(
+        logger.info(
             "==========================================================================================="
         )
     ##########################
@@ -416,12 +414,9 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
     Fov_obs = []
 
     Round = []
-    print("----------   NEW FOLLOW-UP ATTEMPT   ----------")
-    print(
-        "maxRuns: ",
-        maxRuns,
-        "MinimumProbCutForCatalogue: ",
-        obspar.minimumProbCutForCatalogue,
+    logger.info("----------   NEW FOLLOW-UP ATTEMPT   ----------")
+    logger.info(
+        f"maxRuns: {maxRuns}, MinimumProbCutForCatalogue: {obspar.minimumProbCutForCatalogue}"
     )
 
     if obspar.useGreytime:
@@ -453,7 +448,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                     if not obspar.useGreytime:
                         finalGals = visiGals[mask]
                     if not len(finalGals["dp_dV_FOV"]):
-                        print(
+                        logger.info(
                             f"Condition not met at {ObservationTime}: no surviving galaxies."
                         )
                         continue
@@ -624,7 +619,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                             counter = counter + 1
 
                     else:
-                        print(
+                        logger.info(
                             f"Condition not met at {ObservationTime}: dp/dV_FOV = {finalGals['dp_dV_FOV'][0]} must be greater than {obspar.minProbcut}"
                         )
             else:
@@ -794,7 +789,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                             counter = counter + 1
 
                     else:
-                        print(
+                        logger.info(
                             f"Condition not met at {ObservationTime}: dp/dV = {finalGals['dp_dV'][0]} must be greater than {obspar.minProbcut}"
                         )
 
@@ -828,15 +823,15 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
     )
 
     if len(SuggestedPointings) != 0:
-        print(
+        logger.info(
             "\n================================= Tiling found ============================================="
         )
-        print(SuggestedPointings)
-        print(
+        logger.info(SuggestedPointings)
+        logger.info(
             "============================================================================================\n"
         )
-        print(f"The total probability PGal: {np.sum(P_GALarray):.4f}")
-        print(f"The total probability PGW: {np.sum(P_GWarray):.4f}")
+        logger.info(f"The total probability PGal: {np.sum(P_GALarray):.4f}")
+        logger.info(f"The total probability PGW: {np.sum(P_GWarray):.4f}")
     return SuggestedPointings, tGals0
 
 
@@ -867,9 +862,9 @@ def ObservationStartperObs(obsparameters, ObservationTime0):
 
     """
 
-    print("ObservationTime0", ObservationTime0)
+    logger.info(f"ObservationTime0: {ObservationTime0}")
 
-    print("obsparameters", len(obsparameters))
+    logger.info(f"obsparameters: {len(obsparameters)}")
     # Finding the start time for each observatory and checking if it's now
     FirstDark = np.full(len(obsparameters), False, dtype=bool)
     FirstDark_Flag = np.full(len(obsparameters), False, dtype=bool)
@@ -1020,16 +1015,15 @@ def PGWinFoV_NObs(
 
         if obspar.countPrevious:
             maxRuns = obspar.maxRuns - doneObs
-        print(
+        logger.info(
             "==========================================================================================="
         )
-        print()
-        print(f"Total GW probability already covered: {sumPGW}")
-        print(
+        logger.info(f"Total GW probability already covered: {sumPGW}")
+        logger.info(
             f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}"
         )
-        print(
+        logger.info(
             "==========================================================================================="
         )
     #################################################################################################################################################
@@ -1044,11 +1038,11 @@ def PGWinFoV_NObs(
     counter = 0
     i = 0
     couter_per_obs = np.zeros(len(NewActiveObs))
-    print("------NewActiveObsTime--------", NewActiveObs[0].obs_name)
+    logger.info(f"------NewActiveObsTime--------\n{NewActiveObs[0].obs_name}")
     while (i < 500) & any(SameNight):
         for j, obs in enumerate(NewActiveObs):
             obspar = NewActiveObs[j]
-            print("Observatory: ", obspar.obs_name)
+            logger.info(f"Observatory: {obspar.obs_name}")
             ObservationTime = NewActiveObsTime[j]
             if ITERATION_OBS == len(obsparameters):
                 TIME_MIN_ALL = []
@@ -1057,7 +1051,6 @@ def PGWinFoV_NObs(
 
             if obspar.base == "space":
                 SatelliteName = GetSatelliteName(obspar.obs_name, obspar.stationsurl)
-                print(obspar.obs_name)
 
             if couter_per_obs[j] >= maxRuns:
                 SameNight[j] = False
@@ -1110,7 +1103,7 @@ def PGWinFoV_NObs(
                             pixlistHROcc,
                         )
                         if P_GW <= obspar.minProbcut:
-                            print(
+                            logger.info(
                                 "Tile Pgw= ",
                                 P_GW,
                                 " is smaller than the minProbCut (",
@@ -1218,7 +1211,7 @@ def PGWinFoV_NObs(
             "FoV",
         ],
     )
-    print("The total probability PGW: ", np.sum(P_GWarray))
+    logger.info("The total probability PGW: ", np.sum(P_GWarray))
 
     return SuggestedPointings, obsparameters
 
@@ -1274,7 +1267,7 @@ def PGalinFoV_NObs(
     maxRuns = obspar.maxRuns
     if PointingFile is None:
         tGals = tGals0
-        print("No pointings were given to be subtracted")
+        logger.info("No pointings were given to be subtracted")
     else:
         # tGals_aux = tGals
         (
@@ -1293,19 +1286,18 @@ def PGalinFoV_NObs(
         sumPGAL = sum(AlreadyObservedPgal)
         if obspar.countPrevious:
             maxRuns = obspar.maxRuns - doneObs
-        print(
+        logger.info(
             "==========================================================================================="
         )
-        print()
-        print(
+        logger.info(
             f"Total GW probability already covered: {sumPGW}, "
             f"Total Gal probability already covered: {sumPGAL}"
         )
-        print(
+        logger.info(
             f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}"
         )
-        print(
+        logger.info(
             "==========================================================================================="
         )
 
@@ -1368,7 +1360,7 @@ def PGalinFoV_NObs(
                                 and (sum(P_GWarray) > 0.40)
                                 and obspar.secondRound
                             ):
-                                print("probability", finalGals["dp_dV_FOV"][:1])
+                                logger.info(f"Probability: {finalGals['dp_dV_FOV'][:1]}")
                                 visible, altaz, tGals_aux2 = VisibleAtTime(
                                     ObservationTime, tGals_aux2, obspar
                                 )
@@ -1510,7 +1502,7 @@ def PGalinFoV_NObs(
                             # ObservationTimearrayNamibia.append(Tools.UTCtoNamibia(ObservationTime))
 
                         else:
-                            print(
+                            logger.info(
                                 f"Condition NOT met at {ObservationTime}: dp/dV_FOV = {finalGals['dp_dV_FOV'][0]} is greater than {obspar.minProbcut}"
                             )
 
@@ -1540,7 +1532,7 @@ def PGalinFoV_NObs(
                             finalGals["dp_dV"][0]
                             > tGals["dp_dV"][:1] * obspar.minProbcut
                         ):
-                            print(
+                            logger.info(
                                 f"Condition met at {ObservationTime}: dp/dV = {finalGals['dp_dV'][0]} is greater than {obspar.minProbcut}"
                             )
                             if (
@@ -1697,7 +1689,7 @@ def PGalinFoV_NObs(
                                 Fov_obs.append(obspar.FOV)
 
                         else:
-                            print(
+                            logger.info(
                                 f"Condition NOT met at {ObservationTime}: dp/dV = {finalGals['dp_dV'][0]} is greater than {obspar.minProbcut}"
                             )
 
@@ -1753,8 +1745,8 @@ def PGalinFoV_NObs(
             "FoV",
         ],
     )
-    print("The total probability PGal: ", np.sum(P_GALarray))
-    print("The total probability PGW: ", np.sum(P_GWarray))
+    logger.info(f"The total probability PGal: {np.sum(P_GALarray)}")
+    logger.info(f"The total probability PGW: {np.sum(P_GWarray)}")
     return SuggestedPointings, tGals0, obsparameters
 
 
@@ -1806,16 +1798,15 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
 
         if obspar.countPrevious:
             maxRuns = obspar.maxRuns - doneObs
-        print(
+        logger.info(
             "==========================================================================================="
         )
-        print()
-        print(f"Total GW probability already covered: {sumPGW}")
-        print(
+        logger.info(f"Total GW probability already covered: {sumPGW}")
+        logger.info(
             f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}"
         )
-        print(
+        logger.info(
             "==========================================================================================="
         )
 
@@ -1907,16 +1898,17 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
 
         if obspar.countPrevious:
             maxRuns = obspar.maxRuns - doneObs
-        print(
+        logger.info(
             "==========================================================================================="
         )
-        print()
-        print(f"Total GW probability already covered: {sumPGW}")
-        print(
+        logger.info(f"Total GW probability already covered: {sumPGW}")
+        logger.info(
             f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}"
         )
-        print("========")
+        logger.info(
+            "==========================================================================================="
+        )
 
     ipix = TransformRADecToPix(radecs, reducedNside)
     newpix = ipix
@@ -1999,16 +1991,15 @@ def PGWinFoV_Space_NObs(
 
         if obspar.countPrevious:
             maxRuns = obspar.maxRuns - doneObs
-        print(
+        logger.info(
             "==========================================================================================="
         )
-        print()
-        print(f"Total GW probability already covered: {sumPGW}")
-        print(
+        logger.info(f"Total GW probability already covered: {sumPGW}")
+        logger.info(
             f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}"
         )
-        print(
+        logger.info(
             "==========================================================================================="
         )
 
@@ -2226,16 +2217,15 @@ def PGalinFoV_Space_NObs(
 
         if obspar.countPrevious:
             maxRuns = obspar.maxRuns - doneObs
-        print(
+        logger.info(
             "==========================================================================================="
         )
-        print()
-        print(f"Total GW probability already covered: {sumPGW}")
-        print(
+        logger.info(f"Total GW probability already covered: {sumPGW}")
+        logger.info(
             f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
             f"Max Runs was {obspar.maxRuns}, now is {maxRuns}"
         )
-        print(
+        logger.info(
             "==========================================================================================="
         )
 
@@ -2361,7 +2351,7 @@ def PGalinFoV_Space_NObs(
     if matching_rows:
         first_values = Table(rows=matching_rows, names=first_values1.colnames)
     else:
-        print("No coordinates matched within the tolerance.")
+        logger.info("No coordinates matched within the tolerance.")
         first_values = Table(names=first_values1.colnames)
 
     # FOR TARGETED HERE TRY TO FIND OUT WHICH GALAXIES ARE IN THE VISIBLE PART. Then choose the highest 10 between nthem
