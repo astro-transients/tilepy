@@ -21,6 +21,7 @@
 
 
 import datetime
+import logging
 
 #####################################################################
 # Packages
@@ -87,6 +88,10 @@ __all__ = [
     "GetBestNSIDE",
     "FillSummary",
 ]
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 
 class Tools:
@@ -447,10 +452,10 @@ class Tools:
 
         B_total = get_dipole_field(lat, lon, alt_km, coeffs)
 
-        print(
+        logger.info(
             f"[{satellite.name}] lat: {lat:.2f}, lon: {lon:.2f}, alt: {alt_km:.2f} km"
         )
-        print(f"Magnetic field strength: {B_total:.1f} nT")
+        logger.info(f"Magnetic field strength: {B_total:.1f} nT")
 
         return B_total < threshold_nT
 
@@ -999,7 +1004,7 @@ class Observer:
 
 
 def LoadPointings(tpointingFile):
-    print("Loading pointings from " + tpointingFile)
+    logger.info(f"Loading pointings from {tpointingFile}")
     # Read the first line of the file to determine column names
     with open(tpointingFile, "r") as f:
         header_line = f.readline().strip()
@@ -1030,7 +1035,7 @@ def getdate(x):
     elif isinstance(x, str):
         return datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S")
     else:
-        print("ERROR: something is wrong with the format of the date: ", x)
+        logger.error(f"Something is wrong with the format of the date: {x}")
         return None
 
 
@@ -1189,7 +1194,7 @@ def GetBestNSIDE(ReducedNSIDE, HRnside, fov):
         and (ReducedNSIDE & (ReducedNSIDE - 1)) == 0
     ):
         best_nside = ReducedNSIDE
-        print("The NSIDE is already given. No optimization...")
+        logger.info("The NSIDE is already given. No optimization...")
 
     else:
         nside_values = [2**i for i in range(1, 13)]  # From NSIDE=2 to NSIDE=4096
@@ -1202,12 +1207,12 @@ def GetBestNSIDE(ReducedNSIDE, HRnside, fov):
         else:
             best_nside = max(valid_nsides)  # Choose the best NSIDE in range
 
-        print("NO REDUCED NSIDE GIVEN. Optimizing...")
-        print(
+        logger.info("NO REDUCED NSIDE GIVEN. Optimizing...")
+        logger.info(
             f"Best NSIDE for FoV of {fov}° (Min NSIDE {ReducedNSIDE}, Max NSIDE {max_nside}): {best_nside} (Pixel Size ≈ {pixel_sizes[best_nside]:.3f}°)"
         )
 
-    print("best_nside", best_nside)
+    logger.info(f"Best nside {best_nside}")
     return max_nside, best_nside
 
 
@@ -1402,8 +1407,8 @@ def ComputeProbability2D(
                         coord="C",
                         linewidth=0.1,
                     )
-                except Exception:
-                    print("No occulted pixel")
+                except Exception as e:
+                    logger.error(f"{e}: no occulted pixel")
 
             plt.savefig("%s/Zoom_Pointing_%g.png" % (path, counter))
             # for i in range(0,1):
@@ -1422,7 +1427,7 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
     nside = obspar.reducedNside
     radius = obspar.FOV
 
-    print("Subtracting pointings from " + tpointingFile)
+    logger.info(f"Subtracting pointings from {tpointingFile}")
     raPointing, decPointing = np.genfromtxt(
         tpointingFile,
         usecols=(2, 3),
@@ -1449,15 +1454,8 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
             pixlist.append(valuej)
         P_GW.append(prob[effectiveipix_disc].sum())
 
-        print(
-            "Coordinates ra:",
-            raPointing[i],
-            "dec:",
-            decPointing[i],
-            "Pgw:",
-            P_GW[i],
-            "vs",
-            prob[ipix_disc].sum(),
+        logger.info(
+            f"Coordinates ra: {raPointing[i]}, dec: {decPointing[i]}, Pgw: {P_GW[i]} vs {prob[ipix_disc].sum()}"
         )
         # Save the ipixels in HR
         ipix_discHR = hp.query_disc(obspar.HRnside, xyz, np.deg2rad(radius))
@@ -1548,7 +1546,7 @@ def LoadGalaxies(tgalFile):
     Load galaxy catalog as an Astropy Table
     """
 
-    print("Loading galaxy catalogue from " + tgalFile)
+    logger.info(f"Loading galaxy catalogue from {tgalFile}")
 
     # Load data
     h5file = tables.open_file(tgalFile, mode="r")
@@ -1568,7 +1566,7 @@ def LoadGalaxies_SteMgal(tgalFile):
     Load galaxy catalog as an Astropy Table
     """
 
-    print("Loading galaxy catalogue from " + tgalFile)
+    logger.info(f"Loading galaxy catalogue from {tgalFile}")
 
     # Load data
     h5file = tables.open_file(tgalFile, mode="r")
@@ -1790,7 +1788,7 @@ def SubstractPointings(
 
     # Read PointingsFile
 
-    print("Subtracting pointings from " + tpointingFile)
+    logger.info(f"Subtracting pointings from {tpointingFile}")
     (
         rap,
         decP,
@@ -1825,8 +1823,8 @@ def SubstractPointings(
         )
         PGW.append(pgwcircle)
         PGAL.append(pgalcircle)
-        print(
-            "Coordinates ra:", ra, "dec:", dec, "Pgw:", pgwcircle, "PGAL:", pgalcircle
+        logger.info(
+            f"Coordinates ra: {ra}, dec: {dec}, Pgw: {pgwcircle}, PGAL: {pgalcircle}"
         )
     else:
         for i, coord in enumerate(coordinates):
@@ -1846,15 +1844,8 @@ def SubstractPointings(
             )
             PGW.append(pgwcircle)
             PGAL.append(pgalcircle)
-            print(
-                "Coordinates ra:",
-                ra,
-                "dec:",
-                dec,
-                "Pgw:",
-                pgwcircle,
-                "PGAL:",
-                pgalcircle,
+            logger.info(
+                f"Coordinates ra: {ra}, dec: {dec}, Pgw: {pgwcircle}, PGAL: {pgalcircle}"
             )
     return (
         ra,
@@ -1894,7 +1885,7 @@ def SubstractGalaxiesCircle(
         dp_dVfinal[targetCoord.separation(coordinates).deg < radius].sum() / tsum_dP_dV
     )
 
-    print("PGW", P_GW, "P_GAL", P_Gal)
+    logger.info(f"PGW: {P_GW}, P_GAL: {P_Gal}")
 
     newgalaxies = galaux[targetCoord.separation(coordinates).deg > radius]
 
@@ -2238,12 +2229,12 @@ def IsSourceInside(Pointings, Sources, FOV, nside):
             except Exception:
                 ipix_disc = hp.query_disc(nside, xyz[0], np.deg2rad(FOV))
             if txyz in ipix_disc:
-                print("Found in pointing number", i)
+                logger.info(f"Found in pointing number {i}")
                 # Npoiting.append(i)
                 Npoiting = Npoiting + str(i) + ","
                 Found = True
         if not Found:
-            print("Source not covered!")
+            logger.info("Source not covered!")
     except TypeError:
         t = 0.5 * np.pi - Pointings.dec.rad
         p = Pointings.ra.rad
@@ -2252,9 +2243,9 @@ def IsSourceInside(Pointings, Sources, FOV, nside):
         if txyz in ipix_disc:
             Npoiting = "0,"
             Found = True
-            print("Found in pointing number 0")
+            logger.info("Found in pointing number 0")
         else:
-            print("Source not covered!")
+            logger.info("Source not covered!")
     # Reformat output
     if Found:
         Npoiting = Npoiting[:-1]
@@ -2315,7 +2306,7 @@ class NextWindowTools:
         ):
             LastItem = len(WindowDurations)
         else:
-            print("Window is smaller")
+            logger.info("Window is smaller")
             for i in range(0, len(WindowDurations)):
                 if Tools.IsDarkness(
                     time + datetime.timedelta(minutes=np.float64(WindowDurations[-i])),
@@ -2349,7 +2340,7 @@ class NextWindowTools:
             time = Tools.NextMoonset(time, obspar)
             return time
         else:
-            print("No window is found")
+            logger.info("No window is found")
             return False
 
     @classmethod
@@ -2371,7 +2362,7 @@ class NextWindowTools:
             # time=Tools.NextMoonset(time, obsSite)
             return time
         else:
-            print("No window is found")
+            logger.info("No window is found")
             return False
 
     @classmethod
