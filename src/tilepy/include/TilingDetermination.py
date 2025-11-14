@@ -251,12 +251,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
             break
 
     logger.info(
-        "\nTotal GW probability covered: ",
-        float("{:1.4f}".format(float(sum(P_GWarray)))),
-        "Number of runs that fulfill darkness condition  :",
-        len(NightDarkRuns),
-        "Number of effective pointings: ",
-        len(ObservationTimearray),
+        f"\nTotal GW probability covered: {float(sum(P_GWarray)):1.4f}\nNumber of runs that fulfill darkness condition: {len(NightDarkRuns)}\nNumber of effective pointings: {len(ObservationTimearray)}"
     )
 
     # List of suggested pointings
