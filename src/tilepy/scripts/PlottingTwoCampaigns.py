@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import time
 
@@ -6,6 +7,10 @@ from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.tools.VisualizationTools import CompareTwoTilings
 
 __all__ = ["PlottingTwoCampaigns"]
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 
 def PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2):
@@ -78,6 +83,11 @@ def main():
     parser.add_argument(
         "-eventName", metavar="Name of the observed event", default=None
     )
+    parser.add_argument(
+        "-logname",
+        metavar="Name of the output log file.",
+        default="plotting_two_campaigns.log",
+    )
 
     args = parser.parse_args()
     skymap = args.skymap
@@ -90,9 +100,12 @@ def main():
     galcatName = args.galcatName
     pointingsFile = args.tiles
     eventName = args.eventName
+    logname = args.logname
 
     if not os.path.exists(outDir):
         os.makedirs(outDir)
+
+    logging.basicConfig(filename=f"{outDir}/{logname}")
 
     obspar = ObservationParameters()
     obspar.add_parsed_args(
@@ -103,7 +116,7 @@ def main():
     PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2)
 
     end = time.time()
-    print("Execution time: ", end - start)
+    logger.info(f"Execution time: {end - start:.0f} [sec]\n")
 
 
 if __name__ == "__main__":

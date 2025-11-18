@@ -5,6 +5,7 @@
 ########################################################################
 
 import argparse
+import logging
 import os
 import time
 
@@ -15,6 +16,10 @@ from tilepy.include.ObservationScheduler import GetSchedule
 from tilepy.include.PointingTools import getdate
 
 __all__ = ["Tiling_Observations"]
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 
 def Tiling_Observations(obspar):
@@ -98,6 +103,11 @@ def main():
     parser.add_argument(
         "-eventName", metavar="Name of the observed event", default=None
     )
+    parser.add_argument(
+        "-logname",
+        metavar="Name of the output log file.",
+        default="tiling_observations.log",
+    )
 
     args = parser.parse_args()
     skymap = args.skymap
@@ -113,9 +123,12 @@ def main():
     galcatName = args.galcatName
     pointingsFile = args.tiles
     eventName = args.eventName
+    logname = args.logname
 
     if not os.path.exists(outDir):
         os.makedirs(outDir)
+
+    logging.basicConfig(filename=f"{outDir}/{logname}")
 
     if skymap is None and mode not in ["gaussian"]:
         raise ValueError(
@@ -156,7 +169,7 @@ def main():
     Tiling_Observations(obspar)
 
     end = time.time()
-    print("Execution time: ", end - start)
+    logger.info(f"Execution time: {end - start:.0f} [sec]\n")
 
 
 if __name__ == "__main__":

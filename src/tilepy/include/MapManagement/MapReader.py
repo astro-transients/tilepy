@@ -812,7 +812,7 @@ class MapReaderLegacy:
                 break
 
             except Exception as e:
-                print(f"Exception {e == HTTPError}")
+                logger.error(f"Exception {e == HTTPError}")
                 if (
                     i == (download_max_nb_try - 1)
                     or str(e) != "HTTP Error 404: Not Found"
