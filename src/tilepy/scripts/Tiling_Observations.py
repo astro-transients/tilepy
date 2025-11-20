@@ -139,7 +139,7 @@ def main():
     if not os.path.exists(outDir):
         os.makedirs(outDir)
 
-    logging.basicConfig(filename=f"{outDir}/{logname}")
+    logging.basicConfig(filename=logname)
 
     if skymap is None and mode not in ["gaussian"]:
         raise ValueError(

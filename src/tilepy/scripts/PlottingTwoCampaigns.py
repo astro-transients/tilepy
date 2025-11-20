@@ -116,7 +116,7 @@ def main():
     if not os.path.exists(outDir):
         os.makedirs(outDir)
 
-    logging.basicConfig(filename=f"{outDir}/{logname}")
+    logging.basicConfig(filename=logname)
 
     obspar = ObservationParameters()
     obspar.add_parsed_args(
