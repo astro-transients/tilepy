@@ -375,7 +375,7 @@ def SAA_Times(
     # Plot
     if doPlot:
         path = Path(f"{dirName}/SAAPlot")
-        if path.exists():
+        if not path.exists():
             path.mkdir(parents=True)
         plt.figure(figsize=(12, 6))
         plt.plot(
@@ -477,7 +477,7 @@ def GetBestGridPos2D(
         )
 
         path = Path(f"{dirName}/GridPlot")
-        if path.exists():
+        if not path.exists():
             path.mkdir(parents=True)
 
         if n_sides > 0:
@@ -599,7 +599,7 @@ def GetBestGridPos3D(
 
     if doPlot:
         path = Path(f"{dirName}/GridPlot")
-        if path.exists():
+        if not path.exists():
             path.mkdir(parents=True)
 
         # mpl.rcParams.update({'font.size':14})
