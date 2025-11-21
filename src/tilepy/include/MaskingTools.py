@@ -387,7 +387,7 @@ def SAA_Times(
         plt.ylim(-0.1, 1.1)  # Set limits to make binary values clear
         plt.legend()
         plt.grid(True)
-        plt.savefig(f"{str(path)}/SAA_Times.png")
+        plt.savefig(f"{path}/SAA_Times.png")
     return SatTimes, saa
 
 
@@ -534,7 +534,7 @@ def GetBestGridPos2D(
             linewidth=0.1,
         )
 
-        plt.savefig(f"{str(path)}/Grid_Pointing.png", bbox_inches="tight")
+        plt.savefig(f"{path}/Grid_Pointing.png", bbox_inches="tight")
         plt.close()
 
     return first_values
@@ -656,7 +656,7 @@ def GetBestGridPos3D(
             coord="C",
             linewidth=0.1,
         )
-        plt.savefig(f"{str(path)}/Grid_Pointing.png")
+        plt.savefig(f"{path}/Grid_Pointing.png")
         plt.close()
 
     return first_values

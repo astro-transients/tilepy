@@ -1409,7 +1409,7 @@ def ComputeProbability2D(
                 except Exception as e:
                     logger.error(f"{e}: no occulted pixel")
 
-            plt.savefig(f"{str(path)}/Zoom_Pointing_{counter:g}.png")
+            plt.savefig(f"{path}/Zoom_Pointing_{counter:g}.png")
             # for i in range(0,1):
             #    altcoord.fill(90-(maxZenith-5*i))
             #    RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,location=observatory)
@@ -1774,7 +1774,7 @@ def ComputeProbGalTargeted(
         altcoordmin = np.empty(4000)
         altcoordmin.fill(90 - thisminz)
 
-        plt.savefig(f"{str(path)}/Zoom_Pointing_{counter:g}.png")
+        plt.savefig(f"{path}/Zoom_Pointing_{counter:g}.png")
         plt.close()
 
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
@@ -2142,7 +2142,7 @@ def ComputeProbPGALIntegrateFoV(
 
         altcoordmin.fill(90 - thisminz)
 
-        plt.savefig(f"{str(path)}/Zoom_Pointing_{counter:g}.png")
+        plt.savefig(f"{path}/Zoom_Pointing_{counter:g}.png")
         plt.close()
 
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray

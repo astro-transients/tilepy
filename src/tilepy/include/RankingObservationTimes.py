@@ -743,7 +743,7 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
             output_dir_rank.mkdir(parents=True)
 
         # Save the plot
-        plt.savefig(f"{str(output_dir_rank)}/RankingObservations_Space.png")
+        plt.savefig(f"{output_dir_rank}/RankingObservations_Space.png")
         plt.close()
 
     if obspar.doPlot:
@@ -794,7 +794,7 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
             output_dir_rank.mkdir(parents=True)
 
         # Save the plot
-        plt.savefig(f"{str(output_dir_rank)}/Ranking_BeforeOptimization.png")
+        plt.savefig(f"{output_dir_rank}/Ranking_BeforeOptimization.png")
         plt.close()
 
 
@@ -908,7 +908,7 @@ def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
             output_dir_rank.mkdir(parents=True)
 
         # Save the plot
-        plt.savefig(f"{str(output_dir_rank)}/RankingObservations_SpaceClustering.png")
+        plt.savefig(f"{output_dir_rank}/RankingObservations_SpaceClustering.png")
         plt.close()
 
 
@@ -983,7 +983,7 @@ def PlotAccRegionTimePix(dirName, pixels_by_time, ProbaTime, times):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
     plt.gcf().autofmt_xdate()
 
-    plt.savefig(f"{str(path)}/Acc_Pointing_Times_Pix.png", bbox_inches="tight")
+    plt.savefig(f"{path}/Acc_Pointing_Times_Pix.png", bbox_inches="tight")
     plt.close()
 
 
@@ -1034,5 +1034,5 @@ def PlotAccRegionTimeRadec(dirName, pixels_by_time, ProbaTime, times, nside):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
     plt.gcf().autofmt_xdate()
 
-    plt.savefig(f"{str(path)}/Acc_Pointing_Times_Radec.png", bbox_inches="tight")
+    plt.savefig(f"{path}/Acc_Pointing_Times_Radec.png", bbox_inches="tight")
     plt.close()

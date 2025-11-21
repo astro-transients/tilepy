@@ -97,7 +97,7 @@ def GetSchedule(obspar):
         # area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
         if obspar.locCut < area_percentage:
             logger.info(
-                f"The {obspar.percentageMOC * 100:.1f}% area ({area_percentage:.2f} deg^2) is larger than the maximum allowed in the configuration ({str(obspar.locCut)} deg^2)"
+                f"The {obspar.percentageMOC * 100:.1f}% area ({area_percentage:.2f} deg^2) is larger than the maximum allowed in the configuration ({obspar.locCut:.2f} deg^2)"
             )
             return
 
@@ -128,9 +128,9 @@ def GetSchedule(obspar):
         logger.info(f"Filename:  {raw_map.name_event}")
         logger.info(f"Date: {obspar.obsTime}")
         logger.info(f"Previous pointings: {obspar.pointingsFile}")
-        logger.info(f"Catalog: {str(galaxies)}")
+        logger.info(f"Catalog: {galaxies}")
         logger.info(f"Dataset: {obspar.datasetDir}")
-        logger.info(f"Output: {str(outputDir)}")
+        logger.info(f"Output: {outputDir}")
         logger.info(f"90% area = {area_90}. 50% area = {area_50}")
         logger.info(
             "===========================================================================================\n"
@@ -141,7 +141,7 @@ def GetSchedule(obspar):
         )
 
         if len(SuggestedPointings) != 0:
-            outfilename = f"{str(dirName)}/SuggestedPointings_GalProbOptimisation.txt"
+            outfilename = f"{dirName}/SuggestedPointings_GalProbOptimisation.txt"
             ascii.write(
                 SuggestedPointings, outfilename, overwrite=True, fast_writer=False
             )
@@ -152,7 +152,7 @@ def GetSchedule(obspar):
                     skymap,
                     cat,
                     str(dirName),
-                    f"{str(dirName)}/SuggestedPointings_GalProbOptimisation.txt",
+                    f"{dirName}/SuggestedPointings_GalProbOptimisation.txt",
                 )
             if obspar.doPlot:
                 PointingPlotting(
@@ -160,7 +160,7 @@ def GetSchedule(obspar):
                     obspar,
                     raw_map.name_event,
                     str(dirName),
-                    f"{str(dirName)}/SuggestedPointings_GalProbOptimisation.txt",
+                    f"{dirName}/SuggestedPointings_GalProbOptimisation.txt",
                     obspar.obs_name,
                     cat,
                 )
@@ -178,7 +178,7 @@ def GetSchedule(obspar):
         logger.info(f"Date: {obspar.obsTime}")
         logger.info(f"Previous pointings: {obspar.pointingsFile}")
         logger.info(f"Dataset: {obspar.datasetDir}")
-        logger.info(f"Output: {str(outputDir)}")
+        logger.info(f"Output: {outputDir}")
         logger.info(f"90% area = {area_90}. 50% area = {area_50}")
         logger.info(
             "===========================================================================================\n"
@@ -188,7 +188,7 @@ def GetSchedule(obspar):
 
         if len(SuggestedPointings) != 0:
             gal = []
-            outfilename = f"{str(dirName)}/SuggestedPointings_2DProbOptimisation.txt"
+            outfilename = f"{dirName}/SuggestedPointings_2DProbOptimisation.txt"
             ascii.write(
                 SuggestedPointings, outfilename, overwrite=True, fast_writer=False
             )
@@ -198,7 +198,7 @@ def GetSchedule(obspar):
                     obspar,
                     skymap.getMap("prob", obspar.HRnside),
                     str(dirName),
-                    f"{str(dirName)}/SuggestedPointings_2DProbOptimisation.txt",
+                    f"{dirName}/SuggestedPointings_2DProbOptimisation.txt",
                 )
             if obspar.doPlot:
                 PointingPlotting(
@@ -206,7 +206,7 @@ def GetSchedule(obspar):
                     obspar,
                     raw_map.name_event,
                     str(dirName),
-                    f"{str(dirName)}/SuggestedPointings_2DProbOptimisation.txt",
+                    f"{dirName}/SuggestedPointings_2DProbOptimisation.txt",
                     obspar.obs_name,
                     gal,
                 )
@@ -293,9 +293,9 @@ def GetUniversalSchedule(obspar):
             logger.info(f"Filename:  {raw_map.name_event}")
             logger.info(f"Date: {obspar[0].obsTime}")
             logger.info(f"Previous pointings: {obspar[0].pointingsFile}")
-            logger.info(f"Catalog: {str(galaxies)}")
+            logger.info(f"Catalog: {galaxies}")
             logger.info(f"Dataset: {obspar[0].datasetDir}")
-            logger.info(f"Output: {str(outputDir)}")
+            logger.info(f"Output: {outputDir}")
             logger.info(f"90% area = {area_90}. 50% area = {area_50}")
             logger.info(
                 "===========================================================================================\n"
@@ -346,7 +346,7 @@ def GetUniversalSchedule(obspar):
             logger.info(f"Date: {obspar[0].obsTime}")
             logger.info(f"Previous pointings: {obspar[0].pointingsFile}")
             logger.info(f"Dataset: {obspar[0].datasetDir}")
-            logger.info(f"Output: {str(outputDir)}")
+            logger.info(f"Output: {outputDir}")
             logger.info(f"90% area = {area_90}. 50% area = {area_50}")
             logger.info(
                 "===========================================================================================\n"
@@ -401,9 +401,9 @@ def GetUniversalSchedule(obspar):
             logger.info(f"Filename:  {raw_map.name_event}")
             logger.info(f"Date: {obspar[0].obsTime}")
             logger.info(f"Previous pointings: {obspar[0].pointingsFile}")
-            logger.info(f"Catalog: {str(galaxies)}")
+            logger.info(f"Catalog: {galaxies}")
             logger.info(f"Dataset: {obspar[0].datasetDir}")
-            logger.info(f"Output: {str(outputDir)}")
+            logger.info(f"Output: {outputDir}")
             logger.info(f"90% area = {area_90}. 50% area = {area_50}")
             logger.info(
                 "===========================================================================================\n"
@@ -432,7 +432,7 @@ def GetUniversalSchedule(obspar):
             logger.info(f"Date: {obspar[0].obsTime}")
             logger.info(f"Previous pointings: {obspar[0].pointingsFile}")
             logger.info(f"Dataset: {obspar[0].datasetDir}")
-            logger.info(f"Output: {str(outputDir)}")
+            logger.info(f"Output: {outputDir}")
             logger.info(f"90% area = {area_90}. 50% area = {area_50}")
             logger.info(
                 "===========================================================================================\n"
@@ -470,21 +470,21 @@ def GetUniversalSchedule(obspar):
                     )
                     ascii.write(
                         time_table,
-                        f"{str(dirName)}/SAA_Times_{obspar[j].obs_name}.txt",
+                        f"{dirName}/SAA_Times_{obspar[j].obs_name}.txt",
                         overwrite=True,
                         fast_writer=False,
                     )
                 if len(SuggestedPointings_1) != 0:
                     ascii.write(
                         SuggestedPointings_1,
-                        f"{str(dirName)}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
+                        f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
                         overwrite=True,
                         fast_writer=False,
                     )
                     if obspar[j].doRank:
                         Ranking_Space(
                             dirName,
-                            f"{str(dirName)}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
+                            f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
                             obspar[j],
                             obspar[j].alphaR,
                             obspar[j].betaR,
@@ -492,7 +492,7 @@ def GetUniversalSchedule(obspar):
                         )
                         Ranking_Space_AI(
                             dirName,
-                            f"{str(dirName)}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
+                            f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
                             obspar[j],
                             skymap,
                         )
@@ -513,7 +513,7 @@ def GetUniversalSchedule(obspar):
                 if len(SuggestedPointings_1) != 0:
                     ascii.write(
                         SuggestedPointings_1,
-                        f"{str(dirName)}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
+                        f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
                         overwrite=True,
                         fast_writer=False,
                     )
@@ -522,7 +522,7 @@ def GetUniversalSchedule(obspar):
                             obspar[j],
                             skymap.getMap("prob", obspar[j].HRnside),
                             dirName,
-                            f"{str(dirName)}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
+                            f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
                         )
                     if obspar[j].doPlot:
                         PointingPlotting(
@@ -530,7 +530,7 @@ def GetUniversalSchedule(obspar):
                             obspar[j],
                             obspar[j].obs_name,
                             dirName,
-                            f"{str(dirName)}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
+                            f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
                             obspar[j].obs_name,
                             cat,
                         )
@@ -540,7 +540,7 @@ def GetUniversalSchedule(obspar):
                     obspar[0],
                     "all",
                     dirName,
-                    f"{str(dirName)}/SuggestedPointings_GWOptimisation.txt",
+                    f"{dirName}/SuggestedPointings_GWOptimisation.txt",
                     "all",
                     cat,
                 )

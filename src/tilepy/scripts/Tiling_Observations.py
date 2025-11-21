@@ -143,7 +143,7 @@ def main():
     galaxy_catalog = Path(f"{datasetDir}/{galcatName}")
 
     if not galaxy_catalog.exists():
-        raise FileNotFoundError(f"Galaxy catalog file {str(galaxy_catalog)} not found.")
+        raise FileNotFoundError(f"Galaxy catalog file {galaxy_catalog} not found.")
 
     if not Path(cfgFile).exists():
         raise FileNotFoundError(f"Configuration file {cfgFile} not found.")

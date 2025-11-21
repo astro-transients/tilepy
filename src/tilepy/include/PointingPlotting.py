@@ -350,7 +350,7 @@ def PlotPointings(
             hp.visufunc.projplot(
                 RandomCoord_radec.ra, RandomCoord_radec.dec, "b.", lonlat=True
             )
-            plt.savefig(f"{str(dirName)}/Pointings{j}.png")
+            plt.savefig(f"{dirName}/Pointings{j}.png")
 
 
 def PlotPointingsTogether(
@@ -503,7 +503,7 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
             racoord, deccoord, lonlat=True, marker=".", color=Colors[1], coord="C"
         )
         # plt.show()
-    plt.savefig(f"{str(dirName)}/Pointings.png")
+    plt.savefig(f"{dirName}/Pointings.png")
 
     # dist = cat['Dist']
     # hp.visufunc.projscatter(cat['RAJ2000'][dist < 200], cat['DEJ2000'][dist < 200], lonlat=True, marker='.',color='g', linewidth=0.1, coord='C')
@@ -775,5 +775,5 @@ def PlotAccRegion(skymap, dirName, reducedNside, Occultedpixels, first_values):
         coord="C",
         linewidth=0.1,
     )
-    plt.savefig(f"{str(path)}/Occ_Pointing.png", bbox_inches="tight")
+    plt.savefig(f"{path}/Occ_Pointing.png", bbox_inches="tight")
     plt.close()
