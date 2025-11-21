@@ -6,12 +6,13 @@
 
 import argparse
 import logging
-import os
 import sys
 import time
 import traceback
 
 from astropy.time import Time
+
+from pathlib import Path
 
 from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.include.ObservationScheduler import GetSchedule
@@ -136,8 +137,19 @@ def main():
     eventName = args.eventName
     logname = args.logname
 
-    if not os.path.exists(outDir):
-        os.makedirs(outDir)
+    if not Path(datasetDir).exists():
+        raise FileNotFoundError(f"Dataset directory {datasetDir} not found.")
+
+    galaxy_catalog = Path(f"{datasetDir}/{galcatName}")
+
+    if not galaxy_catalog.exists():
+        raise FileNotFoundError(f"Galaxy catalog file {str(galaxy_catalog)} not found.")
+
+    if not Path(cfgFile).exists():
+        raise FileNotFoundError(f"Configuration file {cfgFile} not found.")
+
+    if not Path(outDir).exists():
+        Path(outDir).mkdir(parents=True)
 
     logging.basicConfig(filename=logname)
 
