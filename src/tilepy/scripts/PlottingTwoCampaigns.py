@@ -88,12 +88,6 @@ def main():
     )
     parser.add_argument("-tiles", metavar="tiles already observed", default=None)
     parser.add_argument(
-        "-locCut",
-        metavar="limit on skyloc to perform a followup",
-        help="Options are: loose or std",
-        default=None,
-    )
-    parser.add_argument(
         "-eventName", metavar="Name of the observed event", default=None
     )
     parser.add_argument(
