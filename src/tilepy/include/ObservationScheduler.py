@@ -521,7 +521,7 @@ def GetUniversalSchedule(obspar):
                         RankingTimes_2D(
                             obspar[j],
                             skymap.getMap("prob", obspar[j].HRnside),
-                            dirName,
+                            str(dirName),
                             f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
                         )
                     if obspar[j].doPlot:
@@ -529,7 +529,7 @@ def GetUniversalSchedule(obspar):
                             skymap.getMap("prob", obspar[j].HRnside),
                             obspar[j],
                             obspar[j].obs_name,
-                            dirName,
+                            str(dirName),
                             f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
                             obspar[j].obs_name,
                             cat,
