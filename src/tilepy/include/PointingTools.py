@@ -743,8 +743,6 @@ class Observer:
                         array_interval_masked2 = array_interval[mask2]
 
                     array_interval = np.concatenate((array_interval_masked1, array_interval_masked2))
-                else:
-                    logger.info("No time interval survived the selection 1")
 
             if array_interval.size:
                 diffs = np.array([item.sec for item in np.diff(array_interval)])
@@ -761,7 +759,7 @@ class Observer:
                         ]
                     )
             else:
-                logger.info("No time interval survived the selection 2")
+                logger.info("No time interval survived after removing the vetoed time windows.")
 
         return clean_range_interval
 
