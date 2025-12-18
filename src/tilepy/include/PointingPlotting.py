@@ -21,7 +21,6 @@
 
 import datetime
 import logging
-import os
 
 import astropy.coordinates as co
 import healpy as hp
@@ -34,6 +33,8 @@ import six
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from six.moves import configparser
+
+from pathlib import Path
 
 from .PointingTools import TransformRADec
 
@@ -304,25 +305,17 @@ def PlotPointings(
     if doPlot:
         observatory = obspar.location
 
-        dirName = "%s/Pointing_Plotting_%s" % (dirName, ObsArray)
-        if not os.path.exists(dirName):
-            os.makedirs(dirName)
+        dirName = Path(f"{dirName}/Pointing_Plotting_{ObsArray}")
+        if not dirName.exists():
+            dirName.mkdir(parents=True)
+
+        time_string = f"{time[0].year}-{time[0].month}-{time[0].day} {time[0].hour}:{time[0].minute}:{time[0].second}"
 
         hp.mollview(
             prob,
             rot=[180, 0],
             coord="C",
-            title="GW prob map (Equatorial) + %s %g  %s/%s/%s %s:%s:%s UTC"
-            % (
-                name,
-                Totalprob * 100,
-                time[0].day,
-                time[0].month,
-                time[0].year,
-                time[0].hour,
-                time[0].minute,
-                time[0].second,
-            ),
+            title=f"GW prob map (Equatorial) + {name} {Totalprob * 100:g} {time_string} UTC",
         )
         hp.graticule()
 
@@ -357,7 +350,7 @@ def PlotPointings(
             hp.visufunc.projplot(
                 RandomCoord_radec.ra, RandomCoord_radec.dec, "b.", lonlat=True
             )
-            plt.savefig("%s/Pointings%s.png" % (dirName, j))
+            plt.savefig(f"{dirName}/Pointings{j}.png")
 
 
 def PlotPointingsTogether(
@@ -481,25 +474,17 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
                     datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S")
                 )
 
-    dirName = "%s/Pointing_Plotting_%s/%s" % (outDir, UseObs, ID)
-    if not os.path.exists(dirName):
-        os.makedirs(dirName)
+    dirName = Path(f"{outDir}/Pointing_Plotting_{UseObs}/{ID}")
+    if not dirName.exists():
+        dirName.mkdir(parents=True)
+
+    converted_time_string = f"{converted_time[0].year}-{converted_time[0].month}-{converted_time[0].day} {converted_time[0].hour}:{converted_time[0].minute}:{converted_time[0].second}"
 
     hp.mollview(
         prob,
         rot=[180, 0],
         coord="C",
-        title="GW prob map (Equatorial) + %s %g  %s/%s/%s %s:%s:%s UTC"
-        % (
-            str(ID),
-            sum(Probarray) * 100,
-            converted_time[0].day,
-            converted_time[0].month,
-            converted_time[0].year,
-            converted_time[0].hour,
-            converted_time[0].minute,
-            converted_time[0].second,
-        ),
+        title=f"GW prob map (Equatorial) + {str(ID)} {sum(Probarray) * 100:g} {converted_time_string} UTC",
     )
     hp.graticule()
     # plt.show()
@@ -518,7 +503,7 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
             racoord, deccoord, lonlat=True, marker=".", color=Colors[1], coord="C"
         )
         # plt.show()
-    plt.savefig("%s/Pointings.png" % dirName)
+    plt.savefig(f"{dirName}/Pointings.png")
 
     # dist = cat['Dist']
     # hp.visufunc.projscatter(cat['RAJ2000'][dist < 200], cat['DEJ2000'][dist < 200], lonlat=True, marker='.',color='g', linewidth=0.1, coord='C')
@@ -611,7 +596,7 @@ def PlotPointings_Pretty(
     else:
         radius = radiusMap
 
-    center_str = "%fd %fd" % (center.ra.deg, center.dec.deg)
+    center_str = f"{center.ra.deg:.2f}d {center.dec.deg:.2f}d"
 
     import ligo.skymap.plot  # noqa: F401
 
@@ -713,15 +698,16 @@ def PlotPointings_Pretty(
     cbar.formatter.set_useMathText(True)
     cbar.set_label("Map probability density", color="black", fontsize=9)
     plt.savefig(
-        "%s/Plot_PrettyMap_%s.png" % (dirName, name), dpi=300, bbox_inches="tight"
+        f"{dirName}/Plot_PrettyMap_{name}.png", dpi=300, bbox_inches="tight"
     )
     plt.close()
 
 
 def plot_pixel_availability_healpix(dirName, pixels_by_time, times, nside):
-    path = dirName + "/Occ_Space_Obs"
-    if not os.path.exists(path):
-        os.mkdir(path, 493)
+    path = Path(f"{dirName}/Occ_Space_Obs")
+    if not path.exists():
+        path.mkdir(parents=True)
+
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_subplot(111, projection="3d")
 
@@ -745,16 +731,16 @@ def plot_pixel_availability_healpix(dirName, pixels_by_time, times, nside):
     ax.set_title("HEALPix Pixel Availability Wireframe")
 
     ax.zaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d\n%H:%M"))
-    plt.savefig("%s/Occ_Pointing_Times_Vis.png" % (path))
+    plt.savefig(f"{path}/Occ_Pointing_Times_Vis.png")
     plt.close()
 
 
 def PlotAccRegion(skymap, dirName, reducedNside, Occultedpixels, first_values):
     prob = skymap.getMap("prob", reducedNside)
 
-    path = dirName + "/Occ_Space_Obs"
-    if not os.path.exists(path):
-        os.mkdir(path, 493)
+    path = Path(f"{dirName}/Occ_Space_Obs")
+    if not path.exists():
+        path.mkdir(parents=True)
 
     # mpl.rcParams.update({'font.size':14})
     # hp.mollview(prob)
@@ -789,5 +775,5 @@ def PlotAccRegion(skymap, dirName, reducedNside, Occultedpixels, first_values):
         coord="C",
         linewidth=0.1,
     )
-    plt.savefig("%s/Occ_Pointing.png" % (path), bbox_inches="tight")
+    plt.savefig(f"{path}/Occ_Pointing.png", bbox_inches="tight")
     plt.close()

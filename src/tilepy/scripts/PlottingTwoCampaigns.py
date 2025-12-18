@@ -5,6 +5,8 @@ import sys
 import time
 import traceback
 
+from pathlib import Path
+
 from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.tools.VisualizationTools import CompareTwoTilings
 
@@ -86,12 +88,6 @@ def main():
     )
     parser.add_argument("-tiles", metavar="tiles already observed", default=None)
     parser.add_argument(
-        "-locCut",
-        metavar="limit on skyloc to perform a followup",
-        help="Options are: loose or std",
-        default=None,
-    )
-    parser.add_argument(
         "-eventName", metavar="Name of the observed event", default=None
     )
     parser.add_argument(
@@ -113,8 +109,19 @@ def main():
     eventName = args.eventName
     logname = args.logname
 
-    if not os.path.exists(outDir):
-        os.makedirs(outDir)
+    if not Path(datasetDir).exists():
+        raise FileNotFoundError(f"Dataset directory {datasetDir} not found.")
+
+    galaxy_catalog = Path(f"{datasetDir}/{galcatName}")
+
+    if not galaxy_catalog.exists():
+        raise FileNotFoundError(f"Galaxy catalog file {galaxy_catalog} not found.")
+
+    if not Path(cfgFile).exists():
+        raise FileNotFoundError(f"Configuration file {cfgFile} not found.")
+
+    if not Path(outDir).exists():
+        Path(outDir).mkdir(parents=True)
 
     logging.basicConfig(filename=logname)
 

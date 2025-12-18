@@ -25,11 +25,10 @@ import logging
 
 #####################################################################
 # Packages
-import os
-
 import astropy.coordinates as co
 import ephem
 import healpy as hp
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.ma as ma
@@ -42,7 +41,7 @@ from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord, get_body
 from astropy.table import Table
 from astropy.time import Time
 from gdpyc import DustMap
-from matplotlib.path import Path
+from pathlib import Path
 from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
@@ -1339,9 +1338,9 @@ def ComputeProbability2D(
         ##################################
         # PLOT THE RESULTS
         if plot:
-            path = dirName + "/EvolutionPlot"
-            if not os.path.exists(path):
-                os.mkdir(path, 493)
+            path = Path(f"{dirName}/EvolutionPlot")
+            if not path.exists():
+                path.mkdir(parents=True)
             # nside = 1024
 
             # hp.mollview(highres,title="With FoV circle")
@@ -1410,7 +1409,7 @@ def ComputeProbability2D(
                 except Exception as e:
                     logger.error(f"{e}: no occulted pixel")
 
-            plt.savefig("%s/Zoom_Pointing_%g.png" % (path, counter))
+            plt.savefig(f"{path}/Zoom_Pointing_{counter:g}.png")
             # for i in range(0,1):
             #    altcoord.fill(90-(maxZenith-5*i))
             #    RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,location=observatory)
@@ -1700,9 +1699,9 @@ def ComputeProbGalTargeted(
     noncircleGal = allGals[targetCoord3.separation(targetCoord).deg > radius]
 
     if doPlot:
-        path = dirName + "/EvolutionPlot"
-        if not os.path.exists(path):
-            os.mkdir(path, 493)
+        path = Path(f"{dirName}/EvolutionPlot")
+        if not path.exists():
+            path.mkdir(parents=True)
 
         tt, pp = hp.pix2ang(nside, ipix_disc)
         ra2 = np.rad2deg(pp)
@@ -1775,7 +1774,7 @@ def ComputeProbGalTargeted(
         altcoordmin = np.empty(4000)
         altcoordmin.fill(90 - thisminz)
 
-        plt.savefig("%s/Zoom_Pointing_%g.png" % (path, counter))
+        plt.savefig(f"{path}/Zoom_Pointing_{counter:g}.png")
         plt.close()
 
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
@@ -1945,7 +1944,7 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, n_sides, UsePix):
         dec_vertices = coords.lat.deg  # .lat is Dec equivalent
 
         # 3. Build the polygon path in RA/Dec
-        polygon_path = Path(np.column_stack((ra_vertices, dec_vertices)))
+        polygon_path = matplotlib.path.Path(np.column_stack((ra_vertices, dec_vertices)))
 
         # 4. Prepare your galaxies' RA, Dec arrays (in degrees)
         galaxy_positions = np.column_stack(
@@ -2082,9 +2081,9 @@ def ComputeProbPGALIntegrateFoV(
     noncircleGal = allGalsaftercuts[targetCoord3.separation(targetCoord).deg > radius]
 
     if doPlot:
-        path = dirName + "/EvolutionPlot"
-        if not os.path.exists(path):
-            os.mkdir(path, 493)
+        path = Path(f"{dirName}/EvolutionPlot")
+        if not path.exists():
+            path.mkdir(parents=True)
 
         tt, pp = hp.pix2ang(nside, ipix_disc)
         ra2 = np.rad2deg(pp)
@@ -2143,7 +2142,7 @@ def ComputeProbPGALIntegrateFoV(
 
         altcoordmin.fill(90 - thisminz)
 
-        plt.savefig("%s/Zoom_Pointing_%g.png" % (path, counter))
+        plt.savefig(f"{path}/Zoom_Pointing_{counter:g}.png")
         plt.close()
 
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
