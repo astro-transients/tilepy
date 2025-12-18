@@ -507,7 +507,7 @@ def Sortingby(galPointing, name, exposure):
     logger.info(f"Name: {name}")
 
     target = [
-        (name.split("/")[2] + "_{0}").format(element)
+        (name.split("/")[-1] + "_{0}").format(element)
         for element in gwgalPointing["Pointing"]
     ]
     gwgalPointing["Target"] = target
