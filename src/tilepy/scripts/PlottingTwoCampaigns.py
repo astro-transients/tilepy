@@ -1,7 +1,9 @@
 import argparse
 import logging
 import os
+import sys
 import time
+import traceback
 
 from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.tools.VisualizationTools import CompareTwoTilings
@@ -14,14 +16,23 @@ logger.setLevel(logging.INFO)
 
 
 def PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2):
-    plotType = "gnomonic"
-    CompareTwoTilings(
-        obspar.skymap, PointingsFile1, PointingsFile2, obspar.FOV, plotType
-    )
-    plotType = "mollweide"
-    CompareTwoTilings(
-        obspar.skymap, PointingsFile1, PointingsFile2, obspar.FOV, plotType
-    )
+    return_code = 0
+    try:
+        plotType = "gnomonic"
+        CompareTwoTilings(
+            obspar.skymap, PointingsFile1, PointingsFile2, obspar.FOV, plotType
+        )
+        plotType = "mollweide"
+        CompareTwoTilings(
+            obspar.skymap, PointingsFile1, PointingsFile2, obspar.FOV, plotType
+        )
+    except Exception:
+        logger.error(
+            f"An error occurred during the execution:\n{traceback.format_exc()}"
+        )
+        return_code = 1
+
+    return return_code
 
 
 def main():
@@ -105,7 +116,7 @@ def main():
     if not os.path.exists(outDir):
         os.makedirs(outDir)
 
-    logging.basicConfig(filename=f"{outDir}/{logname}")
+    logging.basicConfig(filename=logname)
 
     obspar = ObservationParameters()
     obspar.add_parsed_args(
@@ -113,10 +124,12 @@ def main():
     )
     obspar.from_configfile(cfgFile)
 
-    PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2)
+    return_code = PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2)
 
     end = time.time()
-    logger.info(f"Execution time: {end - start:.0f} [sec]\n")
+    logger.info(f"Execution time: {end - start:.0f} [sec]")
+    logger.info(f"Return code: {return_code}")
+    sys.exit(return_code)
 
 
 if __name__ == "__main__":
