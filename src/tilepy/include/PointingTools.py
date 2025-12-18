@@ -681,7 +681,7 @@ class Observer:
         # Setup time converter for skyfield
         self.timescale_converter = load.timescale()
 
-    def get_time_window(self, start_time, nb_observation_night):
+    def get_time_window(self, start_time, nb_observation_night, excluded_time_windows=[]):
         """
         Calculate the time window for observations.
 
@@ -712,10 +712,58 @@ class Observer:
         time_interval_moon = self.get_moon_constraint_time_interval(
             start_time, stop_time
         )
-        valid_time_interval = self.compute_interval_intersection(
+        valid_time_interval_sun_moon = self.compute_interval_intersection(
             time_interval_sun, time_interval_moon
         )
+        if len(excluded_time_windows):
+            valid_time_interval = self.veto_time_interval(
+                valid_time_interval_sun_moon, excluded_time_windows
+            )
+        else:
+            valid_time_interval = valid_time_interval_sun_moon
         return self.compute_run_start_time(valid_time_interval)
+
+    def veto_time_interval(self, time_range_intervals, time_range_exclusion):
+        clean_range_interval = []
+
+        for time_range in time_range_intervals:
+            tstart = Time(time_range[0], scale="utc")
+            tend = Time(time_range[1], scale="utc")
+            deltas = np.linspace(0, int((tend-tstart).sec), int((tend-tstart).sec)) * u.second
+            array_interval = tstart + deltas
+            for time_range_excluded in time_range_exclusion:
+                if array_interval.size:
+                    mask1 = (array_interval <= time_range_excluded[0])
+                    mask2 = (array_interval >= time_range_excluded[1])
+                    array_interval_masked1 = np.array([])
+                    array_interval_masked2 = np.array([])
+                    if mask1[0].size != 0:
+                        array_interval_masked1 = array_interval[mask1]
+                    if mask2[0].size != 0:
+                        array_interval_masked2 = array_interval[mask2]
+
+                    array_interval = np.concatenate((array_interval_masked1, array_interval_masked2))
+                else:
+                    logger.info("No time interval survived the selection 1")
+
+            if array_interval.size:
+                diffs = np.array([item.sec for item in np.diff(array_interval)])
+                consecutive_intervals = np.split(array_interval, np.where(diffs > 1.2)[0] + 1)
+                for num_consecutive in range(len(consecutive_intervals)):
+                    clean_range_interval.append(
+                        [
+                            consecutive_intervals[num_consecutive][0].datetime.replace(
+                                tzinfo=datetime.timezone.utc
+                            ),
+                            consecutive_intervals[num_consecutive][-1].datetime.replace(
+                                tzinfo=datetime.timezone.utc
+                            ),
+                        ]
+                    )
+            else:
+                logger.info("No time interval survived the selection 2")
+
+        return clean_range_interval
 
     def compute_interval_intersection(self, time_range_1, time_range_2):
         """
@@ -788,6 +836,13 @@ class Observer:
                 + np.arange(nb_observation_run) * self.run_duration
             )
         return run_start_time
+
+    def get_excluded_constraint_time_interval(excluded_time_windows):
+        excluded = []
+        if len(excluded_time_windows):
+            for items in excluded_time_windows:
+                excluded.append([datetime.datetime.fromisoformat(item+"+00:00") for item in items])
+        return excluded
 
     def get_sun_constraint_time_interval(
         self, start_time, stop_time, nb_observation_night
@@ -1127,7 +1182,11 @@ def NightDarkObservation(time, obspar):
         max_moon_altitude=obspar.moonDown,
         max_moon_phase=-1.0,
     )
-    return obs.get_time_window(start_time=time, nb_observation_night=obspar.maxNights)
+    return obs.get_time_window(
+        start_time=time,
+        nb_observation_night=obspar.maxNights,
+        excluded_time_windows=obspar.vetoTimes,
+    )
 
 
 def NightDarkObservationwithGreyTime(time, obspar):
@@ -1142,7 +1201,11 @@ def NightDarkObservationwithGreyTime(time, obspar):
         max_moon_altitude=obspar.moonGrey,
         max_moon_phase=obspar.moonPhase / 100.0,
     )
-    return obs.get_time_window(start_time=time, nb_observation_night=obspar.maxNights)
+    return obs.get_time_window(
+        start_time=time,
+        nb_observation_night=obspar.maxNights,
+        excluded_time_windows=obspar.vetoTimes,
+    )
 
 
 def GetSatelliteName(satellitename, stationsurl):

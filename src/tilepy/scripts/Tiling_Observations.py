@@ -120,6 +120,12 @@ def main():
         metavar="Name of the output log file.",
         default="tiling_observations.log",
     )
+    parser.add_argument(
+        "-exclude",
+        nargs="+",
+        help="List of time windows to exclude, e.g. -exclude '2025-12-18 20:25:00,2025-12-18 21:00:00' '2025-12-18 22:06:00,2025-12-18 22:34:00'",
+        default=[],
+    )
 
     args = parser.parse_args()
     skymap = args.skymap
@@ -136,6 +142,11 @@ def main():
     pointingsFile = args.tiles
     eventName = args.eventName
     logname = args.logname
+    excluded = args.exclude
+
+    excluded_time_windows = []
+    for window in excluded:
+        excluded_time_windows.append([item for item in window.split(",")])
 
     if not Path(datasetDir).exists():
         raise FileNotFoundError(f"Dataset directory {datasetDir} not found.")
@@ -186,6 +197,7 @@ def main():
         dec,
         sigma,
         nside,
+        excluded_time_windows,
     )
     obspar.from_configfile(cfgFile)
 

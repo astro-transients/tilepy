@@ -141,6 +141,7 @@ class ObservationParameters(object):
         FoVRotation=None,
         alphaR=None,
         betaR=None,
+        vetoTimes=[],
     ):
         self.obs_name = obs_name
         self.event_name = event_name
@@ -215,6 +216,8 @@ class ObservationParameters(object):
         self.decSource = None
         self.sigmaSource = None
 
+        self.vetoTimes = vetoTimes
+
     def __str__(self):
         return "\n".join(
             [
@@ -268,6 +271,7 @@ class ObservationParameters(object):
         dec=None,
         sigma=None,
         nside=None,
+        excluded_time_windows=[],
     ):
         """Update instance attributes from parsed command-line arguments."""
 
@@ -285,6 +289,7 @@ class ObservationParameters(object):
         self.decSource = dec
         self.sigmaSource = sigma
         self.nside = nside
+        self.vetoTimes = excluded_time_windows
 
     def from_configfile(self, filepath):
         """Update instance attributes using parsed command-line arguments."""
