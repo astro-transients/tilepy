@@ -47,6 +47,8 @@ from six.moves import configparser
 from skyfield import almanac
 from skyfield.api import E, N, load, wgs84
 
+from .MaskingTools import GetExcludedTimeWindows
+
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
 else:
@@ -1180,10 +1182,11 @@ def NightDarkObservation(time, obspar):
         max_moon_altitude=obspar.moonDown,
         max_moon_phase=-1.0,
     )
+    excluded_time_windows = GetExcludedTimeWindows(obspar.vetoWindowsFile)
     return obs.get_time_window(
         start_time=time,
         nb_observation_night=obspar.maxNights,
-        excluded_time_windows=obspar.vetoTimes,
+        excluded_time_windows=excluded_time_windows,
     )
 
 
@@ -1199,10 +1202,11 @@ def NightDarkObservationwithGreyTime(time, obspar):
         max_moon_altitude=obspar.moonGrey,
         max_moon_phase=obspar.moonPhase / 100.0,
     )
+    excluded_time_windows = GetExcludedTimeWindows(obspar.vetoWindowsFile)
     return obs.get_time_window(
         start_time=time,
         nb_observation_night=obspar.maxNights,
-        excluded_time_windows=obspar.vetoTimes,
+        excluded_time_windows=excluded_time_windows,
     )
 
 

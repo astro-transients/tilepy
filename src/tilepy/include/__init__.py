@@ -15,6 +15,7 @@ from .MaskingTools import (
     SAA_Times,
     VisibleAtTime,
     ZenithAngleCut,
+    GetExcludedTimeWindows,
 )
 from .ObservationScheduler import GetSchedule, GetUniversalSchedule
 from .Observatories import (

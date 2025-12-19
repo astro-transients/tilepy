@@ -60,6 +60,7 @@ __all__ = [
     "SAA_Times",
     "GetBestGridPos2D",
     "GetBestGridPos3D",
+    "GetExcludedTimeWindows",
 ]
 
 logger = logging.getLogger(__name__)
@@ -660,3 +661,19 @@ def GetBestGridPos3D(
         plt.close()
 
     return first_values
+
+
+def GetExcludedTimeWindows(vetoWindowsFile):
+    logger.info(f"Reading time windows to exclude from {vetoWindowsFile}")
+    tstarts, tstops = np.genfromtxt(
+        vetoWindowsFile,
+        dtype="str",
+        delimiter=" ",
+        unpack=True,
+    )  # ra, dec in degrees
+    tstarts = np.atleast_1d(tstarts).tolist()
+    tstops = np.atleast_1d(tstops).tolist()
+
+    excluded_time_windows = [[tstart, tstop] for tstart, tstop in zip(tstarts, tstops)]
+
+    return excluded_time_windows
