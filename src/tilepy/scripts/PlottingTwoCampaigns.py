@@ -95,6 +95,11 @@ def main():
         metavar="Name of the output log file.",
         default="plotting_two_campaigns.log",
     )
+    parser.add_argument(
+        "-vetoWindowsFile",
+        help="File containing time windows to exclude from the computation..",
+        default=None,
+    )
 
     args = parser.parse_args()
     skymap = args.skymap
@@ -108,6 +113,7 @@ def main():
     pointingsFile = args.tiles
     eventName = args.eventName
     logname = args.logname
+    vetoWindowsFile = args.vetoWindowsFile
 
     if not Path(datasetDir).exists():
         raise FileNotFoundError(f"Dataset directory {datasetDir} not found.")
@@ -127,7 +133,20 @@ def main():
 
     obspar = ObservationParameters()
     obspar.add_parsed_args(
-        skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, None, eventName
+        skymap,
+        obsTime,
+        datasetDir,
+        galcatName,
+        outDir,
+        pointingsFile,
+        None,
+        eventName,
+        "healpix",
+        None,
+        None,
+        None,
+        None,
+        vetoWindowsFile,
     )
     obspar.from_configfile(cfgFile)
 
