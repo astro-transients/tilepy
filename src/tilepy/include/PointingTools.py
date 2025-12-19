@@ -22,6 +22,7 @@
 
 import datetime
 import logging
+from pathlib import Path
 
 #####################################################################
 # Packages
@@ -41,7 +42,6 @@ from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord, get_body
 from astropy.table import Table
 from astropy.time import Time
 from gdpyc import DustMap
-from pathlib import Path
 from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac

@@ -21,6 +21,7 @@
 
 import datetime
 import logging
+from pathlib import Path
 
 import astropy.coordinates as co
 import healpy as hp
@@ -33,8 +34,6 @@ import six
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from six.moves import configparser
-
-from pathlib import Path
 
 from .PointingTools import TransformRADec
 

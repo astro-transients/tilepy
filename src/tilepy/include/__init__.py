@@ -38,6 +38,7 @@ from .PointingTools import (
     ComputeProbGalTargeted,
     ComputeProbPGALIntegrateFoV,
     FillSummary,
+    GetExcludedTimeWindows,
     GetRegionPixGal,
     GetRegionPixReduced,
     IsSourceInside,
@@ -57,7 +58,6 @@ from .PointingTools import (
     UNIQSkymap_toNested,
     get_lvk_uniq_maps,
     getdate,
-    GetExcludedTimeWindows,
 )
 from .RankingObservationTimes import (
     EvolutionPlot,

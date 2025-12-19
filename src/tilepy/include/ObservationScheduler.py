@@ -21,12 +21,11 @@
 
 
 import logging
+from pathlib import Path
 
 import astropy.units as u
 from astropy.io import ascii
 from astropy.table import Table
-
-from pathlib import Path
 
 from .MapManagement import SkyMap, create_map_reader
 from .PointingPlotting import PlotAccRegion, PointingPlotting

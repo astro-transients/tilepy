@@ -23,10 +23,10 @@
 
 import datetime
 import logging
+from pathlib import Path
 
 #####################################################################
 # Packages
-
 import astropy.coordinates as co
 import healpy as hp
 import matplotlib.pyplot as plt
@@ -38,8 +38,6 @@ from astropy.coordinates import AltAz, EarthLocation, SkyCoord, get_body
 from astropy.table import Table
 from astropy.time import Time
 from six.moves import configparser
-
-from pathlib import Path
 
 from .PointingTools import ComputePGalinFOV, GetSatelliteTime, Tools
 

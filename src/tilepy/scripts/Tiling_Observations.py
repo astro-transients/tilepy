@@ -9,10 +9,9 @@ import logging
 import sys
 import time
 import traceback
+from pathlib import Path
 
 from astropy.time import Time
-
-from pathlib import Path
 
 from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.include.ObservationScheduler import GetSchedule
