@@ -122,7 +122,6 @@ def main():
     )
     parser.add_argument(
         "-vetoWindowsFile",
-        nargs="+",
         help="File containing time windows to exclude from the computation..",
         default=None,
     )

@@ -47,8 +47,6 @@ from six.moves import configparser
 from skyfield import almanac
 from skyfield.api import E, N, load, wgs84
 
-from .MaskingTools import GetExcludedTimeWindows
-
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
 else:
@@ -88,6 +86,7 @@ __all__ = [
     "GetSatellitePositions",
     "GetBestNSIDE",
     "FillSummary",
+    "GetExcludedTimeWindows",
 ]
 
 logger = logging.getLogger(__name__)
@@ -2445,3 +2444,23 @@ class NextWindowTools:
         obspar.obsTime = datetime.datetime.strptime(
             str(previousTime), "%Y-%m-%dT%H:%M:%S"
         ) + datetime.timedelta(minutes=np.float64(obspar.duration))
+
+
+def GetExcludedTimeWindows(vetoWindowsFile):
+    logger.info(f"Reading time windows to exclude from {vetoWindowsFile}")
+    tstarts, tstops = np.genfromtxt(
+        vetoWindowsFile,
+        dtype="str",
+        delimiter=",",
+        unpack=True,
+    )  # ra, dec in degrees
+    tstarts = np.atleast_1d(tstarts).tolist()
+    tstops = np.atleast_1d(tstops).tolist()
+
+    excluded_time_windows = [[tstart, tstop] for tstart, tstop in zip(tstarts, tstops)]
+
+    logger.info("The following time windows will be excluded from the computation:")
+    for time_window in excluded_time_windows:
+        logger.info(f"{time_window[0]} -- {time_window[1]}")
+
+    return excluded_time_windows

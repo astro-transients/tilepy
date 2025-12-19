@@ -15,7 +15,6 @@ from .MaskingTools import (
     SAA_Times,
     VisibleAtTime,
     ZenithAngleCut,
-    GetExcludedTimeWindows,
 )
 from .ObservationScheduler import GetSchedule, GetUniversalSchedule
 from .Observatories import (
@@ -58,6 +57,7 @@ from .PointingTools import (
     UNIQSkymap_toNested,
     get_lvk_uniq_maps,
     getdate,
+    GetExcludedTimeWindows,
 )
 from .RankingObservationTimes import (
     EvolutionPlot,
@@ -159,4 +159,5 @@ __all__ = [
     "SAA_Times",
     "GetBestGridPos2D",
     "GetBestGridPos3D",
+    "GetExcludedTimeWindows",
 ]
