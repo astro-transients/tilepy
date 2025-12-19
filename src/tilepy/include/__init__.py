@@ -38,6 +38,7 @@ from .PointingTools import (
     ComputeProbGalTargeted,
     ComputeProbPGALIntegrateFoV,
     FillSummary,
+    GetExcludedTimeWindows,
     GetRegionPixGal,
     GetRegionPixReduced,
     IsSourceInside,
@@ -158,4 +159,5 @@ __all__ = [
     "SAA_Times",
     "GetBestGridPos2D",
     "GetBestGridPos3D",
+    "GetExcludedTimeWindows",
 ]

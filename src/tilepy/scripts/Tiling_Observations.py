@@ -6,10 +6,10 @@
 
 import argparse
 import logging
-import os
 import sys
 import time
 import traceback
+from pathlib import Path
 
 from astropy.time import Time
 
@@ -119,6 +119,11 @@ def main():
         metavar="Name of the output log file.",
         default="tiling_observations.log",
     )
+    parser.add_argument(
+        "-vetoWindowsFile",
+        help="File containing time windows to exclude from the computation..",
+        default=None,
+    )
 
     args = parser.parse_args()
     skymap = args.skymap
@@ -135,9 +140,21 @@ def main():
     pointingsFile = args.tiles
     eventName = args.eventName
     logname = args.logname
+    vetoWindowsFile = args.vetoWindowsFile
 
-    if not os.path.exists(outDir):
-        os.makedirs(outDir)
+    if not Path(datasetDir).exists():
+        raise FileNotFoundError(f"Dataset directory {datasetDir} not found.")
+
+    galaxy_catalog = Path(f"{datasetDir}/{galcatName}")
+
+    if not galaxy_catalog.exists():
+        raise FileNotFoundError(f"Galaxy catalog file {galaxy_catalog} not found.")
+
+    if not Path(cfgFile).exists():
+        raise FileNotFoundError(f"Configuration file {cfgFile} not found.")
+
+    if not Path(outDir).exists():
+        Path(outDir).mkdir(parents=True)
 
     logging.basicConfig(filename=logname)
 
@@ -174,6 +191,7 @@ def main():
         dec,
         sigma,
         nside,
+        vetoWindowsFile,
     )
     obspar.from_configfile(cfgFile)
 

@@ -1,9 +1,9 @@
 import argparse
 import logging
-import os
 import sys
 import time
 import traceback
+from pathlib import Path
 
 from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.tools.VisualizationTools import CompareTwoTilings
@@ -86,18 +86,17 @@ def main():
     )
     parser.add_argument("-tiles", metavar="tiles already observed", default=None)
     parser.add_argument(
-        "-locCut",
-        metavar="limit on skyloc to perform a followup",
-        help="Options are: loose or std",
-        default=None,
-    )
-    parser.add_argument(
         "-eventName", metavar="Name of the observed event", default=None
     )
     parser.add_argument(
         "-logname",
         metavar="Name of the output log file.",
         default="plotting_two_campaigns.log",
+    )
+    parser.add_argument(
+        "-vetoWindowsFile",
+        help="File containing time windows to exclude from the computation..",
+        default=None,
     )
 
     args = parser.parse_args()
@@ -112,15 +111,40 @@ def main():
     pointingsFile = args.tiles
     eventName = args.eventName
     logname = args.logname
+    vetoWindowsFile = args.vetoWindowsFile
 
-    if not os.path.exists(outDir):
-        os.makedirs(outDir)
+    if not Path(datasetDir).exists():
+        raise FileNotFoundError(f"Dataset directory {datasetDir} not found.")
+
+    galaxy_catalog = Path(f"{datasetDir}/{galcatName}")
+
+    if not galaxy_catalog.exists():
+        raise FileNotFoundError(f"Galaxy catalog file {galaxy_catalog} not found.")
+
+    if not Path(cfgFile).exists():
+        raise FileNotFoundError(f"Configuration file {cfgFile} not found.")
+
+    if not Path(outDir).exists():
+        Path(outDir).mkdir(parents=True)
 
     logging.basicConfig(filename=logname)
 
     obspar = ObservationParameters()
     obspar.add_parsed_args(
-        skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, None, eventName
+        skymap,
+        obsTime,
+        datasetDir,
+        galcatName,
+        outDir,
+        pointingsFile,
+        None,
+        eventName,
+        "healpix",
+        None,
+        None,
+        None,
+        None,
+        vetoWindowsFile,
     )
     obspar.from_configfile(cfgFile)
 
