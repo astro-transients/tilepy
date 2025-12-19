@@ -23,6 +23,7 @@
 
 import datetime
 import logging
+from pathlib import Path
 
 import astropy.coordinates as co
 import healpy as hp
@@ -39,7 +40,6 @@ from astropy.table import Table
 from astropy.time import Time
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
-from pathlib import Path
 from six.moves import configparser
 from sklearn.cluster import AgglomerativeClustering
 
