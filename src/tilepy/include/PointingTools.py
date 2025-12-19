@@ -682,7 +682,9 @@ class Observer:
         # Setup time converter for skyfield
         self.timescale_converter = load.timescale()
 
-    def get_time_window(self, start_time, nb_observation_night, excluded_time_windows=[]):
+    def get_time_window(
+        self, start_time, nb_observation_night, excluded_time_windows=[]
+    ):
         """
         Calculate the time window for observations.
 
@@ -730,12 +732,15 @@ class Observer:
         for time_range in time_range_intervals:
             tstart = Time(time_range[0], scale="utc")
             tend = Time(time_range[1], scale="utc")
-            deltas = np.linspace(0, int((tend-tstart).sec), int((tend-tstart).sec)) * u.second
+            deltas = (
+                np.linspace(0, int((tend - tstart).sec), int((tend - tstart).sec))
+                * u.second
+            )
             array_interval = tstart + deltas
             for time_range_excluded in time_range_exclusion:
                 if array_interval.size:
-                    mask1 = (array_interval <= time_range_excluded[0])
-                    mask2 = (array_interval >= time_range_excluded[1])
+                    mask1 = array_interval <= time_range_excluded[0]
+                    mask2 = array_interval >= time_range_excluded[1]
                     array_interval_masked1 = np.array([])
                     array_interval_masked2 = np.array([])
                     if mask1[0].size != 0:
@@ -743,11 +748,15 @@ class Observer:
                     if mask2[0].size != 0:
                         array_interval_masked2 = array_interval[mask2]
 
-                    array_interval = np.concatenate((array_interval_masked1, array_interval_masked2))
+                    array_interval = np.concatenate(
+                        (array_interval_masked1, array_interval_masked2)
+                    )
 
             if array_interval.size:
                 diffs = np.array([item.sec for item in np.diff(array_interval)])
-                consecutive_intervals = np.split(array_interval, np.where(diffs > 1.2)[0] + 1)
+                consecutive_intervals = np.split(
+                    array_interval, np.where(diffs > 1.2)[0] + 1
+                )
                 for num_consecutive in range(len(consecutive_intervals)):
                     clean_range_interval.append(
                         [
@@ -760,7 +769,9 @@ class Observer:
                         ]
                     )
             else:
-                logger.info("No time interval survived after removing the vetoed time windows.")
+                logger.info(
+                    "No time interval survived after removing the vetoed time windows."
+                )
 
         return clean_range_interval
 
@@ -840,7 +851,9 @@ class Observer:
         excluded = []
         if len(excluded_time_windows):
             for items in excluded_time_windows:
-                excluded.append([datetime.datetime.fromisoformat(item+"+00:00") for item in items])
+                excluded.append(
+                    [datetime.datetime.fromisoformat(item + "+00:00") for item in items]
+                )
         return excluded
 
     def get_sun_constraint_time_interval(
@@ -2014,7 +2027,9 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, n_sides, UsePix):
         dec_vertices = coords.lat.deg  # .lat is Dec equivalent
 
         # 3. Build the polygon path in RA/Dec
-        polygon_path = matplotlib.path.Path(np.column_stack((ra_vertices, dec_vertices)))
+        polygon_path = matplotlib.path.Path(
+            np.column_stack((ra_vertices, dec_vertices))
+        )
 
         # 4. Prepare your galaxies' RA, Dec arrays (in degrees)
         galaxy_positions = np.column_stack(

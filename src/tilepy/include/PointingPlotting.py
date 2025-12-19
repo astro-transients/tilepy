@@ -697,9 +697,7 @@ def PlotPointings_Pretty(
     # to get 10^3 instead of 1e3
     cbar.formatter.set_useMathText(True)
     cbar.set_label("Map probability density", color="black", fontsize=9)
-    plt.savefig(
-        f"{dirName}/Plot_PrettyMap_{name}.png", dpi=300, bbox_inches="tight"
-    )
+    plt.savefig(f"{dirName}/Plot_PrettyMap_{name}.png", dpi=300, bbox_inches="tight")
     plt.close()
 
 
