@@ -2447,6 +2447,11 @@ class NextWindowTools:
 
 
 def GetExcludedTimeWindows(vetoWindowsFile):
+    """
+    The expected format of the file is like the following:
+        2025-12-19 00:01:00,2025-12-19 00:20:00
+        2025-12-19 01:06:00,2025-12-19 04:34:00
+    """
     logger.info(f"Reading time windows to exclude from {vetoWindowsFile}")
     tstarts, tstops = np.genfromtxt(
         vetoWindowsFile,
