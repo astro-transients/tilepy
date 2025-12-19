@@ -1181,7 +1181,10 @@ def NightDarkObservation(time, obspar):
         max_moon_altitude=obspar.moonDown,
         max_moon_phase=-1.0,
     )
-    excluded_time_windows = GetExcludedTimeWindows(obspar.vetoWindowsFile)
+    if obspar.vetoWindowsFile is not None:
+        excluded_time_windows = GetExcludedTimeWindows(obspar.vetoWindowsFile)
+    else:
+        excluded_time_windows = []
     return obs.get_time_window(
         start_time=time,
         nb_observation_night=obspar.maxNights,
@@ -1201,7 +1204,10 @@ def NightDarkObservationwithGreyTime(time, obspar):
         max_moon_altitude=obspar.moonGrey,
         max_moon_phase=obspar.moonPhase / 100.0,
     )
-    excluded_time_windows = GetExcludedTimeWindows(obspar.vetoWindowsFile)
+    if obspar.vetoWindowsFile is not None:
+        excluded_time_windows = GetExcludedTimeWindows(obspar.vetoWindowsFile)
+    else:
+        excluded_time_windows = []
     return obs.get_time_window(
         start_time=time,
         nb_observation_night=obspar.maxNights,
