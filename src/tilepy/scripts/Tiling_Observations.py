@@ -93,7 +93,7 @@ def main():
         "-i",
         metavar="input path",
         help="Path to the input datasets (where galaxy cat should be for GW case)",
-        default="../../dataset/",
+        default=None,
     )
     parser.add_argument(
         "-o",
@@ -142,13 +142,15 @@ def main():
     logname = args.logname
     vetoWindowsFile = args.vetoWindowsFile
 
-    if not Path(datasetDir).exists():
-        raise FileNotFoundError(f"Dataset directory {datasetDir} not found.")
+    if datasetDir is not None: 
 
-    galaxy_catalog = Path(f"{datasetDir}/{galcatName}")
+        if not Path(datasetDir).exists():
+            raise FileNotFoundError(f"Dataset directory {datasetDir} not found.")
 
-    if not galaxy_catalog.exists():
-        raise FileNotFoundError(f"Galaxy catalog file {galaxy_catalog} not found.")
+        galaxy_catalog = Path(f"{datasetDir}/{galcatName}")
+
+        if not galaxy_catalog.exists():
+            raise FileNotFoundError(f"Galaxy catalog file {galaxy_catalog} not found.")
 
     if not Path(cfgFile).exists():
         raise FileNotFoundError(f"Configuration file {cfgFile} not found.")
