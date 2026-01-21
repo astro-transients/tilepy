@@ -142,8 +142,7 @@ def main():
     logname = args.logname
     vetoWindowsFile = args.vetoWindowsFile
 
-    if datasetDir is not None: 
-
+    if datasetDir is not None:
         if not Path(datasetDir).exists():
             raise FileNotFoundError(f"Dataset directory {datasetDir} not found.")
 
