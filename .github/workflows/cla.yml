@@ -59,7 +59,7 @@ jobs:
           # branch should not be protected
           branch: 'master'
 
-            
+
           allowlist: pre-commit-ci,pre-commit-ci[bot],pre-commit.ci,pre-commit.ci[bot],dependabot[bot]
 
          # the following are the optional inputs - If the optional inputs are not given, then default values will be taken
