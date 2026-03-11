@@ -1,26 +1,41 @@
 import argparse
+import logging
 import os
+import sys
 import time
+import traceback
 
 from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.tools.VisualizationTools import CompareTwoTilings
 
 __all__ = ["PlottingTwoCampaigns"]
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
+
 
 def PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2):
-    plotType = "gnomonic"
-    CompareTwoTilings(
-        obspar.skymap, PointingsFile1, PointingsFile2, obspar.FOV, plotType
-    )
-    plotType = "mollweide"
-    CompareTwoTilings(
-        obspar.skymap, PointingsFile1, PointingsFile2, obspar.FOV, plotType
-    )
+    return_code = 0
+    try:
+        plotType = "gnomonic"
+        CompareTwoTilings(
+            obspar.skymap, PointingsFile1, PointingsFile2, obspar.FOV, plotType
+        )
+        plotType = "mollweide"
+        CompareTwoTilings(
+            obspar.skymap, PointingsFile1, PointingsFile2, obspar.FOV, plotType
+        )
+    except Exception:
+        logger.error(
+            f"An error occurred during the execution:\n{traceback.format_exc()}"
+        )
+        return_code = 1
+
+    return return_code
 
 
 def main():
-
     start = time.time()
 
     parser = argparse.ArgumentParser(
@@ -79,6 +94,11 @@ def main():
     parser.add_argument(
         "-eventName", metavar="Name of the observed event", default=None
     )
+    parser.add_argument(
+        "-logname",
+        metavar="Name of the output log file.",
+        default="plotting_two_campaigns.log",
+    )
 
     args = parser.parse_args()
     skymap = args.skymap
@@ -91,20 +111,25 @@ def main():
     galcatName = args.galcatName
     pointingsFile = args.tiles
     eventName = args.eventName
+    logname = args.logname
 
     if not os.path.exists(outDir):
         os.makedirs(outDir)
 
+    logging.basicConfig(filename=logname)
+
     obspar = ObservationParameters()
     obspar.add_parsed_args(
-        skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, eventName
+        skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, None, eventName
     )
     obspar.from_configfile(cfgFile)
 
-    PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2)
+    return_code = PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2)
 
     end = time.time()
-    print("Execution time: ", end - start)
+    logger.info(f"Execution time: {end - start:.0f} [sec]")
+    logger.info(f"Return code: {return_code}")
+    sys.exit(return_code)
 
 
 if __name__ == "__main__":

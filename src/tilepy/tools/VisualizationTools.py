@@ -16,7 +16,7 @@ from tilepy.include.PointingPlotting import (
     PlotPointingsTogether,
 )
 from tilepy.include.PointingTools import (
-    Get90RegionPixReduced,
+    GetRegionPixReduced,
     LoadPointings,
     NightDarkObservation,
     NightDarkObservationwithGreyTime,
@@ -26,13 +26,12 @@ from tilepy.include.PointingTools import (
 
 
 def LocateSource(filename, ra, dec, PercentCov=90):
-
     skymap_OD = lf.read_sky_map(filename)
     prob = skymap_OD[0]
     npix = len(prob)
     nside = hp.npix2nside(npix)
 
-    pix_ra1, pix_dec1, _ = Get90RegionPixReduced(prob, PercentCov, nside)
+    pix_ra1, pix_dec1, _ = GetRegionPixReduced(prob, PercentCov, nside)
 
     reduced_nside = 512
     coordinates = TransformRADec(ra, dec)
@@ -316,7 +315,7 @@ def CompareTwoTilings(
             len(df1["PGW"]),
         )
         print(
-            "Summary of 2st file: sum(PW)=",
+            "Summary of 2nd file: sum(PW)=",
             sum(df2["PGW"]),
             "sum(PGAL)=",
             sum(df2["Pgal"]),
@@ -334,7 +333,7 @@ def CompareTwoTilings(
             len(df1["PGW"]),
         )
         print(
-            "Summary of 2st file: sum(PW)=",
+            "Summary of 2nd file: sum(PW)=",
             sum(df2["PGW"]),
             "total pointings",
             len(df2["PGW"]),

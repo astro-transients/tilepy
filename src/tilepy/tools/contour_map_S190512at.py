@@ -219,7 +219,6 @@ with World2ScreenMPL(
     rotation=Angle(0, u.degree),
     projection="AIT",
 ) as wcs:
-
     # add the moc contours
     ax = fig.add_subplot(1, 1, 1, projection=wcs)
     # Call fill with a matplotlib axe and the `~astropy.wcs.WCS` wcs object.
