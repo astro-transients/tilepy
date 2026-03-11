@@ -123,8 +123,8 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
         the desired time for scheduling to start.
 
     """
-    if task_id is not None: 
-        report(task_id, progress=0.3, message="Starting the pointing calculation", status="in_progress")
+    
+    report(task_id, progress=0.3, message="Starting the pointing calculation", status="in_progress")
     ObservationTime0 = obspar.obsTime
     PointingFile = obspar.pointingsFile
     # Main parameters
