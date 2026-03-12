@@ -20,6 +20,7 @@
 ##################################################################################################
 
 import datetime
+import logging
 import os
 
 import astropy.coordinates as co
@@ -56,6 +57,10 @@ __all__ = [
     "PlotPointings_Pretty",
     "PlotAccRegion",
 ]
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 
 Colors = [
@@ -175,7 +180,7 @@ Colors = [
 
 
 def LoadPointingsGW(tpointingFile):
-    print("Loading pointings from " + tpointingFile)
+    logger.info(f"Loading pointings from {tpointingFile}")
 
     time1, time2, ra, dec = np.genfromtxt(
         tpointingFile,
@@ -206,7 +211,7 @@ def LoadPointingsGW(tpointingFile):
 
 
 def LoadPointingsGAL(tpointingFile):
-    print("Loading pointings from " + tpointingFile)
+    logger.info(f"Loading pointings from {tpointingFile}")
     time1, time2, ra, dec, Pgw, Pgal = np.genfromtxt(
         tpointingFile,
         usecols=(0, 1, 2, 3, 4, 5),
@@ -233,7 +238,7 @@ def LoadPointingsGAL(tpointingFile):
 
 
 def LoadPointings(tpointingFile):
-    print("Loading pointings from " + tpointingFile)
+    logger.info(f"Loading pointings from {tpointingFile}")
     # Read the first line of the file to determine column names
     with open(tpointingFile, "r") as f:
         header_line = f.readline().strip()
@@ -252,11 +257,9 @@ def PointingPlotting(prob, obspar, name, dirName, PointingsFile1, ObsArray, gal)
 
     Probarray1 = np.atleast_1d(Probarray1)
 
-    print("----------   PLOTTING THE SCHEDULING   ----------")
-    print(
-        "Total covered probability with the scheduled tiles is PGW= {0:.5f}".format(
-            sum(Probarray1)
-        )
+    logger.info("----------   PLOTTING THE SCHEDULING   ----------")
+    logger.info(
+        f"Total covered probability with the scheduled tiles is PGW= {sum(Probarray1):.5f}"
     )
     converted_time1 = []
     for i, time1 in enumerate(ObservationTimearray1):
@@ -435,9 +438,7 @@ def PlotPointingsTogether(
 
 
 def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
-    print()
-    print("-------------------   PLOTTING SCHEDULE   --------------------")
-    print()
+    logger.info("\n-------------------   PLOTTING SCHEDULE   --------------------\n")
 
     UseObs = obspar.obs_name
     FOV = obspar.FOV
@@ -461,10 +462,8 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
     # making sure to have an array on which we can call the sum() function
     Probarray = np.atleast_1d(Probarray)
 
-    print("----------   BUILDING A MAP   ----------")
-    print(
-        "Total probability of map 1 that maximises PGW= {0:.5f}".format(sum(Probarray))
-    )
+    logger.info("----------   BUILDING A MAP   ----------")
+    logger.info(f"Total probability of map 1 that maximises PGW= {sum(Probarray):.5f}")
 
     converted_time = []
     for _, time in enumerate(ObservationTimearray):
@@ -540,9 +539,9 @@ def PlotPointings_Pretty(
         ragal = gal["RAJ2000"]
         decgal = gal["DEJ2000"]
         galprob = gal["dp_dV"]
-        print("Plotting galaxies")
-    except Exception:
-        print("No galaxies given")
+        logger.info("Plotting galaxies")
+    except Exception as e:
+        logger.error(f"{e}: no galaxies given")
     # Read the pointings file
     tpointingFile = PointingsFile1
     try:
@@ -662,8 +661,8 @@ def PlotPointings_Pretty(
         )
         cbar_inset = plt.colorbar(sc_inset, ax=ax_inset)
         cbar_inset.set_label("Galaxy probability density")
-    except Exception:
-        print("No galaxies given for plot 2")
+    except Exception as e:
+        logger.error(f"{e}: no galaxies given for plot 2")
 
     unique_obs_names = np.unique(nametel)
     if colorspar is None:
@@ -779,8 +778,8 @@ def PlotAccRegion(skymap, dirName, reducedNside, Occultedpixels, first_values):
             coord="C",
             linewidth=0.1,
         )
-    except Exception:
-        print("No pcculted pix")
+    except Exception as e:
+        logger.error(f"{e}: no occulted pix.")
 
     hp.visufunc.projplot(
         first_values["PIXRA"],

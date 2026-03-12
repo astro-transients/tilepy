@@ -5,8 +5,11 @@
 ########################################################################
 
 import argparse
+import logging
 import os
+import sys
 import time
+import traceback
 
 from astropy.time import Time
 
@@ -16,9 +19,22 @@ from tilepy.include.PointingTools import getdate
 
 __all__ = ["Tiling_Observations"]
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
+
 
 def Tiling_Observations(obspar):
-    GetSchedule(obspar)
+    return_code = 0
+    try:
+        GetSchedule(obspar)
+    except Exception:
+        logger.error(
+            f"An error occurred during the execution:\n{traceback.format_exc()}"
+        )
+        return_code = 1
+
+    return return_code
 
 
 def main():
@@ -98,6 +114,11 @@ def main():
     parser.add_argument(
         "-eventName", metavar="Name of the observed event", default=None
     )
+    parser.add_argument(
+        "-logname",
+        metavar="Name of the output log file.",
+        default="tiling_observations.log",
+    )
 
     args = parser.parse_args()
     skymap = args.skymap
@@ -113,9 +134,12 @@ def main():
     galcatName = args.galcatName
     pointingsFile = args.tiles
     eventName = args.eventName
+    logname = args.logname
 
     if not os.path.exists(outDir):
         os.makedirs(outDir)
+
+    logging.basicConfig(filename=logname)
 
     if skymap is None and mode not in ["gaussian"]:
         raise ValueError(
@@ -153,10 +177,12 @@ def main():
     )
     obspar.from_configfile(cfgFile)
 
-    Tiling_Observations(obspar)
+    return_code = Tiling_Observations(obspar)
 
     end = time.time()
-    print("Execution time: ", end - start)
+    logger.info(f"Execution time: {end - start:.0f} [sec]")
+    logger.info(f"Return code: {return_code}")
+    sys.exit(return_code)
 
 
 if __name__ == "__main__":
