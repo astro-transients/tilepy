@@ -21,12 +21,11 @@
 
 
 import logging
+from pathlib import Path
 
 import astropy.units as u
 from astropy.io import ascii
 from astropy.table import Table
-
-from pathlib import Path
 
 from .MapManagement import SkyMap, create_map_reader
 from .PointingPlotting import PlotAccRegion, PointingPlotting
@@ -184,7 +183,9 @@ def GetSchedule(obspar):
             "===========================================================================================\n"
         )
 
-        SuggestedPointings, t0 = PGWinFoV(skymap, raw_map.name_event, obspar, str(dirName))
+        SuggestedPointings, t0 = PGWinFoV(
+            skymap, raw_map.name_event, obspar, str(dirName)
+        )
 
         if len(SuggestedPointings) != 0:
             gal = []
@@ -278,7 +279,11 @@ def GetUniversalSchedule(obspar):
             if not dirName.exists():
                 dirName.mkdir(parents=True)
             SuggestedPointings = GetBestTiles2D(
-                skymap, raw_map.name_event, obspar[0].pointingsFile, obspar, str(dirName)
+                skymap,
+                raw_map.name_event,
+                obspar[0].pointingsFile,
+                obspar,
+                str(dirName),
             )
 
     # SPACE
@@ -451,7 +456,7 @@ def GetUniversalSchedule(obspar):
 
     if len(SuggestedPointings) != 0:
         logger.info(f"Suggested pointings: {SuggestedPointings}")
-        outfilename = str( dirName / "SuggestedPointings_GWOptimisation.txt")
+        outfilename = str(dirName / "SuggestedPointings_GWOptimisation.txt")
         ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
         logger.info(f"Resulting pointings file is {outfilename}")
 

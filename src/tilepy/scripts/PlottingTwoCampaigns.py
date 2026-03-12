@@ -1,10 +1,8 @@
 import argparse
 import logging
-import os
 import sys
 import time
 import traceback
-
 from pathlib import Path
 
 from tilepy.include.CampaignDefinition import ObservationParameters
@@ -95,6 +93,11 @@ def main():
         metavar="Name of the output log file.",
         default="plotting_two_campaigns.log",
     )
+    parser.add_argument(
+        "-vetoWindowsFile",
+        help="File containing time windows to exclude from the computation..",
+        default=None,
+    )
 
     args = parser.parse_args()
     skymap = args.skymap
@@ -108,14 +111,16 @@ def main():
     pointingsFile = args.tiles
     eventName = args.eventName
     logname = args.logname
+    vetoWindowsFile = args.vetoWindowsFile
 
-    if not Path(datasetDir).exists():
-        raise FileNotFoundError(f"Dataset directory {datasetDir} not found.")
+    if datasetDir is not None:
+        if not Path(datasetDir).exists():
+            raise FileNotFoundError(f"Dataset directory {datasetDir} not found.")
 
-    galaxy_catalog = Path(f"{datasetDir}/{galcatName}")
+        galaxy_catalog = Path(f"{datasetDir}/{galcatName}")
 
-    if not galaxy_catalog.exists():
-        raise FileNotFoundError(f"Galaxy catalog file {galaxy_catalog} not found.")
+        if not galaxy_catalog.exists():
+            raise FileNotFoundError(f"Galaxy catalog file {galaxy_catalog} not found.")
 
     if not Path(cfgFile).exists():
         raise FileNotFoundError(f"Configuration file {cfgFile} not found.")
@@ -127,7 +132,20 @@ def main():
 
     obspar = ObservationParameters()
     obspar.add_parsed_args(
-        skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, None, eventName
+        skymap,
+        obsTime,
+        datasetDir,
+        galcatName,
+        outDir,
+        pointingsFile,
+        None,
+        eventName,
+        "healpix",
+        None,
+        None,
+        None,
+        None,
+        vetoWindowsFile,
     )
     obspar.from_configfile(cfgFile)
 

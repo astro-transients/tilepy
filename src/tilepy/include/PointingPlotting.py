@@ -21,6 +21,7 @@
 
 import datetime
 import logging
+from pathlib import Path
 
 import astropy.coordinates as co
 import healpy as hp
@@ -33,8 +34,6 @@ import six
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from six.moves import configparser
-
-from pathlib import Path
 
 from .PointingTools import TransformRADec
 
@@ -697,9 +696,7 @@ def PlotPointings_Pretty(
     # to get 10^3 instead of 1e3
     cbar.formatter.set_useMathText(True)
     cbar.set_label("Map probability density", color="black", fontsize=9)
-    plt.savefig(
-        f"{dirName}/Plot_PrettyMap_{name}.png", dpi=300, bbox_inches="tight"
-    )
+    plt.savefig(f"{dirName}/Plot_PrettyMap_{name}.png", dpi=300, bbox_inches="tight")
     plt.close()
 
 
