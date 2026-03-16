@@ -5,8 +5,11 @@
 ########################################################################
 
 import argparse
-import os
+import logging
+import sys
 import time
+import traceback
+from pathlib import Path
 
 from astropy.time import Time
 
@@ -16,9 +19,22 @@ from tilepy.include.PointingTools import getdate
 
 __all__ = ["Tiling_Observations"]
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
+
 
 def Tiling_Observations(obspar):
-    GetSchedule(obspar)
+    return_code = 0
+    try:
+        GetSchedule(obspar)
+    except Exception:
+        logger.error(
+            f"An error occurred during the execution:\n{traceback.format_exc()}"
+        )
+        return_code = 1
+
+    return return_code
 
 
 def main():
@@ -77,7 +93,7 @@ def main():
         "-i",
         metavar="input path",
         help="Path to the input datasets (where galaxy cat should be for GW case)",
-        default="../../dataset/",
+        default=None,
     )
     parser.add_argument(
         "-o",
@@ -98,6 +114,16 @@ def main():
     parser.add_argument(
         "-eventName", metavar="Name of the observed event", default=None
     )
+    parser.add_argument(
+        "-logname",
+        metavar="Name of the output log file.",
+        default="tiling_observations.log",
+    )
+    parser.add_argument(
+        "-vetoWindowsFile",
+        help="File containing time windows to exclude from the computation..",
+        default=None,
+    )
 
     args = parser.parse_args()
     skymap = args.skymap
@@ -113,9 +139,25 @@ def main():
     galcatName = args.galcatName
     pointingsFile = args.tiles
     eventName = args.eventName
+    logname = args.logname
+    vetoWindowsFile = args.vetoWindowsFile
 
-    if not os.path.exists(outDir):
-        os.makedirs(outDir)
+    if datasetDir is not None:
+        if not Path(datasetDir).exists():
+            raise FileNotFoundError(f"Dataset directory {datasetDir} not found.")
+
+        galaxy_catalog = Path(f"{datasetDir}/{galcatName}")
+
+        if not galaxy_catalog.exists():
+            raise FileNotFoundError(f"Galaxy catalog file {galaxy_catalog} not found.")
+
+    if not Path(cfgFile).exists():
+        raise FileNotFoundError(f"Configuration file {cfgFile} not found.")
+
+    if not Path(outDir).exists():
+        Path(outDir).mkdir(parents=True)
+
+    logging.basicConfig(filename=logname)
 
     if skymap is None and mode not in ["gaussian"]:
         raise ValueError(
@@ -150,13 +192,16 @@ def main():
         dec,
         sigma,
         nside,
+        vetoWindowsFile,
     )
     obspar.from_configfile(cfgFile)
 
-    Tiling_Observations(obspar)
+    return_code = Tiling_Observations(obspar)
 
     end = time.time()
-    print("Execution time: ", end - start)
+    logger.info(f"Execution time: {end - start:.0f} [sec]")
+    logger.info(f"Return code: {return_code}")
+    sys.exit(return_code)
 
 
 if __name__ == "__main__":

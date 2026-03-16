@@ -20,7 +20,8 @@
 ##################################################################################################
 
 import datetime
-import os
+import logging
+from pathlib import Path
 
 import astropy.coordinates as co
 import healpy as hp
@@ -56,6 +57,10 @@ __all__ = [
     "PlotPointings_Pretty",
     "PlotAccRegion",
 ]
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 
 Colors = [
@@ -175,7 +180,7 @@ Colors = [
 
 
 def LoadPointingsGW(tpointingFile):
-    print("Loading pointings from " + tpointingFile)
+    logger.info(f"Loading pointings from {tpointingFile}")
 
     time1, time2, ra, dec = np.genfromtxt(
         tpointingFile,
@@ -206,7 +211,7 @@ def LoadPointingsGW(tpointingFile):
 
 
 def LoadPointingsGAL(tpointingFile):
-    print("Loading pointings from " + tpointingFile)
+    logger.info(f"Loading pointings from {tpointingFile}")
     time1, time2, ra, dec, Pgw, Pgal = np.genfromtxt(
         tpointingFile,
         usecols=(0, 1, 2, 3, 4, 5),
@@ -233,7 +238,7 @@ def LoadPointingsGAL(tpointingFile):
 
 
 def LoadPointings(tpointingFile):
-    print("Loading pointings from " + tpointingFile)
+    logger.info(f"Loading pointings from {tpointingFile}")
     # Read the first line of the file to determine column names
     with open(tpointingFile, "r") as f:
         header_line = f.readline().strip()
@@ -252,11 +257,9 @@ def PointingPlotting(prob, obspar, name, dirName, PointingsFile1, ObsArray, gal)
 
     Probarray1 = np.atleast_1d(Probarray1)
 
-    print("----------   PLOTTING THE SCHEDULING   ----------")
-    print(
-        "Total covered probability with the scheduled tiles is PGW= {0:.5f}".format(
-            sum(Probarray1)
-        )
+    logger.info("----------   PLOTTING THE SCHEDULING   ----------")
+    logger.info(
+        f"Total covered probability with the scheduled tiles is PGW= {sum(Probarray1):.5f}"
     )
     converted_time1 = []
     for i, time1 in enumerate(ObservationTimearray1):
@@ -301,25 +304,17 @@ def PlotPointings(
     if doPlot:
         observatory = obspar.location
 
-        dirName = "%s/Pointing_Plotting_%s" % (dirName, ObsArray)
-        if not os.path.exists(dirName):
-            os.makedirs(dirName)
+        dirName = Path(f"{dirName}/Pointing_Plotting_{ObsArray}")
+        if not dirName.exists():
+            dirName.mkdir(parents=True)
+
+        time_string = f"{time[0].year}-{time[0].month}-{time[0].day} {time[0].hour}:{time[0].minute}:{time[0].second}"
 
         hp.mollview(
             prob,
             rot=[180, 0],
             coord="C",
-            title="GW prob map (Equatorial) + %s %g  %s/%s/%s %s:%s:%s UTC"
-            % (
-                name,
-                Totalprob * 100,
-                time[0].day,
-                time[0].month,
-                time[0].year,
-                time[0].hour,
-                time[0].minute,
-                time[0].second,
-            ),
+            title=f"GW prob map (Equatorial) + {name} {Totalprob * 100:g} {time_string} UTC",
         )
         hp.graticule()
 
@@ -354,7 +349,7 @@ def PlotPointings(
             hp.visufunc.projplot(
                 RandomCoord_radec.ra, RandomCoord_radec.dec, "b.", lonlat=True
             )
-            plt.savefig("%s/Pointings%s.png" % (dirName, j))
+            plt.savefig(f"{dirName}/Pointings{j}.png")
 
 
 def PlotPointingsTogether(
@@ -435,9 +430,7 @@ def PlotPointingsTogether(
 
 
 def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
-    print()
-    print("-------------------   PLOTTING SCHEDULE   --------------------")
-    print()
+    logger.info("\n-------------------   PLOTTING SCHEDULE   --------------------\n")
 
     UseObs = obspar.obs_name
     FOV = obspar.FOV
@@ -461,10 +454,8 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
     # making sure to have an array on which we can call the sum() function
     Probarray = np.atleast_1d(Probarray)
 
-    print("----------   BUILDING A MAP   ----------")
-    print(
-        "Total probability of map 1 that maximises PGW= {0:.5f}".format(sum(Probarray))
-    )
+    logger.info("----------   BUILDING A MAP   ----------")
+    logger.info(f"Total probability of map 1 that maximises PGW= {sum(Probarray):.5f}")
 
     converted_time = []
     for _, time in enumerate(ObservationTimearray):
@@ -482,25 +473,17 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
                     datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S")
                 )
 
-    dirName = "%s/Pointing_Plotting_%s/%s" % (outDir, UseObs, ID)
-    if not os.path.exists(dirName):
-        os.makedirs(dirName)
+    dirName = Path(f"{outDir}/Pointing_Plotting_{UseObs}/{ID}")
+    if not dirName.exists():
+        dirName.mkdir(parents=True)
+
+    converted_time_string = f"{converted_time[0].year}-{converted_time[0].month}-{converted_time[0].day} {converted_time[0].hour}:{converted_time[0].minute}:{converted_time[0].second}"
 
     hp.mollview(
         prob,
         rot=[180, 0],
         coord="C",
-        title="GW prob map (Equatorial) + %s %g  %s/%s/%s %s:%s:%s UTC"
-        % (
-            str(ID),
-            sum(Probarray) * 100,
-            converted_time[0].day,
-            converted_time[0].month,
-            converted_time[0].year,
-            converted_time[0].hour,
-            converted_time[0].minute,
-            converted_time[0].second,
-        ),
+        title=f"GW prob map (Equatorial) + {str(ID)} {sum(Probarray) * 100:g} {converted_time_string} UTC",
     )
     hp.graticule()
     # plt.show()
@@ -519,7 +502,7 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
             racoord, deccoord, lonlat=True, marker=".", color=Colors[1], coord="C"
         )
         # plt.show()
-    plt.savefig("%s/Pointings.png" % dirName)
+    plt.savefig(f"{dirName}/Pointings.png")
 
     # dist = cat['Dist']
     # hp.visufunc.projscatter(cat['RAJ2000'][dist < 200], cat['DEJ2000'][dist < 200], lonlat=True, marker='.',color='g', linewidth=0.1, coord='C')
@@ -540,9 +523,9 @@ def PlotPointings_Pretty(
         ragal = gal["RAJ2000"]
         decgal = gal["DEJ2000"]
         galprob = gal["dp_dV"]
-        print("Plotting galaxies")
-    except Exception:
-        print("No galaxies given")
+        logger.info("Plotting galaxies")
+    except Exception as e:
+        logger.error(f"{e}: no galaxies given")
     # Read the pointings file
     tpointingFile = PointingsFile1
     try:
@@ -612,7 +595,7 @@ def PlotPointings_Pretty(
     else:
         radius = radiusMap
 
-    center_str = "%fd %fd" % (center.ra.deg, center.dec.deg)
+    center_str = f"{center.ra.deg:.2f}d {center.dec.deg:.2f}d"
 
     import ligo.skymap.plot  # noqa: F401
 
@@ -662,8 +645,8 @@ def PlotPointings_Pretty(
         )
         cbar_inset = plt.colorbar(sc_inset, ax=ax_inset)
         cbar_inset.set_label("Galaxy probability density")
-    except Exception:
-        print("No galaxies given for plot 2")
+    except Exception as e:
+        logger.error(f"{e}: no galaxies given for plot 2")
 
     unique_obs_names = np.unique(nametel)
     if colorspar is None:
@@ -713,16 +696,15 @@ def PlotPointings_Pretty(
     # to get 10^3 instead of 1e3
     cbar.formatter.set_useMathText(True)
     cbar.set_label("Map probability density", color="black", fontsize=9)
-    plt.savefig(
-        "%s/Plot_PrettyMap_%s.png" % (dirName, name), dpi=300, bbox_inches="tight"
-    )
+    plt.savefig(f"{dirName}/Plot_PrettyMap_{name}.png", dpi=300, bbox_inches="tight")
     plt.close()
 
 
 def plot_pixel_availability_healpix(dirName, pixels_by_time, times, nside):
-    path = dirName + "/Occ_Space_Obs"
-    if not os.path.exists(path):
-        os.mkdir(path, 493)
+    path = Path(f"{dirName}/Occ_Space_Obs")
+    if not path.exists():
+        path.mkdir(parents=True)
+
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_subplot(111, projection="3d")
 
@@ -746,16 +728,16 @@ def plot_pixel_availability_healpix(dirName, pixels_by_time, times, nside):
     ax.set_title("HEALPix Pixel Availability Wireframe")
 
     ax.zaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d\n%H:%M"))
-    plt.savefig("%s/Occ_Pointing_Times_Vis.png" % (path))
+    plt.savefig(f"{path}/Occ_Pointing_Times_Vis.png")
     plt.close()
 
 
 def PlotAccRegion(skymap, dirName, reducedNside, Occultedpixels, first_values):
     prob = skymap.getMap("prob", reducedNside)
 
-    path = dirName + "/Occ_Space_Obs"
-    if not os.path.exists(path):
-        os.mkdir(path, 493)
+    path = Path(f"{dirName}/Occ_Space_Obs")
+    if not path.exists():
+        path.mkdir(parents=True)
 
     # mpl.rcParams.update({'font.size':14})
     # hp.mollview(prob)
@@ -779,8 +761,8 @@ def PlotAccRegion(skymap, dirName, reducedNside, Occultedpixels, first_values):
             coord="C",
             linewidth=0.1,
         )
-    except Exception:
-        print("No pcculted pix")
+    except Exception as e:
+        logger.error(f"{e}: no occulted pix.")
 
     hp.visufunc.projplot(
         first_values["PIXRA"],
@@ -790,5 +772,5 @@ def PlotAccRegion(skymap, dirName, reducedNside, Occultedpixels, first_values):
         coord="C",
         linewidth=0.1,
     )
-    plt.savefig("%s/Occ_Pointing.png" % (path), bbox_inches="tight")
+    plt.savefig(f"{path}/Occ_Pointing.png", bbox_inches="tight")
     plt.close()

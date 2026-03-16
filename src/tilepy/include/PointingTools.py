@@ -21,14 +21,15 @@
 
 
 import datetime
+import logging
+from pathlib import Path
 
 #####################################################################
 # Packages
-import os
-
 import astropy.coordinates as co
 import ephem
 import healpy as hp
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.ma as ma
@@ -41,7 +42,6 @@ from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord, get_body
 from astropy.table import Table
 from astropy.time import Time
 from gdpyc import DustMap
-from matplotlib.path import Path
 from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
@@ -86,7 +86,12 @@ __all__ = [
     "GetSatellitePositions",
     "GetBestNSIDE",
     "FillSummary",
+    "GetExcludedTimeWindows",
 ]
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 
 class Tools:
@@ -447,10 +452,10 @@ class Tools:
 
         B_total = get_dipole_field(lat, lon, alt_km, coeffs)
 
-        print(
+        logger.info(
             f"[{satellite.name}] lat: {lat:.2f}, lon: {lon:.2f}, alt: {alt_km:.2f} km"
         )
-        print(f"Magnetic field strength: {B_total:.1f} nT")
+        logger.info(f"Magnetic field strength: {B_total:.1f} nT")
 
         return B_total < threshold_nT
 
@@ -677,7 +682,9 @@ class Observer:
         # Setup time converter for skyfield
         self.timescale_converter = load.timescale()
 
-    def get_time_window(self, start_time, nb_observation_night):
+    def get_time_window(
+        self, start_time, nb_observation_night, excluded_time_windows=[]
+    ):
         """
         Calculate the time window for observations.
 
@@ -708,10 +715,65 @@ class Observer:
         time_interval_moon = self.get_moon_constraint_time_interval(
             start_time, stop_time
         )
-        valid_time_interval = self.compute_interval_intersection(
+        valid_time_interval_sun_moon = self.compute_interval_intersection(
             time_interval_sun, time_interval_moon
         )
+        if len(excluded_time_windows):
+            valid_time_interval = self.veto_time_interval(
+                valid_time_interval_sun_moon, excluded_time_windows
+            )
+        else:
+            valid_time_interval = valid_time_interval_sun_moon
         return self.compute_run_start_time(valid_time_interval)
+
+    def veto_time_interval(self, time_range_intervals, time_range_exclusion):
+        clean_range_interval = []
+
+        for time_range in time_range_intervals:
+            tstart = Time(time_range[0], scale="utc")
+            tend = Time(time_range[1], scale="utc")
+            deltas = (
+                np.linspace(0, int((tend - tstart).sec), int((tend - tstart).sec))
+                * u.second
+            )
+            array_interval = tstart + deltas
+            for time_range_excluded in time_range_exclusion:
+                if array_interval.size:
+                    mask1 = array_interval <= time_range_excluded[0]
+                    mask2 = array_interval >= time_range_excluded[1]
+                    array_interval_masked1 = np.array([])
+                    array_interval_masked2 = np.array([])
+                    if mask1[0].size != 0:
+                        array_interval_masked1 = array_interval[mask1]
+                    if mask2[0].size != 0:
+                        array_interval_masked2 = array_interval[mask2]
+
+                    array_interval = np.concatenate(
+                        (array_interval_masked1, array_interval_masked2)
+                    )
+
+            if array_interval.size:
+                diffs = np.array([item.sec for item in np.diff(array_interval)])
+                consecutive_intervals = np.split(
+                    array_interval, np.where(diffs > 1.2)[0] + 1
+                )
+                for num_consecutive in range(len(consecutive_intervals)):
+                    clean_range_interval.append(
+                        [
+                            consecutive_intervals[num_consecutive][0].datetime.replace(
+                                tzinfo=datetime.timezone.utc
+                            ),
+                            consecutive_intervals[num_consecutive][-1].datetime.replace(
+                                tzinfo=datetime.timezone.utc
+                            ),
+                        ]
+                    )
+            else:
+                logger.info(
+                    "No time interval survived after removing the vetoed time windows."
+                )
+
+        return clean_range_interval
 
     def compute_interval_intersection(self, time_range_1, time_range_2):
         """
@@ -784,6 +846,15 @@ class Observer:
                 + np.arange(nb_observation_run) * self.run_duration
             )
         return run_start_time
+
+    def get_excluded_constraint_time_interval(excluded_time_windows):
+        excluded = []
+        if len(excluded_time_windows):
+            for items in excluded_time_windows:
+                excluded.append(
+                    [datetime.datetime.fromisoformat(item + "+00:00") for item in items]
+                )
+        return excluded
 
     def get_sun_constraint_time_interval(
         self, start_time, stop_time, nb_observation_night
@@ -999,7 +1070,7 @@ class Observer:
 
 
 def LoadPointings(tpointingFile):
-    print("Loading pointings from " + tpointingFile)
+    logger.info(f"Loading pointings from {tpointingFile}")
     # Read the first line of the file to determine column names
     with open(tpointingFile, "r") as f:
         header_line = f.readline().strip()
@@ -1030,7 +1101,7 @@ def getdate(x):
     elif isinstance(x, str):
         return datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S")
     else:
-        print("ERROR: something is wrong with the format of the date: ", x)
+        logger.error(f"Something is wrong with the format of the date: {x}")
         return None
 
 
@@ -1123,7 +1194,15 @@ def NightDarkObservation(time, obspar):
         max_moon_altitude=obspar.moonDown,
         max_moon_phase=-1.0,
     )
-    return obs.get_time_window(start_time=time, nb_observation_night=obspar.maxNights)
+    if obspar.vetoWindowsFile is not None:
+        excluded_time_windows = GetExcludedTimeWindows(obspar.vetoWindowsFile)
+    else:
+        excluded_time_windows = []
+    return obs.get_time_window(
+        start_time=time,
+        nb_observation_night=obspar.maxNights,
+        excluded_time_windows=excluded_time_windows,
+    )
 
 
 def NightDarkObservationwithGreyTime(time, obspar):
@@ -1138,7 +1217,15 @@ def NightDarkObservationwithGreyTime(time, obspar):
         max_moon_altitude=obspar.moonGrey,
         max_moon_phase=obspar.moonPhase / 100.0,
     )
-    return obs.get_time_window(start_time=time, nb_observation_night=obspar.maxNights)
+    if obspar.vetoWindowsFile is not None:
+        excluded_time_windows = GetExcludedTimeWindows(obspar.vetoWindowsFile)
+    else:
+        excluded_time_windows = []
+    return obs.get_time_window(
+        start_time=time,
+        nb_observation_night=obspar.maxNights,
+        excluded_time_windows=excluded_time_windows,
+    )
 
 
 def GetSatelliteName(satellitename, stationsurl):
@@ -1189,7 +1276,7 @@ def GetBestNSIDE(ReducedNSIDE, HRnside, fov):
         and (ReducedNSIDE & (ReducedNSIDE - 1)) == 0
     ):
         best_nside = ReducedNSIDE
-        print("The NSIDE is already given. No optimization...")
+        logger.info("The NSIDE is already given. No optimization...")
 
     else:
         nside_values = [2**i for i in range(1, 13)]  # From NSIDE=2 to NSIDE=4096
@@ -1202,12 +1289,12 @@ def GetBestNSIDE(ReducedNSIDE, HRnside, fov):
         else:
             best_nside = max(valid_nsides)  # Choose the best NSIDE in range
 
-        print("NO REDUCED NSIDE GIVEN. Optimizing...")
-        print(
+        logger.info("NO REDUCED NSIDE GIVEN. Optimizing...")
+        logger.info(
             f"Best NSIDE for FoV of {fov}° (Min NSIDE {ReducedNSIDE}, Max NSIDE {max_nside}): {best_nside} (Pixel Size ≈ {pixel_sizes[best_nside]:.3f}°)"
         )
 
-    print("best_nside", best_nside)
+    logger.info(f"Best nside {best_nside}")
     return max_nside, best_nside
 
 
@@ -1334,9 +1421,9 @@ def ComputeProbability2D(
         ##################################
         # PLOT THE RESULTS
         if plot:
-            path = dirName + "/EvolutionPlot"
-            if not os.path.exists(path):
-                os.mkdir(path, 493)
+            path = Path(f"{dirName}/EvolutionPlot")
+            if not path.exists():
+                path.mkdir(parents=True)
             # nside = 1024
 
             # hp.mollview(highres,title="With FoV circle")
@@ -1402,10 +1489,10 @@ def ComputeProbability2D(
                         coord="C",
                         linewidth=0.1,
                     )
-                except Exception:
-                    print("No occulted pixel")
+                except Exception as e:
+                    logger.error(f"{e}: no occulted pixel")
 
-            plt.savefig("%s/Zoom_Pointing_%g.png" % (path, counter))
+            plt.savefig(f"{path}/Zoom_Pointing_{counter:g}.png")
             # for i in range(0,1):
             #    altcoord.fill(90-(maxZenith-5*i))
             #    RandomCoord = SkyCoord(azcoord, altcoord, frame='altaz', unit=(u.deg, u.deg), obstime=time,location=observatory)
@@ -1422,8 +1509,8 @@ def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, radecs)
     nside = obspar.reducedNside
     radius = obspar.FOV
 
-    print("Subtracting pointings from " + tpointingFile)
-    raPointing, decPointing = np.genfromtxt(
+    logger.info(f"Subtracting pointings from {tpointingFile}")
+    ra, dec = np.genfromtxt(
         tpointingFile,
         usecols=(2, 3),
         dtype="str",
@@ -1431,23 +1518,35 @@ def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, radecs)
         delimiter=" ",
         unpack=True,
     )  # ra, dec in degrees
-    raPointing = np.atleast_1d(raPointing)
-    decPointing = np.atleast_1d(decPointing)
+
 
     pointings_subtracted = 0
     max_separation = 0.1 * u.deg
 
-    coordinates = TransformRADec(raPointing, decPointing)
+    ra = np.atleast_1d(ra)
+    dec = np.atleast_1d(dec)
+
+    # only selecting unique pairs of ra-dec
+    # otherwise, if one applies np.unique directly to ra
+    # and dec, one may end up with different lengths
+    # because it may happen that there are pointings e.g.
+    # with the same ra but different dec
+    ra_dec_stacked = np.vstack((ra, dec)).T
+    _, idx = np.unique(ra_dec_stacked, axis=0, return_index=True)
+
+    ra = ra[np.sort(idx)]
+    dec = dec[np.sort(idx)]
+
+    coordinates = TransformRADec(ra, dec)
     P_GW = []
-    for i, _ in enumerate(raPointing):
+    for i, _ in enumerate(ra):
         separations = coordinates[i].separation(radecs)
         if len(separations[separations < max_separation]) == 0:
             print(
-                f"Not subtracting RA: {raPointing[i]} Dec: {decPointing[i]} as it is outside of the {obspar.percentageMOC * 100}% area"
+                f"Not subtracting RA: {ra[i]} Dec: {dec[i]} as it is outside of the {obspar.percentageMOC * 100}% area"
             )
             continue
         pointings_subtracted += 1
-        # if (coordinates[i].separation(radecs))
         t = 0.5 * np.pi - coordinates[i].dec.rad
         p = coordinates[i].ra.rad
         # Get the pixels for the ipix_disc (low res)
@@ -1460,15 +1559,8 @@ def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, radecs)
             pixlist.append(valuej)
         P_GW.append(prob[effectiveipix_disc].sum())
 
-        print(
-            "Coordinates ra:",
-            raPointing[i],
-            "dec:",
-            decPointing[i],
-            "Pgw:",
-            P_GW[i],
-            "vs",
-            prob[ipix_disc].sum(),
+        logger.info(
+            f"Coordinates ra: {ra[i]}, dec: {dec[i]}, Pgw: {P_GW[i]} vs {prob[ipix_disc].sum()}"
         )
         # Save the ipixels in HR
         ipix_discHR = hp.query_disc(obspar.HRnside, xyz, np.deg2rad(radius))
@@ -1559,7 +1651,7 @@ def LoadGalaxies(tgalFile):
     Load galaxy catalog as an Astropy Table
     """
 
-    print("Loading galaxy catalogue from " + tgalFile)
+    logger.info(f"Loading galaxy catalogue from {tgalFile}")
 
     # Load data
     h5file = tables.open_file(tgalFile, mode="r")
@@ -1579,7 +1671,7 @@ def LoadGalaxies_SteMgal(tgalFile):
     Load galaxy catalog as an Astropy Table
     """
 
-    print("Loading galaxy catalogue from " + tgalFile)
+    logger.info(f"Loading galaxy catalogue from {tgalFile}")
 
     # Load data
     h5file = tables.open_file(tgalFile, mode="r")
@@ -1713,9 +1805,9 @@ def ComputeProbGalTargeted(
     noncircleGal = allGals[targetCoord3.separation(targetCoord).deg > radius]
 
     if doPlot:
-        path = dirName + "/EvolutionPlot"
-        if not os.path.exists(path):
-            os.mkdir(path, 493)
+        path = Path(f"{dirName}/EvolutionPlot")
+        if not path.exists():
+            path.mkdir(parents=True)
 
         tt, pp = hp.pix2ang(nside, ipix_disc)
         ra2 = np.rad2deg(pp)
@@ -1788,7 +1880,7 @@ def ComputeProbGalTargeted(
         altcoordmin = np.empty(4000)
         altcoordmin.fill(90 - thisminz)
 
-        plt.savefig("%s/Zoom_Pointing_%g.png" % (path, counter))
+        plt.savefig(f"{path}/Zoom_Pointing_{counter:g}.png")
         plt.close()
 
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
@@ -1808,7 +1900,7 @@ def SubtractPointings(
 
     # Read PointingsFile
 
-    print("Subtracting pointings from " + tpointingFile)
+    logger.info(f"Subtracting pointings from {tpointingFile}")
     (
         rap,
         decP,
@@ -1821,15 +1913,24 @@ def SubtractPointings(
         unpack=True,
     )  # ra, dec in degrees
 
-    rap = np.atleast_1d(rap)
-    decP = np.atleast_1d(decP)
-
     pointings_subtracted = 0
     max_separation = 0.1 * u.deg
 
+    rap = np.atleast_1d(rap)
+    decP = np.atleast_1d(decP)
+
+    # only selecting unique pairs of ra-dec
+    # otherwise, if one applies np.unique directly to ra
+    # and dec, one may end up with different lengths
+    # because it may happen that there are pointings e.g.
+    # with the same ra but different dec
+    ra_dec_stacked = np.vstack((rap, decP)).T
+    _, idx = np.unique(ra_dec_stacked, axis=0, return_index=True)
+
+    rap = rap[np.sort(idx)]
+    decP = decP[np.sort(idx)]
+
     coordinates = TransformRADec(rap, decP)
-    ra = coordinates.ra.deg
-    dec = coordinates.dec.deg
 
     PGW = []
     PGAL = []
@@ -1843,13 +1944,15 @@ def SubtractPointings(
             )
             continue
         pointings_subtracted += 1
-        ra = coord.ra.deg
-        dec = coord.dec.deg
+
+        ral = coord.ra.deg
+        decl = coord.dec.deg
+
         updatedGalaxies, pgwcircle, pgalcircle, talreadysumipixarray = (
             SubtractGalaxiesCircle(
                 updatedGalaxies,
-                ra,
-                dec,
+                ral,
+                decl,
                 talreadysumipixarray,
                 tsum_dP_dV,
                 FOV,
@@ -1859,19 +1962,14 @@ def SubtractPointings(
         )
         PGW.append(pgwcircle)
         PGAL.append(pgalcircle)
-        print(
-            "Coordinates ra:",
-            ra,
-            "dec:",
-            dec,
-            "Pgw:",
-            pgwcircle,
-            "PGAL:",
-            pgalcircle,
+
+        logger.info(
+            f"Coordinates ra: {ral}, dec: {decl}, Pgw: {pgwcircle}, PGAL: {pgalcircle}"
         )
+
     return (
-        ra,
-        dec,
+        rap,
+        decP,
         updatedGalaxies,
         PGW,
         PGAL,
@@ -1907,7 +2005,7 @@ def SubtractGalaxiesCircle(
         dp_dVfinal[targetCoord.separation(coordinates).deg < radius].sum() / tsum_dP_dV
     )
 
-    print("PGW", P_GW, "P_GAL", P_Gal)
+    logger.info(f"PGW: {P_GW}, P_GAL: {P_Gal}")
 
     newgalaxies = galaux[targetCoord.separation(coordinates).deg > radius]
 
@@ -1967,7 +2065,9 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, n_sides, UsePix):
         dec_vertices = coords.lat.deg  # .lat is Dec equivalent
 
         # 3. Build the polygon path in RA/Dec
-        polygon_path = Path(np.column_stack((ra_vertices, dec_vertices)))
+        polygon_path = matplotlib.path.Path(
+            np.column_stack((ra_vertices, dec_vertices))
+        )
 
         # 4. Prepare your galaxies' RA, Dec arrays (in degrees)
         galaxy_positions = np.column_stack(
@@ -2104,9 +2204,9 @@ def ComputeProbPGALIntegrateFoV(
     noncircleGal = allGalsaftercuts[targetCoord3.separation(targetCoord).deg > radius]
 
     if doPlot:
-        path = dirName + "/EvolutionPlot"
-        if not os.path.exists(path):
-            os.mkdir(path, 493)
+        path = Path(f"{dirName}/EvolutionPlot")
+        if not path.exists():
+            path.mkdir(parents=True)
 
         tt, pp = hp.pix2ang(nside, ipix_disc)
         ra2 = np.rad2deg(pp)
@@ -2165,7 +2265,7 @@ def ComputeProbPGALIntegrateFoV(
 
         altcoordmin.fill(90 - thisminz)
 
-        plt.savefig("%s/Zoom_Pointing_%g.png" % (path, counter))
+        plt.savefig(f"{path}/Zoom_Pointing_{counter:g}.png")
         plt.close()
 
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
@@ -2251,12 +2351,12 @@ def IsSourceInside(Pointings, Sources, FOV, nside):
             except Exception:
                 ipix_disc = hp.query_disc(nside, xyz[0], np.deg2rad(FOV))
             if txyz in ipix_disc:
-                print("Found in pointing number", i)
+                logger.info(f"Found in pointing number {i}")
                 # Npoiting.append(i)
                 Npoiting = Npoiting + str(i) + ","
                 Found = True
         if not Found:
-            print("Source not covered!")
+            logger.info("Source not covered!")
     except TypeError:
         t = 0.5 * np.pi - Pointings.dec.rad
         p = Pointings.ra.rad
@@ -2265,9 +2365,9 @@ def IsSourceInside(Pointings, Sources, FOV, nside):
         if txyz in ipix_disc:
             Npoiting = "0,"
             Found = True
-            print("Found in pointing number 0")
+            logger.info("Found in pointing number 0")
         else:
-            print("Source not covered!")
+            logger.info("Source not covered!")
     # Reformat output
     if Found:
         Npoiting = Npoiting[:-1]
@@ -2328,7 +2428,7 @@ class NextWindowTools:
         ):
             LastItem = len(WindowDurations)
         else:
-            print("Window is smaller")
+            logger.info("Window is smaller")
             for i in range(0, len(WindowDurations)):
                 if Tools.IsDarkness(
                     time + datetime.timedelta(minutes=np.float64(WindowDurations[-i])),
@@ -2362,7 +2462,7 @@ class NextWindowTools:
             time = Tools.NextMoonset(time, obspar)
             return time
         else:
-            print("No window is found")
+            logger.info("No window is found")
             return False
 
     @classmethod
@@ -2384,7 +2484,7 @@ class NextWindowTools:
             # time=Tools.NextMoonset(time, obsSite)
             return time
         else:
-            print("No window is found")
+            logger.info("No window is found")
             return False
 
     @classmethod
@@ -2403,3 +2503,28 @@ class NextWindowTools:
         obspar.obsTime = datetime.datetime.strptime(
             str(previousTime), "%Y-%m-%dT%H:%M:%S"
         ) + datetime.timedelta(minutes=np.float64(obspar.duration))
+
+
+def GetExcludedTimeWindows(vetoWindowsFile):
+    """
+    The expected format of the file is like the following:
+        2025-12-19 00:01:00,2025-12-19 00:20:00
+        2025-12-19 01:06:00,2025-12-19 04:34:00
+    """
+    logger.info(f"Reading time windows to exclude from {vetoWindowsFile}")
+    tstarts, tstops = np.genfromtxt(
+        vetoWindowsFile,
+        dtype="str",
+        delimiter=",",
+        unpack=True,
+    )  # ra, dec in degrees
+    tstarts = np.atleast_1d(tstarts).tolist()
+    tstops = np.atleast_1d(tstops).tolist()
+
+    excluded_time_windows = [[tstart, tstop] for tstart, tstop in zip(tstarts, tstops)]
+
+    logger.info("The following time windows will be excluded from the computation:")
+    for time_window in excluded_time_windows:
+        logger.info(f"{time_window[0]} -- {time_window[1]}")
+
+    return excluded_time_windows

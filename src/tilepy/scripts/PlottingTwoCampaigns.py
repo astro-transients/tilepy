@@ -1,22 +1,38 @@
 import argparse
-import os
+import logging
+import sys
 import time
+import traceback
+from pathlib import Path
 
 from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.tools.VisualizationTools import CompareTwoTilings
 
 __all__ = ["PlottingTwoCampaigns"]
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
+
 
 def PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2):
-    plotType = "gnomonic"
-    CompareTwoTilings(
-        obspar.skymap, PointingsFile1, PointingsFile2, obspar.FOV, plotType
-    )
-    plotType = "mollweide"
-    CompareTwoTilings(
-        obspar.skymap, PointingsFile1, PointingsFile2, obspar.FOV, plotType
-    )
+    return_code = 0
+    try:
+        plotType = "gnomonic"
+        CompareTwoTilings(
+            obspar.skymap, PointingsFile1, PointingsFile2, obspar.FOV, plotType
+        )
+        plotType = "mollweide"
+        CompareTwoTilings(
+            obspar.skymap, PointingsFile1, PointingsFile2, obspar.FOV, plotType
+        )
+    except Exception:
+        logger.error(
+            f"An error occurred during the execution:\n{traceback.format_exc()}"
+        )
+        return_code = 1
+
+    return return_code
 
 
 def main():
@@ -70,13 +86,17 @@ def main():
     )
     parser.add_argument("-tiles", metavar="tiles already observed", default=None)
     parser.add_argument(
-        "-locCut",
-        metavar="limit on skyloc to perform a followup",
-        help="Options are: loose or std",
-        default=None,
+        "-eventName", metavar="Name of the observed event", default=None
     )
     parser.add_argument(
-        "-eventName", metavar="Name of the observed event", default=None
+        "-logname",
+        metavar="Name of the output log file.",
+        default="plotting_two_campaigns.log",
+    )
+    parser.add_argument(
+        "-vetoWindowsFile",
+        help="File containing time windows to exclude from the computation..",
+        default=None,
     )
 
     args = parser.parse_args()
@@ -90,20 +110,51 @@ def main():
     galcatName = args.galcatName
     pointingsFile = args.tiles
     eventName = args.eventName
+    logname = args.logname
+    vetoWindowsFile = args.vetoWindowsFile
 
-    if not os.path.exists(outDir):
-        os.makedirs(outDir)
+    if datasetDir is not None:
+        if not Path(datasetDir).exists():
+            raise FileNotFoundError(f"Dataset directory {datasetDir} not found.")
+
+        galaxy_catalog = Path(f"{datasetDir}/{galcatName}")
+
+        if not galaxy_catalog.exists():
+            raise FileNotFoundError(f"Galaxy catalog file {galaxy_catalog} not found.")
+
+    if not Path(cfgFile).exists():
+        raise FileNotFoundError(f"Configuration file {cfgFile} not found.")
+
+    if not Path(outDir).exists():
+        Path(outDir).mkdir(parents=True)
+
+    logging.basicConfig(filename=logname)
 
     obspar = ObservationParameters()
     obspar.add_parsed_args(
-        skymap, obsTime, datasetDir, galcatName, outDir, pointingsFile, None, eventName
+        skymap,
+        obsTime,
+        datasetDir,
+        galcatName,
+        outDir,
+        pointingsFile,
+        None,
+        eventName,
+        "healpix",
+        None,
+        None,
+        None,
+        None,
+        vetoWindowsFile,
     )
     obspar.from_configfile(cfgFile)
 
-    PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2)
+    return_code = PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2)
 
     end = time.time()
-    print("Execution time: ", end - start)
+    logger.info(f"Execution time: {end - start:.0f} [sec]")
+    logger.info(f"Return code: {return_code}")
+    sys.exit(return_code)
 
 
 if __name__ == "__main__":

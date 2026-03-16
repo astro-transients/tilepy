@@ -22,6 +22,8 @@
 ##################################################################################################
 
 import datetime
+import logging
+from pathlib import Path
 
 import astropy.coordinates as co
 import healpy as hp
@@ -47,7 +49,6 @@ if six.PY2:
     ConfigParser = configparser.SafeConfigParser
 else:
     ConfigParser = configparser.ConfigParser
-import os
 import re
 
 # iers_file = os.path.join(os.path.abspath(
@@ -72,6 +73,10 @@ __all__ = [
     "Ranking_Space",
     "Ranking_Space_AI",
 ]
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 
 def LoadPointingFile(tpointingFile):
@@ -102,7 +107,7 @@ def LoadPointingFile(tpointingFile):
 
     """
 
-    print("Loading pointings from " + tpointingFile)
+    logger.info(f"Loading pointings from {tpointingFile}")
     (
         time1,
         time2,
@@ -478,7 +483,7 @@ def Sortingby(galPointing, name, exposure):
     # gwgalPointing.remove_column('Array of zenith angles')
     # gwgalPointing.remove_column('Zenith angles in steps')
     # print(gwgalPointing)
-    outfilename = "%s/RankingObservationTimes_Complete.txt" % name
+    outfilename = f"{name}/RankingObservationTimes_Complete.txt"
     ascii.write(
         gwgalPointing[np.argsort(gwgalPointing["Pointing"])],
         outfilename,
@@ -490,7 +495,7 @@ def Sortingby(galPointing, name, exposure):
     gwgalPointing.remove_column("PriorityGW")
     gwgalPointing.rename_column("PriorityGal", "Priority")
     gwgalPointing.remove_column("RA(HH:MM:SS) Dec (DD:MM:SS)")
-    outfilename = "%s/RankingObservationTimes_forShifters.txt" % name
+    outfilename = f"{name}/RankingObservationTimes_forShifters.txt"
     ascii.write(
         gwgalPointing[np.argsort(gwgalPointing["Pointing"])],
         outfilename,
@@ -499,10 +504,10 @@ def Sortingby(galPointing, name, exposure):
 
     gwgalPointing.remove_column("Observation window")
     gwgalPointing.remove_column("Priority")
-    print(name)
+    logger.info(f"Name: {name}")
 
     target = [
-        (name.split("/")[2] + "_{0}").format(element)
+        (name.split("/")[-1] + "_{0}").format(element)
         for element in gwgalPointing["Pointing"]
     ]
     gwgalPointing["Target"] = target
@@ -514,7 +519,7 @@ def Sortingby(galPointing, name, exposure):
     ]
 
     # gwgalPointing_TH = gwgalPointing[new_order]
-    outfilename = "%s/RankingObservationTimes_forAlerter.txt" % name
+    outfilename = f"{name}/RankingObservationTimes_forAlerter.txt"
     ascii.write(
         gwgalPointing_TH[np.argsort(gwgalPointing_TH["Id"])],
         outfilename,
@@ -555,8 +560,7 @@ def EvolutionPlot(galPointing, tname, ObsArray):
         ax.plot(
             x,
             ZENITH,
-            label="ra:%.2f dec:%.2f- Pgw:%.3f - Pgal:%.3f "
-            % (ra[i], dec[i], 100 * pgw[i], 100 * pgal[i]),
+            label=f"ra:{ra[i]:.2f} dec:{dec[i]:.2f}- Pgw:{100 * pgw[i]:.3f} - Pgal:{100 * pgal[i]:.3f}",
         )
 
     ax.set_xticks(x)
@@ -565,7 +569,7 @@ def EvolutionPlot(galPointing, tname, ObsArray):
     ax.set_xlabel("Time", fontsize=14)
     ax.grid()
     ax.legend(bbox_to_anchor=(1.02, 1), loc=2, borderaxespad=0.0)
-    plt.savefig("%s/AltitudevsTime_%s.png" % (tname, ObsArray))
+    plt.savefig(f"{tname}/AltitudevsTime_{ObsArray}.png")
 
 
 def RankingTimes(obspar, skymap, cat, dirName, PointingFile):
@@ -575,11 +579,9 @@ def RankingTimes(obspar, skymap, cat, dirName, PointingFile):
 
     ################################################################
 
-    print()
-    print(
-        "---------  RANKING THE OBSERVATIONS AND PRODUCING THE OUTPUT FILES   ----------"
+    logger.info(
+        "\n---------  RANKING THE OBSERVATIONS AND PRODUCING THE OUTPUT FILES   ----------\n"
     )
-    print()
 
     nside = obspar.HRnside
     prob = skymap.getMap("prob", obspar.HRnside)
@@ -602,11 +604,9 @@ def RankingTimes_2D(obspar, prob, dirName, PointingFile):
 
     ################################################################
 
-    print()
-    print(
-        "---------  RANKING THE OBSERVATIONS AND PRODUCING THE OUTPUT FILES   ----------"
+    logger.info(
+        "\n---------  RANKING THE OBSERVATIONS AND PRODUCING THE OUTPUT FILES   ----------\n"
     )
-    print()
 
     npix = len(prob)
     nside = hp.npix2nside(npix)
@@ -673,14 +673,14 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
         data = data.drop(index=best_idx).reset_index(drop=True)
 
     # Output the ranked list
-    print("Ranked List:")
+    logger.info("Ranked List:")
     for idx, entry in enumerate(ranked, start=1):
-        print(f"Rank {idx}: {entry.to_dict()}")
+        logger.info(f"Rank {idx}: {entry.to_dict()}")
 
     # Save the ranked list to a file
-    output_file = "%s/RankingObservations_Space.txt" % dirName
+    output_file = f"{dirName}/RankingObservations_Space.txt"
     pd.DataFrame(ranked).to_csv(output_file, index=False, sep="\t")
-    print(f"Ranked file saved to {output_file}")
+    logger.info(f"Ranked file saved to {output_file}")
 
     # Read pre- and post-optimization data
     pre_df = pd.read_csv(file_path, delim_whitespace=True)
@@ -738,11 +738,12 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
 
         hp.graticule()
 
-        output_dir_rank = os.path.join(dirName, "Ranked_grid")
-        os.makedirs(output_dir_rank, exist_ok=True)
+        output_dir_rank = Path(f"{dirName}/Ranked_grid")
+        if not output_dir_rank.exists():
+            output_dir_rank.mkdir(parents=True)
 
         # Save the plot
-        plt.savefig(os.path.join(output_dir_rank, "RankingObservations_Space.png"))
+        plt.savefig(f"{output_dir_rank}/RankingObservations_Space.png")
         plt.close()
 
     if obspar.doPlot:
@@ -788,11 +789,12 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
 
         hp.graticule()
 
-        output_dir_rank = os.path.join(dirName, "Ranked_grid")
-        os.makedirs(output_dir_rank, exist_ok=True)
+        output_dir_rank = Path(f"{dirName}/Ranked_grid")
+        if not output_dir_rank.exists():
+            output_dir_rank.mkdir(parents=True)
 
         # Save the plot
-        plt.savefig(os.path.join(output_dir_rank, "Ranking_BeforeOptimization.png"))
+        plt.savefig(f"{output_dir_rank}/Ranking_BeforeOptimization.png")
         plt.close()
 
 
@@ -842,9 +844,9 @@ def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
     final_ranked["Rank"] = final_ranked.index + 1
 
     # Save the ranked list to a file
-    output_file = "%s/RankingObservations_AI_Space.txt" % dirName
+    output_file = f"{dirName}/RankingObservations_AI_Space.txt"
     pd.DataFrame(final_ranked).to_csv(output_file, index=False, sep="\t")
-    print(f"Ranked file saved to {output_file}")
+    logger.info(f"Ranked file saved to {output_file}")
 
     if obspar.doPlot:
         prob = skymap.getMap("prob", obspar.HRnside)
@@ -901,13 +903,12 @@ def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
 
         hp.graticule()
 
-        output_dir_rank = os.path.join(dirName, "Ranked_grid")
-        os.makedirs(output_dir_rank, exist_ok=True)
+        output_dir_rank = Path(f"{dirName}/Ranked_grid")
+        if not output_dir_rank.exists():
+            output_dir_rank.mkdir(parents=True)
 
         # Save the plot
-        plt.savefig(
-            os.path.join(output_dir_rank, "RankingObservations_SpaceClustering.png")
-        )
+        plt.savefig(f"{output_dir_rank}/RankingObservations_SpaceClustering.png")
         plt.close()
 
 
@@ -943,9 +944,9 @@ def map_pixel_availability(pixels_by_time, probs_by_time, times):
 
 
 def PlotAccRegionTimePix(dirName, pixels_by_time, ProbaTime, times):
-    path = dirName + "/Occ_Space_Obs"
-    if not os.path.exists(path):
-        os.mkdir(path, 493)
+    path = Path(f"{dirName}/Occ_Space_Obs")
+    if not path.exists():
+        path.mkdir(parents=True)
 
     pixel_availability = map_pixel_availability(pixels_by_time, ProbaTime, times)
 
@@ -982,13 +983,14 @@ def PlotAccRegionTimePix(dirName, pixels_by_time, ProbaTime, times):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
     plt.gcf().autofmt_xdate()
 
-    plt.savefig(os.path.join(path, "Acc_Pointing_Times_Pix.png"), bbox_inches="tight")
+    plt.savefig(f"{path}/Acc_Pointing_Times_Pix.png", bbox_inches="tight")
     plt.close()
 
 
 def PlotAccRegionTimeRadec(dirName, pixels_by_time, ProbaTime, times, nside):
-    path = os.path.join(dirName, "Occ_Space_Obs")
-    os.makedirs(path, mode=0o755, exist_ok=True)
+    path = Path(f"{dirName}/Occ_Space_Obs")
+    if not path.exists():
+        path.mkdir(parents=True)
 
     # Map pixel availability with times and probabilities
     pixel_availability = map_pixel_availability(pixels_by_time, ProbaTime, times)
@@ -1032,5 +1034,5 @@ def PlotAccRegionTimeRadec(dirName, pixels_by_time, ProbaTime, times, nside):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
     plt.gcf().autofmt_xdate()
 
-    plt.savefig(os.path.join(path, "Acc_Pointing_Times_Radec.png"), bbox_inches="tight")
+    plt.savefig(f"{path}/Acc_Pointing_Times_Radec.png", bbox_inches="tight")
     plt.close()
