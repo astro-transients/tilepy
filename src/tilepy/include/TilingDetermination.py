@@ -429,7 +429,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                 )
                 if visible:
                     # select galaxies within the slightly enlarged visibility window
-                    visiMask = altaz.alt.value > 90 - (obspar.maxZenith + obspar.FOV)
+                    visiMask = altaz.alt.value > 90.0 - (obspar.maxZenith + obspar.FOV)
                     visiGals = tGals_aux[visiMask]
                     visiGals = ModifyCatalogue(
                         prob, visiGals, obspar.FOV, sum_dP_dV, nside
@@ -459,7 +459,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                                 ObservationTime, tGals_aux2, obspar
                             )
                             if visible:
-                                visiMask = altaz.alt.value > 90 - (
+                                visiMask = altaz.alt.value > 90.0 - (
                                     obspar.maxZenith + obspar.FOV
                                 )
                                 visiGals2 = tGals_aux2[visiMask]
@@ -628,7 +628,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                 )
                 if visible:
                     # select galaxies within the slightly enlarged visibility window
-                    visiMask = altaz.alt.value > 90 - (obspar.maxZenith + obspar.FOV)
+                    visiMask = altaz.alt.value > 90.0 - (obspar.maxZenith + obspar.FOV)
                     visiGals = tGals_aux[visiMask]
                     mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
                     if obspar.useGreytime:
@@ -655,7 +655,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                                 ObservationTime, tGals_aux2, obspar
                             )
                             if visible:
-                                visiMask = altaz.alt.value > 90 - (
+                                visiMask = altaz.alt.value > 90.0 - (
                                     obspar.maxZenith + obspar.FOV
                                 )
                                 visiGals2 = tGals_aux2[visiMask]
@@ -1335,7 +1335,7 @@ def PGalinFoV_NObs(
 
                     if visible:
                         # select galaxies within the slightly enlarged visibility window
-                        visiMask = altaz.alt.value > 90 - (
+                        visiMask = altaz.alt.value > 90.0 - (
                             obspar.maxZenith + obspar.FOV
                         )
                         visiGals = tGals_aux[visiMask]
@@ -1367,7 +1367,7 @@ def PGalinFoV_NObs(
                                     ObservationTime, tGals_aux2, obspar
                                 )
                                 if visible:
-                                    visiMask = altaz.alt.value > 90 - (
+                                    visiMask = altaz.alt.value > 90.0 - (
                                         obspar.maxZenith + obspar.FOV
                                     )
                                     visiGals2 = tGals_aux2[visiMask]
@@ -1514,7 +1514,7 @@ def PGalinFoV_NObs(
                     )
                     if visible:
                         # select galaxies within the slightly enlarged visibility window
-                        visiMask = altaz.alt.value > 90 - (
+                        visiMask = altaz.alt.value > 90.0 - (
                             obspar.maxZenith + obspar.FOV
                         )
                         visiGals = tGals_aux[visiMask]
@@ -1546,7 +1546,7 @@ def PGalinFoV_NObs(
                                     ObservationTime, tGals_aux2, obspar
                                 )
                                 if visible:
-                                    visiMask = altaz.alt.value > 90 - (
+                                    visiMask = altaz.alt.value > 90.0 - (
                                         obspar.maxZenith + obspar.FOV
                                     )
                                     visiGals2 = tGals_aux2[visiMask]
