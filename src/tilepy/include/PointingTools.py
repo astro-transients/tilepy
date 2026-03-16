@@ -1519,7 +1519,6 @@ def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, radecs)
         unpack=True,
     )  # ra, dec in degrees
 
-
     pointings_subtracted = 0
     max_separation = 0.1 * u.deg
 
