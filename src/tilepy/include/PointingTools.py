@@ -1519,7 +1519,6 @@ def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, radecs)
         unpack=True,
     )  # ra, dec in degrees
 
-
     pointings_subtracted = 0
     max_separation = 0.1 * u.deg
 
@@ -1542,7 +1541,7 @@ def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, radecs)
     for i, _ in enumerate(ra):
         separations = coordinates[i].separation(radecs)
         if len(separations[separations < max_separation]) == 0:
-            print(
+            logger.info(
                 f"Not subtracting RA: {ra[i]} Dec: {dec[i]} as it is outside of the {obspar.percentageMOC * 100}% area"
             )
             continue
@@ -1939,7 +1938,7 @@ def SubtractPointings(
     for i, coord in enumerate(coordinates):
         separations = coord.separation(radecs)
         if len(separations[separations < max_separation]) == 0:
-            print(
+            logger.info(
                 f"Not subtracting RA: {coord[i].ra} Dec: {coord[i].dec} as it is outside of the {obspar.percentageMOC * 100}% area"
             )
             continue
