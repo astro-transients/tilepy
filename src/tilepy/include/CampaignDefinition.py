@@ -142,6 +142,7 @@ class ObservationParameters(object):
         alphaR=None,
         betaR=None,
         vetoWindowsFile=None,
+        countSubtractedPointingsOutside=False,
     ):
         self.obs_name = obs_name
         self.event_name = event_name
@@ -217,6 +218,7 @@ class ObservationParameters(object):
         self.sigmaSource = None
 
         self.vetoWindowsFile = vetoWindowsFile
+        self.countSubtractedPointingsOutside = countSubtractedPointingsOutside
 
     def __str__(self):
         return "\n".join(
@@ -366,7 +368,10 @@ class ObservationParameters(object):
         self.algorithm = str(parser.get(section, "algorithm", fallback=None))
         self.strategy = str(parser.get(section, "strategy", fallback=None))
         self.doRank = parser.getboolean(section, "doRank", fallback=None)
-        self.countPrevious = parser.getboolean(section, "countPrevious", fallback=None)
+        self.countPrevious = parser.getboolean(section, "countPrevious", fallback=False)
+        self.countSubtractedPointingsOutside = parser.getboolean(
+            section, "countSubtractedPointingsOutside", fallback=False
+        )
         self.alphaR = float(parser.get(section, "alphaR", fallback=0))
         self.betaR = float(parser.get(section, "betaR", fallback=0))
 

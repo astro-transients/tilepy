@@ -1539,12 +1539,13 @@ def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, radecs)
     coordinates = TransformRADec(ra, dec)
     P_GW = []
     for i, _ in enumerate(ra):
-        separations = coordinates[i].separation(radecs)
-        if len(separations[separations < max_separation]) == 0:
-            logger.info(
-                f"Not subtracting RA: {ra[i]} Dec: {dec[i]} as it is outside of the {obspar.percentageMOC * 100}% area"
-            )
-            continue
+        if not obspar.countSubtractedPointingsOutside:
+            separations = coordinates[i].separation(radecs)
+            if len(separations[separations < max_separation]) == 0:
+                logger.info(
+                    f"Not subtracting RA: {ra[i]} Dec: {dec[i]} as it is outside of the {obspar.percentageMOC * 100}% area"
+                )
+                continue
         pointings_subtracted += 1
         t = 0.5 * np.pi - coordinates[i].dec.rad
         p = coordinates[i].ra.rad
@@ -1936,12 +1937,14 @@ def SubtractPointings(
     updatedGalaxies = galaxies
 
     for i, coord in enumerate(coordinates):
-        separations = coord.separation(radecs)
-        if len(separations[separations < max_separation]) == 0:
-            logger.info(
-                f"Not subtracting RA: {coord[i].ra} Dec: {coord[i].dec} as it is outside of the {obspar.percentageMOC * 100}% area"
-            )
-            continue
+        if not obspar.countSubtractedPointingsOutside:
+            separations = coord.separation(radecs)
+            if len(separations[separations < max_separation]) == 0:
+                logger.info(
+                    f"Not subtracting RA: {coord[i].ra} Dec: {coord[i].dec} as it is outside of the {obspar.percentageMOC * 100}% area"
+                )
+                continue
+
         pointings_subtracted += 1
 
         ral = coord.ra.deg
