@@ -33,7 +33,7 @@ repos:
 
   # Ruff linter and formatter for Python.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.6
+    rev: v0.15.6
     hooks:
       # try to fix what is possible
       - id: ruff
@@ -54,7 +54,7 @@ repos:
   # Spell checker for code and documentation.
   # Uses the codespell tool to find and correct common misspellings in source code, comments, and documentation.
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.1
+    rev: v2.4.2
     hooks:
       - id: codespell
         args: ["--ignore-words=.codespell-ignore-words", -L, "nd,hist", "--skip", "*.ipynb"]
