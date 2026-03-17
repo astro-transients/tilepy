@@ -87,7 +87,7 @@ def ZenithAngleCut(prob, time, obspar):
     dec = np.rad2deg(0.5 * np.pi - pixel_theta)
     targetCoord_map = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
     altaz_map = targetCoord_map.transform_to(frame)
-    maskzenith[altaz_map.alt.value < 90 - maxZenith] = 1
+    maskzenith[altaz_map.alt.value < 90.0 - maxZenith] = 1
     mzenith.mask = maskzenith
 
     yprob = ma.masked_array(pprob, mzenith.mask)

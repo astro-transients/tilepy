@@ -237,7 +237,7 @@ class ObservationParameters(object):
                 f"Min Moon Source Separation: {self.minMoonSourceSeparation}",
                 f"Max Moon Source Separation: {self.maxMoonSourceSeparation}",
                 f"Geomagnetic Threshold for SAA: {self.SAAThreshold}",
-                f"Max Zenith: {self.maxZenith}, Zenith Weighting: {self.zenithWeighting}",
+                f"Max Zenith: {self.maxZenith:.1f}, Zenith Weighting: {self.zenithWeighting}",
                 f"FoV number of sides: {self.numberSides}, "
                 f"FoV rotation: {self.FoVRotation},"
                 f"Priority for FoV proximity and Probability: {self.alphaR}, Zenith Weighting: {self.betaR}",
@@ -328,7 +328,7 @@ class ObservationParameters(object):
         self.SAAThreshold = int(parser.get(section, "SAAThreshold", fallback=0))
 
         section = "operations"
-        self.maxZenith = int(parser.get(section, "maxzenith", fallback=0))
+        self.maxZenith = float(parser.get(section, "maxzenith", fallback=0))
         self.FOV = float(parser.get(section, "fov", fallback=0))
         self.maxRuns = int(parser.get(section, "maxRuns", fallback=0))
         self.maxNights = int(parser.get(section, "maxNights", fallback=0))
