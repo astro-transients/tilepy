@@ -1520,7 +1520,8 @@ def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, radecs)
     )  # ra, dec in degrees
 
     pointings_subtracted = 0
-    max_separation = 0.1 * u.deg
+    pixel_size = np.rad2deg(hp.nside2resol(nside))
+    max_separation = pixel_size * u.deg
 
     ra = np.atleast_1d(ra)
     dec = np.atleast_1d(dec)
@@ -1914,7 +1915,8 @@ def SubtractPointings(
     )  # ra, dec in degrees
 
     pointings_subtracted = 0
-    max_separation = 0.1 * u.deg
+    pixel_size = np.rad2deg(hp.nside2resol(nside))
+    max_separation = pixel_size * u.deg
 
     rap = np.atleast_1d(rap)
     decP = np.atleast_1d(decP)
