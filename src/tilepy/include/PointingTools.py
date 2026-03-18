@@ -1939,12 +1939,12 @@ def SubtractPointings(
     PGAL = []
     updatedGalaxies = galaxies
 
-    for i, coord in enumerate(coordinates):
+    for _, coord in enumerate(coordinates):
         if not obspar.countSubtractedPointingsOutside:
             separations = coord.separation(radecs)
             if len(separations[separations < max_separation]) == 0:
                 logger.info(
-                    f"Not subtracting RA: {coord[i].ra:.4f} Dec: {coord[i].dec:.4f} as it is outside of the {obspar.percentageMOC * 100}% area"
+                    f"Not subtracting RA: {coord.ra:.4f} Dec: {coord.dec:.4f} as it is outside of the {obspar.percentageMOC * 100}% area"
                 )
                 PGW.append(0.0)
                 PGAL.append(0.0)
