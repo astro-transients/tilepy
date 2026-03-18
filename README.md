@@ -119,6 +119,7 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - HRnside: nside of the high-resolution skymap used to compute the covered probability
           - mangrove: flag to use the mangrove method of weighting by the mass of the host galaxy
           - countPrevious: True if you want previous observation to be considered in number to set the max run variable. False else
+          - countSubtractedPointingsOutside: False if you do not want to take into account pointings outside of the current percentageMOC area when subtracting pointings, True if you want to subtract them anyway
 
 ## Issue with Daily Earth Orientation Parameters Solutions file (finals2000A)
 
