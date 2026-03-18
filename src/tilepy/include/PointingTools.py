@@ -1544,8 +1544,9 @@ def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, radecs)
             separations = coordinates[i].separation(radecs)
             if len(separations[separations < max_separation]) == 0:
                 logger.info(
-                    f"Not subtracting RA: {ra[i]} Dec: {dec[i]} as it is outside of the {obspar.percentageMOC * 100}% area"
+                    f"Not subtracting RA: {float(ra[i]):.4f} Dec: {float(dec[i]):.4f} as it is outside of the {obspar.percentageMOC * 100}% area"
                 )
+                P_GW.append(0.0)
                 continue
         pointings_subtracted += 1
         t = 0.5 * np.pi - coordinates[i].dec.rad
@@ -1561,7 +1562,7 @@ def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, radecs)
         P_GW.append(prob[effectiveipix_disc].sum())
 
         logger.info(
-            f"Coordinates ra: {ra[i]}, dec: {dec[i]}, Pgw: {P_GW[i]} vs {prob[ipix_disc].sum()}"
+            f"Subtracting coordinates ra: {float(ra[i]):.4f}, dec: {float(dec[i]):.4f}, Pgw: {P_GW[i]:.6f} vs {prob[ipix_disc].sum():.6f}"
         )
         # Save the ipixels in HR
         ipix_discHR = hp.query_disc(obspar.HRnside, xyz, np.deg2rad(radius))
@@ -1943,8 +1944,10 @@ def SubtractPointings(
             separations = coord.separation(radecs)
             if len(separations[separations < max_separation]) == 0:
                 logger.info(
-                    f"Not subtracting RA: {coord[i].ra} Dec: {coord[i].dec} as it is outside of the {obspar.percentageMOC * 100}% area"
+                    f"Not subtracting RA: {coord[i].ra:.4f} Dec: {coord[i].dec:.4f} as it is outside of the {obspar.percentageMOC * 100}% area"
                 )
+                PGW.append(0.0)
+                PGAL.append(0.0)
                 continue
 
         pointings_subtracted += 1
@@ -1968,7 +1971,7 @@ def SubtractPointings(
         PGAL.append(pgalcircle)
 
         logger.info(
-            f"Coordinates ra: {ral}, dec: {decl}, Pgw: {pgwcircle}, PGAL: {pgalcircle}"
+            f"Subtracting coordinates ra: {ral:.4f}, dec: {decl:.4f}, Pgw: {pgwcircle:.6f}, PGAL: {pgalcircle:.6f}"
         )
 
     return (
