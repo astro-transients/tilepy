@@ -52,6 +52,8 @@ class SkyMap:
 
         """
         self.raw_map_prob_density = mapReader.getMap("prob")
+        self.scheme = self.raw_map_prob_density.scheme
+        self.is_nested = self.raw_map_prob_density.is_nested
         if obspar.algorithm == "2D":
             self.is3D = False
         else:
