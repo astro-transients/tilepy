@@ -249,7 +249,7 @@ def LoadPointings(tpointingFile):
     return data
 
 
-def PointingPlotting(prob, obspar, name, dirName, PointingsFile1, ObsArray, gal):
+def PointingPlotting(prob, is_nested, obspar, name, dirName, PointingsFile1, ObsArray, gal):
     npix = len(prob)
     nside = hp.npix2nside(npix)
 
@@ -282,6 +282,7 @@ def PointingPlotting(prob, obspar, name, dirName, PointingsFile1, ObsArray, gal)
 
     PlotPointings(
         prob,
+        is_nested,
         converted_time1,
         Coordinates1,
         sum(Probarray1),
@@ -291,11 +292,11 @@ def PointingPlotting(prob, obspar, name, dirName, PointingsFile1, ObsArray, gal)
         dirName,
         ObsArray,
     )
-    PlotPointings_Pretty(prob, name, PointingsFile1, dirName, obspar, gal)
+    PlotPointings_Pretty(prob, is_nested, name, PointingsFile1, dirName, obspar, gal)
 
 
 def PlotPointings(
-    prob, time, targetCoord, Totalprob, nside, obspar, name, dirName, ObsArray
+    prob, is_nested, time, targetCoord, Totalprob, nside, obspar, name, dirName, ObsArray
 ):
     FOV = obspar.FOV
     maxzenith = obspar.maxZenith
@@ -315,6 +316,7 @@ def PlotPointings(
             rot=[180, 0],
             coord="C",
             title=f"GW prob map (Equatorial) + {name} {Totalprob * 100:g} {time_string} UTC",
+            nest=is_nested
         )
         hp.graticule()
 
@@ -353,7 +355,7 @@ def PlotPointings(
 
 
 def PlotPointingsTogether(
-    prob, targetCoord1, targetCoord2, FOV1, FOV2, plotType, doPlot=True
+    prob, is_nested, targetCoord1, targetCoord2, FOV1, FOV2, plotType, doPlot=True
 ):
     if doPlot:
         if plotType == "gnomonic":
@@ -363,9 +365,10 @@ def PlotPointingsTogether(
                 ysize=1000,
                 rot=[targetCoord1[0].ra.deg, targetCoord1[0].dec.deg],
                 reso=1.0,
+                nest=is_nested,
             )
         if plotType == "mollweide":
-            hp.mollview(prob, title="GW prob map (Equatorial)", coord="C")
+            hp.mollview(prob, title="GW prob map (Equatorial)", coord="C", nest=is_nested)
         hp.graticule()
 
         hp.visufunc.projscatter(
@@ -439,8 +442,13 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
     SuggestedPointingsC = SuggestedPointings[maskClean]
     SuggestedPointingsC.remove_column("ObsInfo")
 
-    skymap_OD = lf.read_sky_map(filename)
+    skymap_OD, meta_info = lf.read_sky_map(filename)
     prob = skymap_OD[0]
+
+    if meta_info["nest"]:
+        is_nested = True
+    else:
+        is_nested = False
 
     # ObservationTimearray, Coordinates, Probarray = LoadPointingsGW(SuggestedPointings)
     ObservationTimearray = SuggestedPointingsC["Time[UTC]"]
@@ -484,6 +492,7 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
         rot=[180, 0],
         coord="C",
         title=f"GW prob map (Equatorial) + {str(ID)} {sum(Probarray) * 100:g} {converted_time_string} UTC",
+        nest=is_nested
     )
     hp.graticule()
     # plt.show()
@@ -510,6 +519,7 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
 
 def PlotPointings_Pretty(
     filename,
+    is_nested,
     name,
     PointingsFile1,
     dirName,
@@ -623,7 +633,7 @@ def PlotPointings_Pretty(
     ax_inset.set_xlabel("RA (J2000)")
     ax_inset.set_ylabel("Dec (J2000)")
 
-    ax.imshow_hpx(filename, cmap="cylon")
+    ax.imshow_hpx(filename, cmap="cylon", nested=is_nested)
 
     try:
         vmin_value = np.min(galprob)
@@ -660,7 +670,7 @@ def PlotPointings_Pretty(
             name: colors1[i] for i, name in enumerate(unique_obs_names)
         }
 
-    pos = ax_inset.imshow_hpx(filename, cmap="cylon")
+    pos = ax_inset.imshow_hpx(filename, cmap="cylon", nested=is_nested)
 
     for i in range(0, len(ra)):
         obs_name = nametel[i]
@@ -746,10 +756,11 @@ def PlotAccRegion(skymap, dirName, reducedNside, Occultedpixels, first_values):
         rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]),
         xsize=500,
         ysize=500,
+        nest=skymap.is_nested
     )
     hp.graticule()
     try:
-        tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
+        tt, pp = hp.pix2ang(reducedNside, Occultedpixels, nest=skymap.is_nested)
         ra2 = np.rad2deg(pp)
         dec2 = np.rad2deg(0.5 * np.pi - tt)
         skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
