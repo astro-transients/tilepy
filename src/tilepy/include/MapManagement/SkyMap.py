@@ -246,7 +246,9 @@ class SkyMap:
         dist = galaxyCatalog["Dist"]
         theta = 0.5 * np.pi - np.deg2rad(dec)
         phi = np.deg2rad(ra)
-        pix_id = self.raw_map_prob_density.ang2pix(theta, phi)
+        pix_id = self.raw_map_prob_density.ang2pix(
+            theta, phi
+        )
 
         # Compute the probability associated to each galaxy
         if self.is3D:
