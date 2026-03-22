@@ -159,7 +159,7 @@ class SkyMap:
         )
         return np.sum(area_vals.to(u.deg * u.deg))
 
-    def getMap(self, mapType, nside, scheme="ring"):
+    def getMap(self, mapType, nside):
         """
         Get a rasterized map of the specified type and pixelization.
 
@@ -169,8 +169,6 @@ class SkyMap:
             Type of map ('prob_density', 'prob', 'coordinate').
         nside : int
             Desired HEALPix nside resolution.
-        scheme : str, optional
-            HEALPix ordering scheme: 'ring' (default) or 'nested'.
 
         Returns
         -------
@@ -183,22 +181,23 @@ class SkyMap:
 
         """
 
-        cache_entry = mapType + "_" + str(nside) + "_" + scheme
+        cache_entry = mapType + "_" + str(nside) + "_" + self.scheme
+
         if cache_entry in self.rasterized_map_cache.keys():
             return self.rasterized_map_cache[cache_entry]
 
         if mapType == "prob_density":
             self.rasterized_map_cache[cache_entry] = (
-                self.raw_map_prob_density.rasterize(nside=nside, scheme=scheme).data
+                self.raw_map_prob_density.rasterize(nside=nside, scheme=self.scheme).data
             )
         elif mapType == "prob":
             self.rasterized_map_cache[cache_entry] = self.getMap(
-                "prob_density", nside, scheme
+                "prob_density", nside
             ) * hp.nside2pixarea(nside)
         elif mapType == "coordinate":
             npix = hp.nside2npix(nside)
             id_pix = np.arange(npix)
-            lon, lat = hp.pix2ang(nside, id_pix, nest=(scheme == "nested"), lonlat=True)
+            lon, lat = hp.pix2ang(nside, id_pix, nest=self.is_nested, lonlat=True)
             self.rasterized_map_cache[cache_entry] = SkyCoord(
                 ra=lon * u.deg, dec=lat * u.deg
             )
