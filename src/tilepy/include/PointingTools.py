@@ -1408,7 +1408,7 @@ def ComputeProbability2D(
 
     # Chose highest
     targetCoord = co.SkyCoord(
-        sortcat["PIXRA"][:1], sortcat["PIXDEC"][:1], frame="fk5", unit=(u.deg, u.deg)
+        sortcat["PIXRA"][:1], sortcat["PIXDEC"][:1], frame="icrs", unit=(u.deg, u.deg)
     )
 
     P_GW = sortcat["PIXFOVPROB"][:1]
@@ -1444,7 +1444,7 @@ def ComputeProbability2D(
             tt, pp = hp.pix2ang(HRnside, ipix_discplot, nest=is_nested)
             ra2 = np.rad2deg(pp)
             dec2 = np.rad2deg(0.5 * np.pi - tt)
-            skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+            skycoord = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
 
             # hp.visufunc.projplot(skycoord.ra, skycoord.dec, 'y.', lonlat=True, coord="C")
             # plt.show()
@@ -1460,7 +1460,7 @@ def ComputeProbability2D(
             MaxCoord = SkyCoord(
                 sortcat["PIXRA"][:1],
                 sortcat["PIXDEC"][:1],
-                frame="fk5",
+                frame="icrs",
                 unit=(u.deg, u.deg),
             )
             separations = skycoord.separation(MaxCoord)
@@ -1490,7 +1490,7 @@ def ComputeProbability2D(
                     )
                     ra2 = np.rad2deg(pp)
                     dec2 = np.rad2deg(0.5 * np.pi - tt)
-                    skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+                    skycoord = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
                     hp.visufunc.projplot(
                         skycoord.ra.deg,
                         skycoord.dec.deg,
@@ -1590,7 +1590,7 @@ def TransformRADec(vra, vdec):
         ra = []
         dec = []
         for i in range(0, len(vra)):
-            coord = SkyCoord(vra[i].split('"')[1], vdec[i].split('"')[0], frame="fk5")
+            coord = SkyCoord(vra[i].split('"')[1], vdec[i].split('"')[0], frame="icrs")
             # print(coord)
             ra.append(coord.ra.deg)
             dec.append(coord.dec.deg)
@@ -1598,7 +1598,7 @@ def TransformRADec(vra, vdec):
         ra = vra.astype(float)
         dec = vdec.astype(float)
 
-    coordinates = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+    coordinates = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
     return coordinates
 
 
@@ -1616,7 +1616,7 @@ def TransformPixToRaDec(pix, is_nested, nside):
     tt, pp = hp.pix2ang(nside, pix, nest=is_nested)
     ra2 = np.rad2deg(pp)
     dec2 = np.rad2deg(0.5 * np.pi - tt)
-    pixradec = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+    pixradec = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
     return pixradec
 
 
@@ -1636,7 +1636,7 @@ def FindMatchingCoords(option, radec1, radec2, is_nested, reducedNside):
         theta, phi = hp.pix2ang(reducedNside, radec2, nest=is_nested)
         ra = np.rad2deg(phi)
         dec = np.rad2deg(0.5 * np.pi - theta)
-        radec = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+        radec = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
 
         # Match each radec coordinate to closest in firstvalue1
         idx, sep2d, _ = firstvalue1_coords.match_to_catalog_sky(radec)
@@ -1781,16 +1781,16 @@ def ComputeProbGalTargeted(
     targetCoord = co.SkyCoord(
         finalGals["RAJ2000"][:1],
         finalGals["DEJ2000"][:1],
-        frame="fk5",
+        frame="icrs",
         unit=(u.deg, u.deg),
     )
 
     targetCoord2 = co.SkyCoord(
-        visiGals["RAJ2000"], visiGals["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+        visiGals["RAJ2000"], visiGals["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
 
     targetCoord3 = co.SkyCoord(
-        allGals["RAJ2000"], allGals["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+        allGals["RAJ2000"], allGals["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
 
     dp_dVfinal = visiGals["dp_dV"]
@@ -1828,7 +1828,7 @@ def ComputeProbGalTargeted(
         ra2 = np.rad2deg(pp)
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
-        skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+        skycoord = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
 
         separations = skycoord.separation(targetCoord)
         tempmask = separations < (radius + 0.05 * radius) * u.deg
@@ -1884,7 +1884,7 @@ def ComputeProbGalTargeted(
             location=observatory,
         )
 
-        RandomCoord_radec = RandomCoord.transform_to("fk5")
+        RandomCoord_radec = RandomCoord.transform_to("icrs")
 
         hp.visufunc.projplot(
             RandomCoord_radec.ra, RandomCoord_radec.dec, "b.", lonlat=True, coord="C"
@@ -2005,10 +2005,10 @@ def SubtractGalaxiesCircle(
     galaux, ra, dec, talreadysumipixarray, tsum_dP_dV, FOV, prob, is_nested, nside
 ):
     radius = FOV
-    coordinates = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+    coordinates = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
 
     targetCoord = co.SkyCoord(
-        galaux["RAJ2000"], galaux["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+        galaux["RAJ2000"], galaux["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
     dp_dVfinal = galaux["dp_dV"]
 
@@ -2042,17 +2042,17 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, n_sides, UsePix):
     if UsePix:
         try:
             targetCoord = co.SkyCoord(
-                galpix["PIXRA"], galpix["PIXDEC"], frame="fk5", unit=(u.deg, u.deg)
+                galpix["PIXRA"], galpix["PIXDEC"], frame="icrs", unit=(u.deg, u.deg)
             )
         except Exception:
             targetCoord = galpix
     else:
         targetCoord = co.SkyCoord(
-            galpix["RAJ2000"], galpix["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+            galpix["RAJ2000"], galpix["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
         )
 
     targetCoord2 = co.SkyCoord(
-        cat["RAJ2000"], cat["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+        cat["RAJ2000"], cat["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
 
     dp_dV = cat["dp_dV"]
@@ -2168,7 +2168,7 @@ def ComputeProbPGALIntegrateFoV(
             targetCoord = co.SkyCoord(
                 centerPoint["PIXRA"][:1],
                 centerPoint["PIXDEC"][:1],
-                frame="fk5",
+                frame="icrs",
                 unit=(u.deg, u.deg),
             )
         except Exception:
@@ -2178,18 +2178,18 @@ def ComputeProbPGALIntegrateFoV(
         targetCoord = co.SkyCoord(
             centerPoint["RAJ2000"][:1],
             centerPoint["DEJ2000"][:1],
-            frame="fk5",
+            frame="icrs",
             unit=(u.deg, u.deg),
         )
 
     targetCoord2 = co.SkyCoord(
-        visiGals["RAJ2000"], visiGals["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+        visiGals["RAJ2000"], visiGals["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
 
     targetCoord3 = co.SkyCoord(
         allGalsaftercuts["RAJ2000"],
         allGalsaftercuts["DEJ2000"],
-        frame="fk5",
+        frame="icrs",
         unit=(u.deg, u.deg),
     )
 
@@ -2236,7 +2236,7 @@ def ComputeProbPGALIntegrateFoV(
         ra2 = np.rad2deg(pp)
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
-        skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+        skycoord = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
 
         separations = skycoord.separation(targetCoord)
         tempmask = separations < (radius + 0.05 * radius) * u.deg
@@ -2279,7 +2279,7 @@ def ComputeProbPGALIntegrateFoV(
             location=observatory,
         )
 
-        RandomCoord_radec = RandomCoord.transform_to("fk5")
+        RandomCoord_radec = RandomCoord.transform_to("icrs")
 
         hp.visufunc.projplot(
             RandomCoord_radec.ra, RandomCoord_radec.dec, "b.", lonlat=True, coord="C"

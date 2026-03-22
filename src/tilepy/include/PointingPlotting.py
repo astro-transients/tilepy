@@ -726,7 +726,7 @@ def plot_pixel_availability_healpix(dirName, pixels_by_time, times, nside):
         theta, phi = hp.pix2ang(nside, pixels_by_time[i])
         ra = np.rad2deg(phi)
         dec = np.rad2deg(0.5 * np.pi - theta)
-        radec = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+        radec = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
 
         ax.bar3d(
             radec.ra.deg, radec.dec.deg, time_float[i], dx, dy, dz, zsort="average"
@@ -763,7 +763,7 @@ def PlotAccRegion(skymap, dirName, reducedNside, Occultedpixels, first_values):
         tt, pp = hp.pix2ang(reducedNside, Occultedpixels, nest=skymap.is_nested)
         ra2 = np.rad2deg(pp)
         dec2 = np.rad2deg(0.5 * np.pi - tt)
-        skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+        skycoord = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
         hp.visufunc.projplot(
             skycoord.ra.deg,
             skycoord.dec.deg,

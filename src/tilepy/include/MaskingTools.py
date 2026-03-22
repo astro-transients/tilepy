@@ -85,7 +85,7 @@ def ZenithAngleCut(prob, is_nested, time, obspar):
     pixel_theta, pixel_phi = hp.pix2ang(nside, np.arange(hp.nside2npix(nside)), nest=is_nested)
     ra = np.rad2deg(pixel_phi)
     dec = np.rad2deg(0.5 * np.pi - pixel_theta)
-    targetCoord_map = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+    targetCoord_map = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
     altaz_map = targetCoord_map.transform_to(frame)
     maskzenith[altaz_map.alt.value < 90 - maxZenith] = 1
     mzenith.mask = maskzenith
@@ -146,7 +146,7 @@ def VisibleAtTime(time, galaxies, obspar):
     # print('galaxies',galaxies)
     # print('galaxies',len(galaxies['RAJ2000']))
     radecs = co.SkyCoord(
-        galaxies["RAJ2000"], galaxies["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+        galaxies["RAJ2000"], galaxies["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
     if len(radecs) > 0:
         thisaltaz = radecs.transform_to(frame)
@@ -223,7 +223,7 @@ def FulfillsRequirementGreyObservations(time, theseGals, obspar):
     observatory = obspar.location
     minMoonSourceSeparation = obspar.minMoonSourceSeparation
     targetCoord = co.SkyCoord(
-        theseGals["RAJ2000"], theseGals["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+        theseGals["RAJ2000"], theseGals["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
     frame = co.AltAz(obstime=time, location=observatory)
     moonaltazs = get_body("moon", Time(time, scale="utc")).transform_to(frame)
@@ -516,7 +516,7 @@ def GetBestGridPos2D(
             tt, pp = hp.pix2ang(reducedNside, Occultedpixels, nest=is_nested)
             ra2 = np.rad2deg(pp)
             dec2 = np.rad2deg(0.5 * np.pi - tt)
-            skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+            skycoord = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
             hp.visufunc.projplot(
                 skycoord.ra.deg,
                 skycoord.dec.deg,
@@ -640,7 +640,7 @@ def GetBestGridPos3D(
             tt, pp = hp.pix2ang(reducedNside, Occultedpixels, nest=is_nested)
             ra2 = np.rad2deg(pp)
             dec2 = np.rad2deg(0.5 * np.pi - tt)
-            skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+            skycoord = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
             hp.visufunc.projplot(
                 skycoord.ra.deg,
                 skycoord.dec.deg,
