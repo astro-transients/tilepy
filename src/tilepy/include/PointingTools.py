@@ -1302,6 +1302,7 @@ def GetBestNSIDE(ReducedNSIDE, HRnside, fov):
 def ComputeProbability2D(
     obspar,
     prob,
+    is_nested,
     highres,
     radecs,
     time,
@@ -1349,7 +1350,7 @@ def ComputeProbability2D(
     phipix = np.deg2rad(pix_ra)
     thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
 
-    ipix = hp.ang2pix(reducedNside, thetapix, phipix)
+    ipix = hp.ang2pix(reducedNside, thetapix, phipix, nest=is_nested)
 
     dp_Pix_Fov = np.empty(len(pix_ra), dtype=object)
 
@@ -1365,7 +1366,9 @@ def ComputeProbability2D(
     # Grid-scheme and the connection between HR and LR
     for i in range(0, len(cat_pix)):
         # Pixels associated to a disk of radius centered in xyzpix[i] for HR NSIDE
-        ipix_discfull = hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
+        ipix_discfull = hp.query_disc(
+            HRnside, xyzpix[i], np.deg2rad(radius), nest=is_nested
+        )
         if len(ipixlistHR) == 0:
             # No mask needed
             HRprob = highres[ipix_discfull].sum()
@@ -1415,8 +1418,10 @@ def ComputeProbability2D(
         thetap = float(0.5 * np.pi - np.deg2rad(targetCoord.dec.deg))
         xyz = hp.ang2vec(thetap, phip)
 
-        ipixlistHR.extend(hp.query_disc(HRnside, xyz, np.deg2rad(radius)))
-        ipix_disc = hp.query_disc(reducedNside, xyz, np.deg2rad(radius))
+        ipixlistHR.extend(
+            hp.query_disc(HRnside, xyz, np.deg2rad(radius), nest=is_nested)
+        )
+        ipix_disc = hp.query_disc(reducedNside, xyz, np.deg2rad(radius), nest=is_nested)
         ipixlist.extend(ipix_disc)
 
         ##################################
@@ -1429,12 +1434,14 @@ def ComputeProbability2D(
 
             # hp.mollview(highres,title="With FoV circle")
 
-            hp.mollview(prob, title=str(time))
+            hp.mollview(prob, title=str(time), nest=is_nested)
 
             hp.graticule()
 
-            ipix_discplot = hp.query_disc(HRnside, xyz, np.deg2rad(radius))
-            tt, pp = hp.pix2ang(HRnside, ipix_discplot)
+            ipix_discplot = hp.query_disc(
+                HRnside, xyz, np.deg2rad(radius), nest=is_nested
+            )
+            tt, pp = hp.pix2ang(HRnside, ipix_discplot, nest=is_nested)
             ra2 = np.rad2deg(pp)
             dec2 = np.rad2deg(0.5 * np.pi - tt)
             skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
@@ -1478,7 +1485,9 @@ def ComputeProbability2D(
 
             if ipixlistOcc is not None:
                 try:
-                    tt, pp = hp.pix2ang(reducedNside, ipixlistOcc)
+                    tt, pp = hp.pix2ang(
+                        reducedNside, ipixlistOcc, nest=is_nested
+                    )
                     ra2 = np.rad2deg(pp)
                     dec2 = np.rad2deg(0.5 * np.pi - tt)
                     skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
@@ -1506,7 +1515,7 @@ def ComputeProbability2D(
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
 
-def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, radecs):
+def SubtractPointings2D(tpointingFile, prob, is_nested, obspar, pixlist, pixlistHR, radecs):
     nside = obspar.reducedNside
     radius = obspar.FOV
 
@@ -1554,7 +1563,7 @@ def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, radecs)
         p = coordinates[i].ra.rad
         # Get the pixels for the ipix_disc (low res)
         xyz = hp.ang2vec(t, p)
-        ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+        ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius), nest=is_nested)
         effectiveipix_disc = []
         for j, valuej in enumerate(ipix_disc):
             if valuej not in pixlist:
@@ -1566,7 +1575,9 @@ def SubtractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, radecs)
             f"Subtracting coordinates ra: {float(ra[i]):.4f}, dec: {float(dec[i]):.4f}, Pgw: {P_GW[i]:.6f} vs {prob[ipix_disc].sum():.6f}"
         )
         # Save the ipixels in HR
-        ipix_discHR = hp.query_disc(obspar.HRnside, xyz, np.deg2rad(radius))
+        ipix_discHR = hp.query_disc(
+            obspar.HRnside, xyz, np.deg2rad(radius), nest=is_nested
+        )
         for k, valuek in enumerate(ipix_discHR):
             if valuek not in pixlistHR:
                 pixlistHR.append(valuek)
@@ -1591,18 +1602,18 @@ def TransformRADec(vra, vdec):
     return coordinates
 
 
-def TransformRADecToPix(radecs, nside):
+def TransformRADecToPix(radecs, is_nested, nside):
     pix_ra = radecs.ra.deg
     pix_dec = radecs.dec.deg
     phipix = np.deg2rad(pix_ra)
     thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
-    ipix = hp.ang2pix(nside, thetapix, phipix)
+    ipix = hp.ang2pix(nside, thetapix, phipix, nest=is_nested)
     newpix = ipix
     return newpix
 
 
-def TransformPixToRaDec(pix, nside):
-    tt, pp = hp.pix2ang(nside, pix)
+def TransformPixToRaDec(pix, is_nested, nside):
+    tt, pp = hp.pix2ang(nside, pix, nest=is_nested)
     ra2 = np.rad2deg(pp)
     dec2 = np.rad2deg(0.5 * np.pi - tt)
     pixradec = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
@@ -1616,13 +1627,13 @@ def FindMatchingPixList(pix1, list2):
     return filtered_rows
 
 
-def FindMatchingCoords(option, radec1, radec2, reducedNside):
+def FindMatchingCoords(option, radec1, radec2, is_nested, reducedNside):
     if option == 1:
         firstvalue1_coords = co.SkyCoord(
             ra=radec1["PIXRA"] * u.deg, dec=radec1["PIXDEC"] * u.deg
         )
 
-        theta, phi = hp.pix2ang(reducedNside, radec2)
+        theta, phi = hp.pix2ang(reducedNside, radec2, nest=is_nested)
         ra = np.rad2deg(phi)
         dec = np.rad2deg(0.5 * np.pi - theta)
         radec = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
@@ -1728,6 +1739,7 @@ def MangroveGalaxiesProbabilities(catalog):
 
 def ComputeProbGalTargeted(
     prob,
+    is_nested,
     time,
     finalGals,
     visiGals,
@@ -1791,7 +1803,7 @@ def ComputeProbGalTargeted(
     p = targetCoord[0].ra.rad
     xyz = hp.ang2vec(t, p)
 
-    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius), nest=is_nested)
 
     effectiveipix_disc = []
 
@@ -1812,7 +1824,7 @@ def ComputeProbGalTargeted(
         if not path.exists():
             path.mkdir(parents=True)
 
-        tt, pp = hp.pix2ang(nside, ipix_disc)
+        tt, pp = hp.pix2ang(nside, ipix_disc, nest=is_nested)
         ra2 = np.rad2deg(pp)
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
@@ -1828,6 +1840,7 @@ def ComputeProbGalTargeted(
             ysize=500,
             rot=[targetCoord.ra.deg, targetCoord.dec.deg],
             reso=5.0,
+            nest=is_nested
         )
 
         hp.graticule()
@@ -1895,6 +1908,7 @@ def SubtractPointings(
     talreadysumipixarray,
     tsum_dP_dV,
     prob,
+    is_nested,
     obspar,
     nside,
     radecs,
@@ -1965,6 +1979,7 @@ def SubtractPointings(
                 tsum_dP_dV,
                 FOV,
                 prob,
+                is_nested,
                 nside,
             )
         )
@@ -1987,7 +2002,7 @@ def SubtractPointings(
 
 
 def SubtractGalaxiesCircle(
-    galaux, ra, dec, talreadysumipixarray, tsum_dP_dV, FOV, prob, nside
+    galaux, ra, dec, talreadysumipixarray, tsum_dP_dV, FOV, prob, is_nested, nside
 ):
     radius = FOV
     coordinates = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
@@ -2000,7 +2015,7 @@ def SubtractGalaxiesCircle(
     t = 0.5 * np.pi - coordinates.dec.rad
     p = coordinates.ra.rad
     xyz = hp.ang2vec(t, p)
-    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius), nest=is_nested)
     effectiveipix_disc = []
 
     for j in range(0, len(ipix_disc)):
@@ -2126,6 +2141,7 @@ def ModifyCatalogue(prob, cat, FOV, totaldPdV, nside):
 
 def ComputeProbPGALIntegrateFoV(
     prob,
+    is_nested,
     time,
     observatory,
     centerPoint,
@@ -2190,7 +2206,7 @@ def ComputeProbPGALIntegrateFoV(
 
     # translate pixel indices to coordinates
 
-    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius), nest=is_nested)
 
     effectiveipix_disc = []
 
@@ -2216,7 +2232,7 @@ def ComputeProbPGALIntegrateFoV(
         if not path.exists():
             path.mkdir(parents=True)
 
-        tt, pp = hp.pix2ang(nside, ipix_disc)
+        tt, pp = hp.pix2ang(nside, ipix_disc, nest=is_nested)
         ra2 = np.rad2deg(pp)
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
@@ -2232,6 +2248,7 @@ def ComputeProbPGALIntegrateFoV(
             ysize=500,
             rot=[targetCoord.ra.deg, targetCoord.dec.deg],
             reso=5.0,
+            nest=is_nested
         )
 
         hp.graticule()
@@ -2320,10 +2337,10 @@ def GetRegionPixGal(hpxx, percentage, Nside):
     return table_ipix_contour
 
 
-def IsSourceInside(Pointings, Sources, FOV, nside):
+def IsSourceInside(Pointings, Sources, FOV, nside, is_nested):
     tt = 0.5 * np.pi - Sources.dec.rad
     tp = Sources.ra.rad
-    txyz = hp.ang2pix(nside, tt, tp)
+    txyz = hp.ang2pix(nside, tt, tp, nest=is_nested)
     Npoiting = ""
     Found = False
     try:
@@ -2332,9 +2349,9 @@ def IsSourceInside(Pointings, Sources, FOV, nside):
             p = Pointings[i].ra.rad
             xyz = hp.ang2vec(t, p)
             try:
-                ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV))
+                ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV), nest=is_nested)
             except Exception:
-                ipix_disc = hp.query_disc(nside, xyz[0], np.deg2rad(FOV))
+                ipix_disc = hp.query_disc(nside, xyz[0], np.deg2rad(FOV), nest=is_nested)
             if txyz in ipix_disc:
                 logger.info(f"Found in pointing number {i}")
                 # Npoiting.append(i)
@@ -2346,7 +2363,7 @@ def IsSourceInside(Pointings, Sources, FOV, nside):
         t = 0.5 * np.pi - Pointings.dec.rad
         p = Pointings.ra.rad
         xyz = hp.ang2vec(t, p)
-        ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV))
+        ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV), nest=is_nested)
         if txyz in ipix_disc:
             Npoiting = "0,"
             Found = True
