@@ -384,7 +384,7 @@ def GetVisibility(time, radecs, maxZenith, obsLoc):
     return window, altitude
 
 
-def ProbabilitiesinPointings3D(cat, galPointing, FOV, totaldPdV, prob, nside):
+def ProbabilitiesinPointings3D(cat, galPointing, FOV, totaldPdV, prob, is_nested, nside):
     ra = galPointing["RA[deg]"]
     dec = galPointing["DEC[deg]"]
     PGW = []
@@ -393,7 +393,7 @@ def ProbabilitiesinPointings3D(cat, galPointing, FOV, totaldPdV, prob, nside):
     # bucle
     for i in range(0, len(ra)):
         pgwcircle, pgalcircle = PGGPGalinFOV(
-            cat, ra[i], dec[i], prob, totaldPdV, FOV, nside
+            cat, ra[i], dec[i], prob, is_nested, totaldPdV, FOV, nside
         )
         PGW.append(float("{:1.4f}".format(pgwcircle)))
         PGAL.append(float("{:1.4f}".format(pgalcircle)))
@@ -404,7 +404,7 @@ def ProbabilitiesinPointings3D(cat, galPointing, FOV, totaldPdV, prob, nside):
     return galPointing
 
 
-def PGGPGalinFOV(cat, ra, dec, prob, totaldPdV, FOV, nside):
+def PGGPGalinFOV(cat, ra, dec, prob, is_nested, totaldPdV, FOV, nside):
     targetCoordcat = co.SkyCoord(
         cat["RAJ2000"], cat["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
@@ -420,7 +420,7 @@ def PGGPGalinFOV(cat, ra, dec, prob, totaldPdV, FOV, nside):
     # print('t, p, targetCoord[0].ra.deg, targetCoord[0].dec.deg', t, p, targetCoord.ra.deg, targetCoord.dec.deg)
     xyz = hp.ang2vec(t, p)
 
-    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius), nest=is_nested)
     P_GW = prob[ipix_disc].sum()
     Pgal_inFoV = (
         dp_dV[targetCoordcat.separation(targetCoordpointing).deg <= radius].sum()
@@ -430,13 +430,13 @@ def PGGPGalinFOV(cat, ra, dec, prob, totaldPdV, FOV, nside):
     return P_GW, Pgal_inFoV
 
 
-def ProbabilitiesinPointings2D(Pointing, FOV, prob, nside):
+def ProbabilitiesinPointings2D(Pointing, FOV, prob, is_nested, nside):
     ra = Pointing["RA[deg]"]
     dec = Pointing["DEC[deg]"]
     PGW = []
     PGAL = []
     for i in range(0, len(ra)):
-        pgwcircle = PGinFOV(ra[i], dec[i], prob, FOV, nside)
+        pgwcircle = PGinFOV(ra[i], dec[i], prob, is_nested, FOV, nside)
         PGW.append(float("{:1.4f}".format(pgwcircle)))
         PGAL.append(float("{:1.4f}".format(0)))
 
@@ -446,7 +446,7 @@ def ProbabilitiesinPointings2D(Pointing, FOV, prob, nside):
     return Pointing
 
 
-def PGinFOV(ra, dec, prob, radius, nside):
+def PGinFOV(ra, dec, prob, is_nested, radius, nside):
     targetCoordpointing = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
 
     # Array of indices of pixels inside circle of FoV
@@ -457,7 +457,7 @@ def PGinFOV(ra, dec, prob, radius, nside):
     # print('t, p, targetCoord[0].ra.deg, targetCoord[0].dec.deg', t, p, targetCoord.ra.deg, targetCoord.dec.deg)
     xyz = hp.ang2vec(t, p)
 
-    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius), nest=is_nested)
     P_GW = prob[ipix_disc].sum()
 
     return P_GW
@@ -590,13 +590,13 @@ def RankingTimes(obspar, skymap, cat, dirName, PointingFile):
     cat = skymap.computeGalaxyProbability(cat)
     tGals = FilterGalaxies(cat, obspar.minimumProbCutForCatalogue)
     sum_dP_dV = cat["dp_dV"].sum()
-    point = ProbabilitiesinPointings3D(tGals, point, obspar.FOV, sum_dP_dV, prob, nside)
+    point = ProbabilitiesinPointings3D(tGals, point, obspar.FOV, sum_dP_dV, prob, skymap.is_nested, nside)
     point = VisibilityWindow(ObservationTime, point, obspar, dirName)
     EvolutionPlot(point, dirName, ObsArray)
     Sortingby(point, dirName, obspar.duration)
 
 
-def RankingTimes_2D(obspar, prob, dirName, PointingFile):
+def RankingTimes_2D(obspar, prob, is_nested, dirName, PointingFile):
     ObservationTime = obspar.obsTime
     ObsArray = obspar.obs_name
 
@@ -612,7 +612,7 @@ def RankingTimes_2D(obspar, prob, dirName, PointingFile):
     nside = hp.npix2nside(npix)
 
     # In this function, the 2D probability is computed and the 3D probability is set to zero
-    point = ProbabilitiesinPointings2D(point, obspar.FOV, prob, nside)
+    point = ProbabilitiesinPointings2D(point, obspar.FOV, prob, is_nested, nside)
     point = VisibilityWindow(ObservationTime, point, obspar, dirName)
 
     EvolutionPlot(point, dirName, ObsArray)
@@ -713,7 +713,7 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
         fig = plt.figure(figsize=(10, 6))
         # Plot HEALPix map with its own color map
         hp.gnomview(
-            prob, rot=(skycoords[0].ra.deg, skycoords[0].dec.deg), xsize=500, ysize=500
+            prob, rot=(skycoords[0].ra.deg, skycoords[0].dec.deg), xsize=500, ysize=500, nest=skymap.is_nested
         )
 
         # Plot each pointing using rank-based color
@@ -766,7 +766,7 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
             [(pre_coords, pre_colors, "Before Optimization")]
         ):
             fig.add_subplot(1, 2, i + 1, projection="mollweide")
-            hp.gnomview(prob, rot=(144.844, 11.111), xsize=500, ysize=500)
+            hp.gnomview(prob, rot=(144.844, 11.111), xsize=500, ysize=500, nest=skympa.is_nested)
 
             for coord, color in zip(coords, colors):
                 hp.projplot(
@@ -862,7 +862,7 @@ def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
         fig = plt.figure(figsize=(10, 6))
         # Plot HEALPix map with its own color map
         hp.gnomview(
-            prob, rot=(skycoords.ra.deg[0], skycoords.dec.deg[0]), xsize=500, ysize=500
+            prob, rot=(skycoords.ra.deg[0], skycoords.dec.deg[0]), xsize=500, ysize=500, nest=skymap.is_nested
         )
 
         # Normalize ranks for colormap
