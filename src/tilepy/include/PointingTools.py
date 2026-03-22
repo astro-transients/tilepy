@@ -46,6 +46,7 @@ from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
 from skyfield.api import E, N, load, wgs84
+from ligo.skymap.postprocess import find_greedy_credible_levels
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -2278,40 +2279,17 @@ def ComputeProbPGALIntegrateFoV(
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
 
 
-def GetRegionPixReduced(hpxx, percentage, Nnside):
+def GetRegionPixReduced(hpxx, percentage, Nnside, scheme):
     nside = Nnside  # size of map used for contour determination
     hpx = hp.ud_grade(
-        hpxx, nside_out=nside, power=-2, order_in="Nested", order_out="Nested"
+        hpxx, nside_out=nside, power=-2, order_in=scheme, order_out="NESTED"
     )
 
-    sort = sorted(hpx, reverse=True)
-    cumsum = np.cumsum(sort)
-    index, value = min(enumerate(cumsum), key=lambda x: abs(x[1] - percentage))
+    credible_levels = find_greedy_credible_levels(hpx)
+    percentage_list = list(np.where(credible_levels <= percentage)[0])
+    area = len(percentage_list) * hp.nside2pixarea(nside, degrees=True)
 
-    # finding ipix indices confined in a given percentage
-    index_hpx = range(0, len(hpx))
-    hpx_index = np.c_[hpx, index_hpx]
-
-    sort_2array = sorted(hpx_index, key=lambda x: x[0], reverse=True)
-    value_contour = sort_2array[0:index]
-
-    j = 1
-    table_ipix_contour = []
-
-    for i in range(0, len(value_contour)):
-        ipix_contour = int(value_contour[i][j])
-        table_ipix_contour.append(ipix_contour)
-    # from index to polar coordinates
-    theta1, phi1 = hp.pix2ang(nside, table_ipix_contour)
-    area = len(table_ipix_contour) * hp.nside2pixarea(nside, True)
-
-    # reducing resolution to et a faser execution
-    # list of pixel indices in the new map
-    R_ipix = hp.ang2pix(Nnside, theta1, phi1)
-    R_ipix = list(set(R_ipix))  # Removing/keeping 1 duplicate from list)
-
-    # from index to polar coordinates
-    theta, phi = hp.pix2ang(Nnside, R_ipix)
+    theta, phi = hp.pix2ang(nside, percentage_list, nest=(scheme == "NESTED"))
 
     # converting these to right ascension and declination in degrees
     ra = np.rad2deg(phi)
