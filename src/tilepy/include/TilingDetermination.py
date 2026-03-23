@@ -205,10 +205,11 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
                     counter,
                     dirName,
                 )
-                if P_GW <= obspar.minProbcut:
-                    logger.info(
-                        f"Tile Pgw= {P_GW} is smaller than the minProbCut ({obspar.minProbcut}) => skip this tile"
-                    )
+                if not obspar.secondRound:
+                    if P_GW <= obspar.minProbcut:
+                        logger.info(
+                            f"Condition not met at {ObservationTime}: Pgw= {P_GW.quantity[0]:.4f} must be greater than ({obspar.minProbcut:.4f})"
+                        )
                 if (P_GW <= obspar.minProbcut) and obspar.secondRound:
                     # Try Round 2
                     # print('The minimum probability cut being', minProbcut * 100, '% is, unfortunately, not reached.')
@@ -227,7 +228,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
                     )
                     if P_GW <= obspar.minProbcut:
                         logger.info(
-                            f"Tile Pgw= {P_GW} is smaller than the minProbCut ({obspar.minProbcut}) => skip this tile"
+                            f"Condition not met at {ObservationTime}: Pgw= {P_GW.quantity[0]:.4f} must be greater than ({obspar.minProbcut:.4f})"
                         )
                     else:
                         Round.append(2)
@@ -253,6 +254,10 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
                     Duration.append(obspar.duration)
                     Fov_obs.append(obspar.FOV)
                     counter = counter + 1
+            else:
+                logger.info(
+                    f"Condition not met at {ObservationTime}: probability after zenith cuts {np.sum(yprob):.4f} must be greater than {obspar.minProbcut:.4f}"
+                )
         else:
             break
 
