@@ -221,7 +221,7 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
 
 
 def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlot):
-    AltitudeCut = 90 - obspar.maxZenith
+    AltitudeCut = 90.0 - obspar.maxZenith
     nights = obspar.maxNights
     useGreytime = obspar.useGreytime
     moonGrey = obspar.moonGrey
@@ -358,7 +358,7 @@ def GetVisibility(time, radecs, maxZenith, obsLoc):
                 auxtime = datetime.datetime.strptime(time[i], "%Y-%m-%d %H:%M")
         frame = co.AltAz(obstime=auxtime, location=obsLoc)
         thisaltaz = radecs.transform_to(frame)
-        visible = thisaltaz.alt.value > (90 - maxZenith)
+        visible = thisaltaz.alt.value > (90.0 - maxZenith)
 
         if visible:
             visibility.append(auxtime)
@@ -369,7 +369,7 @@ def GetVisibility(time, radecs, maxZenith, obsLoc):
     lasttime = auxtime + datetime.timedelta(minutes=30)
     frame = co.AltAz(obstime=lasttime, location=obsLoc)
     thisaltaz = radecs.transform_to(frame)
-    visible = thisaltaz.alt.value > (90 - maxZenith)
+    visible = thisaltaz.alt.value > (90.0 - maxZenith)
 
     if visible:
         visibility.append(auxtime)

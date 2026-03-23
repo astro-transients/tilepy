@@ -1334,18 +1334,18 @@ def ComputeProbability2D(
         )
         # Zenith and Moon angular distance mask
         pix_ra = radecs.ra.value[
-            (thisaltaz.alt.value > 90 - maxZenith)
-            & (thisaltaz.separation(moonaltazs) > (90 - maxZenith) * u.deg)
+            (thisaltaz.alt.value > 90.0 - maxZenith)
+            & (thisaltaz.separation(moonaltazs) > (90.0 - maxZenith) * u.deg)
         ]
         pix_dec = radecs.dec.value[
             (thisaltaz.alt.value > 90 - maxZenith)
-            & (thisaltaz.separation(moonaltazs) > (90 - maxZenith) * u.deg)
+            & (thisaltaz.separation(moonaltazs) > (90.0 - maxZenith) * u.deg)
         ]
 
     else:
         # Zenith angle mask
-        pix_ra = radecs.ra.value[(thisaltaz.alt.value > 90 - maxZenith)]
-        pix_dec = radecs.dec.value[thisaltaz.alt.value > 90 - maxZenith]
+        pix_ra = radecs.ra.value[(thisaltaz.alt.value > 90.0 - maxZenith)]
+        pix_dec = radecs.dec.value[thisaltaz.alt.value > 90.0 - maxZenith]
 
     phipix = np.deg2rad(pix_ra)
     thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
@@ -1871,7 +1871,7 @@ def ComputeProbGalTargeted(
 
         altcoord = np.empty(4000)
 
-        altcoord.fill(90 - maxZenith)
+        altcoord.fill(90.0 - maxZenith)
 
         azcoord = np.random.rand(4000) * 360
 
@@ -2266,7 +2266,7 @@ def ComputeProbPGALIntegrateFoV(
 
         altcoord = np.empty(4000)
 
-        altcoord.fill(90 - maxZenith)
+        altcoord.fill(90.0 - maxZenith)
 
         azcoord = np.random.rand(4000) * 360
 
