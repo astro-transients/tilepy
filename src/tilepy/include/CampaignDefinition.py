@@ -316,9 +316,7 @@ class ObservationParameters(object):
         self.EarthDown = float(parser.get(section, "earthdown", fallback=0))
         # Altitude in degrees
         self.moonGrey = int(parser.get(section, "moongrey", fallback=0))
-        self.moonPhase = int(
-            parser.get(section, "gmoonphase", fallback=0)
-        )  # Phase in %
+        self.moonPhase = int(parser.get(section, "moonphase", fallback=0))  # Phase in %
         self.minMoonSourceSeparation = int(
             parser.get(section, "minmoonsourceseparation", fallback=0)
         )  # Separation in degrees
