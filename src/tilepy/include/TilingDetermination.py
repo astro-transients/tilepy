@@ -190,7 +190,9 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     for j, NightDarkRun in enumerate(NightDarkRuns):
         if len(ObservationTimearray) < maxRuns:
             ObservationTime = NightDarkRun
-            ObsBool, yprob = ZenithAngleCut(prob, skymap.is_nested, ObservationTime, obspar)
+            ObsBool, yprob = ZenithAngleCut(
+                prob, skymap.is_nested, ObservationTime, obspar
+            )
             if ObsBool:
                 # Round 1
                 P_GW, TC, pixlist, pixlistHR = ComputeProbability2D(
@@ -1102,7 +1104,9 @@ def PGWinFoV_NObs(
                         satelliteLocation,
                     )
                 else:
-                    ObsBool, yprob = ZenithAngleCut(prob, skymap.is_nested, ObservationTime, obspar)
+                    ObsBool, yprob = ZenithAngleCut(
+                        prob, skymap.is_nested, ObservationTime, obspar
+                    )
 
                 if ObsBool:
                     # Round 1
@@ -1827,7 +1831,9 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
     highres = skymap.getMap("prob", HRnside)
 
     # Create table for 2D probability at percentageMOC containment
-    rapix, decpix, _ = GetRegionPixReduced(prob, obspar.percentageMOC, reducedNside, skymap.scheme)
+    rapix, decpix, _ = GetRegionPixReduced(
+        prob, obspar.percentageMOC, reducedNside, skymap.scheme
+    )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
     maxRuns = obspar.maxRuns
 
@@ -2138,7 +2144,9 @@ def PGWinFoV_Space_NObs(
         # Let's get the list of pixels available at each iteration
         firstvalue1 = first_values1
 
-        matching_rows1 = FindMatchingCoords(1, firstvalue1, pixlistRROcc, skymap.is_nested, reducedNside)
+        matching_rows1 = FindMatchingCoords(
+            1, firstvalue1, pixlistRROcc, skymap.is_nested, reducedNside
+        )
         matching_tables.append(matching_rows1)
 
         radectime = co.SkyCoord(
@@ -2368,7 +2376,9 @@ def PGalinFoV_Space_NObs(
         # Let's get the list of pixels available at each iteration
         firstvalue1 = first_values1
 
-        matching_rows1 = FindMatchingCoords(1, firstvalue1, pixlistRROcc, skymap.is_nested, reducedNside)
+        matching_rows1 = FindMatchingCoords(
+            1, firstvalue1, pixlistRROcc, skymap.is_nested, reducedNside
+        )
         matching_tables.append(matching_rows1)
 
         radectime = co.SkyCoord(

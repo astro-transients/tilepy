@@ -186,7 +186,9 @@ class SkyMap:
 
         if mapType == "prob_density":
             self.rasterized_map_cache[cache_entry] = (
-                self.raw_map_prob_density.rasterize(nside=nside, scheme=self.scheme).data
+                self.raw_map_prob_density.rasterize(
+                    nside=nside, scheme=self.scheme
+                ).data
             )
         elif mapType == "prob":
             self.rasterized_map_cache[cache_entry] = self.getMap(
@@ -246,9 +248,7 @@ class SkyMap:
         dist = galaxyCatalog["Dist"]
         theta = 0.5 * np.pi - np.deg2rad(dec)
         phi = np.deg2rad(ra)
-        pix_id = self.raw_map_prob_density.ang2pix(
-            theta, phi
-        )
+        pix_id = self.raw_map_prob_density.ang2pix(theta, phi)
 
         # Compute the probability associated to each galaxy
         if self.is3D:

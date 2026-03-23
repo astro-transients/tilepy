@@ -249,7 +249,9 @@ def LoadPointings(tpointingFile):
     return data
 
 
-def PointingPlotting(prob, is_nested, obspar, name, dirName, PointingsFile1, ObsArray, gal):
+def PointingPlotting(
+    prob, is_nested, obspar, name, dirName, PointingsFile1, ObsArray, gal
+):
     npix = len(prob)
     nside = hp.npix2nside(npix)
 
@@ -296,7 +298,16 @@ def PointingPlotting(prob, is_nested, obspar, name, dirName, PointingsFile1, Obs
 
 
 def PlotPointings(
-    prob, is_nested, time, targetCoord, Totalprob, nside, obspar, name, dirName, ObsArray
+    prob,
+    is_nested,
+    time,
+    targetCoord,
+    Totalprob,
+    nside,
+    obspar,
+    name,
+    dirName,
+    ObsArray,
 ):
     FOV = obspar.FOV
     maxzenith = obspar.maxZenith
@@ -316,7 +327,7 @@ def PlotPointings(
             rot=[180, 0],
             coord="C",
             title=f"GW prob map (Equatorial) + {name} {Totalprob * 100:g} {time_string} UTC",
-            nest=is_nested
+            nest=is_nested,
         )
         hp.graticule()
 
@@ -368,7 +379,9 @@ def PlotPointingsTogether(
                 nest=is_nested,
             )
         if plotType == "mollweide":
-            hp.mollview(prob, title="GW prob map (Equatorial)", coord="C", nest=is_nested)
+            hp.mollview(
+                prob, title="GW prob map (Equatorial)", coord="C", nest=is_nested
+            )
         hp.graticule()
 
         hp.visufunc.projscatter(
@@ -492,7 +505,7 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
         rot=[180, 0],
         coord="C",
         title=f"GW prob map (Equatorial) + {str(ID)} {sum(Probarray) * 100:g} {converted_time_string} UTC",
-        nest=is_nested
+        nest=is_nested,
     )
     hp.graticule()
     # plt.show()
@@ -756,7 +769,7 @@ def PlotAccRegion(skymap, dirName, reducedNside, Occultedpixels, first_values):
         rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]),
         xsize=500,
         ysize=500,
-        nest=skymap.is_nested
+        nest=skymap.is_nested,
     )
     hp.graticule()
     try:
