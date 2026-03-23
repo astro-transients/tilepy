@@ -384,7 +384,9 @@ def GetVisibility(time, radecs, maxZenith, obsLoc):
     return window, altitude
 
 
-def ProbabilitiesinPointings3D(cat, galPointing, FOV, totaldPdV, prob, is_nested, nside):
+def ProbabilitiesinPointings3D(
+    cat, galPointing, FOV, totaldPdV, prob, is_nested, nside
+):
     ra = galPointing["RA[deg]"]
     dec = galPointing["DEC[deg]"]
     PGW = []
@@ -590,7 +592,9 @@ def RankingTimes(obspar, skymap, cat, dirName, PointingFile):
     cat = skymap.computeGalaxyProbability(cat)
     tGals = FilterGalaxies(cat, obspar.minimumProbCutForCatalogue)
     sum_dP_dV = cat["dp_dV"].sum()
-    point = ProbabilitiesinPointings3D(tGals, point, obspar.FOV, sum_dP_dV, prob, skymap.is_nested, nside)
+    point = ProbabilitiesinPointings3D(
+        tGals, point, obspar.FOV, sum_dP_dV, prob, skymap.is_nested, nside
+    )
     point = VisibilityWindow(ObservationTime, point, obspar, dirName)
     EvolutionPlot(point, dirName, ObsArray)
     Sortingby(point, dirName, obspar.duration)
@@ -713,7 +717,11 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
         fig = plt.figure(figsize=(10, 6))
         # Plot HEALPix map with its own color map
         hp.gnomview(
-            prob, rot=(skycoords[0].ra.deg, skycoords[0].dec.deg), xsize=500, ysize=500, nest=skymap.is_nested
+            prob,
+            rot=(skycoords[0].ra.deg, skycoords[0].dec.deg),
+            xsize=500,
+            ysize=500,
+            nest=skymap.is_nested,
         )
 
         # Plot each pointing using rank-based color
@@ -766,7 +774,9 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
             [(pre_coords, pre_colors, "Before Optimization")]
         ):
             fig.add_subplot(1, 2, i + 1, projection="mollweide")
-            hp.gnomview(prob, rot=(144.844, 11.111), xsize=500, ysize=500, nest=skymap.is_nested)
+            hp.gnomview(
+                prob, rot=(144.844, 11.111), xsize=500, ysize=500, nest=skympa.is_nested
+            )
 
             for coord, color in zip(coords, colors):
                 hp.projplot(
@@ -862,7 +872,11 @@ def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
         fig = plt.figure(figsize=(10, 6))
         # Plot HEALPix map with its own color map
         hp.gnomview(
-            prob, rot=(skycoords.ra.deg[0], skycoords.dec.deg[0]), xsize=500, ysize=500, nest=skymap.is_nested
+            prob,
+            rot=(skycoords.ra.deg[0], skycoords.dec.deg[0]),
+            xsize=500,
+            ysize=500,
+            nest=skymap.is_nested,
         )
 
         # Normalize ranks for colormap

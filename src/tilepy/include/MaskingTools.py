@@ -82,7 +82,9 @@ def ZenithAngleCut(prob, is_nested, time, obspar):
     mzenith = hp.ma(pprob)
     maskzenith = np.zeros(hp.nside2npix(nside), dtype=bool)
 
-    pixel_theta, pixel_phi = hp.pix2ang(nside, np.arange(hp.nside2npix(nside)), nest=is_nested)
+    pixel_theta, pixel_phi = hp.pix2ang(
+        nside, np.arange(hp.nside2npix(nside)), nest=is_nested
+    )
     ra = np.rad2deg(pixel_phi)
     dec = np.rad2deg(0.5 * np.pi - pixel_theta)
     targetCoord_map = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
@@ -237,7 +239,13 @@ def FulfillsRequirementGreyObservations(time, theseGals, obspar):
 
 
 def GetEarthOccultedPix(
-    nside, is_nested, time, earth_radius, earth_sep, satellitePosition, satelliteLocation
+    nside,
+    is_nested,
+    time,
+    earth_radius,
+    earth_sep,
+    satellitePosition,
+    satelliteLocation,
 ):
     # for equatorial frame
 
@@ -261,7 +269,10 @@ def GetEarthOccultedPix(
     earth_thetapix = 0.5 * np.pi - np.deg2rad(earthCoord_equatorial.dec.deg)
     earth_xyzpix = hp.ang2vec(earth_thetapix, earth_phipix)
     earth_occulted_pix = hp.query_disc(
-        nside, earth_xyzpix, np.deg2rad(np.rad2deg(angle_of_occlusion) + earth_sep), nest=is_nested
+        nside,
+        earth_xyzpix,
+        np.deg2rad(np.rad2deg(angle_of_occlusion) + earth_sep),
+        nest=is_nested,
     )
     return earth_occulted_pix, earthCoord_equatorial
 
@@ -274,7 +285,9 @@ def GetMoonOccultedPix(nside, is_nested, moon_sep, time):
     phipix_moon = np.deg2rad(MoonCoord_equatorial.ra.deg)
     thetapix_moon = 0.5 * np.pi - np.deg2rad(MoonCoord_equatorial.dec.deg)
     moon_xyzpix = hp.ang2vec(thetapix_moon, phipix_moon)
-    moon_occulted_pix = hp.query_disc(nside, moon_xyzpix, np.deg2rad(moon_sep), nest=is_nested)
+    moon_occulted_pix = hp.query_disc(
+        nside, moon_xyzpix, np.deg2rad(moon_sep), nest=is_nested
+    )
     return moon_occulted_pix, MoonCoord_equatorial
 
 
@@ -286,7 +299,9 @@ def GetSunOccultedPix(nside, is_nested, sun_sep, time):
     phipix_sun = np.deg2rad(SunCoord_equatorial.ra.deg)
     thetapix_sun = 0.5 * np.pi - np.deg2rad(SunCoord_equatorial.dec.deg)
     sun_xyzpix = hp.ang2vec(thetapix_sun, phipix_sun)
-    sun_occulted_pix = hp.query_disc(nside, sun_xyzpix, np.deg2rad(sun_sep), nest=is_nested)
+    sun_occulted_pix = hp.query_disc(
+        nside, sun_xyzpix, np.deg2rad(sun_sep), nest=is_nested
+    )
     return sun_occulted_pix, SunCoord_equatorial
 
 
@@ -429,7 +444,9 @@ def GetBestGridPos2D(
             vertices = Tools.get_regular_polygon_vertices(
                 ra_center, dec_center, radius, n_sides, rotation
             )
-            ipix_discfull = hp.query_polygon(HRnside, vertices, inclusive=True, nest=is_nested)
+            ipix_discfull = hp.query_polygon(
+                HRnside, vertices, inclusive=True, nest=is_nested
+            )
         else:
             raise ValueError("Shape must be 'circle' or 'polygon'.")
 
@@ -476,7 +493,7 @@ def GetBestGridPos2D(
             rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]),
             xsize=500,
             ysize=500,
-            nest=is_nested
+            nest=is_nested,
         )
 
         path = Path(f"{dirName}/GridPlot")
@@ -612,7 +629,7 @@ def GetBestGridPos3D(
             rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]),
             xsize=500,
             ysize=500,
-            nest=is_nested
+            nest=is_nested,
         )
         hp.graticule()
 

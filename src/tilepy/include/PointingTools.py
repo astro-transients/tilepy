@@ -42,11 +42,11 @@ from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord, get_body
 from astropy.table import Table
 from astropy.time import Time
 from gdpyc import DustMap
+from ligo.skymap.postprocess import find_greedy_credible_levels
 from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
 from skyfield.api import E, N, load, wgs84
-from ligo.skymap.postprocess import find_greedy_credible_levels
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -1485,9 +1485,7 @@ def ComputeProbability2D(
 
             if ipixlistOcc is not None:
                 try:
-                    tt, pp = hp.pix2ang(
-                        reducedNside, ipixlistOcc, nest=is_nested
-                    )
+                    tt, pp = hp.pix2ang(reducedNside, ipixlistOcc, nest=is_nested)
                     ra2 = np.rad2deg(pp)
                     dec2 = np.rad2deg(0.5 * np.pi - tt)
                     skycoord = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
@@ -1515,7 +1513,9 @@ def ComputeProbability2D(
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
 
-def SubtractPointings2D(tpointingFile, prob, is_nested, obspar, pixlist, pixlistHR, radecs):
+def SubtractPointings2D(
+    tpointingFile, prob, is_nested, obspar, pixlist, pixlistHR, radecs
+):
     nside = obspar.reducedNside
     radius = obspar.FOV
 
@@ -1840,7 +1840,7 @@ def ComputeProbGalTargeted(
             ysize=500,
             rot=[targetCoord.ra.deg, targetCoord.dec.deg],
             reso=5.0,
-            nest=is_nested
+            nest=is_nested,
         )
 
         hp.graticule()
@@ -2248,7 +2248,7 @@ def ComputeProbPGALIntegrateFoV(
             ysize=500,
             rot=[targetCoord.ra.deg, targetCoord.dec.deg],
             reso=5.0,
-            nest=is_nested
+            nest=is_nested,
         )
 
         hp.graticule()
@@ -2351,7 +2351,9 @@ def IsSourceInside(Pointings, Sources, FOV, nside, is_nested):
             try:
                 ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV), nest=is_nested)
             except Exception:
-                ipix_disc = hp.query_disc(nside, xyz[0], np.deg2rad(FOV), nest=is_nested)
+                ipix_disc = hp.query_disc(
+                    nside, xyz[0], np.deg2rad(FOV), nest=is_nested
+                )
             if txyz in ipix_disc:
                 logger.info(f"Found in pointing number {i}")
                 # Npoiting.append(i)
