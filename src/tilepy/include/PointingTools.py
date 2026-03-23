@@ -47,6 +47,7 @@ from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
 from skyfield.api import E, N, load, wgs84
+from tilepy.progress import report
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -2149,12 +2150,17 @@ def ComputeProbPGALIntegrateFoV(
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
 
 
-def GetRegionPixReduced(hpxx, percentage, Nnside): # todo: add monitoring 
+def GetRegionPixReduced(hpxx, percentage, Nnside, task_id=None): # todo: add monitoring 
     nside = Nnside  # size of map used for contour determination
     hpx = hp.ud_grade(
         hpxx, nside_out=nside, power=-2, order_in="Nested", order_out="Nested"
     )
-
+    report(
+        task_id=task_id,
+        progress=0.2,
+        message=f"Finding contour for {percentage*100:.1f}% of the probability",
+        status="in_progress"
+    )
     sort = sorted(hpx, reverse=True)
     cumsum = np.cumsum(sort)
     index, value = min(enumerate(cumsum), key=lambda x: abs(x[1] - percentage))
@@ -2175,6 +2181,7 @@ def GetRegionPixReduced(hpxx, percentage, Nnside): # todo: add monitoring
     # from index to polar coordinates
     theta1, phi1 = hp.pix2ang(nside, table_ipix_contour)
     area = len(table_ipix_contour) * hp.nside2pixarea(nside, True)
+    report(task_id=task_id, progress=0.2, message=f"Found contour for {percentage*100:.1f}% of the probability", status="in_progress")
 
     # reducing resolution to et a faser execution
     # list of pixel indices in the new map
@@ -2183,7 +2190,6 @@ def GetRegionPixReduced(hpxx, percentage, Nnside): # todo: add monitoring
 
     # from index to polar coordinates
     theta, phi = hp.pix2ang(Nnside, R_ipix)
-
     # converting these to right ascension and declination in degrees
     ra = np.rad2deg(phi)
     dec = np.rad2deg(0.5 * np.pi - theta)

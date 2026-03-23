@@ -124,7 +124,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
 
     """
     
-    report(task_id, progress=0.3, message="Starting the pointing calculation", status="in_progress")
+    report(task_id, progress=0.1, message="Starting the pointing calculation", status="in_progress")
     ObservationTime0 = obspar.obsTime
     PointingFile = obspar.pointingsFile
     # Main parameters
@@ -154,11 +154,11 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
 
     # Create table for 2D probability at 90% containment
     rapix, decpix, areapix = GetRegionPixReduced(
-        prob, obspar.percentageMOC, obspar.reducedNside
+        prob, obspar.percentageMOC, obspar.reducedNside, task_id=task_id
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
     
-    report(task_id, progress=0.4, message="Finished retrieving the skymap and preparing the pixel list", status="in_progress")
+    report(task_id, progress=0.3, message="Finished retrieving the skymap and preparing the pixel list", status="in_progress")
     # Add observed pixels to pixlist
     maxRuns = obspar.maxRuns
     if PointingFile is not None:
@@ -208,7 +208,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
                     pixlistHR,
                     counter,
                     dirName,
-                )
+                ) # todo: add monitoring for each process
                 if (P_GW <= obspar.minProbcut) and obspar.secondRound:
                     # Try Round 2
                     # print('The minimum probability cut being', minProbcut * 100, '% is, unfortunately, not reached.')
@@ -254,7 +254,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
                     counter = counter + 1
         else:
             break
-        report(task_id, progress=0.5 + 0.3 * ((j + 1) / len(NightDarkRuns)), message=f"Processing night/dark time window {j+1} of {len(NightDarkRuns)}", status="in_progress")
+        report(task_id, progress=0.6 + 0.3 * ((j + 1) / len(NightDarkRuns)), message=f"Processing night/dark time window {j+1} of {len(NightDarkRuns)}", status="in_progress")
         # todo: add monitoring for each process
     logger.info(
         f"\nTotal GW probability covered: {float(sum(P_GWarray)):1.4f}\nNumber of runs that fulfill darkness condition: {len(NightDarkRuns)}\nNumber of effective pointings: {len(ObservationTimearray)}"
@@ -334,7 +334,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
 
     # Main Parameters
     logger.info(f"Obspar:\n{obspar}")
-    report(task_id, progress=0.1, message="Starting the pointing calculation", status="in_progress")
+    report(task_id, progress=0.05, message="Starting the pointing calculation", status="in_progress")
 
     # load galaxy catalog from local file
     if not obspar.mangrove:
@@ -360,7 +360,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
         tGals0 = FilterGalaxies(cat, obspar.minimumProbCutForCatalogue)
         tGals0 = MangroveGalaxiesProbabilities(tGals0)
         sum_dP_dV = cat["dp_dV"].sum()
-    report(task_id, progress=0.2, message="Finished loading and filtering the galaxy catalog", status="in_progress")
+    report(task_id, progress=0.1, message="Finished loading and filtering the galaxy catalog", status="in_progress")
 
     alreadysumipixarray1 = []
     alreadysumipixarray2 = []
@@ -403,7 +403,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
             "==========================================================================================="
         )
     ##########################
-    report(task_id, progress=0.3, message="Finished subtracting previous pointings", status="in_progress")
+    report(task_id, progress=0.15, message="Finished subtracting previous pointings", status="in_progress")
 
     tGals_aux = tGals
     tGals_aux2 = tGals
@@ -427,7 +427,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
         NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0, obspar)
     else:
         NightDarkRuns = NightDarkObservation(ObservationTime0, obspar)
-    
+
     report(task_id, progress=0.4, message="Finished calculating night and dark time windows", status="in_progress")
 
     counter = 0

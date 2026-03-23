@@ -38,7 +38,8 @@ def report(task_id, progress=None, message=None, status=None, result=None):
         data = _progress.get(task_id)
 
         if data is None:
-            data = {"progress": 0, "message": "", "status": "in_progress", "result": None}
+            data = {"progress": 0, "message": "", "status": "in_progress", "time": time.time()}
+            print(f"Creating new progress for task_id: {task_id} at {data['time']}")
 
         if progress is not None:
             data["progress"] = progress
@@ -46,11 +47,11 @@ def report(task_id, progress=None, message=None, status=None, result=None):
             data["message"] = message
         if status is not None:
             data["status"] = status
-        if result is not None:
-            data["result"] = result
+        print(f"Reporting progress for {task_id} at {time.time() - data['time']} seconds")
 
         if status == "completed":
             print(f"Task {task_id} completed. Cleaning up progress data.")
+            print(f"Final progress data for {task_id} in: {time.time() - data['time']} seconds")
             _progress.pop(task_id, None)
         else:
             _progress[task_id] = data

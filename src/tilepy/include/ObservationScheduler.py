@@ -138,11 +138,11 @@ def GetSchedule(obspar, task_id=None):
         logger.info(
             "===========================================================================================\n"
         )
-        report(task_id, progress=0.1, message="Finished logging the parameters", status="in_progress")
+        report(task_id, progress=0.01, message="Finished logging the parameters", status="in_progress")
         SuggestedPointings, cat = PGalinFoV(
             skymap, raw_map.name_event, galaxies, obspar, dirName, task_id=task_id
         )
-        report(task_id, progress=0.8, message="Finished calculating the suggested pointings", status="in_progress")
+        # report(task_id, progress=0.8, message="Finished calculating the suggested pointings", status="in_progress")
         if len(SuggestedPointings) != 0:
             outfilename = "%s/SuggestedPointings_GalProbOptimisation.txt" % dirName
             ascii.write (
@@ -172,7 +172,7 @@ def GetSchedule(obspar, task_id=None):
             report(task_id, progress=1.0, message="No observations are scheduled", status="completed")
 
     else:
-        report(task_id, progress=0.2, message="Finished logging the parameters", status="in_progress")
+        report(task_id, progress=0.05, message="Finished logging the parameters", status="in_progress")
         logger.info(
             "==========================================================================================="
         )
@@ -190,7 +190,7 @@ def GetSchedule(obspar, task_id=None):
         )
 
         SuggestedPointings, t0 = PGWinFoV(skymap, raw_map.name_event, obspar, dirName, task_id=task_id)
-        report(task_id, progress=0.8, message="Finished calculating the suggested pointings", status="in_progress")
+        # report(task_id, progress=0.8, message="Finished calculating the suggested pointings", status="in_progress")
 
         if len(SuggestedPointings) != 0:
             gal = []
