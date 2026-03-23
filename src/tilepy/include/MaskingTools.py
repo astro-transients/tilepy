@@ -65,7 +65,7 @@ logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.INFO)
 
 
-def ZenithAngleCut(prob, time, obspar):
+def ZenithAngleCut(prob, is_nested, time, obspar):
     """
     Mask in the pixels with zenith angle larger than the max Zenith cut
     """
@@ -82,10 +82,12 @@ def ZenithAngleCut(prob, time, obspar):
     mzenith = hp.ma(pprob)
     maskzenith = np.zeros(hp.nside2npix(nside), dtype=bool)
 
-    pixel_theta, pixel_phi = hp.pix2ang(nside, np.arange(hp.nside2npix(nside)))
+    pixel_theta, pixel_phi = hp.pix2ang(
+        nside, np.arange(hp.nside2npix(nside)), nest=is_nested
+    )
     ra = np.rad2deg(pixel_phi)
     dec = np.rad2deg(0.5 * np.pi - pixel_theta)
-    targetCoord_map = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+    targetCoord_map = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
     altaz_map = targetCoord_map.transform_to(frame)
     maskzenith[altaz_map.alt.value < 90.0 - maxZenith] = 1
     mzenith.mask = maskzenith
@@ -146,7 +148,7 @@ def VisibleAtTime(time, galaxies, obspar):
     # print('galaxies',galaxies)
     # print('galaxies',len(galaxies['RAJ2000']))
     radecs = co.SkyCoord(
-        galaxies["RAJ2000"], galaxies["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+        galaxies["RAJ2000"], galaxies["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
     if len(radecs) > 0:
         thisaltaz = radecs.transform_to(frame)
@@ -223,7 +225,7 @@ def FulfillsRequirementGreyObservations(time, theseGals, obspar):
     observatory = obspar.location
     minMoonSourceSeparation = obspar.minMoonSourceSeparation
     targetCoord = co.SkyCoord(
-        theseGals["RAJ2000"], theseGals["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+        theseGals["RAJ2000"], theseGals["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
     frame = co.AltAz(obstime=time, location=observatory)
     moonaltazs = get_body("moon", Time(time, scale="utc")).transform_to(frame)
@@ -237,7 +239,13 @@ def FulfillsRequirementGreyObservations(time, theseGals, obspar):
 
 
 def GetEarthOccultedPix(
-    nside, time, earth_radius, earth_sep, satellitePosition, satelliteLocation
+    nside,
+    is_nested,
+    time,
+    earth_radius,
+    earth_sep,
+    satellitePosition,
+    satelliteLocation,
 ):
     # for equatorial frame
 
@@ -261,12 +269,15 @@ def GetEarthOccultedPix(
     earth_thetapix = 0.5 * np.pi - np.deg2rad(earthCoord_equatorial.dec.deg)
     earth_xyzpix = hp.ang2vec(earth_thetapix, earth_phipix)
     earth_occulted_pix = hp.query_disc(
-        nside, earth_xyzpix, np.deg2rad(np.rad2deg(angle_of_occlusion) + earth_sep)
+        nside,
+        earth_xyzpix,
+        np.deg2rad(np.rad2deg(angle_of_occlusion) + earth_sep),
+        nest=is_nested,
     )
     return earth_occulted_pix, earthCoord_equatorial
 
 
-def GetMoonOccultedPix(nside, moon_sep, time):
+def GetMoonOccultedPix(nside, is_nested, moon_sep, time):
     time = Time(time)
     # for equatorial frame
     MoonCoord_equatorial = get_body("moon", time, location=EarthLocation(0, 0, 0))
@@ -274,11 +285,13 @@ def GetMoonOccultedPix(nside, moon_sep, time):
     phipix_moon = np.deg2rad(MoonCoord_equatorial.ra.deg)
     thetapix_moon = 0.5 * np.pi - np.deg2rad(MoonCoord_equatorial.dec.deg)
     moon_xyzpix = hp.ang2vec(thetapix_moon, phipix_moon)
-    moon_occulted_pix = hp.query_disc(nside, moon_xyzpix, np.deg2rad(moon_sep))
+    moon_occulted_pix = hp.query_disc(
+        nside, moon_xyzpix, np.deg2rad(moon_sep), nest=is_nested
+    )
     return moon_occulted_pix, MoonCoord_equatorial
 
 
-def GetSunOccultedPix(nside, sun_sep, time):
+def GetSunOccultedPix(nside, is_nested, sun_sep, time):
     time = Time(time)
     # for equatorial frame
     SunCoord_equatorial = get_body("sun", time, location=EarthLocation(0, 0, 0))
@@ -286,12 +299,15 @@ def GetSunOccultedPix(nside, sun_sep, time):
     phipix_sun = np.deg2rad(SunCoord_equatorial.ra.deg)
     thetapix_sun = 0.5 * np.pi - np.deg2rad(SunCoord_equatorial.dec.deg)
     sun_xyzpix = hp.ang2vec(thetapix_sun, phipix_sun)
-    sun_occulted_pix = hp.query_disc(nside, sun_xyzpix, np.deg2rad(sun_sep))
+    sun_occulted_pix = hp.query_disc(
+        nside, sun_xyzpix, np.deg2rad(sun_sep), nest=is_nested
+    )
     return sun_occulted_pix, SunCoord_equatorial
 
 
 def OccultationCut(
     prob,
+    is_nested,
     nside,
     time,
     obspar,
@@ -314,14 +330,14 @@ def OccultationCut(
     mpixels = []
 
     mEarth, posEarth = GetEarthOccultedPix(
-        nside, time, 6371, earth_sep, satellitePosition, satelliteLocation
+        nside, is_nested, time, 6371, earth_sep, satellitePosition, satelliteLocation
     )
     mpixels.extend(mEarth)
 
-    mSun, posSun = GetSunOccultedPix(nside, sun_sep, time)
+    mSun, posSun = GetSunOccultedPix(nside, is_nested, sun_sep, time)
     mpixels.extend(mSun)
 
-    mMoon, poSMoon = GetMoonOccultedPix(nside, moon_sep, time)
+    mMoon, poSMoon = GetMoonOccultedPix(nside, is_nested, moon_sep, time)
     mpixels.extend(mMoon)
 
     pixlist.extend(mpixels)
@@ -391,6 +407,7 @@ def SAA_Times(
 
 def GetBestGridPos2D(
     prob,
+    is_nested,
     highres,
     HRnside,
     reducedNside,
@@ -415,17 +432,21 @@ def GetBestGridPos2D(
 
     for i in range(0, len(newpix)):
         if n_sides == 0:
-            xyzpix = hp.pix2vec(reducedNside, newpix[i])
+            xyzpix = hp.pix2vec(reducedNside, newpix[i], nest=is_nested)
             # xyzpix = np.column_stack(xyzpix1)
-            ipix_discfull = hp.query_disc(HRnside, xyzpix, np.deg2rad(radius))
+            ipix_discfull = hp.query_disc(
+                HRnside, xyzpix, np.deg2rad(radius), nest=is_nested
+            )
         elif n_sides > 0:
-            theta, phi = hp.pix2ang(reducedNside, newpix[i])
+            theta, phi = hp.pix2ang(reducedNside, newpix[i], nest=is_nested)
             ra_center = np.rad2deg(phi)
             dec_center = 90 - np.rad2deg(theta)
             vertices = Tools.get_regular_polygon_vertices(
                 ra_center, dec_center, radius, n_sides, rotation
             )
-            ipix_discfull = hp.query_polygon(HRnside, vertices, inclusive=True)
+            ipix_discfull = hp.query_polygon(
+                HRnside, vertices, inclusive=True, nest=is_nested
+            )
         else:
             raise ValueError("Shape must be 'circle' or 'polygon'.")
 
@@ -449,7 +470,7 @@ def GetBestGridPos2D(
             sum_PGW.append(HRprob)
             dp_dV_FOV.append(HRprobf)
             newpixfinal.append(newpix[i])
-            theta, phi = hp.pix2ang(reducedNside, newpix[i])
+            theta, phi = hp.pix2ang(reducedNside, newpix[i], nest=is_nested)
             ra.append(np.degrees(phi))  # RA in degrees
             dec.append(90 - np.degrees(theta))
 
@@ -472,6 +493,7 @@ def GetBestGridPos2D(
             rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]),
             xsize=500,
             ysize=500,
+            nest=is_nested,
         )
 
         path = Path(f"{dirName}/GridPlot")
@@ -508,10 +530,10 @@ def GetBestGridPos2D(
 
         hp.graticule()
         try:
-            tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
+            tt, pp = hp.pix2ang(reducedNside, Occultedpixels, nest=is_nested)
             ra2 = np.rad2deg(pp)
             dec2 = np.rad2deg(0.5 * np.pi - tt)
-            skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+            skycoord = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
             hp.visufunc.projplot(
                 skycoord.ra.deg,
                 skycoord.dec.deg,
@@ -540,6 +562,7 @@ def GetBestGridPos2D(
 
 def GetBestGridPos3D(
     prob,
+    is_nested,
     cat,
     galpix,
     newpix,
@@ -606,6 +629,7 @@ def GetBestGridPos3D(
             rot=(first_values["PIXRA"][0], first_values["PIXDEC"][0]),
             xsize=500,
             ysize=500,
+            nest=is_nested,
         )
         hp.graticule()
 
@@ -630,10 +654,10 @@ def GetBestGridPos3D(
         )
 
         try:
-            tt, pp = hp.pix2ang(reducedNside, Occultedpixels)
+            tt, pp = hp.pix2ang(reducedNside, Occultedpixels, nest=is_nested)
             ra2 = np.rad2deg(pp)
             dec2 = np.rad2deg(0.5 * np.pi - tt)
-            skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+            skycoord = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
             hp.visufunc.projplot(
                 skycoord.ra.deg,
                 skycoord.dec.deg,
