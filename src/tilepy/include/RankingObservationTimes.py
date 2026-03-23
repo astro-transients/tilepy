@@ -766,7 +766,7 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
             [(pre_coords, pre_colors, "Before Optimization")]
         ):
             fig.add_subplot(1, 2, i + 1, projection="mollweide")
-            hp.gnomview(prob, rot=(144.844, 11.111), xsize=500, ysize=500, nest=skympa.is_nested)
+            hp.gnomview(prob, rot=(144.844, 11.111), xsize=500, ysize=500, nest=skymap.is_nested)
 
             for coord, color in zip(coords, colors):
                 hp.projplot(
