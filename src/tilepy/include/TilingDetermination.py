@@ -166,7 +166,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
             "==========================================================================================="
         )
         pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist, pixlistHR
+            PointingFile, prob, obspar, pixlist, pixlistHR, task_id=task_id
         )
         if obspar.countPrevious:
             maxRuns = obspar.maxRuns - doneObs
@@ -254,7 +254,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
                     counter = counter + 1
         else:
             break
-        report(task_id, progress=0.6 + 0.3 * ((j + 1) / len(NightDarkRuns)), message=f"Processing night/dark time window {j+1} of {len(NightDarkRuns)}", status="in_progress")
+        report(task_id, progress=0.5 + 0.4 * ((j + 1) / len(NightDarkRuns)), message=f"Processing night/dark time window {j+1} of {len(NightDarkRuns)}", status="in_progress")
         # todo: add monitoring for each process
     logger.info(
         f"\nTotal GW probability covered: {float(sum(P_GWarray)):1.4f}\nNumber of runs that fulfill darkness condition: {len(NightDarkRuns)}\nNumber of effective pointings: {len(ObservationTimearray)}"

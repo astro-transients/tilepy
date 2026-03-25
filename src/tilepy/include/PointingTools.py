@@ -1424,7 +1424,7 @@ def ComputeProbability2D(
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
 
-def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR): # todo: add monitoring
+def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR, task_id: str | None = None): # todo: add monitoring
     nside = obspar.reducedNside
     radius = obspar.FOV
 
@@ -1463,6 +1463,7 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR): # tod
         for k, valuek in enumerate(ipix_discHR):
             if valuek not in pixlistHR:
                 pixlistHR.append(valuek)
+        report(task_id, message=f"Subtracted pointing {i+1}/{len(raPointing)}: ra {raPointing[i]}, dec {decPointing[i]}, P_GW {P_GW[i]:.4e}")
 
     return pixlist, pixlistHR, np.sum(P_GW), len(raPointing)
 
