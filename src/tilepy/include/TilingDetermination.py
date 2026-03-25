@@ -166,7 +166,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
             "==========================================================================================="
         )
         pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist, pixlistHR, task_id=task_id
+            PointingFile, prob, obspar, pixlist, pixlistHR
         )
         if obspar.countPrevious:
             maxRuns = obspar.maxRuns - doneObs
