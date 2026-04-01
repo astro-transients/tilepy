@@ -21,7 +21,7 @@
 
 
 import logging
-import os
+from pathlib import Path
 
 import astropy.units as u
 from astropy.io import ascii
@@ -98,7 +98,7 @@ def GetSchedule(obspar, task_id=None):
         # area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
         if obspar.locCut < area_percentage:
             logger.info(
-                f"The {obspar.percentageMOC * 100:.1f}% area ({area_percentage:.2f} deg^2) is larger than the maximum allowed in the configuration ({str(obspar.locCut)} deg^2)"
+                f"The {obspar.percentageMOC * 100:.1f}% area ({area_percentage:.2f} deg^2) is larger than the maximum allowed in the configuration ({obspar.locCut:.2f} deg^2)"
             )
             return
 
@@ -108,18 +108,16 @@ def GetSchedule(obspar, task_id=None):
         "==========================================================================================="
     )
 
-    outputDir = "%s/%s" % (obspar.outDir, raw_map.name_event)
+    outputDir = Path(f"{obspar.outDir}/{raw_map.name_event}")
 
     if skymap.is3D:
-        dirName = f"{outputDir}/PGallinFoV{obspar.strategy}"
-        galaxies = obspar.datasetDir + obspar.galcatName
+        dirName = outputDir / f"PGallinFoV{obspar.strategy}"
+        galaxies = Path(f"{obspar.datasetDir}/{obspar.galcatName}")
     else:
-        dirName = f"{outputDir}/PGinFoV"
+        dirName = outputDir / "PGinFoV"
 
-    if not os.path.exists(dirName):
-        os.makedirs(dirName)
-    # FIXME:
-    # os.makedirs(dirName, exist_ok=True)
+    if not dirName.exists():
+        dirName.mkdir(parents=True)
 
     if skymap.is3D:
         logger.info(
@@ -140,11 +138,11 @@ def GetSchedule(obspar, task_id=None):
         )
         report(task_id, progress=0.01, message="Finished logging the parameters", status="in_progress")
         SuggestedPointings, cat = PGalinFoV(
-            skymap, raw_map.name_event, galaxies, obspar, dirName, task_id=task_id
+            skymap, raw_map.name_event, str(galaxies), obspar, str(dirName), task_id=task_id
         )
         # report(task_id, progress=0.8, message="Finished calculating the suggested pointings", status="in_progress")
         if len(SuggestedPointings) != 0:
-            outfilename = "%s/SuggestedPointings_GalProbOptimisation.txt" % dirName
+            outfilename = f"{dirName}/SuggestedPointings_GalProbOptimisation.txt"
             ascii.write (
                 SuggestedPointings, outfilename, overwrite=True, fast_writer=False
             )
@@ -154,16 +152,16 @@ def GetSchedule(obspar, task_id=None):
                     obspar,
                     skymap,
                     cat,
-                    dirName,
-                    "%s/SuggestedPointings_GalProbOptimisation.txt" % dirName,
+                    str(dirName),
+                    f"{dirName}/SuggestedPointings_GalProbOptimisation.txt",
                 )
             if obspar.doPlot:
                 PointingPlotting(
                     skymap.getMap("prob", obspar.HRnside),
                     obspar,
                     raw_map.name_event,
-                    dirName,
-                    "%s/SuggestedPointings_GalProbOptimisation.txt" % dirName,
+                    str(dirName),
+                    f"{dirName}/SuggestedPointings_GalProbOptimisation.txt",
                     obspar.obs_name,
                     cat,
                 )
@@ -189,12 +187,15 @@ def GetSchedule(obspar, task_id=None):
             "===========================================================================================\n"
         )
 
-        SuggestedPointings, t0 = PGWinFoV(skymap, raw_map.name_event, obspar, dirName, task_id=task_id)
+        SuggestedPointings, t0 = PGWinFoV(
+            skymap, raw_map.name_event, obspar, str(dirName), task_id=task_id
+        )
         # report(task_id, progress=0.8, message="Finished calculating the suggested pointings", status="in_progress")
+
 
         if len(SuggestedPointings) != 0:
             gal = []
-            outfilename = "%s/SuggestedPointings_2DProbOptimisation.txt" % dirName
+            outfilename = f"{dirName}/SuggestedPointings_2DProbOptimisation.txt"
             ascii.write(
                 SuggestedPointings, outfilename, overwrite=True, fast_writer=False
             )
@@ -203,8 +204,8 @@ def GetSchedule(obspar, task_id=None):
                 RankingTimes_2D(
                     obspar,
                     skymap.getMap("prob", obspar.HRnside),
-                    dirName,
-                    "%s/SuggestedPointings_2DProbOptimisation.txt" % dirName,
+                    str(dirName),
+                    f"{dirName}/SuggestedPointings_2DProbOptimisation.txt",
                 )
 
             if obspar.doPlot:
@@ -212,8 +213,8 @@ def GetSchedule(obspar, task_id=None):
                     skymap.getMap("prob", obspar.HRnside),
                     obspar,
                     raw_map.name_event,
-                    dirName,
-                    "%s/SuggestedPointings_2DProbOptimisation.txt" % dirName,
+                    str(dirName),
+                    f"{dirName}/SuggestedPointings_2DProbOptimisation.txt",
                     obspar.obs_name,
                     gal,
                 )
@@ -260,33 +261,38 @@ def GetUniversalSchedule(obspar):
     base = obspar[0].base
 
     ObservationTime = obspar[0].obsTime
-    outputDir = "%s/%s" % (obspar[0].outDir, raw_map.name_event)
+
+    outputDir = Path(f"{obspar[0].outDir}/{raw_map.name_event}")
 
     if skymap.is3D:
-        galaxies = obspar[0].datasetDir + obspar[0].galcatName
+        galaxies = Path(f"{obspar[0].datasetDir}/{obspar[0].galcatName}")
 
     cat = None
 
     if base == "grid":
         if skymap.is3D:
-            dirName = "%s/GetBestTiles3D" % outputDir
-            if not os.path.exists(dirName):
-                os.makedirs(dirName)
+            dirName = outputDir / "GetBestTiles3D"
+            if not dirName.exists():
+                dirName.mkdir(parents=True)
             SuggestedPointings = GetBestTiles3D(
                 skymap,
                 raw_map.name_event,
                 obspar[0].pointingsFile,
-                galaxies,
+                str(galaxies),
                 obspar,
-                dirName,
+                str(dirName),
             )
             # print(SuggestedPointings)
         else:
-            dirName = "%s/GetBestTiles2D" % outputDir
-            if not os.path.exists(dirName):
-                os.makedirs(dirName)
+            dirName = outputDir / "GetBestTiles2D"
+            if not dirName.exists():
+                dirName.mkdir(parents=True)
             SuggestedPointings = GetBestTiles2D(
-                skymap, raw_map.name_event, obspar[0].pointingsFile, obspar, dirName
+                skymap,
+                raw_map.name_event,
+                obspar[0].pointingsFile,
+                obspar,
+                str(dirName),
             )
 
     # SPACE
@@ -308,36 +314,35 @@ def GetUniversalSchedule(obspar):
             logger.info(
                 "===========================================================================================\n"
             )
-            dirName = "%s/PGalinFoV_NObs_Space" % outputDir
-            if not os.path.exists(dirName):
-                os.makedirs(dirName)
-            galaxies = obspar[0].datasetDir + obspar[0].galcatName
+            dirName = outputDir / "PGalinFoV_NObs_Space"
+            if not dirName.exists():
+                dirName.mkdir(parents=True)
             SuggestedPointings, result = PGalinFoV_Space_NObs(
                 skymap,
                 raw_map.name_event,
                 ObservationTime,
                 obspar[0].pointingsFile,
-                galaxies,
+                str(galaxies),
                 obspar,
-                dirName,
+                str(dirName),
             )
             if obspar[0].doPlot and len(result["first_values1"]) > 0:
                 PlotAccRegion(
                     skymap,
-                    dirName,
+                    str(dirName),
                     obspar[0].reducedNside,
                     result["Occultedpixels"],
                     result["first_values"],
                 )
             if obspar[0].doRank:
                 PlotAccRegionTimePix(
-                    dirName,
+                    str(dirName),
                     result["AvailablePixPerTime"],
                     result["ProbaTime"],
                     result["TestTime"],
                 )
                 PlotAccRegionTimeRadec(
-                    dirName,
+                    str(dirName),
                     result["AvailablePixPerTime"],
                     result["ProbaTime"],
                     result["TestTime"],
@@ -360,34 +365,34 @@ def GetUniversalSchedule(obspar):
             logger.info(
                 "===========================================================================================\n"
             )
-            dirName = "%s/PGWinFoV_Space_NObs" % outputDir
-            if not os.path.exists(dirName):
-                os.makedirs(dirName)
+            dirName = outputDir / "PGWinFoV_Space_NObs"
+            if not dirName.exists():
+                dirName.mkdir(parents=True)
             SuggestedPointings, result = PGWinFoV_Space_NObs(
                 skymap,
                 raw_map.name_event,
                 ObservationTime,
                 obspar[0].pointingsFile,
                 obspar,
-                dirName,
+                str(dirName),
             )
             if obspar[0].doPlot and len(result["first_values1"]) > 0:
                 PlotAccRegion(
                     skymap,
-                    dirName,
+                    str(dirName),
                     obspar[0].reducedNside,
                     result["Occultedpixels"],
                     result["first_values"],
                 )
             if obspar[0].doRank:
                 PlotAccRegionTimePix(
-                    dirName,
+                    str(dirName),
                     result["AvailablePixPerTime"],
                     result["ProbaTime"],
                     result["TestTime"],
                 )
                 PlotAccRegionTimeRadec(
-                    dirName,
+                    str(dirName),
                     result["AvailablePixPerTime"],
                     result["ProbaTime"],
                     result["TestTime"],
@@ -417,18 +422,17 @@ def GetUniversalSchedule(obspar):
             logger.info(
                 "===========================================================================================\n"
             )
-            dirName = "%s/PGalinFoV_NObs" % outputDir
-            galaxies = obspar[0].datasetDir + obspar[0].galcatName
-            if not os.path.exists(dirName):
-                os.makedirs(dirName)
+            dirName = outputDir / "PGalinFoV_NObs"
+            if not dirName.exists():
+                dirName.mkdir(parents=True)
             SuggestedPointings, cat, obspar = PGalinFoV_NObs(
                 skymap,
                 raw_map.name_event,
                 ObservationTime,
                 obspar[0].pointingsFile,
-                galaxies,
+                str(galaxies),
                 obspar,
-                dirName,
+                str(dirName),
             )
 
         else:
@@ -447,21 +451,21 @@ def GetUniversalSchedule(obspar):
             logger.info(
                 "===========================================================================================\n"
             )
-            dirName = "%s/PGWinFoV_NObs" % outputDir
-            if not os.path.exists(dirName):
-                os.makedirs(dirName)
+            dirName = outputDir / "PGWinFoV_NObs"
+            if not dirName.exists():
+                dirName.mkdir(parents=True)
             SuggestedPointings, obspar = PGWinFoV_NObs(
                 skymap,
                 raw_map.name_event,
                 ObservationTime,
                 obspar[0].pointingsFile,
                 obspar,
-                dirName,
+                str(dirName),
             )
 
     if len(SuggestedPointings) != 0:
         logger.info(f"Suggested pointings: {SuggestedPointings}")
-        outfilename = "%s/SuggestedPointings_GWOptimisation.txt" % dirName
+        outfilename = str(dirName / "SuggestedPointings_GWOptimisation.txt")
         ascii.write(SuggestedPointings, outfilename, overwrite=True, fast_writer=False)
         logger.info(f"Resulting pointings file is {outfilename}")
 
@@ -480,23 +484,21 @@ def GetUniversalSchedule(obspar):
                     )
                     ascii.write(
                         time_table,
-                        "%s/SAA_Times_%s.txt" % (dirName, obspar[j].obs_name),
+                        f"{dirName}/SAA_Times_{obspar[j].obs_name}.txt",
                         overwrite=True,
                         fast_writer=False,
                     )
                 if len(SuggestedPointings_1) != 0:
                     ascii.write(
                         SuggestedPointings_1,
-                        "%s/SuggestedPointings_GWOptimisation_%s.txt"
-                        % (dirName, obspar[j].obs_name),
+                        f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
                         overwrite=True,
                         fast_writer=False,
                     )
                     if obspar[j].doRank:
                         Ranking_Space(
                             dirName,
-                            "%s/SuggestedPointings_GWOptimisation_%s.txt"
-                            % (dirName, obspar[j].obs_name),
+                            f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
                             obspar[j],
                             obspar[j].alphaR,
                             obspar[j].betaR,
@@ -504,8 +506,7 @@ def GetUniversalSchedule(obspar):
                         )
                         Ranking_Space_AI(
                             dirName,
-                            "%s/SuggestedPointings_GWOptimisation_%s.txt"
-                            % (dirName, obspar[j].obs_name),
+                            f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
                             obspar[j],
                             skymap,
                         )
@@ -526,8 +527,7 @@ def GetUniversalSchedule(obspar):
                 if len(SuggestedPointings_1) != 0:
                     ascii.write(
                         SuggestedPointings_1,
-                        "%s/SuggestedPointings_GWOptimisation_%s.txt"
-                        % (dirName, obspar[j].obs_name),
+                        f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
                         overwrite=True,
                         fast_writer=False,
                     )
@@ -535,18 +535,16 @@ def GetUniversalSchedule(obspar):
                         RankingTimes_2D(
                             obspar[j],
                             skymap.getMap("prob", obspar[j].HRnside),
-                            dirName,
-                            "%s/SuggestedPointings_GWOptimisation_%s.txt"
-                            % (dirName, obspar[j].obs_name),
+                            str(dirName),
+                            f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
                         )
                     if obspar[j].doPlot:
                         PointingPlotting(
                             skymap.getMap("prob", obspar[j].HRnside),
                             obspar[j],
                             obspar[j].obs_name,
-                            dirName,
-                            "%s/SuggestedPointings_GWOptimisation_%s.txt"
-                            % (dirName, obspar[j].obs_name),
+                            str(dirName),
+                            f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
                             obspar[j].obs_name,
                             cat,
                         )
@@ -556,7 +554,7 @@ def GetUniversalSchedule(obspar):
                     obspar[0],
                     "all",
                     dirName,
-                    "%s/SuggestedPointings_GWOptimisation.txt" % dirName,
+                    f"{dirName}/SuggestedPointings_GWOptimisation.txt",
                     "all",
                     cat,
                 )

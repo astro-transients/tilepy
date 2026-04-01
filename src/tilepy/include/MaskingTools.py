@@ -23,11 +23,10 @@
 
 import datetime
 import logging
+from pathlib import Path
 
 #####################################################################
 # Packages
-import os
-
 import astropy.coordinates as co
 import healpy as hp
 import matplotlib.pyplot as plt
@@ -88,7 +87,7 @@ def ZenithAngleCut(prob, time, obspar):
     dec = np.rad2deg(0.5 * np.pi - pixel_theta)
     targetCoord_map = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
     altaz_map = targetCoord_map.transform_to(frame)
-    maskzenith[altaz_map.alt.value < 90 - maxZenith] = 1
+    maskzenith[altaz_map.alt.value < 90.0 - maxZenith] = 1
     mzenith.mask = maskzenith
 
     yprob = ma.masked_array(pprob, mzenith.mask)
@@ -373,9 +372,9 @@ def SAA_Times(
     saa_numeric = [1 if value else 0 for value in saa]
     # Plot
     if doPlot:
-        path = dirName + "/SAAPlot"
-        if not os.path.exists(path):
-            os.mkdir(path, 493)
+        path = Path(f"{dirName}/SAAPlot")
+        if not path.exists():
+            path.mkdir(parents=True)
         plt.figure(figsize=(12, 6))
         plt.plot(
             SatTimes, saa_numeric, drawstyle="steps-post", label="SAA (True=1, False=0)"
@@ -386,7 +385,7 @@ def SAA_Times(
         plt.ylim(-0.1, 1.1)  # Set limits to make binary values clear
         plt.legend()
         plt.grid(True)
-        plt.savefig("%s/SAA_Times.png" % (path))
+        plt.savefig(f"{path}/SAA_Times.png")
     return SatTimes, saa
 
 
@@ -475,9 +474,9 @@ def GetBestGridPos2D(
             ysize=500,
         )
 
-        path = dirName + "/GridPlot"
-        if not os.path.exists(path):
-            os.mkdir(path, 493)
+        path = Path(f"{dirName}/GridPlot")
+        if not path.exists():
+            path.mkdir(parents=True)
 
         if n_sides > 0:
             for ra1, dec1 in zip(first_values["PIXRA"], first_values["PIXDEC"]):
@@ -533,7 +532,7 @@ def GetBestGridPos2D(
             linewidth=0.1,
         )
 
-        plt.savefig("%s/Grid_Pointing.png" % (path), bbox_inches="tight")
+        plt.savefig(f"{path}/Grid_Pointing.png", bbox_inches="tight")
         plt.close()
 
     return first_values
@@ -597,9 +596,9 @@ def GetBestGridPos3D(
         raise ValueError("No pointing were found with current minProbCut")
 
     if doPlot:
-        path = dirName + "/GridPlot"
-        if not os.path.exists(path):
-            os.mkdir(path, 493)
+        path = Path(f"{dirName}/GridPlot")
+        if not path.exists():
+            path.mkdir(parents=True)
 
         # mpl.rcParams.update({'font.size':14})
         hp.gnomview(
@@ -655,7 +654,7 @@ def GetBestGridPos3D(
             coord="C",
             linewidth=0.1,
         )
-        plt.savefig("%s/Grid_Pointing.png" % (path))
+        plt.savefig(f"{path}/Grid_Pointing.png")
         plt.close()
 
     return first_values

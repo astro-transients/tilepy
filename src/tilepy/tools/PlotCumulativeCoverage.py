@@ -83,7 +83,7 @@ def ObtainCumulativeProbabilityPlot(
         plt.show()
     else:
         plt.savefig(
-            "%s_%s_cumulativeDistribution.png" % (event_name, WhatToPlot),
+            f"{event_name}_{WhatToPlot}_cumulativeDistribution.png",
             dpi=300,
             bbox_inches="tight",
         )
@@ -172,7 +172,7 @@ def ObtainCumulativeProbabilityPlotLog(
         plt.show()
     else:
         plt.savefig(
-            "%s_%s_cumulativeDistribution.png" % (event_name, WhatToPlot),
+            f"{event_name}_{WhatToPlot}_cumulativeDistribution.png",
             dpi=300,
             bbox_inches="tight",
         )
