@@ -136,7 +136,7 @@ def GetSchedule(obspar, task_id=None):
         logger.info(
             "===========================================================================================\n"
         )
-        report(task_id, progress=0.01, message="Finished logging the parameters", status="in_progress")
+        report(task_id, progress=0.05, message="Finished logging the parameters", status="in_progress")
         SuggestedPointings, cat = PGalinFoV(
             skymap, raw_map.name_event, str(galaxies), obspar, str(dirName), task_id=task_id
         )
