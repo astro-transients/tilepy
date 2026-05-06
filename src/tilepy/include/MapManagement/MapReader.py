@@ -59,7 +59,8 @@ class SimpleHealpixMap:
         self.data = data
         self.nside = nside
         self.unit = u.Unit("sr^-1")
-        self.ordering = ordering
+        self.scheme = ordering
+        self.is_nested = self.scheme == "NESTED" or self.scheme == "NUNIQ"
 
     def pixarea(self, pix_ids):
         area_sr = hp.nside2pixarea(self.nside)
