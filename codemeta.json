@@ -1,0 +1,130 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "name": "tilepy",
+  "version": "3.0.1",
+  "datePublished": "2025-10-02",
+  "description": "tilepy is an open-source Python package for scheduling follow-up observations of multi-messenger transient events with large sky localization uncertainties, such as gravitational waves, gamma-ray bursts, and high-energy neutrinos. It supports 2D and 3D (galaxy-catalog-based) tiling strategies and is accessible via a public API and through the Astro-COLIBRI platform.",
+  "license": "https://spdx.org/licenses/LGPL-3.0-only",
+  "codeRepository": "https://github.com/astro-transients/tilepy",
+  "url": "https://tilepy.com/tilepy/",
+  "downloadUrl": "https://pypi.org/project/tilepy/",
+  "issueTracker": "https://github.com/astro-transients/tilepy/issues",
+  "readme": "https://github.com/astro-transients/tilepy/blob/master/README.md",
+  "programmingLanguage": {
+    "@type": "ComputerLanguage",
+    "name": "Python",
+    "url": "https://www.python.org/"
+  },
+  "runtimePlatform": "Python >= 3.9",
+  "keywords": [
+    "astronomy",
+    "astrophysics",
+    "multi-messenger astrophysics",
+    "gravitational waves",
+    "observation scheduling",
+    "time-domain astronomy",
+    "tiling",
+    "gamma-ray bursts",
+    "neutrinos"
+  ],
+  "applicationCategory": "Astronomy",
+  "operatingSystem": "Linux, macOS, Windows",
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Monica",
+      "familyName": "Seglar-Arroyo",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "IFAE, Barcelona, Spain"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Halim",
+      "familyName": "Ashkar",
+      "email": "halim.ashkar@llr.in2p3.fr",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "ICE-CSIC, Barcelona, Spain"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Mathieu",
+      "familyName": "de Bony de Lavergne",
+      "email": "mathieu.debony@cea.fr",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "CPPM, Marseille, France"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Fabian",
+      "familyName": "Schüssler",
+      "email": "fabian.schussler@cea.fr",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "IRFU, CEA, Université Paris-Saclay, France"
+      }
+    }
+  ],
+  "maintainer": [
+    {
+      "@type": "Person",
+      "givenName": "Halim",
+      "familyName": "Ashkar",
+      "email": "halim.ashkar@llr.in2p3.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Fabian",
+      "familyName": "Schüssler",
+      "email": "fabian.schussler@cea.fr"
+    }
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "email": "astro.tilepy@gmail.com",
+    "url": "https://forum.astro-colibri.science/c/instrumentation-and-tools/tilepy/8",
+    "contactType": "user support"
+  },
+  "identifier": [
+    {
+      "@type": "PropertyValue",
+      "propertyID": "ascl",
+      "value": "ascl:2604.019"
+    }
+  ],
+  "citation": [
+    {
+      "@type": "ScholarlyArticle",
+      "name": "Cross-Observatory Coordination with tilepy: A Novel Tool for Observations of Multi-Messenger Transient Events",
+      "author": [
+        {
+          "@type": "Person",
+          "givenName": "Monica",
+          "familyName": "Seglar-Arroyo"
+        },
+        { "@type": "Person", "givenName": "Halim", "familyName": "Ashkar" },
+        {
+          "@type": "Person",
+          "givenName": "Mathieu",
+          "familyName": "de Bony de Lavergne"
+        },
+        { "@type": "Person", "givenName": "Fabian", "familyName": "Schüssler" }
+      ],
+      "datePublished": "2024-09",
+      "journal": "The Astrophysical Journal Supplement Series",
+      "volumeNumber": "274",
+      "issueNumber": "1",
+      "identifier": "https://doi.org/10.3847/1538-4365/ad5bde",
+      "url": "https://iopscience.iop.org/article/10.3847/1538-4365/ad5bde"
+    }
+  ],
+  "developmentStatus": "active",
+  "contIntegration": "https://github.com/astro-transients/tilepy/actions",
+  "releaseNotes": "https://github.com/astro-transients/tilepy/releases"
+}
