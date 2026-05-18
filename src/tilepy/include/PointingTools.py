@@ -2263,16 +2263,10 @@ def ComputeProbPGALIntegrateFoV(
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
 
 
-def GetRegionPixReduced(hpxx, percentage, Nnside, task_id=None): # todo: add monitoring 
+def GetRegionPixReduced(hpxx, percentage, Nnside): 
     nside = Nnside  # size of map used for contour determination
     hpx = hp.ud_grade(
         hpxx, nside_out=nside, power=-2, order_in="Nested", order_out="Nested"
-    )
-    report(
-        task_id=task_id,
-        progress=0.2,
-        message=f"Finding contour for {percentage*100:.1f}% of the probability",
-        status="in_progress"
     )
     sort = sorted(hpx, reverse=True)
     cumsum = np.cumsum(sort)
@@ -2294,7 +2288,6 @@ def GetRegionPixReduced(hpxx, percentage, Nnside, task_id=None): # todo: add mon
     # from index to polar coordinates
     theta1, phi1 = hp.pix2ang(nside, table_ipix_contour)
     area = len(table_ipix_contour) * hp.nside2pixarea(nside, True)
-    report(task_id=task_id, progress=0.2, message=f"Found contour for {percentage*100:.1f}% of the probability", status="in_progress")
 
     # reducing resolution to et a faser execution
     # list of pixel indices in the new map
