@@ -76,7 +76,7 @@ def GetSchedule(obspar):
 
     Notes
     -----
-    If the 90% localization area is larger than the configured maximum (`locCut`), no schedule is generated.
+    If the localization area at the confidence level specified by the user (`percentageMOC`) is larger than the configured maximum (`locCut`), no schedule is generated.
 
     Examples
     --------
@@ -156,6 +156,7 @@ def GetSchedule(obspar):
             if obspar.doPlot:
                 PointingPlotting(
                     skymap.getMap("prob", obspar.HRnside),
+                    skymap.is_nested,
                     obspar,
                     raw_map.name_event,
                     str(dirName),
@@ -198,12 +199,14 @@ def GetSchedule(obspar):
                 RankingTimes_2D(
                     obspar,
                     skymap.getMap("prob", obspar.HRnside),
+                    skymap.is_nested,
                     str(dirName),
                     f"{dirName}/SuggestedPointings_2DProbOptimisation.txt",
                 )
             if obspar.doPlot:
                 PointingPlotting(
                     skymap.getMap("prob", obspar.HRnside),
+                    skymap.is_nested,
                     obspar,
                     raw_map.name_event,
                     str(dirName),
@@ -526,12 +529,14 @@ def GetUniversalSchedule(obspar):
                         RankingTimes_2D(
                             obspar[j],
                             skymap.getMap("prob", obspar[j].HRnside),
+                            skymap.is_nested,
                             str(dirName),
                             f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
                         )
                     if obspar[j].doPlot:
                         PointingPlotting(
                             skymap.getMap("prob", obspar[j].HRnside),
+                            skymap.is_nested,
                             obspar[j],
                             obspar[j].obs_name,
                             str(dirName),
@@ -542,6 +547,7 @@ def GetUniversalSchedule(obspar):
             if obspar[j].doPlot:
                 PointingPlotting(
                     skymap.getMap("prob", obspar[j].HRnside),
+                    skymap.is_nested,
                     obspar[0],
                     "all",
                     dirName,

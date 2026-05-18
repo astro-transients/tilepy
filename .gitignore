@@ -37,6 +37,7 @@ GLADE+.txt
 *.fits.*
 *.fit.*
 examples/launcher/output
+0_n_PROBMAP
 
 # Compiled files
 *.py[cod]
