@@ -25,7 +25,7 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from scipy.stats import norm
 
-from scripts.progress import report
+# from progress import report
 from tilepy.include.PointingTools import Tools
 
 __all__ = ["SkyMap"]
@@ -158,7 +158,7 @@ class SkyMap:
         )
         return np.sum(area_vals.to(u.deg * u.deg))
 
-    def getMap(self, mapType, nside, scheme="ring", task_id=None):
+    def getMap(self, mapType, nside, scheme="ring"):
         """
         Get a rasterized map of the specified type and pixelization.
 
@@ -183,7 +183,7 @@ class SkyMap:
         """
         print(f"Rasterizing map of type '{mapType}' at nside={nside} with scheme='{scheme}'")
         print(f'task_id: {task_id}')
-        report(task_id, progress=0.015, message=f"Rasterizing map of type '{mapType}' at nside={nside} with scheme='{scheme}'", status="in_progress")
+        # report(task_id, progress=0.015, message=f"Rasterizing map of type '{mapType}' at nside={nside} with scheme='{scheme}'", status="in_progress")
         cache_entry = mapType + "_" + str(nside) + "_" + scheme
         if cache_entry in self.rasterized_map_cache.keys():
             return self.rasterized_map_cache[cache_entry]
