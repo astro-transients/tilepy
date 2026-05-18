@@ -149,12 +149,12 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
     logger.info("\n-------------------   NEW EVENT   --------------------\n")
 
     # Retrieve maps
-    prob = skymap.getMap("prob", obspar.reducedNside, task_id=task_id)
-    highres = skymap.getMap("prob", obspar.HRnside, task_id=task_id)
+    prob = skymap.getMap("prob", obspar.reducedNside)
+    highres = skymap.getMap("prob", obspar.HRnside)
 
     # Create table for 2D probability at 90% containment
     rapix, decpix, areapix = GetRegionPixReduced(
-        prob, obspar.percentageMOC, obspar.reducedNside, task_id=task_id
+        prob, obspar.percentageMOC, obspar.reducedNside
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
     
