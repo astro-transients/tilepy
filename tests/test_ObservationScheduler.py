@@ -35,7 +35,7 @@ def test_get_schedule(setup_and_teardown):
     )
 
     # Run GetSchedule with the parsed parameters
-    GetSchedule(parsed_obs_parameters, task_id="test_task")
+    GetSchedule(parsed_obs_parameters, task_id=None)
 
     # Check if the file has been created
     # assert os.path.exists(output_file), f"Expected output file {output_file} not found."
