@@ -1,22 +1,19 @@
 # Reproduce form
 # We then need add "pybtex" in the ../pyproject.toml, to be installed by sphinx
 
-"""Pybtex style to display at most 3 authors in a reference.
+"""Pybtex style to display all authors in a reference.
 Reproduced from
 https://github.com/m4opt/m4opt/blob/main/m4opt/utils/pybtex/styles/short_alpha.py
 
 """
 
-from pybtex.database import Person
 from pybtex.plugin import register_plugin
 from pybtex.style.formatting.alpha import Style as AlphaStyle
 from pybtex.style.template import FieldIsMissing, join, node, sentence
 
-max_names = 3
-
 
 @node
-def short_names(children, context, role):
+def full_names(children, context, role):
     """Return formatted names."""
 
     assert not children
@@ -27,24 +24,17 @@ def short_names(children, context, role):
         raise FieldIsMissing(role, context["entry"])
 
     style = context["style"]
-    if len(persons) < max_names:
-        formatted_names = [
-            style.format_name(person, style.abbreviate_names) for person in persons
-        ]
-        return join(sep=", ", sep2=" and ", last_sep=", and ")[
-            formatted_names
-        ].format_data(context)
-    else:
-        formatted_names = [
-            style.format_name(person, style.abbreviate_names)
-            for person in [*persons[:max_names], Person("et al.")]
-        ]
-        return join(sep=", ")[formatted_names].format_data(context)
+    formatted_names = [
+        style.format_name(person, style.abbreviate_names) for person in persons
+    ]
+    return join(sep=", ", sep2=" and ", last_sep=", and ")[formatted_names].format_data(
+        context
+    )
 
 
 class ShortAlphaStyle(AlphaStyle):
     def format_names(self, role, as_sentence=True):
-        formatted_names = short_names(role)
+        formatted_names = full_names(role)
         if as_sentence:
             return sentence[formatted_names]
         else:
