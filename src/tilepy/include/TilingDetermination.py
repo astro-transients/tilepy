@@ -254,7 +254,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
                     counter = counter + 1
         else:
             break
-        report(task_id, progress=0.2 + 0.5 * ((j + 1) / len(NightDarkRuns)), message=f"Processing night/dark time window {j+1} of {len(NightDarkRuns)}", status="in_progress")
+        report(task_id, progress=0.2 + 0.72 * ((j + 1) / len(NightDarkRuns)), message=f"Processing night/dark time window {j+1} of {len(NightDarkRuns)}", status="in_progress")
         # todo: add monitoring for each process
     logger.info(
         f"\nTotal GW probability covered: {float(sum(P_GWarray)):1.4f}\nNumber of runs that fulfill darkness condition: {len(NightDarkRuns)}\nNumber of effective pointings: {len(ObservationTimearray)}"
@@ -637,7 +637,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                         logger.info(
                             f"Condition not met at {ObservationTime}: dp/dV_FOV = {finalGals['dp_dV_FOV'][0]} must be greater than {obspar.minProbcut}"
                         )
-                report(task_id, progress=0.2 + 0.5 * (j / len(NightDarkRuns)), message=f"Processing night/dark time window {j+1} of {len(NightDarkRuns)}", status="in_progress")
+                report(task_id, progress=0.2 + 0.72 * (j / len(NightDarkRuns)), message=f"Processing night/dark time window {j+1} of {len(NightDarkRuns)}", status="in_progress")
 
             else:
                 break
@@ -815,7 +815,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                             f"Condition not met at {ObservationTime}: dp/dV = {finalGals['dp_dV'][0]} must be greater than {obspar.minProbcut}"
                         )
                 
-                report(task_id, progress=0.2 + 0.5 * (j / len(NightDarkRuns)), message=f"Processing night/dark time window {j+1} of {len(NightDarkRuns)}", status="in_progress")
+                report(task_id, progress=0.2 + 0.72 * (j / len(NightDarkRuns)), message=f"Processing night/dark time window {j+1} of {len(NightDarkRuns)}", status="in_progress")
 
             else:
                 break
