@@ -27,6 +27,8 @@ import astropy.units as u
 from astropy.io import ascii
 from astropy.table import Table
 
+from tilepy.progress import report
+
 from .MapManagement import SkyMap, create_map_reader
 from .PointingPlotting import PlotAccRegion, PointingPlotting
 from .RankingObservationTimes import (
@@ -47,8 +49,6 @@ from .TilingDetermination import (
     PGWinFoV_NObs,
     PGWinFoV_Space_NObs,
 )
-
-from tilepy.progress import report
 
 __all__ = [
     "GetSchedule",
@@ -136,13 +136,23 @@ def GetSchedule(obspar, task_id=None):
         logger.info(
             "===========================================================================================\n"
         )
-        report(task_id, progress=0.05, message="Finished logging the parameters", status="in_progress")
+        report(
+            task_id,
+            progress=0.05,
+            message="Finished logging the parameters",
+            status="in_progress",
+        )
         SuggestedPointings, cat = PGalinFoV(
-            skymap, raw_map.name_event, str(galaxies), obspar, str(dirName), task_id=task_id
+            skymap,
+            raw_map.name_event,
+            str(galaxies),
+            obspar,
+            str(dirName),
+            task_id=task_id,
         )
         if len(SuggestedPointings) != 0:
             outfilename = f"{dirName}/SuggestedPointings_GalProbOptimisation.txt"
-            ascii.write (
+            ascii.write(
                 SuggestedPointings, outfilename, overwrite=True, fast_writer=False
             )
             logger.info(f"\nResulting pointings file is {outfilename}")
@@ -168,7 +178,12 @@ def GetSchedule(obspar, task_id=None):
             logger.info("No observations are scheduled")
 
     else:
-        report(task_id, progress=0.05, message="Finished logging the parameters", status="in_progress")
+        report(
+            task_id,
+            progress=0.05,
+            message="Finished logging the parameters",
+            status="in_progress",
+        )
         logger.info(
             "==========================================================================================="
         )
@@ -217,8 +232,12 @@ def GetSchedule(obspar, task_id=None):
             # todo: add report for the final results 100%
         else:
             logger.info("No observations are scheduled")
-            report(task_id, progress=1.0, message="No observations are scheduled", status="completed")
-    
+            report(
+                task_id,
+                progress=1.0,
+                message="No observations are scheduled",
+                status="completed",
+            )
 
 
 def GetUniversalSchedule(obspar):

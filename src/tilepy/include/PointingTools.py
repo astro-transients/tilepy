@@ -46,7 +46,6 @@ from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
 from skyfield.api import E, N, load, wgs84
-from tilepy.progress import report
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -1506,7 +1505,9 @@ def ComputeProbability2D(
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
 
-def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR): # todo: add monitoring
+def SubstractPointings2D(
+    tpointingFile, prob, obspar, pixlist, pixlistHR
+):  # todo: add monitoring
     nside = obspar.reducedNside
     radius = obspar.FOV
 
@@ -2263,7 +2264,7 @@ def ComputeProbPGALIntegrateFoV(
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
 
 
-def GetRegionPixReduced(hpxx, percentage, Nnside): 
+def GetRegionPixReduced(hpxx, percentage, Nnside):
     nside = Nnside  # size of map used for contour determination
     hpx = hp.ud_grade(
         hpxx, nside_out=nside, power=-2, order_in="Nested", order_out="Nested"

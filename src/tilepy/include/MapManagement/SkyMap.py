@@ -181,7 +181,9 @@ class SkyMap:
             If `mapType` is not recognized.
 
         """
-        print(f"Rasterizing map of type '{mapType}' at nside={nside} with scheme='{scheme}'")
+        print(
+            f"Rasterizing map of type '{mapType}' at nside={nside} with scheme='{scheme}'"
+        )
         # print(f'task_id: {task_id}')
         # report(task_id, progress=0.015, message=f"Rasterizing map of type '{mapType}' at nside={nside} with scheme='{scheme}'", status="in_progress")
         cache_entry = mapType + "_" + str(nside) + "_" + scheme
