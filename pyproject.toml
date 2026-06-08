@@ -60,9 +60,10 @@ tests = [
 ]
 
 docs = [
+    "setuptools<71",
     "numpy<2",
     "python-ligo-lw",
-    "sphinx>=8,<9",
+    "sphinx>=1.6",
     "sphinx-astropy[confv2]",
     "sphinxcontrib-typer",
     "sphinxcontrib-bibtex",
