@@ -60,6 +60,7 @@ tests = [
 ]
 
 docs = [
+    "setuptools<71",
     "numpy<2",
     "python-ligo-lw",
     "sphinx>=1.6",
