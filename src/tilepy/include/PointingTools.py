@@ -1505,7 +1505,9 @@ def ComputeProbability2D(
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
 
-def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
+def SubstractPointings2D(
+    tpointingFile, prob, obspar, pixlist, pixlistHR
+):  # todo: add monitoring
     nside = obspar.reducedNside
     radius = obspar.FOV
 
@@ -2267,7 +2269,6 @@ def GetRegionPixReduced(hpxx, percentage, Nnside):
     hpx = hp.ud_grade(
         hpxx, nside_out=nside, power=-2, order_in="Nested", order_out="Nested"
     )
-
     sort = sorted(hpx, reverse=True)
     cumsum = np.cumsum(sort)
     index, value = min(enumerate(cumsum), key=lambda x: abs(x[1] - percentage))
@@ -2296,7 +2297,6 @@ def GetRegionPixReduced(hpxx, percentage, Nnside):
 
     # from index to polar coordinates
     theta, phi = hp.pix2ang(Nnside, R_ipix)
-
     # converting these to right ascension and declination in degrees
     ra = np.rad2deg(phi)
     dec = np.rad2deg(0.5 * np.pi - theta)

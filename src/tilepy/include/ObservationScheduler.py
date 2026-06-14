@@ -27,6 +27,8 @@ import astropy.units as u
 from astropy.io import ascii
 from astropy.table import Table
 
+from tilepy.progress import report
+
 from .MapManagement import SkyMap, create_map_reader
 from .PointingPlotting import PlotAccRegion, PointingPlotting
 from .RankingObservationTimes import (
@@ -58,7 +60,7 @@ logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.INFO)
 
 
-def GetSchedule(obspar):
+def GetSchedule(obspar, task_id=None):
     """
     Generates a tiling schedule and visibility plots for a single telescope.
 
@@ -134,11 +136,20 @@ def GetSchedule(obspar):
         logger.info(
             "===========================================================================================\n"
         )
-
-        SuggestedPointings, cat = PGalinFoV(
-            skymap, raw_map.name_event, str(galaxies), obspar, str(dirName)
+        report(
+            task_id,
+            progress=0.05,
+            message="Finished logging the parameters",
+            status="in_progress",
         )
-
+        SuggestedPointings, cat = PGalinFoV(
+            skymap,
+            raw_map.name_event,
+            str(galaxies),
+            obspar,
+            str(dirName),
+            task_id=task_id,
+        )
         if len(SuggestedPointings) != 0:
             outfilename = f"{dirName}/SuggestedPointings_GalProbOptimisation.txt"
             ascii.write(
@@ -167,6 +178,12 @@ def GetSchedule(obspar):
             logger.info("No observations are scheduled")
 
     else:
+        report(
+            task_id,
+            progress=0.05,
+            message="Finished logging the parameters",
+            status="in_progress",
+        )
         logger.info(
             "==========================================================================================="
         )
@@ -184,7 +201,7 @@ def GetSchedule(obspar):
         )
 
         SuggestedPointings, t0 = PGWinFoV(
-            skymap, raw_map.name_event, obspar, str(dirName)
+            skymap, raw_map.name_event, obspar, str(dirName), task_id=task_id
         )
 
         if len(SuggestedPointings) != 0:
@@ -201,6 +218,7 @@ def GetSchedule(obspar):
                     str(dirName),
                     f"{dirName}/SuggestedPointings_2DProbOptimisation.txt",
                 )
+
             if obspar.doPlot:
                 PointingPlotting(
                     skymap.getMap("prob", obspar.HRnside),
@@ -211,8 +229,15 @@ def GetSchedule(obspar):
                     obspar.obs_name,
                     gal,
                 )
+            # todo: add report for the final results 100%
         else:
             logger.info("No observations are scheduled")
+            report(
+                task_id,
+                progress=1.0,
+                message="No observations are scheduled",
+                status="completed",
+            )
 
 
 def GetUniversalSchedule(obspar):
