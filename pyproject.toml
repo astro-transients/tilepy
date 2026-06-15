@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
+requires = ["setuptools>=64,<71", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -48,6 +48,7 @@ dependencies = [
           'mhealpy>=0.3.0,<0.4',
           'ligo.skymap>=2.0.0',
           "scikit-learn>=1.6.1",
+          "setuptools>=64,<71",
 ]
 
 [project.optional-dependencies]
@@ -60,7 +61,6 @@ tests = [
 ]
 
 docs = [
-    "setuptools<71",
     "numpy<2",
     "python-ligo-lw",
     "sphinx>=1.6",
@@ -73,6 +73,7 @@ docs = [
     "sphinx-gallery",
     "astropy-sphinx-theme",
     "sphinx-automodapi",
+    "setuptools>=64,<71",
 ]
 
 dev = [
@@ -177,4 +178,5 @@ package = true
 
 override-dependencies = [
     'healpy>=1.17.0',
+    "setuptools>=64,<71",
 ]
