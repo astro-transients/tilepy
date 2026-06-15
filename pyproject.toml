@@ -173,3 +173,7 @@ ignore-words-list = """
 # Install with UV ASTRAL
 [tool.uv]
 package = true
+
+override-dependencies = [
+    'healpy>=1.17.0',
+]
