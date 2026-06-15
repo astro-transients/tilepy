@@ -70,8 +70,8 @@ docs = [
     "ipykernel",
     "nbsphinx",
     "sphinx-gallery",
-    "astropy-sphinx-theme @ git+https://github.com/astropy/sphinx-astropy-theme.git",
-    "sphinx-automodapi @ git+https://github.com/astropy/sphinx-automodapi",
+    "astropy-sphinx-theme",
+    "sphinx-automodapi",
 ]
 
 dev = [
@@ -169,3 +169,7 @@ ignore-words-list = """
     ToO,
     ToOs,
 """
+
+# Install with UV ASTRAL
+[tool.uv]
+package = true
