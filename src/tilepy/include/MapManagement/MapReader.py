@@ -55,11 +55,12 @@ def validate_source_params(obspar):
 
 
 class SimpleHealpixMap:
-    def __init__(self, data, nside, ordering="nested"):
+    def __init__(self, data, nside, ordering="NESTED"):
         self.data = data
         self.nside = nside
         self.unit = u.Unit("sr^-1")
-        self.ordering = ordering
+        self.scheme = ordering
+        self.is_nested = self.scheme == "NESTED" or self.scheme == "NUNIQ"
 
     def pixarea(self, pix_ids):
         area_sr = hp.nside2pixarea(self.nside)
@@ -236,7 +237,7 @@ class GaussianMapReader(MapReader):
         prob_density = prob_unnorm / norm_factor
 
         self.simulated_map = SimpleHealpixMap(
-            prob_density, self.nside, ordering="nested"
+            prob_density, self.nside, ordering="NESTED"
         )
 
     def getMap(self, mapType):
@@ -332,7 +333,7 @@ class LocProbMapReader(MapReader):
         norm = np.sum(healpix_map) * pixarea
         healpix_map /= norm
 
-        return SimpleHealpixMap(healpix_map, nside, ordering="nested")
+        return SimpleHealpixMap(healpix_map, nside, ordering="NESTED")
 
 
 class HealpixMapReader(MapReader):
@@ -589,7 +590,7 @@ class MapReaderLegacy:
         norm = np.sum(healpix_map) * pixarea
         healpix_map /= norm
 
-        return SimpleHealpixMap(healpix_map, nside, ordering="nested")
+        return SimpleHealpixMap(healpix_map, nside, ordering="NESTED")
 
     def generate_gaussian_map(self, obspar):
         ra_deg = float(obspar.raSource)
@@ -626,7 +627,7 @@ class MapReaderLegacy:
         prob_density = prob_unnorm / norm_factor  # unit: sr⁻¹
 
         self.simulated_map = SimpleHealpixMap(
-            prob_density, self.nside, ordering="nested"
+            prob_density, self.nside, ordering="NESTED"
         )
         self.name_event = f"Gaussian_RA{ra_deg}_Dec{dec_deg}"
         self.prob_density = True
