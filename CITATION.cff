@@ -1,0 +1,71 @@
+cff-version: 1.2.0
+message: "If you use tilepy for your research, please cite the following paper."
+title: "tilepy"
+abstract: >
+  tilepy is an open-source Python package for scheduling follow-up observations
+  of multi-messenger transient events with large sky localization uncertainties,
+  such as gravitational waves, gamma-ray bursts, and high-energy neutrinos.
+  It supports 2D and 3D (galaxy-catalog-based) tiling strategies and is
+  accessible via a public API and through the Astro-COLIBRI platform.
+version: "3.0.1"
+date-released: "2025-10-02"
+license: LGPL-3.0
+repository-code: "https://github.com/astro-transients/tilepy"
+url: "https://tilepy.com/tilepy/"
+contact:
+  - email: astro.tilepy@gmail.com
+    name: "tilepy team"
+    website: "https://forum.astro-colibri.science/c/instrumentation-and-tools/tilepy/8"
+keywords:
+  - astronomy
+  - astrophysics
+  - multi-messenger astrophysics
+  - gravitational waves
+  - observation scheduling
+  - time-domain astronomy
+  - tiling
+authors:
+  - family-names: "Seglar-Arroyo"
+    given-names: "Monica"
+    affiliation: "IFAE, Barcelona, Spain"
+  - family-names: "Ashkar"
+    given-names: "Halim"
+    affiliation: "ICE-CSIC, Barcelona, Spain"
+    email: "halim.ashkar@llr.in2p3.fr"
+  - family-names: "de Bony de Lavergne"
+    given-names: "Mathieu"
+    affiliation: "CPPM, Marseille, France"
+    email: "mathieu.debony@cea.fr"
+  - family-names: "Schüssler"
+    given-names: "Fabian"
+    affiliation: "IRFU, CEA, Université Paris-Saclay, France"
+    email: "fabian.schussler@cea.fr"
+    orcid: "https://orcid.org/0000-0003-1500-6571"
+preferred-citation:
+  type: article
+  title: >
+    Cross-Observatory Coordination with tilepy: A Novel Tool for Observations
+    of Multi-Messenger Transient Events
+  authors:
+    - family-names: "Seglar-Arroyo"
+      given-names: "Monica"
+    - family-names: "Ashkar"
+      given-names: "Halim"
+    - family-names: "de Bony de Lavergne"
+      given-names: "Mathieu"
+    - family-names: "Schüssler"
+      given-names: "Fabian"
+  journal: "The Astrophysical Journal Supplement Series"
+  abbreviation: "ApJS"
+  volume: 274
+  issue: 1
+  year: 2024
+  month: 9
+  doi: "10.3847/1538-4365/ad5bde"
+  url: "https://iopscience.iop.org/article/10.3847/1538-4365/ad5bde"
+  identifiers:
+    - type: doi
+      value: "10.3847/1538-4365/ad5bde"
+    - type: other
+      value: "arXiv:2407.18076"
+      description: "arXiv preprint"

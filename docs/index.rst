@@ -17,6 +17,8 @@
    :class: tip
 
    To cite |tilepy| in your research, please cite :footcite:`Seglar-Arroyo_2024`.
+   |tilepy| is also registered in the Astrophysics Source Code Library as
+   `ascl:2604.019 <https://ascl.net/2604.019>`_.
 
 
 .. admonition:: Contents

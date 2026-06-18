@@ -6,6 +6,10 @@ Simulation Gallery
 Scripts and tutorials for tilepy simulations.
 
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 

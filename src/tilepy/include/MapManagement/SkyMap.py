@@ -25,6 +25,7 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from scipy.stats import norm
 
+# from progress import report
 from tilepy.include.PointingTools import Tools
 
 __all__ = ["SkyMap"]

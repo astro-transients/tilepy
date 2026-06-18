@@ -32,6 +32,8 @@ from astropy import units as u
 from astropy.table import Table
 from six.moves import configparser
 
+from tilepy.progress import report
+
 from .MaskingTools import (
     FulfillsRequirement,
     FulfillsRequirementGreyObservations,
@@ -95,7 +97,7 @@ logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.INFO)
 
 
-def PGWinFoV(skymap, nameEvent, obspar, dirName):
+def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
     """
     Mid-level function that is called by GetSchedule to compute a observation schedule based on a 2D method.
 
@@ -123,6 +125,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
 
     """
 
+    # report(task_id, progress=0.1, message="Starting the pointing calculation", status="in_progress")
     ObservationTime0 = obspar.obsTime
     PointingFile = obspar.pointingsFile
     # Main parameters
@@ -156,6 +159,12 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
 
+    report(
+        task_id,
+        progress=0.1,
+        message="Finished retrieving the skymap and preparing the pixel list",
+        status="in_progress",
+    )
     # Add observed pixels to pixlist
     maxRuns = obspar.maxRuns
     if PointingFile is not None:
@@ -167,7 +176,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
         )
         if obspar.countPrevious:
             maxRuns = obspar.maxRuns - doneObs
-
+        # report(task_id, progress=0.45, message="Finished subtracting previous pointings", status="in_progress")
         logger.info(f"Total GW probability already covered: {sumPGW}")
         logger.info(
             f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
@@ -181,10 +190,17 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
 
     logger.info("----------   NEW FOLLOW-UP ATTEMPT   ----------")
 
-    if obspar.useGreytime:
+    if obspar.useGreytime:  # todo: add monitoring but not right now
         NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0, obspar)
     else:
         NightDarkRuns = NightDarkObservation(ObservationTime0, obspar)
+
+    report(
+        task_id,
+        progress=0.2,
+        message="Finished calculating night and dark time windows",
+        status="in_progress",
+    )
 
     counter = 0
     for j, NightDarkRun in enumerate(NightDarkRuns):
@@ -262,7 +278,13 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
                 )
         else:
             break
-
+        report(
+            task_id,
+            progress=0.2 + 0.72 * ((j + 1) / len(NightDarkRuns)),
+            message=f"Processing night/dark time window {j + 1} of {len(NightDarkRuns)}",
+            status="in_progress",
+        )
+        # todo: add monitoring for each process
     logger.info(
         f"\nTotal GW probability covered: {float(sum(P_GWarray)):1.4f}\nNumber of runs that fulfill darkness condition: {len(NightDarkRuns)}\nNumber of effective pointings: {len(ObservationTimearray)}"
     )
@@ -296,14 +318,29 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
             "\n================================= Tiling found ============================================="
         )
         logger.info(SuggestedPointings)
+        report(task_id, progress=1.0, message="Tiling found", status="completed")
         logger.info(
             "============================================================================================\n"
         )
         logger.info(f"The total probability PGW: {np.sum(P_GWarray):.4f}")
+        # todo: add report for the final results 100%
+    else:
+        logger.info(
+            "\n================================= No tiling found ============================================="
+        )
+        report(
+            task_id,
+            progress=1.0,
+            message="No tiling found that fulfills the conditions",
+            status="completed",
+        )
+        logger.info(
+            "============================================================================================\n"
+        )
     return (SuggestedPointings, ObservationTime0)
 
 
-def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
+def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
     """
     Compute an observation schedule based on a 3D (galaxy-weighted) method.
 
@@ -372,6 +409,12 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
         tGals0 = FilterGalaxies(cat, obspar.minimumProbCutForCatalogue)
         tGals0 = MangroveGalaxiesProbabilities(tGals0)
         sum_dP_dV = cat["dp_dV"].sum()
+    report(
+        task_id,
+        progress=0.1,
+        message="Finished loading and filtering the galaxy catalog",
+        status="in_progress",
+    )
 
     alreadysumipixarray1 = []
     alreadysumipixarray2 = []
@@ -445,6 +488,13 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
         NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0, obspar)
     else:
         NightDarkRuns = NightDarkObservation(ObservationTime0, obspar)
+
+    report(
+        task_id,
+        progress=0.2,
+        message="Finished calculating night and dark time windows",
+        status="in_progress",
+    )
 
     counter = 0
     if obspar.strategy == "integrated":
@@ -647,6 +697,13 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                         logger.info(
                             f"Condition not met at {ObservationTime}: dp/dV_FOV = {finalGals['dp_dV_FOV'][0]} must be greater than {obspar.minProbcut}"
                         )
+                report(
+                    task_id,
+                    progress=0.2 + 0.72 * (j / len(NightDarkRuns)),
+                    message=f"Processing night/dark time window {j + 1} of {len(NightDarkRuns)}",
+                    status="in_progress",
+                )
+
             else:
                 break
     if obspar.strategy == "targeted":
@@ -826,6 +883,13 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                             f"Condition not met at {ObservationTime}: dp/dV = {finalGals['dp_dV'][0]} must be greater than {obspar.minProbcut}"
                         )
 
+                report(
+                    task_id,
+                    progress=0.2 + 0.72 * (j / len(NightDarkRuns)),
+                    message=f"Processing night/dark time window {j + 1} of {len(NightDarkRuns)}",
+                    status="in_progress",
+                )
+
             else:
                 break
 
@@ -854,17 +918,36 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
             "FoV",
         ],
     )
-
     if len(SuggestedPointings) != 0:
         logger.info(
             "\n================================= Tiling found ============================================="
         )
         logger.info(SuggestedPointings)
+        report(
+            task_id,
+            progress=1.0,
+            message="Finished the pointing calculation",
+            status="completed",
+        )
+
         logger.info(
             "============================================================================================\n"
         )
         logger.info(f"The total probability PGal: {np.sum(P_GALarray):.4f}")
         logger.info(f"The total probability PGW: {np.sum(P_GWarray):.4f}")
+    else:
+        logger.info(
+            "\n================================= No tiling found ============================================="
+        )
+        report(
+            task_id,
+            progress=1.0,
+            message="Finished the pointing calculation",
+            status="completed",
+        )
+        logger.info(
+            "============================================================================================\n"
+        )
     return SuggestedPointings, tGals0
 
 
