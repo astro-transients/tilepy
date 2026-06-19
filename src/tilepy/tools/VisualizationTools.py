@@ -26,12 +26,19 @@ from tilepy.include.PointingTools import (
 
 
 def LocateSource(filename, ra, dec, PercentCov=90):
-    skymap_OD = lf.read_sky_map(filename)
+    skymap_OD, meta_info = lf.read_sky_map(filename)
     prob = skymap_OD[0]
     npix = len(prob)
     nside = hp.npix2nside(npix)
 
-    pix_ra1, pix_dec1, _ = GetRegionPixReduced(prob, PercentCov, nside)
+    if meta_info["nest"]:
+        is_nested = True
+        scheme = "NESTED"
+    else:
+        is_nested = False
+        scheme = "RING"
+
+    pix_ra1, pix_dec1, _ = GetRegionPixReduced(prob, PercentCov, nside, scheme)
 
     reduced_nside = 512
     coordinates = TransformRADec(ra, dec)
@@ -42,12 +49,12 @@ def LocateSource(filename, ra, dec, PercentCov=90):
     pix_ra11 = radecs.ra.rad
     pix_dec11 = radecs.dec.rad
 
-    Igrb = hp.ang2pix(reduced_nside, ra1, dec1, lonlat=True)
-    Imap = hp.ang2pix(reduced_nside, pix_ra11, pix_dec11, lonlat=True)
+    Igrb = hp.ang2pix(reduced_nside, ra1, dec1, nest=is_nested, lonlat=True)
+    Imap = hp.ang2pix(reduced_nside, pix_ra11, pix_dec11, nest=is_nested, lonlat=True)
 
     print(np.isin(Igrb, Imap))
 
-    hp.mollview(prob, title="Locate source")
+    hp.mollview(prob, title="Locate source", nest=is_nested)
     hp.visufunc.projplot(coordinates.ra, coordinates.dec, "r.", lonlat=True)
     hp.graticule()
     plt.show()
@@ -73,8 +80,13 @@ def VisibilityOverview_forZenithCut(
     observatory = HESSObservatory()
     observatory2 = CTANorthObservatory()
 
-    skymap_OD = lf.read_sky_map(filename)
+    skymap_OD, meta_info = lf.read_sky_map(filename)
     prob = skymap_OD[0]
+
+    if meta_info["nest"]:
+        is_nested = True
+    else:
+        is_nested = False
 
     titlePlot = (
         observatory.Name
@@ -85,7 +97,7 @@ def VisibilityOverview_forZenithCut(
     )
     # Just do a plotting
     hp.mollview(
-        prob, coord="C", title=titlePlot, unit="Probability"
+        prob, coord="C", title=titlePlot, unit="Probability", nest=is_nested
     )  # Celestial=Equatorial
 
     altcoord = np.empty(4000)
@@ -290,13 +302,18 @@ def CompareTwoTilings(
     print("Filename 1: ", PointingsFile1)
     print("Filename 2: ", PointingsFile2)
 
-    skymap_OD = lf.read_sky_map(filename)
+    skymap_OD, meta_info = lf.read_sky_map(filename)
     prob = skymap_OD[0]
+
+    if meta_info["nest"]:
+        is_nested = True
+    else:
+        is_nested = False
 
     if (PointingsFile1 == "False") or (PointingsFile2 == "False"):
         print("At least one of the pointings has not been given, try again")
         # Just do a plotting
-        hp.mollview(prob, coord="C")
+        hp.mollview(prob, coord="C", nest=is_nested)
         hp.graticule()
         plt.show()
 
@@ -356,6 +373,7 @@ def CompareTwoTilings(
         )
         PlotPointingsTogether(
             prob,
+            is_nested,
             Coordinates1,
             Coordinates2,
             df1["FoV"][0],

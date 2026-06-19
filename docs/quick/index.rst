@@ -1,9 +1,8 @@
 ***********
-User Manual
+Quickstart
 ***********
 
 .. toctree::
    :maxdepth: 2
 
-   observation_scheduler
    quickStart

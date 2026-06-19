@@ -1,6 +1,6 @@
 <p align="center">
   <a href="" rel="noopener">
-    <img style="width: 400px; height: 200px; max-width: 100%;" src="image/tilepy_logo.png" alt="tilepy logo">
+    <img style="width: 400px; height: 200px; max-width: 100%;" src="https://raw.githubusercontent.com/astro-transients/tilepy/master/image/tilepy_logo.png" alt="tilepy logo">
   </a>
 </p>
 
@@ -8,7 +8,7 @@
 
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12190543.svg)](https://doi.org/10.5281/zenodo.12190543)
-[![Latest release](http://img.shields.io/pypi/v/tilepy.svg?text=version)](https://pypi.org/project/tilepy/)
+[![Latest release](https://img.shields.io/pypi/v/tilepy.svg)](https://pypi.org/project/tilepy/)
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPLv3-blue.svg)](https://github.com/astro-transients/tilepy/blob/master/LICENSE.rst)
 [![CLA assistant](https://cla-assistant.io/readme/badge/astro-transients/tilepy)](https://cla-assistant.io/astro-transients/tilepy)
 [![ApJS Published](https://img.shields.io/badge/ApJS-Published-Green.svg)](https://doi.org/10.3847/1538-4365/ad5bde)
@@ -119,6 +119,7 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - HRnside: nside of the high-resolution skymap used to compute the covered probability
           - mangrove: flag to use the mangrove method of weighting by the mass of the host galaxy
           - countPrevious: True if you want previous observation to be considered in number to set the max run variable. False else
+          - countSubtractedPointingsOutside: False if you do not want to take into account pointings outside of the current percentageMOC area when subtracting pointings, True if you want to subtract them anyway
 
 ## Issue with Daily Earth Orientation Parameters Solutions file (finals2000A)
 
