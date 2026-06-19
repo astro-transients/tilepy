@@ -6,4 +6,3 @@ User Manual
    :maxdepth: 2
 
    observation_scheduler
-   quickStart
