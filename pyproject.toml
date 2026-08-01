@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
+requires = ["setuptools>=77.0.3", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -15,10 +15,10 @@ maintainers = [
     {name = "Fabian Schussler", email = "fabian.schussler@cea.fr"},
     {name = "Mathieu de Bony", email = "mathieu.debony@cea.fr"},
 ]
-license = {file = "LICENSE.rst"}
+license = "LGPL-3.0-or-later"
+license-files = ["LICENSE.rst"]
 classifiers = [
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",

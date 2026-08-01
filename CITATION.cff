@@ -9,7 +9,7 @@ abstract: >
   accessible via a public API and through the Astro-COLIBRI platform.
 version: "3.0.1"
 date-released: "2025-10-02"
-license: LGPL-3.0
+license: LGPL-3.0-or-later
 repository-code: "https://github.com/astro-transients/tilepy"
 url: "https://tilepy.com/tilepy/"
 contact:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2024, tilepy developers
-# Licensed under the GNU license - see ../LICENSE.rst
+# Licensed under the GNU Lesser General Public License v3 or later - see ../LICENSE.rst
 #
 # Inspired by Sphinx_Astropy, Sphinx, m4opt.
 
