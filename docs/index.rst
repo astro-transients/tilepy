@@ -29,6 +29,7 @@
 
       install/index
       overview/index
+      quick/index
       guide/index
 
 

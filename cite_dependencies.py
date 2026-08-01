@@ -4,6 +4,11 @@ from datetime import datetime
 
 import requests
 
+try:
+    import tomllib  # Python 3.11+
+except ImportError:
+    import tomli as tomllib  # Python 3.9, 3.10
+
 
 def get_authors_from_github(repo_path, title, url):
     headers = {
@@ -63,28 +68,24 @@ def write_bibtex_to_file(data):
         file.write(bibtex_entry)
 
 
-# Parse requirements.txt for package names and versions
-# with open('requirements.txt', 'r') as file:
-#    lines = file.readlines()
-#    packages_and_versions = [line for line in lines]
-
-
-def parse_requirements(file_path):
+def parse_pyproject_dependencies(file_path="pyproject.toml"):
+    """Parse dependencies from pyproject.toml"""
     packages = []
-    with open(file_path, "r") as file:
-        for line in file:
-            # Removing any trailing whitespace and comments
-            package = line.split("#")[0].strip()
-            if package:  # Only add non-empty lines
-                packages.append(package)
+    with open(file_path, "rb") as f:
+        data = tomllib.load(f)
+
+    # Extract main dependencies
+    dependencies = data.get("project", {}).get("dependencies", [])
+    for dep in dependencies:
+        # Remove any version specifiers and whitespace
+        package_name = dep.split("[")[0].strip()
+        if package_name and package_name.lower() != "setuptools":
+            packages.append(dep)
+
     return packages
 
 
-# Usage
-file_path = "./requirements.txt"  # Replace with your file path
-packages = parse_requirements(file_path)
-print(packages)
-
+packages = parse_pyproject_dependencies("./pyproject.toml")
 print("requirements found: ", packages)
 # Regex to match GitHub URLs
 github_pattern = re.compile(r"https?://github\.com/([\w\-]+/[\w\-]+)")

@@ -21,100 +21,150 @@ This guide describes the step-by-step process to install **tilepy** and its depe
 
       Python >= 3.9
 
-   .. button-link:: https://docs.conda.io/projects/conda/en/stable/
-      :color: info
-      :shadow:
+.. dropdown:: ⚡ Fastest & simplest install -- uv :bdg-success:`recommended`
 
-      Conda
+   `uv <https://docs.astral.sh/uv/>`_ installs tilepy and all its dependencies
+   in a single command, with no environment setup needed.
 
-   **or**
+   .. tab-set::
 
-   .. button-link:: https://docs.python.org/3/library/venv.html
-      :color: info
-      :shadow:
+      .. tab-item:: Linux / macOS
 
-      virtualenv
+         .. code-block:: bash
 
-   - (Optional) mamba for faster environment setup
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+            git clone https://github.com/astro-transients/tilepy.git
+            cd tilepy
+            uv sync --python 3.11
+
+      .. tab-item:: Windows
+
+         .. code-block:: powershell
+
+            powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+            git clone https://github.com/astro-transients/tilepy.git
+            cd tilepy
+            uv sync --python 3.11
 
 
-.. dropdown:: Environment setup
+   Once installed, run tilepy commands directly with ``uv run`` -- no need to activate any environment:
+
+   .. tab-set::
+
+      .. tab-item:: Using uv run (recommended)
+
+         .. code-block:: bash
+
+            uv run python -c "import tilepy; print(tilepy.__version__)"
+            uv run Tiling_Observations ...
+
+      .. tab-item:: Activating the environment (optional)
+
+         .. code-block:: bash
+
+            source .venv/bin/activate
+            python -c "import tilepy; print(tilepy.__version__)"
+
+
+.. dropdown:: Other installation methods
+
+   Prefer another tool? Choose one of the following:
 
    .. tab-set::
 
       .. tab-item:: Conda
 
+         **1. Create and activate the environment:**
+
          .. code-block:: bash
 
-            conda create -n tilepy_env python=3.9
-            conda activate tilepyenv
+            conda create -n tilepy_env python=3.11
+            conda activate tilepy_env
 
-      .. tab-item:: Python
+         **2. Install tilepy:**
+
+         .. code-block:: bash
+
+            pip install tilepy
+
+      .. tab-item:: pip + venv
+
+         **1. Create and activate the environment:**
 
          .. code-block:: bash
 
             python -m venv tilepy_venv
-            source tilepy_venv/bin/activate
+            source tilepy_venv/bin/activate  # Linux/macOS
+            tilepy_venv\Scripts\activate     # Windows
             pip install --upgrade pip
 
-.. dropdown:: Install tilepy
+         **2. Install tilepy:**
 
-   .. tab-set::
+         .. code-block:: bash
 
-      .. tab-item:: PyPI
+            pip install tilepy
 
-         .. admonition:: Recommended
-            :class: tip
-
-            The recommended way to install tilepy is using pip:
-
-            .. code-block:: console
-
-               $ pip install tilepy
-
-      .. tab-item:: Latest
+      .. tab-item:: GitHub (unreleased)
 
          .. admonition:: Unreleased version
             :class: danger
 
-            If you want to use the latest version of tilepy, you can install the current main branch directly from GitHub:
+            Install the current main branch directly from GitHub:
 
             .. code-block:: console
 
                $ pip install git+https://github.com/astro-transients/tilepy.git@main
 
-      .. tab-item:: Development
+   .. warning:: Troubleshooting MOCpy
 
-         .. admonition:: Development install
-            :class: info
-
-            To install tilepy in development mode, run:
-
-            .. code-block:: bash
-
-               git clone https://github.com/astro-transients/tilepy.git
-               cd tilepy
-               conda env create -n tilepyenv -f environment.yml
-               conda activate tilepyenv
-               pip install -e .
-
-
-   .. warning:: Troubleshooting MOCpy Installation (If Needed)
-
-      If you have issues with the `mocpy` package when using conda, try installing it separately with pip after creating your environment:
+      If you have issues with ``mocpy`` under conda, install it separately:
 
       .. code-block:: console
 
          $ pip install mocpy
 
 
+.. dropdown:: Developer install
+
+   For contributors who want to modify the source code:
+
+   .. tab-set::
+
+      .. tab-item:: uv
+
+         .. code-block:: bash
+
+            git clone https://github.com/astro-transients/tilepy.git
+            cd tilepy
+            uv sync --python 3.11
+
+      .. tab-item:: pip
+
+         .. code-block:: bash
+
+            git clone https://github.com/astro-transients/tilepy.git
+            cd tilepy
+            pip install -e ".[dev]"
+
+
 .. dropdown:: Verify your installation
 
-   .. code-block:: console
+   .. tab-set::
 
-      $ python -c "import tilepy; print(tilepy.__version__)"
+      .. tab-item:: uv
+
+         .. code-block:: bash
+
+            uv run python -c "import tilepy; print(tilepy.__version__)"
+
+      .. tab-item:: conda / pip
+
+         .. code-block:: console
+
+            $ python -c "import tilepy; print(tilepy.__version__)"
 
    If no error appears and the version number is printed, your installation is correct!
+
 
 
 .. note::

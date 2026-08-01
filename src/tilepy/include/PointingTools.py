@@ -42,6 +42,7 @@ from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord, get_body
 from astropy.table import Table
 from astropy.time import Time
 from gdpyc import DustMap
+from ligo.skymap.postprocess import find_greedy_credible_levels
 from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
@@ -63,7 +64,7 @@ __all__ = [
     "NightDarkObservation",
     "NightDarkObservationwithGreyTime",
     "ComputeProbability2D",
-    "SubstractPointings2D",
+    "SubtractPointings2D",
     "TransformRADec",
     "TransformRADecToPix",
     "TransformPixToRaDec",
@@ -72,8 +73,8 @@ __all__ = [
     "LoadGalaxies",
     "LoadGalaxies_SteMgal",
     "ComputeProbGalTargeted",
-    "SubstractPointings",
-    "SubstractGalaxiesCircle",
+    "SubtractPointings",
+    "SubtractGalaxiesCircle",
     "ComputePGalinFOV",
     "ModifyCatalogue",
     "ComputeProbPGALIntegrateFoV",
@@ -1301,6 +1302,7 @@ def GetBestNSIDE(ReducedNSIDE, HRnside, fov):
 def ComputeProbability2D(
     obspar,
     prob,
+    is_nested,
     highres,
     radecs,
     time,
@@ -1348,7 +1350,7 @@ def ComputeProbability2D(
     phipix = np.deg2rad(pix_ra)
     thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
 
-    ipix = hp.ang2pix(reducedNside, thetapix, phipix)
+    ipix = hp.ang2pix(reducedNside, thetapix, phipix, nest=is_nested)
 
     dp_Pix_Fov = np.empty(len(pix_ra), dtype=object)
 
@@ -1364,7 +1366,9 @@ def ComputeProbability2D(
     # Grid-scheme and the connection between HR and LR
     for i in range(0, len(cat_pix)):
         # Pixels associated to a disk of radius centered in xyzpix[i] for HR NSIDE
-        ipix_discfull = hp.query_disc(HRnside, xyzpix[i], np.deg2rad(radius))
+        ipix_discfull = hp.query_disc(
+            HRnside, xyzpix[i], np.deg2rad(radius), nest=is_nested
+        )
         if len(ipixlistHR) == 0:
             # No mask needed
             HRprob = highres[ipix_discfull].sum()
@@ -1404,7 +1408,7 @@ def ComputeProbability2D(
 
     # Chose highest
     targetCoord = co.SkyCoord(
-        sortcat["PIXRA"][:1], sortcat["PIXDEC"][:1], frame="fk5", unit=(u.deg, u.deg)
+        sortcat["PIXRA"][:1], sortcat["PIXDEC"][:1], frame="icrs", unit=(u.deg, u.deg)
     )
 
     P_GW = sortcat["PIXFOVPROB"][:1]
@@ -1414,8 +1418,10 @@ def ComputeProbability2D(
         thetap = float(0.5 * np.pi - np.deg2rad(targetCoord.dec.deg))
         xyz = hp.ang2vec(thetap, phip)
 
-        ipixlistHR.extend(hp.query_disc(HRnside, xyz, np.deg2rad(radius)))
-        ipix_disc = hp.query_disc(reducedNside, xyz, np.deg2rad(radius))
+        ipixlistHR.extend(
+            hp.query_disc(HRnside, xyz, np.deg2rad(radius), nest=is_nested)
+        )
+        ipix_disc = hp.query_disc(reducedNside, xyz, np.deg2rad(radius), nest=is_nested)
         ipixlist.extend(ipix_disc)
 
         ##################################
@@ -1428,15 +1434,17 @@ def ComputeProbability2D(
 
             # hp.mollview(highres,title="With FoV circle")
 
-            hp.mollview(prob, title=str(time))
+            hp.mollview(prob, title=str(time), nest=is_nested)
 
             hp.graticule()
 
-            ipix_discplot = hp.query_disc(HRnside, xyz, np.deg2rad(radius))
-            tt, pp = hp.pix2ang(HRnside, ipix_discplot)
+            ipix_discplot = hp.query_disc(
+                HRnside, xyz, np.deg2rad(radius), nest=is_nested
+            )
+            tt, pp = hp.pix2ang(HRnside, ipix_discplot, nest=is_nested)
             ra2 = np.rad2deg(pp)
             dec2 = np.rad2deg(0.5 * np.pi - tt)
-            skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+            skycoord = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
 
             # hp.visufunc.projplot(skycoord.ra, skycoord.dec, 'y.', lonlat=True, coord="C")
             # plt.show()
@@ -1452,7 +1460,7 @@ def ComputeProbability2D(
             MaxCoord = SkyCoord(
                 sortcat["PIXRA"][:1],
                 sortcat["PIXDEC"][:1],
-                frame="fk5",
+                frame="icrs",
                 unit=(u.deg, u.deg),
             )
             separations = skycoord.separation(MaxCoord)
@@ -1477,10 +1485,10 @@ def ComputeProbability2D(
 
             if ipixlistOcc is not None:
                 try:
-                    tt, pp = hp.pix2ang(reducedNside, ipixlistOcc)
+                    tt, pp = hp.pix2ang(reducedNside, ipixlistOcc, nest=is_nested)
                     ra2 = np.rad2deg(pp)
                     dec2 = np.rad2deg(0.5 * np.pi - tt)
-                    skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+                    skycoord = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
                     hp.visufunc.projplot(
                         skycoord.ra.deg,
                         skycoord.dec.deg,
@@ -1505,7 +1513,9 @@ def ComputeProbability2D(
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
 
-def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
+def SubtractPointings2D(
+    tpointingFile, prob, is_nested, obspar, pixlist, pixlistHR, radecs
+):
     nside = obspar.reducedNside
     radius = obspar.FOV
 
@@ -1518,6 +1528,10 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
         delimiter=" ",
         unpack=True,
     )  # ra, dec in degrees
+
+    pointings_subtracted = 0
+    pixel_size = np.rad2deg(hp.nside2resol(nside))
+    max_separation = pixel_size * u.deg
 
     ra = np.atleast_1d(ra)
     dec = np.atleast_1d(dec)
@@ -1535,12 +1549,21 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
 
     coordinates = TransformRADec(ra, dec)
     P_GW = []
-    for i, valuei in enumerate(ra):
+    for i, _ in enumerate(ra):
+        if not obspar.countSubtractedPointingsOutside:
+            separations = coordinates[i].separation(radecs)
+            if len(separations[separations < max_separation]) == 0:
+                logger.info(
+                    f"Not subtracting RA: {float(ra[i]):.4f} Dec: {float(dec[i]):.4f} as it is outside of the {obspar.percentageMOC * 100}% area"
+                )
+                P_GW.append(0.0)
+                continue
+        pointings_subtracted += 1
         t = 0.5 * np.pi - coordinates[i].dec.rad
         p = coordinates[i].ra.rad
         # Get the pixels for the ipix_disc (low res)
         xyz = hp.ang2vec(t, p)
-        ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+        ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius), nest=is_nested)
         effectiveipix_disc = []
         for j, valuej in enumerate(ipix_disc):
             if valuej not in pixlist:
@@ -1549,15 +1572,17 @@ def SubstractPointings2D(tpointingFile, prob, obspar, pixlist, pixlistHR):
         P_GW.append(prob[effectiveipix_disc].sum())
 
         logger.info(
-            f"Coordinates ra: {ra[i]}, dec: {dec[i]}, Pgw: {P_GW[i]} vs {prob[ipix_disc].sum()}"
+            f"Subtracting coordinates ra: {float(ra[i]):.4f}, dec: {float(dec[i]):.4f}, Pgw: {P_GW[i]:.6f} vs {prob[ipix_disc].sum():.6f}"
         )
         # Save the ipixels in HR
-        ipix_discHR = hp.query_disc(obspar.HRnside, xyz, np.deg2rad(radius))
+        ipix_discHR = hp.query_disc(
+            obspar.HRnside, xyz, np.deg2rad(radius), nest=is_nested
+        )
         for k, valuek in enumerate(ipix_discHR):
             if valuek not in pixlistHR:
                 pixlistHR.append(valuek)
 
-    return pixlist, pixlistHR, np.sum(P_GW), len(ra)
+    return pixlist, pixlistHR, np.sum(P_GW), pointings_subtracted
 
 
 def TransformRADec(vra, vdec):
@@ -1565,7 +1590,7 @@ def TransformRADec(vra, vdec):
         ra = []
         dec = []
         for i in range(0, len(vra)):
-            coord = SkyCoord(vra[i].split('"')[1], vdec[i].split('"')[0], frame="fk5")
+            coord = SkyCoord(vra[i].split('"')[1], vdec[i].split('"')[0], frame="icrs")
             # print(coord)
             ra.append(coord.ra.deg)
             dec.append(coord.dec.deg)
@@ -1573,25 +1598,25 @@ def TransformRADec(vra, vdec):
         ra = vra.astype(float)
         dec = vdec.astype(float)
 
-    coordinates = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+    coordinates = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
     return coordinates
 
 
-def TransformRADecToPix(radecs, nside):
+def TransformRADecToPix(radecs, is_nested, nside):
     pix_ra = radecs.ra.deg
     pix_dec = radecs.dec.deg
     phipix = np.deg2rad(pix_ra)
     thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)
-    ipix = hp.ang2pix(nside, thetapix, phipix)
+    ipix = hp.ang2pix(nside, thetapix, phipix, nest=is_nested)
     newpix = ipix
     return newpix
 
 
-def TransformPixToRaDec(pix, nside):
-    tt, pp = hp.pix2ang(nside, pix)
+def TransformPixToRaDec(pix, is_nested, nside):
+    tt, pp = hp.pix2ang(nside, pix, nest=is_nested)
     ra2 = np.rad2deg(pp)
     dec2 = np.rad2deg(0.5 * np.pi - tt)
-    pixradec = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+    pixradec = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
     return pixradec
 
 
@@ -1602,16 +1627,16 @@ def FindMatchingPixList(pix1, list2):
     return filtered_rows
 
 
-def FindMatchingCoords(option, radec1, radec2, reducedNside):
+def FindMatchingCoords(option, radec1, radec2, is_nested, reducedNside):
     if option == 1:
         firstvalue1_coords = co.SkyCoord(
             ra=radec1["PIXRA"] * u.deg, dec=radec1["PIXDEC"] * u.deg
         )
 
-        theta, phi = hp.pix2ang(reducedNside, radec2)
+        theta, phi = hp.pix2ang(reducedNside, radec2, nest=is_nested)
         ra = np.rad2deg(phi)
         dec = np.rad2deg(0.5 * np.pi - theta)
-        radec = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+        radec = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
 
         # Match each radec coordinate to closest in firstvalue1
         idx, sep2d, _ = firstvalue1_coords.match_to_catalog_sky(radec)
@@ -1714,6 +1739,7 @@ def MangroveGalaxiesProbabilities(catalog):
 
 def ComputeProbGalTargeted(
     prob,
+    is_nested,
     time,
     finalGals,
     visiGals,
@@ -1755,16 +1781,16 @@ def ComputeProbGalTargeted(
     targetCoord = co.SkyCoord(
         finalGals["RAJ2000"][:1],
         finalGals["DEJ2000"][:1],
-        frame="fk5",
+        frame="icrs",
         unit=(u.deg, u.deg),
     )
 
     targetCoord2 = co.SkyCoord(
-        visiGals["RAJ2000"], visiGals["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+        visiGals["RAJ2000"], visiGals["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
 
     targetCoord3 = co.SkyCoord(
-        allGals["RAJ2000"], allGals["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+        allGals["RAJ2000"], allGals["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
 
     dp_dVfinal = visiGals["dp_dV"]
@@ -1777,7 +1803,7 @@ def ComputeProbGalTargeted(
     p = targetCoord[0].ra.rad
     xyz = hp.ang2vec(t, p)
 
-    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius), nest=is_nested)
 
     effectiveipix_disc = []
 
@@ -1798,11 +1824,11 @@ def ComputeProbGalTargeted(
         if not path.exists():
             path.mkdir(parents=True)
 
-        tt, pp = hp.pix2ang(nside, ipix_disc)
+        tt, pp = hp.pix2ang(nside, ipix_disc, nest=is_nested)
         ra2 = np.rad2deg(pp)
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
-        skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+        skycoord = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
 
         separations = skycoord.separation(targetCoord)
         tempmask = separations < (radius + 0.05 * radius) * u.deg
@@ -1814,6 +1840,7 @@ def ComputeProbGalTargeted(
             ysize=500,
             rot=[targetCoord.ra.deg, targetCoord.dec.deg],
             reso=5.0,
+            nest=is_nested,
         )
 
         hp.graticule()
@@ -1857,7 +1884,7 @@ def ComputeProbGalTargeted(
             location=observatory,
         )
 
-        RandomCoord_radec = RandomCoord.transform_to("fk5")
+        RandomCoord_radec = RandomCoord.transform_to("icrs")
 
         hp.visufunc.projplot(
             RandomCoord_radec.ra, RandomCoord_radec.dec, "b.", lonlat=True, coord="C"
@@ -1875,8 +1902,16 @@ def ComputeProbGalTargeted(
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
 
 
-def SubstractPointings(
-    tpointingFile, galaxies, talreadysumipixarray, tsum_dP_dV, prob, obspar, nside
+def SubtractPointings(
+    tpointingFile,
+    galaxies,
+    talreadysumipixarray,
+    tsum_dP_dV,
+    prob,
+    is_nested,
+    obspar,
+    nside,
+    radecs,
 ):
     FOV = obspar.FOV
 
@@ -1894,6 +1929,10 @@ def SubstractPointings(
         delimiter=" ",
         unpack=True,
     )  # ra, dec in degrees
+
+    pointings_subtracted = 0
+    pixel_size = np.rad2deg(hp.nside2resol(nside))
+    max_separation = pixel_size * u.deg
 
     rap = np.atleast_1d(rap)
     decP = np.atleast_1d(decP)
@@ -1915,11 +1954,24 @@ def SubstractPointings(
     PGAL = []
     updatedGalaxies = galaxies
 
-    for i, coord in enumerate(coordinates):
+    for _, coord in enumerate(coordinates):
+        if not obspar.countSubtractedPointingsOutside:
+            separations = coord.separation(radecs)
+            if len(separations[separations < max_separation]) == 0:
+                logger.info(
+                    f"Not subtracting RA: {coord.ra:.4f} Dec: {coord.dec:.4f} as it is outside of the {obspar.percentageMOC * 100}% area"
+                )
+                PGW.append(0.0)
+                PGAL.append(0.0)
+                continue
+
+        pointings_subtracted += 1
+
         ral = coord.ra.deg
         decl = coord.dec.deg
+
         updatedGalaxies, pgwcircle, pgalcircle, talreadysumipixarray = (
-            SubstractGalaxiesCircle(
+            SubtractGalaxiesCircle(
                 updatedGalaxies,
                 ral,
                 decl,
@@ -1927,6 +1979,7 @@ def SubstractPointings(
                 tsum_dP_dV,
                 FOV,
                 prob,
+                is_nested,
                 nside,
             )
         )
@@ -1934,29 +1987,8 @@ def SubstractPointings(
         PGAL.append(pgalcircle)
 
         logger.info(
-            f"Coordinates ra: {ral}, dec: {decl}, Pgw: {pgwcircle}, PGAL: {pgalcircle}"
+            f"Subtracting coordinates ra: {ral:.4f}, dec: {decl:.4f}, Pgw: {pgwcircle:.6f}, PGAL: {pgalcircle:.6f}"
         )
-    else:
-        for i, coord in enumerate(coordinates):
-            ral = coord.ra.deg
-            decl = coord.dec.deg
-            updatedGalaxies, pgwcircle, pgalcircle, talreadysumipixarray = (
-                SubstractGalaxiesCircle(
-                    updatedGalaxies,
-                    ral,
-                    decl,
-                    talreadysumipixarray,
-                    tsum_dP_dV,
-                    FOV,
-                    prob,
-                    nside,
-                )
-            )
-            PGW.append(pgwcircle)
-            PGAL.append(pgalcircle)
-            logger.info(
-                f"Coordinates ra: {ral}, dec: {decl}, Pgw: {pgwcircle}, PGAL: {pgalcircle}"
-            )
 
     return (
         rap,
@@ -1965,25 +1997,25 @@ def SubstractPointings(
         PGW,
         PGAL,
         talreadysumipixarray,
-        len(np.atleast_1d(rap)),
+        pointings_subtracted,
     )
 
 
-def SubstractGalaxiesCircle(
-    galaux, ra, dec, talreadysumipixarray, tsum_dP_dV, FOV, prob, nside
+def SubtractGalaxiesCircle(
+    galaux, ra, dec, talreadysumipixarray, tsum_dP_dV, FOV, prob, is_nested, nside
 ):
     radius = FOV
-    coordinates = co.SkyCoord(ra, dec, frame="fk5", unit=(u.deg, u.deg))
+    coordinates = co.SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
 
     targetCoord = co.SkyCoord(
-        galaux["RAJ2000"], galaux["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+        galaux["RAJ2000"], galaux["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
     dp_dVfinal = galaux["dp_dV"]
 
     t = 0.5 * np.pi - coordinates.dec.rad
     p = coordinates.ra.rad
     xyz = hp.ang2vec(t, p)
-    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius), nest=is_nested)
     effectiveipix_disc = []
 
     for j in range(0, len(ipix_disc)):
@@ -2010,17 +2042,17 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, n_sides, UsePix):
     if UsePix:
         try:
             targetCoord = co.SkyCoord(
-                galpix["PIXRA"], galpix["PIXDEC"], frame="fk5", unit=(u.deg, u.deg)
+                galpix["PIXRA"], galpix["PIXDEC"], frame="icrs", unit=(u.deg, u.deg)
             )
         except Exception:
             targetCoord = galpix
     else:
         targetCoord = co.SkyCoord(
-            galpix["RAJ2000"], galpix["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+            galpix["RAJ2000"], galpix["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
         )
 
     targetCoord2 = co.SkyCoord(
-        cat["RAJ2000"], cat["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+        cat["RAJ2000"], cat["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
 
     dp_dV = cat["dp_dV"]
@@ -2109,6 +2141,7 @@ def ModifyCatalogue(prob, cat, FOV, totaldPdV, nside):
 
 def ComputeProbPGALIntegrateFoV(
     prob,
+    is_nested,
     time,
     observatory,
     centerPoint,
@@ -2135,7 +2168,7 @@ def ComputeProbPGALIntegrateFoV(
             targetCoord = co.SkyCoord(
                 centerPoint["PIXRA"][:1],
                 centerPoint["PIXDEC"][:1],
-                frame="fk5",
+                frame="icrs",
                 unit=(u.deg, u.deg),
             )
         except Exception:
@@ -2145,18 +2178,18 @@ def ComputeProbPGALIntegrateFoV(
         targetCoord = co.SkyCoord(
             centerPoint["RAJ2000"][:1],
             centerPoint["DEJ2000"][:1],
-            frame="fk5",
+            frame="icrs",
             unit=(u.deg, u.deg),
         )
 
     targetCoord2 = co.SkyCoord(
-        visiGals["RAJ2000"], visiGals["DEJ2000"], frame="fk5", unit=(u.deg, u.deg)
+        visiGals["RAJ2000"], visiGals["DEJ2000"], frame="icrs", unit=(u.deg, u.deg)
     )
 
     targetCoord3 = co.SkyCoord(
         allGalsaftercuts["RAJ2000"],
         allGalsaftercuts["DEJ2000"],
-        frame="fk5",
+        frame="icrs",
         unit=(u.deg, u.deg),
     )
 
@@ -2173,7 +2206,7 @@ def ComputeProbPGALIntegrateFoV(
 
     # translate pixel indices to coordinates
 
-    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius))
+    ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius), nest=is_nested)
 
     effectiveipix_disc = []
 
@@ -2199,11 +2232,11 @@ def ComputeProbPGALIntegrateFoV(
         if not path.exists():
             path.mkdir(parents=True)
 
-        tt, pp = hp.pix2ang(nside, ipix_disc)
+        tt, pp = hp.pix2ang(nside, ipix_disc, nest=is_nested)
         ra2 = np.rad2deg(pp)
         dec2 = np.rad2deg(0.5 * np.pi - tt)
 
-        skycoord = co.SkyCoord(ra2, dec2, frame="fk5", unit=(u.deg, u.deg))
+        skycoord = co.SkyCoord(ra2, dec2, frame="icrs", unit=(u.deg, u.deg))
 
         separations = skycoord.separation(targetCoord)
         tempmask = separations < (radius + 0.05 * radius) * u.deg
@@ -2215,6 +2248,7 @@ def ComputeProbPGALIntegrateFoV(
             ysize=500,
             rot=[targetCoord.ra.deg, targetCoord.dec.deg],
             reso=5.0,
+            nest=is_nested,
         )
 
         hp.graticule()
@@ -2245,7 +2279,7 @@ def ComputeProbPGALIntegrateFoV(
             location=observatory,
         )
 
-        RandomCoord_radec = RandomCoord.transform_to("fk5")
+        RandomCoord_radec = RandomCoord.transform_to("icrs")
 
         hp.visufunc.projplot(
             RandomCoord_radec.ra, RandomCoord_radec.dec, "b.", lonlat=True, coord="C"
@@ -2262,40 +2296,17 @@ def ComputeProbPGALIntegrateFoV(
     return P_Gal, P_GW, noncircleGal, talreadysumipixarray
 
 
-def GetRegionPixReduced(hpxx, percentage, Nnside):
+def GetRegionPixReduced(hpxx, percentage, Nnside, scheme):
     nside = Nnside  # size of map used for contour determination
     hpx = hp.ud_grade(
-        hpxx, nside_out=nside, power=-2, order_in="Nested", order_out="Nested"
+        hpxx, nside_out=nside, power=-2, order_in=scheme, order_out="NESTED"
     )
 
-    sort = sorted(hpx, reverse=True)
-    cumsum = np.cumsum(sort)
-    index, value = min(enumerate(cumsum), key=lambda x: abs(x[1] - percentage))
+    credible_levels = find_greedy_credible_levels(hpx)
+    percentage_list = list(np.where(credible_levels <= percentage)[0])
+    area = len(percentage_list) * hp.nside2pixarea(nside, degrees=True)
 
-    # finding ipix indices confined in a given percentage
-    index_hpx = range(0, len(hpx))
-    hpx_index = np.c_[hpx, index_hpx]
-
-    sort_2array = sorted(hpx_index, key=lambda x: x[0], reverse=True)
-    value_contour = sort_2array[0:index]
-
-    j = 1
-    table_ipix_contour = []
-
-    for i in range(0, len(value_contour)):
-        ipix_contour = int(value_contour[i][j])
-        table_ipix_contour.append(ipix_contour)
-    # from index to polar coordinates
-    theta1, phi1 = hp.pix2ang(nside, table_ipix_contour)
-    area = len(table_ipix_contour) * hp.nside2pixarea(nside, True)
-
-    # reducing resolution to et a faser execution
-    # list of pixel indices in the new map
-    R_ipix = hp.ang2pix(Nnside, theta1, phi1)
-    R_ipix = list(set(R_ipix))  # Removing/keeping 1 duplicate from list)
-
-    # from index to polar coordinates
-    theta, phi = hp.pix2ang(Nnside, R_ipix)
+    theta, phi = hp.pix2ang(nside, percentage_list, nest=(scheme == "NESTED"))
 
     # converting these to right ascension and declination in degrees
     ra = np.rad2deg(phi)
@@ -2326,10 +2337,10 @@ def GetRegionPixGal(hpxx, percentage, Nside):
     return table_ipix_contour
 
 
-def IsSourceInside(Pointings, Sources, FOV, nside):
+def IsSourceInside(Pointings, Sources, FOV, nside, is_nested):
     tt = 0.5 * np.pi - Sources.dec.rad
     tp = Sources.ra.rad
-    txyz = hp.ang2pix(nside, tt, tp)
+    txyz = hp.ang2pix(nside, tt, tp, nest=is_nested)
     Npoiting = ""
     Found = False
     try:
@@ -2338,9 +2349,11 @@ def IsSourceInside(Pointings, Sources, FOV, nside):
             p = Pointings[i].ra.rad
             xyz = hp.ang2vec(t, p)
             try:
-                ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV))
+                ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV), nest=is_nested)
             except Exception:
-                ipix_disc = hp.query_disc(nside, xyz[0], np.deg2rad(FOV))
+                ipix_disc = hp.query_disc(
+                    nside, xyz[0], np.deg2rad(FOV), nest=is_nested
+                )
             if txyz in ipix_disc:
                 logger.info(f"Found in pointing number {i}")
                 # Npoiting.append(i)
@@ -2352,7 +2365,7 @@ def IsSourceInside(Pointings, Sources, FOV, nside):
         t = 0.5 * np.pi - Pointings.dec.rad
         p = Pointings.ra.rad
         xyz = hp.ang2vec(t, p)
-        ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV))
+        ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV), nest=is_nested)
         if txyz in ipix_disc:
             Npoiting = "0,"
             Found = True

@@ -1,14 +1,14 @@
 <p align="center">
   <a href="" rel="noopener">
- <img style="width: 400px; height: 200px; max-width: 100%;" src="image/tilepy_logo.png" src="image/tilepy_logo.png" alt="tilepy logo"
- ></a>
+    <img style="width: 400px; height: 200px; max-width: 100%;" src="https://raw.githubusercontent.com/astro-transients/tilepy/master/image/tilepy_logo.png" alt="tilepy logo">
+  </a>
 </p>
 
 <div align="center">
 
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12190543.svg)](https://doi.org/10.5281/zenodo.12190543)
-[![Latest release](http://img.shields.io/pypi/v/tilepy.svg?text=version)](https://pypi.org/project/tilepy/)
+[![Latest release](https://img.shields.io/pypi/v/tilepy.svg)](https://pypi.org/project/tilepy/)
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPLv3-blue.svg)](https://github.com/astro-transients/tilepy/blob/master/LICENSE.rst)
 [![CLA assistant](https://cla-assistant.io/readme/badge/astro-transients/tilepy)](https://cla-assistant.io/astro-transients/tilepy)
 [![ApJS Published](https://img.shields.io/badge/ApJS-Published-Green.svg)](https://doi.org/10.3847/1538-4365/ad5bde)
@@ -39,15 +39,15 @@ If you prefer to avoid conda and use a virtual environment with your favorite py
 ```
 python -m venv tilepy_venv
 source tilepy_venv/bin/activate
-pip3 install --upgrade pip
-python -m pip install -r requirements.txt
+pip install --upgrade pip
+pip install .
 ```
 
 Requirements of the installation:
 
 - The current version of the package **only** runs with `python>=3.9`. Python 3.9 is recommended. Be careful as well with the versions of matplotlib and healpy, they should be the ones explicitly given in the requirements.yml, otherwise conflicts between them when plotting skymaps will arise.
 - Note that by creating the env from the environment.yml, the libraries and versions needed will be installed automatically.
-- Note that every time we made changes to the package, you should update the installation of the package doing ```pip install .``` in the folder where the setup.py is located. The changes will be only applied to the env in which you are working.
+- Note that every time we made changes to the package, you should reinstall the package by running ```pip install .``` in the project root directory. The changes will be only applied to the env in which you are working.
 - The package relies on 'curl' to download the localisation map of the multi-messenger events.
 
 In the case you are working in CC-Lyon, the easiest solution is to do```ccenv conda ``` and then follow the instructions given above.
@@ -119,6 +119,7 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - HRnside: nside of the high-resolution skymap used to compute the covered probability
           - mangrove: flag to use the mangrove method of weighting by the mass of the host galaxy
           - countPrevious: True if you want previous observation to be considered in number to set the max run variable. False else
+          - countSubtractedPointingsOutside: False if you do not want to take into account pointings outside of the current percentageMOC area when subtracting pointings, True if you want to subtract them anyway
 
 ## Issue with Daily Earth Orientation Parameters Solutions file (finals2000A)
 

@@ -34,7 +34,7 @@ dependencies = [
           'astropy',
           'scipy<1.14.0',
           'numpy',
-          'healpy==1.16.2',
+          'healpy>=1.16.2,<2',
           'ipython',
           'matplotlib<3.9.0',
           'MOCpy',
@@ -48,6 +48,7 @@ dependencies = [
           'mhealpy>=0.3.0,<0.4',
           'ligo.skymap>=2.0.0',
           "scikit-learn>=1.6.1",
+          "setuptools>=64,<71",
 ]
 
 [project.optional-dependencies]
@@ -70,8 +71,9 @@ docs = [
     "ipykernel",
     "nbsphinx",
     "sphinx-gallery",
-    "astropy-sphinx-theme @ git+https://github.com/astropy/sphinx-astropy-theme.git",
-    "sphinx-automodapi @ git+https://github.com/astropy/sphinx-automodapi",
+    "astropy-sphinx-theme",
+    "sphinx-automodapi",
+    "setuptools>=64,<71",
 ]
 
 dev = [
@@ -169,3 +171,12 @@ ignore-words-list = """
     ToO,
     ToOs,
 """
+
+# Install with UV ASTRAL
+[tool.uv]
+package = true
+
+override-dependencies = [
+    'healpy>=1.16.2,<2',
+    "setuptools>=64,<71",
+]

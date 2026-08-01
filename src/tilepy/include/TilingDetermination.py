@@ -32,6 +32,8 @@ from astropy import units as u
 from astropy.table import Table
 from six.moves import configparser
 
+from tilepy.progress import report
+
 from .MaskingTools import (
     FulfillsRequirement,
     FulfillsRequirementGreyObservations,
@@ -61,8 +63,8 @@ from .PointingTools import (
     NextWindowTools,
     NightDarkObservation,
     NightDarkObservationwithGreyTime,
-    SubstractPointings,
-    SubstractPointings2D,
+    SubtractPointings,
+    SubtractPointings2D,
     Tools,
     TransformPixToRaDec,
     TransformRADecToPix,
@@ -95,7 +97,7 @@ logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.INFO)
 
 
-def PGWinFoV(skymap, nameEvent, obspar, dirName):
+def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
     """
     Mid-level function that is called by GetSchedule to compute a observation schedule based on a 2D method.
 
@@ -123,6 +125,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
 
     """
 
+    # report(task_id, progress=0.1, message="Starting the pointing calculation", status="in_progress")
     ObservationTime0 = obspar.obsTime
     PointingFile = obspar.pointingsFile
     # Main parameters
@@ -150,24 +153,30 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
     prob = skymap.getMap("prob", obspar.reducedNside)
     highres = skymap.getMap("prob", obspar.HRnside)
 
-    # Create table for 2D probability at 90% containment
-    rapix, decpix, areapix = GetRegionPixReduced(
-        prob, obspar.percentageMOC, obspar.reducedNside
+    # Create table for 2D probability at percentageMOC containment
+    rapix, decpix, _ = GetRegionPixReduced(
+        prob, obspar.percentageMOC, obspar.reducedNside, skymap.scheme
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
 
+    report(
+        task_id,
+        progress=0.1,
+        message="Finished retrieving the skymap and preparing the pixel list",
+        status="in_progress",
+    )
     # Add observed pixels to pixlist
     maxRuns = obspar.maxRuns
     if PointingFile is not None:
         logger.info(
             "==========================================================================================="
         )
-        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist, pixlistHR
+        pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
+            PointingFile, prob, skymap.is_nested, obspar, pixlist, pixlistHR, radecs
         )
         if obspar.countPrevious:
             maxRuns = obspar.maxRuns - doneObs
-
+        # report(task_id, progress=0.45, message="Finished subtracting previous pointings", status="in_progress")
         logger.info(f"Total GW probability already covered: {sumPGW}")
         logger.info(
             f"Count Previous = {obspar.countPrevious}, Number of pointings already done: {doneObs}, "
@@ -181,21 +190,31 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
 
     logger.info("----------   NEW FOLLOW-UP ATTEMPT   ----------")
 
-    if obspar.useGreytime:
+    if obspar.useGreytime:  # todo: add monitoring but not right now
         NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0, obspar)
     else:
         NightDarkRuns = NightDarkObservation(ObservationTime0, obspar)
+
+    report(
+        task_id,
+        progress=0.2,
+        message="Finished calculating night and dark time windows",
+        status="in_progress",
+    )
 
     counter = 0
     for j, NightDarkRun in enumerate(NightDarkRuns):
         if len(ObservationTimearray) < maxRuns:
             ObservationTime = NightDarkRun
-            ObsBool, yprob = ZenithAngleCut(prob, ObservationTime, obspar)
+            ObsBool, yprob = ZenithAngleCut(
+                prob, skymap.is_nested, ObservationTime, obspar
+            )
             if ObsBool:
                 # Round 1
                 P_GW, TC, pixlist, pixlistHR = ComputeProbability2D(
                     obspar,
                     prob,
+                    skymap.is_nested,
                     highres,
                     radecs,
                     ObservationTime,
@@ -204,6 +223,11 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
                     counter,
                     dirName,
                 )
+                if not obspar.secondRound:
+                    if P_GW <= obspar.minProbcut:
+                        logger.info(
+                            f"Condition not met at {ObservationTime}: Pgw= {P_GW.quantity[0]:.4f} must be greater than ({obspar.minProbcut:.4f})"
+                        )
                 if (P_GW <= obspar.minProbcut) and obspar.secondRound:
                     # Try Round 2
                     # print('The minimum probability cut being', minProbcut * 100, '% is, unfortunately, not reached.')
@@ -211,6 +235,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
                     P_GW, TC, pixlist1, pixlistHR1 = ComputeProbability2D(
                         obspar,
                         prob,
+                        skymap.is_nested,
                         yprob1,
                         radecs,
                         ObservationTime,
@@ -221,7 +246,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
                     )
                     if P_GW <= obspar.minProbcut:
                         logger.info(
-                            "Tile Pgw= {P_GW} is smaller than the minProbCut ({obspar.minProbcut}) => skip this tile"
+                            f"Condition not met at {ObservationTime}: Pgw= {P_GW.quantity[0]:.4f} must be greater than ({obspar.minProbcut:.4f})"
                         )
                     else:
                         Round.append(2)
@@ -247,9 +272,19 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
                     Duration.append(obspar.duration)
                     Fov_obs.append(obspar.FOV)
                     counter = counter + 1
+            else:
+                logger.info(
+                    f"Condition not met at {ObservationTime}: probability after zenith cuts {np.sum(yprob):.4f} must be greater than {obspar.minProbcut:.4f}"
+                )
         else:
             break
-
+        report(
+            task_id,
+            progress=0.2 + 0.72 * ((j + 1) / len(NightDarkRuns)),
+            message=f"Processing night/dark time window {j + 1} of {len(NightDarkRuns)}",
+            status="in_progress",
+        )
+        # todo: add monitoring for each process
     logger.info(
         f"\nTotal GW probability covered: {float(sum(P_GWarray)):1.4f}\nNumber of runs that fulfill darkness condition: {len(NightDarkRuns)}\nNumber of effective pointings: {len(ObservationTimearray)}"
     )
@@ -283,14 +318,29 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName):
             "\n================================= Tiling found ============================================="
         )
         logger.info(SuggestedPointings)
+        report(task_id, progress=1.0, message="Tiling found", status="completed")
         logger.info(
             "============================================================================================\n"
         )
         logger.info(f"The total probability PGW: {np.sum(P_GWarray):.4f}")
+        # todo: add report for the final results 100%
+    else:
+        logger.info(
+            "\n================================= No tiling found ============================================="
+        )
+        report(
+            task_id,
+            progress=1.0,
+            message="No tiling found that fulfills the conditions",
+            status="completed",
+        )
+        logger.info(
+            "============================================================================================\n"
+        )
     return (SuggestedPointings, ObservationTime0)
 
 
-def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
+def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
     """
     Compute an observation schedule based on a 3D (galaxy-weighted) method.
 
@@ -338,6 +388,12 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
     nside = obspar.HRnside
     prob = skymap.getMap("prob", obspar.HRnside)
 
+    # Create table for 2D probability at percentageMOC containment
+    rapix, decpix, _ = GetRegionPixReduced(
+        prob, obspar.percentageMOC, obspar.reducedNside, skymap.scheme
+    )
+    radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
+
     if skymap.is3D:
         logger.info("Skymap is 3D")
     else:
@@ -353,6 +409,12 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
         tGals0 = FilterGalaxies(cat, obspar.minimumProbCutForCatalogue)
         tGals0 = MangroveGalaxiesProbabilities(tGals0)
         sum_dP_dV = cat["dp_dV"].sum()
+    report(
+        task_id,
+        progress=0.1,
+        message="Finished loading and filtering the galaxy catalog",
+        status="in_progress",
+    )
 
     alreadysumipixarray1 = []
     alreadysumipixarray2 = []
@@ -371,13 +433,21 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
             AlreadyObservedPgal,
             alreadysumipixarray1,
             doneObs,
-        ) = SubstractPointings(
-            PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, prob, obspar, nside
+        ) = SubtractPointings(
+            PointingFile,
+            tGals0,
+            alreadysumipixarray1,
+            sum_dP_dV,
+            prob,
+            skymap.is_nested,
+            obspar,
+            nside,
+            radecs,
         )
         sumPGW = sum(AlreadyObservedPgw)
         sumPGAL = sum(AlreadyObservedPgal)
         # for second round
-        # ra, dec, tGals, AlreadyObservedPgw, AlreadyObservedPgal,alreadysumipixarray2, doneObs = SubstractPointings(PointingFile, tGals0,alreadysumipixarray1,sum_dP_dV,prob, obspar, nside)
+        # ra, dec, tGals, AlreadyObservedPgw, AlreadyObservedPgal,alreadysumipixarray2, doneObs = SubtractPointings(PointingFile, tGals0,alreadysumipixarray1,sum_dP_dV,prob, obspar, nside)
         if obspar.countPrevious:
             maxRuns = obspar.maxRuns - doneObs
         logger.info(
@@ -418,6 +488,13 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
         NightDarkRuns = NightDarkObservationwithGreyTime(ObservationTime0, obspar)
     else:
         NightDarkRuns = NightDarkObservation(ObservationTime0, obspar)
+
+    report(
+        task_id,
+        progress=0.2,
+        message="Finished calculating night and dark time windows",
+        status="in_progress",
+    )
 
     counter = 0
     if obspar.strategy == "integrated":
@@ -482,6 +559,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                                 p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = (
                                     ComputeProbPGALIntegrateFoV(
                                         prob,
+                                        skymap.is_nested,
                                         ObservationTime,
                                         obspar.location,
                                         finalGals2,
@@ -529,6 +607,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                                 p_gal, p_gw, tGals_aux, alreadysumipixarray1 = (
                                     ComputeProbPGALIntegrateFoV(
                                         prob,
+                                        skymap.is_nested,
                                         ObservationTime,
                                         obspar.location,
                                         finalGals,
@@ -578,6 +657,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                             p_gal, p_gw, tGals_aux, alreadysumipixarray1 = (
                                 ComputeProbPGALIntegrateFoV(
                                     prob,
+                                    skymap.is_nested,
                                     ObservationTime,
                                     obspar.location,
                                     finalGals,
@@ -617,6 +697,13 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                         logger.info(
                             f"Condition not met at {ObservationTime}: dp/dV_FOV = {finalGals['dp_dV_FOV'][0]} must be greater than {obspar.minProbcut}"
                         )
+                report(
+                    task_id,
+                    progress=0.2 + 0.72 * (j / len(NightDarkRuns)),
+                    message=f"Processing night/dark time window {j + 1} of {len(NightDarkRuns)}",
+                    status="in_progress",
+                )
+
             else:
                 break
     if obspar.strategy == "targeted":
@@ -673,6 +760,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                                 p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = (
                                     ComputeProbGalTargeted(
                                         prob,
+                                        skymap.is_nested,
                                         ObservationTime,
                                         finalGals2,
                                         visiGals2,
@@ -716,6 +804,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                                 p_gal, p_gw, tGals_aux, alreadysumipixarray1 = (
                                     ComputeProbGalTargeted(
                                         prob,
+                                        skymap.is_nested,
                                         ObservationTime,
                                         finalGals,
                                         visiGals,
@@ -758,6 +847,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                             p_gal, p_gw, tGals_aux, alreadysumipixarray1 = (
                                 ComputeProbGalTargeted(
                                     prob,
+                                    skymap.is_nested,
                                     ObservationTime,
                                     finalGals,
                                     visiGals,
@@ -793,6 +883,13 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
                             f"Condition not met at {ObservationTime}: dp/dV = {finalGals['dp_dV'][0]} must be greater than {obspar.minProbcut}"
                         )
 
+                report(
+                    task_id,
+                    progress=0.2 + 0.72 * (j / len(NightDarkRuns)),
+                    message=f"Processing night/dark time window {j + 1} of {len(NightDarkRuns)}",
+                    status="in_progress",
+                )
+
             else:
                 break
 
@@ -821,17 +918,36 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName):
             "FoV",
         ],
     )
-
     if len(SuggestedPointings) != 0:
         logger.info(
             "\n================================= Tiling found ============================================="
         )
         logger.info(SuggestedPointings)
+        report(
+            task_id,
+            progress=1.0,
+            message="Finished the pointing calculation",
+            status="completed",
+        )
+
         logger.info(
             "============================================================================================\n"
         )
         logger.info(f"The total probability PGal: {np.sum(P_GALarray):.4f}")
         logger.info(f"The total probability PGW: {np.sum(P_GWarray):.4f}")
+    else:
+        logger.info(
+            "\n================================= No tiling found ============================================="
+        )
+        report(
+            task_id,
+            progress=1.0,
+            message="Finished the pointing calculation",
+            status="completed",
+        )
+        logger.info(
+            "============================================================================================\n"
+        )
     return SuggestedPointings, tGals0
 
 
@@ -1000,17 +1116,17 @@ def PGWinFoV_NObs(
     prob = skymap.getMap("prob", obspar.reducedNside)
     highres = skymap.getMap("prob", obspar.HRnside)
 
-    # Create table for 2D probability at 90% containment
-    rapix, decpix, areapix = GetRegionPixReduced(
-        prob, obspar.percentageMOC, obspar.reducedNside
+    # Create table for 2D probability at percentageMOC containment
+    rapix, decpix, _ = GetRegionPixReduced(
+        prob, obspar.percentageMOC, obspar.reducedNside, skymap.scheme
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
     maxRuns = obspar.maxRuns
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist, pixlistHR
+        pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
+            PointingFile, prob, skymap.is_nested, obspar, pixlist, pixlistHR, radecs
         )
 
         if obspar.countPrevious:
@@ -1063,6 +1179,7 @@ def PGWinFoV_NObs(
                     )
                     ObsBool, yprob, pixlistHROcc = OccultationCut(
                         prob,
+                        skymap.is_nested,
                         obspar.reducedNside,
                         ObservationTime,
                         obspar,
@@ -1070,13 +1187,16 @@ def PGWinFoV_NObs(
                         satelliteLocation,
                     )
                 else:
-                    ObsBool, yprob = ZenithAngleCut(prob, ObservationTime, obspar)
+                    ObsBool, yprob = ZenithAngleCut(
+                        prob, skymap.is_nested, ObservationTime, obspar
+                    )
 
                 if ObsBool:
                     # Round 1
                     P_GW, TC, pixlist, pixlistHR = ComputeProbability2D(
                         obspar,
                         prob,
+                        skymap.is_nested,
                         highres,
                         radecs,
                         ObservationTime,
@@ -1094,6 +1214,7 @@ def PGWinFoV_NObs(
                         P_GW, TC, pixlist1, pixlistHR1 = ComputeProbability2D(
                             prob,
                             yprob1,
+                            skymap.is_nested,
                             radecs,
                             ObservationTime,
                             pixlist1,
@@ -1246,6 +1367,12 @@ def PGalinFoV_NObs(
     nside = obspar.HRnside
     prob = skymap.getMap("prob", obspar.HRnside)
 
+    # Create table for 2D probability at percentageMOC containment
+    rapix, decpix, _ = GetRegionPixReduced(
+        prob, obspar.percentageMOC, obspar.reducedNside, skymap.scheme
+    )
+    radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
+
     # load galaxy catalogue
     if not obspar.mangrove:
         cat = LoadGalaxies(galFile)
@@ -1278,8 +1405,16 @@ def PGalinFoV_NObs(
             AlreadyObservedPgal,
             alreadysumipixarray1,
             doneObs,
-        ) = SubstractPointings(
-            PointingFile, tGals0, alreadysumipixarray1, sum_dP_dV, prob, obspar, nside
+        ) = SubtractPointings(
+            PointingFile,
+            tGals0,
+            alreadysumipixarray1,
+            sum_dP_dV,
+            prob,
+            skymap.is_nested,
+            obspar,
+            nside,
+            radecs,
         )
         maxRuns = obspar.maxRuns - len(ra)
         sumPGW = sum(AlreadyObservedPgw)
@@ -1390,6 +1525,7 @@ def PGalinFoV_NObs(
                                     p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = (
                                         ComputeProbPGALIntegrateFoV(
                                             prob,
+                                            skymap.is_nested,
                                             ObservationTime,
                                             obspar.location,
                                             finalGals2,
@@ -1451,6 +1587,7 @@ def PGalinFoV_NObs(
                                 p_gal, p_gw, tGals_aux, alreadysumipixarray1 = (
                                     ComputeProbPGALIntegrateFoV(
                                         prob,
+                                        skymap.is_nested,
                                         ObservationTime,
                                         obspar.location,
                                         finalGals,
@@ -1564,6 +1701,7 @@ def PGalinFoV_NObs(
                                     p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = (
                                         ComputeProbGalTargeted(
                                             prob,
+                                            skymap.is_nested,
                                             ObservationTime,
                                             finalGals2,
                                             visiGals2,
@@ -1608,6 +1746,7 @@ def PGalinFoV_NObs(
                                     p_gal, p_gw, tGals_aux, alreadysumipixarray1 = (
                                         ComputeProbGalTargeted(
                                             prob,
+                                            skymap.is_nested,
                                             ObservationTime,
                                             finalGals,
                                             visiGals,
@@ -1651,6 +1790,7 @@ def PGalinFoV_NObs(
                                 p_gal, p_gw, tGals_aux, alreadysumipixarray1 = (
                                     ComputeProbGalTargeted(
                                         prob,
+                                        skymap.is_nested,
                                         ObservationTime,
                                         finalGals,
                                         visiGals,
@@ -1762,6 +1902,7 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
     DECarray = []
     P_GWarray = []
     Occultedpixels = []
+    pixlist = []
     pixlistHR = []
     obspar = obsparameters[0]
 
@@ -1772,8 +1913,10 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
     prob = skymap.getMap("prob", reducedNside)
     highres = skymap.getMap("prob", HRnside)
 
-    # Create table for 2D probability at 90% containment
-    rapix, decpix, _ = GetRegionPixReduced(prob, obspar.percentageMOC, reducedNside)
+    # Create table for 2D probability at percentageMOC containment
+    rapix, decpix, _ = GetRegionPixReduced(
+        prob, obspar.percentageMOC, reducedNside, skymap.scheme
+    )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
     maxRuns = obspar.maxRuns
 
@@ -1781,7 +1924,6 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
 
     # Add observed pixels to pixlist
     if PointingFile is not None:
-        # FIXME: pixlist is undefined in this scope
         # The program will crash is the if branch is executed
         print(
             PointingFile,
@@ -1790,12 +1932,14 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
             obspar.FOV,
             pixlist,  # noqa: F821
         )
-        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
+        pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
             PointingFile,
             prob,
+            skymap.is_nested,
             obspar,
-            pixlist,  # noqa: F821
+            pixlist,
             pixlistHR,  # noqa: F821
+            radecs,
         )
 
         if obspar.countPrevious:
@@ -1812,11 +1956,12 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
             "==========================================================================================="
         )
 
-    ipix = TransformRADecToPix(radecs, reducedNside)
+    ipix = TransformRADecToPix(radecs, skymap.is_nested, reducedNside)
     newpix = ipix
 
     first_values = GetBestGridPos2D(
         prob,
+        skymap.is_nested,
         highres,
         HRnside,
         reducedNside,
@@ -1865,9 +2010,9 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
     # Retrieve maps
     prob = skymap.getMap("prob", reducedNside)
 
-    # Create table for 2D probability at 90% containment
-    rapix, decpix, areapix = GetRegionPixReduced(
-        prob, obspar.percentageMOC, reducedNside
+    # Create table for 2D probability at percentageMOC containment
+    rapix, decpix, _ = GetRegionPixReduced(
+        prob, obspar.percentageMOC, reducedNside, skymap.scheme
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
     maxRuns = obspar.maxRuns
@@ -1894,8 +2039,8 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist, pixlistHR
+        pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
+            PointingFile, prob, skymap.is_nested, obspar, pixlist, pixlistHR, radecs
         )
 
         if obspar.countPrevious:
@@ -1912,14 +2057,15 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
             "==========================================================================================="
         )
 
-    ipix = TransformRADecToPix(radecs, reducedNside)
+    ipix = TransformRADecToPix(radecs, skymap.is_nested, reducedNside)
     newpix = ipix
 
     # CONVERTING newpix to angles on the coordinate grid
-    pixradec = TransformPixToRaDec(newpix, reducedNside)
+    pixradec = TransformPixToRaDec(newpix, skymap.is_nested, reducedNside)
 
     first_values = GetBestGridPos3D(
         prob,
+        skymap.is_nested,
         tGals0,
         pixradec,
         newpix,
@@ -1975,9 +2121,9 @@ def PGWinFoV_Space_NObs(
     prob = skymap.getMap("prob", reducedNside)
     highres = skymap.getMap("prob", HRnside)
 
-    # Create table for 2D probability at 90% containment
-    rapix, decpix, areapix = GetRegionPixReduced(
-        prob, obspar.percentageMOC, reducedNside
+    # Create table for 2D probability at percentageMOC containment
+    rapix, decpix, _ = GetRegionPixReduced(
+        prob, obspar.percentageMOC, reducedNside, skymap.scheme
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
     maxRuns = obspar.maxRuns
@@ -1987,8 +2133,8 @@ def PGWinFoV_Space_NObs(
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
-        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist, pixlistHR
+        pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
+            PointingFile, prob, skymap.is_nested, obspar, pixlist, pixlistHR, radecs
         )
 
         if obspar.countPrevious:
@@ -2005,11 +2151,12 @@ def PGWinFoV_Space_NObs(
             "==========================================================================================="
         )
 
-    ipix = TransformRADecToPix(radecs, reducedNside)
+    ipix = TransformRADecToPix(radecs, skymap.is_nested, reducedNside)
     newpix = ipix
 
     first_values1 = GetBestGridPos2D(
         prob,
+        skymap.is_nested,
         highres,
         HRnside,
         reducedNside,
@@ -2069,6 +2216,7 @@ def PGWinFoV_Space_NObs(
         )
         ObsBool, yprob, pixlistRROcc = OccultationCut(
             prob,
+            skymap.is_nested,
             reducedNside,
             current_time,
             obspar,
@@ -2079,13 +2227,15 @@ def PGWinFoV_Space_NObs(
         # Let's get the list of pixels available at each iteration
         firstvalue1 = first_values1
 
-        matching_rows1 = FindMatchingCoords(1, firstvalue1, pixlistRROcc, reducedNside)
+        matching_rows1 = FindMatchingCoords(
+            1, firstvalue1, pixlistRROcc, skymap.is_nested, reducedNside
+        )
         matching_tables.append(matching_rows1)
 
         radectime = co.SkyCoord(
             ra=matching_rows1["PIXRA"] * u.deg, dec=matching_rows1["PIXDEC"] * u.deg
         )
-        pix_idx = TransformRADecToPix(radectime, reducedNside)
+        pix_idx = TransformRADecToPix(radectime, skymap.is_nested, reducedNside)
         pix_proba = matching_rows1["PIXFOVPROB"]
 
         RadecsVsTimes.append(radectime)
@@ -2184,9 +2334,9 @@ def PGalinFoV_Space_NObs(
     # Retrieve maps
     prob = skymap.getMap("prob", reducedNside)
 
-    # Create table for 2D probability at 90% containment
-    rapix, decpix, areapix = GetRegionPixReduced(
-        prob, obspar.percentageMOC, reducedNside
+    # Create table for 2D probability at percentageMOC containment
+    rapix, decpix, _ = GetRegionPixReduced(
+        prob, obspar.percentageMOC, reducedNside, skymap.scheme
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
     maxRuns = obspar.maxRuns
@@ -2213,8 +2363,8 @@ def PGalinFoV_Space_NObs(
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, reducedNside, radius, pixlist)
-        pixlist, pixlistHR, sumPGW, doneObs = SubstractPointings2D(
-            PointingFile, prob, obspar, pixlist, pixlistHR
+        pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
+            PointingFile, prob, skymap.is_nested, obspar, pixlist, pixlistHR, radecs
         )
 
         if obspar.countPrevious:
@@ -2231,12 +2381,13 @@ def PGalinFoV_Space_NObs(
             "==========================================================================================="
         )
 
-    ipix = TransformRADecToPix(radecs, reducedNside)
+    ipix = TransformRADecToPix(radecs, skymap.is_nested, reducedNside)
     newpix = ipix
     pixradec = radecs
 
     first_values1 = GetBestGridPos3D(
         prob,
+        skymap.is_nested,
         tGals0,
         pixradec,
         newpix,
@@ -2297,6 +2448,7 @@ def PGalinFoV_Space_NObs(
         )
         ObsBool, yprob, pixlistRROcc = OccultationCut(
             prob,
+            skymap.is_nested,
             reducedNside,
             current_time,
             obspar,
@@ -2307,7 +2459,9 @@ def PGalinFoV_Space_NObs(
         # Let's get the list of pixels available at each iteration
         firstvalue1 = first_values1
 
-        matching_rows1 = FindMatchingCoords(1, firstvalue1, pixlistRROcc, reducedNside)
+        matching_rows1 = FindMatchingCoords(
+            1, firstvalue1, pixlistRROcc, skymap.is_nested, reducedNside
+        )
         matching_tables.append(matching_rows1)
 
         radectime = co.SkyCoord(
@@ -2315,7 +2469,7 @@ def PGalinFoV_Space_NObs(
         )
         theta = np.radians(90.0 - matching_rows1["PIXDEC"])
         phi = np.radians(matching_rows1["PIXRA"])  # phi = longitude
-        pix_idx = hp.ang2pix(reducedNside, theta, phi, nest=False)
+        pix_idx = hp.ang2pix(reducedNside, theta, phi, nest=skymap.is_nested)
 
         pix_proba = matching_rows1["PIXFOVPROB"]
 
@@ -2329,14 +2483,14 @@ def PGalinFoV_Space_NObs(
         current_time += step
         i += 1
 
-    # WE CAN GET THE LIST OF PIXELS AVAILABLE AT ALL TIMES --> here we are getting them for all the 90% region... we can only get then for first value if we want
+    # WE CAN GET THE LIST OF PIXELS AVAILABLE AT ALL TIMES --> here we are getting them for all the percentageMOC region... we can only get then for first value if we want
     Occultedpixels = [item for sublist in Occultedpixels for item in sublist]
     OldPix = ipix
     searchpix = np.isin(OldPix, Occultedpixels, invert=True)
     newpix = OldPix[searchpix]
 
     # CONVERTING newpix to angles on the coordinate grid
-    pixradec = TransformPixToRaDec(newpix, reducedNside)
+    pixradec = TransformPixToRaDec(newpix, skymap.is_nested, reducedNside)
 
     # Finding the common radec between visible pixels and the grid
     first_values_coords = co.SkyCoord(
