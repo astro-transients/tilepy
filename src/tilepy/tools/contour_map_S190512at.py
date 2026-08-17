@@ -29,7 +29,7 @@ cumsum = np.cumsum(sort)
 index, value = min(enumerate(cumsum), key=lambda x: abs(x[1] - percentage))
 
 # finding ipix indices confined in a given percentage
-index_hpx = range(0, len(hpx))
+index_hpx = range(len(hpx))
 hpx_index = np.c_[hpx, index_hpx]
 
 sort_2array = sorted(hpx_index, key=lambda x: x[0], reverse=True)
@@ -38,7 +38,7 @@ value_contour = sort_2array[0:index]
 j = 1
 table_ipix_contour = []
 
-for i in range(0, len(value_contour)):
+for i in range(len(value_contour)):
     ipix_contour = int(value_contour[i][j])
     table_ipix_contour.append(ipix_contour)
 
@@ -76,7 +76,7 @@ cumsum = np.cumsum(sort)
 index, value = min(enumerate(cumsum), key=lambda x: abs(x[1] - percentage))
 
 # finding ipix indices confined in a given percentage
-index_hpx = range(0, len(hpx))
+index_hpx = range(len(hpx))
 hpx_index = np.c_[hpx, index_hpx]
 
 sort_2array = sorted(hpx_index, key=lambda x: x[0], reverse=True)
@@ -85,7 +85,7 @@ value_contour = sort_2array[0:index]
 j = 1
 table_ipix_contour = []
 
-for i in range(0, len(value_contour)):
+for i in range(len(value_contour)):
     ipix_contour = int(value_contour[i][j])
     table_ipix_contour.append(ipix_contour)
 
@@ -123,7 +123,7 @@ cumsum = np.cumsum(sort)
 index, value = min(enumerate(cumsum), key=lambda x: abs(x[1] - percentage))
 
 # finding ipix indices confined in a given percentage
-index_hpx = range(0, len(hpx))
+index_hpx = range(len(hpx))
 hpx_index = np.c_[hpx, index_hpx]
 
 sort_2array = sorted(hpx_index, key=lambda x: x[0], reverse=True)
@@ -132,7 +132,7 @@ value_contour = sort_2array[0:index]
 j = 1
 table_ipix_contour = []
 
-for i in range(0, len(value_contour)):
+for i in range(len(value_contour)):
     ipix_contour = int(value_contour[i][j])
     table_ipix_contour.append(ipix_contour)
 
@@ -167,7 +167,7 @@ cumsum = np.cumsum(sort)
 index, value = min(enumerate(cumsum), key=lambda x: abs(x[1] - percentage))
 
 # finding ipix indices confined in a given percentage
-index_hpx = range(0, len(hpx))
+index_hpx = range(len(hpx))
 hpx_index = np.c_[hpx, index_hpx]
 
 sort_2array = sorted(hpx_index, key=lambda x: x[0], reverse=True)
@@ -176,7 +176,7 @@ value_contour = sort_2array[0:index]
 j = 1
 table_ipix_contour = []
 
-for i in range(0, len(value_contour)):
+for i in range(len(value_contour)):
     ipix_contour = int(value_contour[i][j])
     table_ipix_contour.append(ipix_contour)
 

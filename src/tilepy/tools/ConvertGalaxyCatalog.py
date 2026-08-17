@@ -79,7 +79,7 @@ def parse_arguments() -> argparse.ArgumentParser:
         required=False,
         default=0,
         type=int,
-        choices=range(0, 10),
+        choices=range(10),
         help="Compression level",
     )
     parser.add_argument(
@@ -286,7 +286,7 @@ def main(argv=None) -> int:
     if extension == ".parquet":
         catalog = pd.read_parquet(args.input, engine="fastparquet")
         catalog = catalog.rename(cosmo_hub_converter_name_columns_catalog, axis=1)
-        for col in cosmo_hub_converter_columns_catalog.keys():
+        for col in cosmo_hub_converter_columns_catalog:
             catalog[col] = catalog[col].apply(cosmo_hub_converter_columns_catalog[col])
     else:
         catalog = pd.read_csv(
@@ -297,9 +297,7 @@ def main(argv=None) -> int:
             dtype=dtype_columns_catalog,
             converters=converter_columns_catalog,
         )
-    logging.info(
-        "Catalog files loaded with success in {0}s".format(time.time() - tstart)
-    )
+    logging.info(f"Catalog files loaded with success in {time.time() - tstart}s")
 
     # Compute filter
     logging.info("Start computing catalog filter")
@@ -316,7 +314,7 @@ def main(argv=None) -> int:
         logging.info("Remove non valid data")
         catalog = catalog[catalog["valid_data"]]
 
-    logging.info("Catalog filter computed in {0}s".format(time.time() - tstart))
+    logging.info(f"Catalog filter computed in {time.time() - tstart}s")
 
     # Create output files
     logging.info("Start writing file")
@@ -417,7 +415,7 @@ def main(argv=None) -> int:
         h5file.root.catalog.cols.no_GLADE.create_index()
         h5file.close()
 
-    logging.info("File written in {0}s".format(time.time() - tstart))
+    logging.info(f"File written in {time.time() - tstart}s")
     return 0
 
 
