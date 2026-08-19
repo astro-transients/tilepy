@@ -127,7 +127,7 @@ pgal = pgal.astype(float)
 coordinates = SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
 print(ra, dec, pgw, pgal)
 
-for i in range(0, len(ra)):
+for i in range(len(ra)):
     print(ra[i])
     c = Circle(
         (ra[i], dec[i]),

@@ -47,15 +47,15 @@ import matplotlib.dates as mdates
 from matplotlib.patches import Circle
 
 __all__ = [
-    "LoadPointingsGW",
-    "LoadPointingsGAL",
     "LoadPointings",
-    "PointingPlotting",
+    "LoadPointingsGAL",
+    "LoadPointingsGW",
+    "PlotAccRegion",
     "PlotPointings",
     "PlotPointingsTogether",
-    "PointingPlottingGWCTA",
     "PlotPointings_Pretty",
-    "PlotAccRegion",
+    "PointingPlotting",
+    "PointingPlottingGWCTA",
 ]
 
 logger = logging.getLogger(__name__)
@@ -227,7 +227,7 @@ def LoadPointingsGAL(tpointingFile):
     time = []
     for i, time1 in enumerate(time1):
         try:
-            time.append((time1[i] + " " + time2[i]).split('"')[1])
+            time.append((time1 + " " + time2[i]).split('"')[1])
         except IndexError:
             time.append((time1 + " " + time2).split('"')[1])
             break
@@ -337,7 +337,7 @@ def PlotPointings(
         Fov_array = np.empty(400)
         Fov_array.fill(FOV)
 
-        for j in range(0, len(targetCoord.ra)):
+        for j in range(len(targetCoord.ra)):
             tarcoordra.fill(targetCoord[j].ra.deg)
             tarcoorddec.fill(targetCoord[j].dec.deg)
             racoord = tarcoordra + Fov_array * np.cos(theta)
@@ -407,7 +407,7 @@ def PlotPointingsTogether(
         tarcoordra1 = np.empty(npoints)
 
         tarcoorddec1 = np.empty(npoints)
-        for j in range(0, len(targetCoord1.ra)):
+        for j in range(len(targetCoord1.ra)):
             tarcoordra1.fill(targetCoord1[j].ra.deg)
             tarcoorddec1.fill(targetCoord1[j].dec.deg)
             racoord1 = tarcoordra1 + Fov_array1 * np.cos(theta)
@@ -428,7 +428,7 @@ def PlotPointingsTogether(
         tarcoordra2 = np.empty(npoints)
 
         tarcoorddec2 = np.empty(npoints)
-        for j in range(0, len(targetCoord2.ra)):
+        for j in range(len(targetCoord2.ra)):
             tarcoordra2.fill(targetCoord2[j].ra.deg)
             tarcoorddec2.fill(targetCoord2[j].dec.deg)
             racoord2 = tarcoordra2 + Fov_array2 * np.cos(theta)
@@ -504,7 +504,7 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
         prob,
         rot=[180, 0],
         coord="C",
-        title=f"GW prob map (Equatorial) + {str(ID)} {sum(Probarray) * 100:g} {converted_time_string} UTC",
+        title=f"GW prob map (Equatorial) + {ID!s} {sum(Probarray) * 100:g} {converted_time_string} UTC",
         nest=is_nested,
     )
     hp.graticule()
@@ -515,7 +515,7 @@ def PointingPlottingGWCTA(filename, ID, outDir, SuggestedPointings, obspar):
     Fov_array = np.empty(400)
     Fov_array.fill(FOV)
 
-    for j in range(0, len(Coordinates.ra)):
+    for j in range(len(Coordinates.ra)):
         tarcoordra.fill(Coordinates[j].ra.deg)
         tarcoorddec.fill(Coordinates[j].dec.deg)
         racoord = tarcoordra + Fov_array * np.cos(theta)
@@ -685,7 +685,7 @@ def PlotPointings_Pretty(
 
     pos = ax_inset.imshow_hpx(filename, cmap="cylon", nested=is_nested)
 
-    for i in range(0, len(ra)):
+    for i in range(len(ra)):
         obs_name = nametel[i]
         color1 = obs_name_to_color[obs_name]
 

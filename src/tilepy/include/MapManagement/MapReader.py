@@ -159,8 +159,7 @@ class MapReader(ABC):
 
         """
 
-        if download_max_nb_try < 1:
-            download_max_nb_try = 1
+        download_max_nb_try = max(download_max_nb_try, 1)
 
         filename = self.url.split("/")[-1]
         logger.info(f"The filename is {filename}")
@@ -795,8 +794,7 @@ class MapReaderLegacy:
             Name or path of the downloaded file.
         """
 
-        if download_max_nb_try < 1:
-            download_max_nb_try = 1
+        download_max_nb_try = max(download_max_nb_try, 1)
 
         filename = self.url.split("/")[-1]
         logger.info(f"The filename is {filename}")

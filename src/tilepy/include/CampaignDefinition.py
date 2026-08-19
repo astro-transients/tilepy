@@ -74,7 +74,7 @@ def set_gaussian_source(obspar, ra, dec, sigma, name="gaussian_event"):
         obspar.event_name = name
 
 
-class ObservationParameters(object):
+class ObservationParameters:
     """
     Stores all the configuration parameters from the .ini file
 

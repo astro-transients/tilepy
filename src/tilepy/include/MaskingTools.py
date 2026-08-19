@@ -31,12 +31,12 @@ import astropy.coordinates as co
 import healpy as hp
 import matplotlib.pyplot as plt
 import numpy as np
-import numpy.ma as ma
 import six
 from astropy import units as u
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord, get_body
 from astropy.table import Table
 from astropy.time import Time
+from numpy import ma
 from six.moves import configparser
 
 from .PointingTools import ComputePGalinFOV, GetSatelliteTime, Tools
@@ -47,17 +47,17 @@ else:
     ConfigParser = configparser.ConfigParser
 
 __all__ = [
-    "ZenithAngleCut",
-    "VisibleAtTime",
     "FulfillsRequirement",
     "FulfillsRequirementGreyObservations",
+    "GetBestGridPos2D",
+    "GetBestGridPos3D",
     "GetEarthOccultedPix",
     "GetMoonOccultedPix",
     "GetSunOccultedPix",
     "OccultationCut",
     "SAA_Times",
-    "GetBestGridPos2D",
-    "GetBestGridPos3D",
+    "VisibleAtTime",
+    "ZenithAngleCut",
 ]
 
 logger = logging.getLogger(__name__)
@@ -430,7 +430,7 @@ def GetBestGridPos2D(
     newpix = newpix[np.argsort(prob1)[::-1]]
     rotation = 0
 
-    for i in range(0, len(newpix)):
+    for i in range(len(newpix)):
         if n_sides == 0:
             xyzpix = hp.pix2vec(reducedNside, newpix[i], nest=is_nested)
             # xyzpix = np.column_stack(xyzpix1)
@@ -585,7 +585,7 @@ def GetBestGridPos3D(
     BestGalsDec = []
     # galaxx = []
     cat0 = cat
-    for element in range(0, len(SelectedGals)):
+    for element in range(len(SelectedGals)):
         if element < len(SelectedGals):
             dp_dV_FOV1, galax = ComputePGalinFOV(
                 prob,
