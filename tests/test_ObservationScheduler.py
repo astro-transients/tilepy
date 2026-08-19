@@ -28,7 +28,7 @@ def setup_and_teardown(parsed_obs_parameters):
         )  # Ensure directory is removed after test
 
 
-def test_get_schedule(setup_and_teardown):
+def test_get_schedule(setup_and_teardown, skip_if_skymap_unreachable):
     """Tests GetSchedule using config from parsed_obs_parameters (defined in conftest.py)"""
     parsed_obs_parameters = (
         setup_and_teardown  # This gets the value yielded from the fixture
