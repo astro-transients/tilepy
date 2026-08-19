@@ -39,15 +39,15 @@ If you prefer to avoid conda and use a virtual environment with your favorite py
 ```
 python -m venv tilepy_venv
 source tilepy_venv/bin/activate
-pip3 install --upgrade pip
-python -m pip install -r requirements.txt
+pip install --upgrade pip
+pip install .
 ```
 
 Requirements of the installation:
 
 - The current version of the package **only** runs with `python>=3.9`. Python 3.9 is recommended. Be careful as well with the versions of matplotlib and healpy, they should be the ones explicitly given in the requirements.yml, otherwise conflicts between them when plotting skymaps will arise.
 - Note that by creating the env from the environment.yml, the libraries and versions needed will be installed automatically.
-- Note that every time we made changes to the package, you should update the installation of the package doing ```pip install .``` in the folder where the setup.py is located. The changes will be only applied to the env in which you are working.
+- Note that every time we made changes to the package, you should reinstall the package by running ```pip install .``` in the project root directory. The changes will be only applied to the env in which you are working.
 - The package relies on 'curl' to download the localisation map of the multi-messenger events.
 
 In the case you are working in CC-Lyon, the easiest solution is to do```ccenv conda ``` and then follow the instructions given above.

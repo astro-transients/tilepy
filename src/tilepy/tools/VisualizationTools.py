@@ -60,9 +60,9 @@ def LocateSource(filename, ra, dec, PercentCov=90):
     plt.show()
 
 
-def VisibilityOverview_forZenithCut(
-    filename, date=datetime.datetime.now(timezone.utc), zenithcut=60
-):
+def VisibilityOverview_forZenithCut(filename, date=None, zenithcut=60):
+    if date is None:
+        date = datetime.datetime.now(timezone.utc)
     time = getdate(date)
 
     print(
@@ -155,12 +155,14 @@ def VisibilityOverview_forZenithCut(
 def Time_DarkTime_GreyTime(
     filename,
     cfgFile,
-    date=datetime.datetime.now(timezone.utc),
+    date=None,
     zenithcut=60,
     maxNights=1,
     maxDuration=28,
     minDuration=10,
 ):
+    if date is None:
+        date = datetime.datetime.now(timezone.utc)
     time = getdate(date)
 
     obspar = ObservationParameters()

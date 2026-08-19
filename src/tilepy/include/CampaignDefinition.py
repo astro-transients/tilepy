@@ -74,7 +74,7 @@ def set_gaussian_source(obspar, ra, dec, sigma, name="gaussian_event"):
         obspar.event_name = name
 
 
-class ObservationParameters(object):
+class ObservationParameters:
     """
     Stores all the configuration parameters from the .ini file
 
@@ -242,8 +242,8 @@ class ObservationParameters(object):
                 f"Max Moon Source Separation: {self.maxMoonSourceSeparation}",
                 f"Geomagnetic Threshold for SAA: {self.SAAThreshold}",
                 f"Max Zenith: {self.maxZenith:.1f}, Zenith Weighting: {self.zenithWeighting}",
-                f"FoV number of sides: {self.numberSides}, "
-                f"FoV rotation: {self.FoVRotation},"
+                f"FoV number of sides: {self.numberSides}, ",
+                f"FoV rotation: {self.FoVRotation},",
                 f"Priority for FoV proximity and Probability: {self.alphaR}, Zenith Weighting: {self.betaR}",
                 "--------------------- Skymap considerations ----------------",
                 f"Skymap: {self.skymap}",
@@ -355,14 +355,14 @@ class ObservationParameters(object):
         self.percentageMOC = float(parser.get(section, "percentageMOC", fallback=0.90))
         try:
             self.reducedNside = int(parser.get(section, "reducedNside", fallback=0))
-        except Exception:
+        except ValueError:
             self.reducedNside = parser.getboolean(
                 section, "reducedNside", fallback=None
             )
 
         try:
             self.HRnside = int(parser.get(section, "hrnside", fallback=0))
-        except Exception:
+        except ValueError:
             self.HRnside = parser.getboolean(section, "hrnside", fallback=None)
         self.mangrove = parser.getboolean(section, "mangrove", fallback=None)
         self.algorithm = str(parser.get(section, "algorithm", fallback=None))

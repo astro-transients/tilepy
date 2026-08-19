@@ -8,6 +8,7 @@ import pandas as pd
 import tables
 
 logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def parse_arguments() -> argparse.ArgumentParser:
@@ -79,7 +80,7 @@ def parse_arguments() -> argparse.ArgumentParser:
         required=False,
         default=0,
         type=int,
-        choices=range(0, 10),
+        choices=range(10),
         help="Compression level",
     )
     parser.add_argument(
@@ -280,14 +281,14 @@ def main(argv=None) -> int:
     args = parser.parse_args()
 
     # Load catalog
-    logging.info("Start loading catalog file")
+    logger.info("Start loading catalog file")
     tstart = time.time()
     _, extension = os.path.splitext(args.input)
     if extension == ".parquet":
         catalog = pd.read_parquet(args.input, engine="fastparquet")
         catalog = catalog.rename(cosmo_hub_converter_name_columns_catalog, axis=1)
-        for col in cosmo_hub_converter_columns_catalog.keys():
-            catalog[col] = catalog[col].apply(cosmo_hub_converter_columns_catalog[col])
+        for col, converter in cosmo_hub_converter_columns_catalog.items():
+            catalog[col] = catalog[col].apply(converter)
     else:
         catalog = pd.read_csv(
             args.input,
@@ -297,15 +298,13 @@ def main(argv=None) -> int:
             dtype=dtype_columns_catalog,
             converters=converter_columns_catalog,
         )
-    logging.info(
-        "Catalog files loaded with success in {0}s".format(time.time() - tstart)
-    )
+    logger.info(f"Catalog files loaded with success in {time.time() - tstart}s")
 
     # Compute filter
-    logging.info("Start computing catalog filter")
+    logger.info("Start computing catalog filter")
     tstart = time.time()
 
-    logging.info("Determine data validity")
+    logger.info("Determine data validity")
     # Remove galaxies with invalid distance or too far
     catalog["valid_data"] = True
     catalog["valid_data"] &= ~np.isnan(catalog["d_L"])
@@ -313,13 +312,13 @@ def main(argv=None) -> int:
 
     # Remove non valid data if requested
     if not args.store_all:
-        logging.info("Remove non valid data")
+        logger.info("Remove non valid data")
         catalog = catalog[catalog["valid_data"]]
 
-    logging.info("Catalog filter computed in {0}s".format(time.time() - tstart))
+    logger.info(f"Catalog filter computed in {time.time() - tstart}s")
 
     # Create output files
-    logging.info("Start writing file")
+    logger.info("Start writing file")
     tstart = time.time()
 
     if args.text_format:
@@ -417,7 +416,7 @@ def main(argv=None) -> int:
         h5file.root.catalog.cols.no_GLADE.create_index()
         h5file.close()
 
-    logging.info("File written in {0}s".format(time.time() - tstart))
+    logger.info(f"File written in {time.time() - tstart}s")
     return 0
 
 

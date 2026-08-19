@@ -93,14 +93,13 @@ def GetSchedule(obspar, task_id=None):
     area_50 = skymap.getArea(0.5).to_value(u.deg * u.deg)
     area_percentage = skymap.getArea(obspar.percentageMOC).to_value(u.deg * u.deg)
 
-    if obspar.locCut is not None:
+    if obspar.locCut is not None and obspar.locCut < area_percentage:
         # FIXME : a repetitive calculation
         # area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
-        if obspar.locCut < area_percentage:
-            logger.info(
-                f"The {obspar.percentageMOC * 100:.1f}% area ({area_percentage:.2f} deg^2) is larger than the maximum allowed in the configuration ({obspar.locCut:.2f} deg^2)"
-            )
-            return
+        logger.info(
+            f"The {obspar.percentageMOC * 100:.1f}% area ({area_percentage:.2f} deg^2) is larger than the maximum allowed in the configuration ({obspar.locCut:.2f} deg^2)"
+        )
+        return
 
     # FIXME : Not necessary but could ovoid to have along "==" in the code
     # print("=" * 91)
@@ -201,7 +200,7 @@ def GetSchedule(obspar, task_id=None):
             "===========================================================================================\n"
         )
 
-        SuggestedPointings, t0 = PGWinFoV(
+        SuggestedPointings, _t0 = PGWinFoV(
             skymap, raw_map.name_event, obspar, str(dirName), task_id=task_id
         )
 
@@ -490,12 +489,12 @@ def GetUniversalSchedule(obspar):
 
         if base in ["space"]:
             for j, obs in enumerate(obspar):
-                obspar1 = obspar[j]
+                obspar1 = obs
                 SuggestedPointings_1 = SuggestedPointings[
-                    SuggestedPointings["ObsName"] == obspar[j].obs_name
+                    SuggestedPointings["ObsName"] == obs.obs_name
                 ]
                 logger.info(
-                    f"Suggested pointings for {obspar[j].obs_name}: {SuggestedPointings_1}"
+                    f"Suggested pointings for {obs.obs_name}: {SuggestedPointings_1}"
                 )
                 if base == "space":
                     time_table = Table(
@@ -503,30 +502,30 @@ def GetUniversalSchedule(obspar):
                     )
                     ascii.write(
                         time_table,
-                        f"{dirName}/SAA_Times_{obspar[j].obs_name}.txt",
+                        f"{dirName}/SAA_Times_{obs.obs_name}.txt",
                         overwrite=True,
                         fast_writer=False,
                     )
                 if len(SuggestedPointings_1) != 0:
                     ascii.write(
                         SuggestedPointings_1,
-                        f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
+                        f"{dirName}/SuggestedPointings_GWOptimisation_{obs.obs_name}.txt",
                         overwrite=True,
                         fast_writer=False,
                     )
-                    if obspar[j].doRank:
+                    if obs.doRank:
                         Ranking_Space(
                             dirName,
-                            f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
-                            obspar[j],
-                            obspar[j].alphaR,
-                            obspar[j].betaR,
+                            f"{dirName}/SuggestedPointings_GWOptimisation_{obs.obs_name}.txt",
+                            obs,
+                            obs.alphaR,
+                            obs.betaR,
                             skymap,
                         )
                         Ranking_Space_AI(
                             dirName,
-                            f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
-                            obspar[j],
+                            f"{dirName}/SuggestedPointings_GWOptimisation_{obs.obs_name}.txt",
+                            obs,
                             skymap,
                         )
 
@@ -536,7 +535,7 @@ def GetUniversalSchedule(obspar):
         else:
             # for obspar in parameters:
             for j, obs in enumerate(obspar):
-                obspar1 = obspar[j]
+                obspar1 = obs
                 SuggestedPointings_1 = SuggestedPointings[
                     SuggestedPointings["ObsName"] == obspar1.obs_name
                 ]
@@ -546,27 +545,27 @@ def GetUniversalSchedule(obspar):
                 if len(SuggestedPointings_1) != 0:
                     ascii.write(
                         SuggestedPointings_1,
-                        f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
+                        f"{dirName}/SuggestedPointings_GWOptimisation_{obs.obs_name}.txt",
                         overwrite=True,
                         fast_writer=False,
                     )
-                    if obspar[j].doRank:
+                    if obs.doRank:
                         RankingTimes_2D(
-                            obspar[j],
-                            skymap.getMap("prob", obspar[j].HRnside),
+                            obs,
+                            skymap.getMap("prob", obs.HRnside),
                             skymap.is_nested,
                             str(dirName),
-                            f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
+                            f"{dirName}/SuggestedPointings_GWOptimisation_{obs.obs_name}.txt",
                         )
-                    if obspar[j].doPlot:
+                    if obs.doPlot:
                         PointingPlotting(
-                            skymap.getMap("prob", obspar[j].HRnside),
+                            skymap.getMap("prob", obs.HRnside),
                             skymap.is_nested,
-                            obspar[j],
-                            obspar[j].obs_name,
+                            obs,
+                            obs.obs_name,
                             str(dirName),
-                            f"{dirName}/SuggestedPointings_GWOptimisation_{obspar[j].obs_name}.txt",
-                            obspar[j].obs_name,
+                            f"{dirName}/SuggestedPointings_GWOptimisation_{obs.obs_name}.txt",
+                            obs.obs_name,
                             cat,
                         )
             if obspar[j].doPlot:

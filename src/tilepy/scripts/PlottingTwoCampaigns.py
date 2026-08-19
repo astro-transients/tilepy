@@ -26,7 +26,7 @@ def PlottingTwoCampaigns(obspar, PointingsFile1, PointingsFile2):
         CompareTwoTilings(
             obspar.skymap, PointingsFile1, PointingsFile2, obspar.FOV, plotType
         )
-    except Exception:
+    except Exception:  # noqa: BLE001
         logger.error(
             f"An error occurred during the execution:\n{traceback.format_exc()}"
         )

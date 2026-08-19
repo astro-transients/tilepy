@@ -24,10 +24,10 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation
 
 __all__ = [
-    "HESSObservatory",
     "LST",
-    "CTASouthObservatory",
     "CTANorthObservatory",
+    "CTASouthObservatory",
+    "HESSObservatory",
 ]
 
 

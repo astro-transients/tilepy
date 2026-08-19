@@ -28,7 +28,7 @@ def Tiling_Observations(obspar):
     return_code = 0
     try:
         GetSchedule(obspar)
-    except Exception:
+    except Exception:  # noqa: BLE001
         logger.error(
             f"An error occurred during the execution:\n{traceback.format_exc()}"
         )

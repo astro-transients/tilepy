@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 import pytest
+import requests
 
 from tilepy.include.CampaignDefinition import ObservationParameters
 
@@ -45,3 +46,19 @@ def parsed_obs_parameters(request):
     )
 
     return obspar
+
+
+@pytest.fixture
+def skip_if_skymap_unreachable(parsed_obs_parameters):
+    """Skip the test if the skymap URL can't be fetched, instead of failing
+    later with a confusing error once the download degrades downstream results."""
+    url = parsed_obs_parameters.skymap
+    try:
+        response = requests.get(url, timeout=15, stream=True)
+        response.close()
+    except requests.exceptions.RequestException as exc:
+        pytest.skip(f"Skymap URL unreachable, skipping test: {url} ({exc})")
+    if response.status_code >= 400:
+        pytest.skip(
+            f"Skymap URL returned status {response.status_code}, skipping test: {url}"
+        )

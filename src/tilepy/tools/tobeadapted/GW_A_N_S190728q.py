@@ -46,7 +46,7 @@ RA_GRB = 217
 DEC_GRB = 34
 # url = 'https://gracedb.ligo.org/api/superevents/S190728q/files/GW190728_064510_PublicationSamples_flattened.fits.gz,0'
 center = SkyCoord(RA_GRB, DEC_GRB, unit="deg", frame="icrs")
-center_str = "%fd %fd" % (center.ra.deg, center.dec.deg)
+center_str = f"{center.ra.deg:f}d {center.dec.deg:f}d"
 # center = SkyCoord(232.418, 28.071, unit='deg', frame='icrs')
 # filename = download_file(url, cache=True)
 # filename = '/Users/hashkar/Desktop/GW_HESS_PUBLICATION/GW_O2_O3_MAPS/maps/O3/GW190512_180714_PublicationSamples_flattened.fits.gz,0'
@@ -127,7 +127,7 @@ pgal = pgal.astype(float)
 coordinates = SkyCoord(ra, dec, frame="icrs", unit=(u.deg, u.deg))
 print(ra, dec, pgw, pgal)
 
-for i in range(0, len(ra)):
+for i in range(len(ra)):
     print(ra[i])
     c = Circle(
         (ra[i], dec[i]),
@@ -141,7 +141,7 @@ for i in range(0, len(ra)):
     ax_inset.text(
         ra[i] - 2.5,
         dec[i] - 1,
-        "%d\n%s \n %d%% %d deg " % (i, time[i], 100 * pgw[i], pgal[i]),
+        f"{i}\n{time[i]} \n {int(100 * pgw[i])}% {int(pgal[i])} deg ",
         transform=ax_inset.get_transform("icrs"),
         color="k",
         rotation=-15,

@@ -27,7 +27,6 @@ from pathlib import Path
 
 import astropy.coordinates as co
 import healpy as hp
-import matplotlib.cm as cm
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,6 +37,7 @@ from astropy.coordinates import AltAz, SkyCoord, get_body
 from astropy.io import ascii
 from astropy.table import Table
 from astropy.time import Time
+from matplotlib import cm
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 from six.moves import configparser
@@ -56,22 +56,22 @@ import re
 # iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
 __all__ = [
-    "LoadPointingFile",
-    "VisibilityWindow",
+    "EvolutionPlot",
     "GetObservationPeriod",
     "GetVisibility",
-    "ProbabilitiesinPointings3D",
+    "LoadPointingFile",
     "PGGPGalinFOV",
-    "ProbabilitiesinPointings2D",
     "PGinFOV",
-    "Sortingby",
-    "EvolutionPlot",
-    "RankingTimes",
-    "RankingTimes_2D",
     "PlotAccRegionTimePix",
     "PlotAccRegionTimeRadec",
+    "ProbabilitiesinPointings2D",
+    "ProbabilitiesinPointings3D",
+    "RankingTimes",
+    "RankingTimes_2D",
     "Ranking_Space",
     "Ranking_Space_AI",
+    "Sortingby",
+    "VisibilityWindow",
 ]
 
 logger = logging.getLogger(__name__)
@@ -190,7 +190,7 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
     # frame = co.AltAz(obstime=auxtime, location=observatory)
     timeInitial = auxtime - datetime.timedelta(minutes=obspar.duration)
     for i, s in enumerate(source):
-        NonValidwindow, Stepzenith = GetVisibility(
+        _NonValidwindow, Stepzenith = GetVisibility(
             Pointing["Time"], s, obspar.maxZenith, obspar.location
         )
         window, zenith = GetObservationPeriod(timeInitial, s, obspar, i, dirName, False)
@@ -337,7 +337,7 @@ def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlo
             + "-->"
             + str(ScheduledTimes[-1]).split(".")[0]
         ), msourcealtazs.alt
-    except Exception:
+    except Exception:  # noqa: BLE001
         ScheduledTimesUni = str(ScheduledTimes).split(".")
         ScheduledTimes1 = ScheduledTimesUni[0]
         ScheduledTimes2 = ScheduledTimesUni[-1]
@@ -348,7 +348,7 @@ def GetVisibility(time, radecs, maxZenith, obsLoc):
     visibility = []
     altitude = []
 
-    for i in range(0, len(time)):
+    for i in range(len(time)):
         try:
             auxtime = datetime.datetime.strptime(time[i], "%Y-%m-%d %H:%M:%S.%f")
         except ValueError:
@@ -393,12 +393,12 @@ def ProbabilitiesinPointings3D(
     PGAL = []
 
     # bucle
-    for i in range(0, len(ra)):
+    for i in range(len(ra)):
         pgwcircle, pgalcircle = PGGPGalinFOV(
             cat, ra[i], dec[i], prob, is_nested, totaldPdV, FOV, nside
         )
-        PGW.append(float("{:1.4f}".format(pgwcircle)))
-        PGAL.append(float("{:1.4f}".format(pgalcircle)))
+        PGW.append(float(f"{pgwcircle:1.4f}"))
+        PGAL.append(float(f"{pgalcircle:1.4f}"))
 
     galPointing["Pgw"] = PGW
     galPointing["Pgal"] = PGAL
@@ -437,10 +437,10 @@ def ProbabilitiesinPointings2D(Pointing, FOV, prob, is_nested, nside):
     dec = Pointing["DEC[deg]"]
     PGW = []
     PGAL = []
-    for i in range(0, len(ra)):
+    for i in range(len(ra)):
         pgwcircle = PGinFOV(ra[i], dec[i], prob, is_nested, FOV, nside)
-        PGW.append(float("{:1.4f}".format(pgwcircle)))
-        PGAL.append(float("{:1.4f}".format(0)))
+        PGW.append(float(f"{pgwcircle:1.4f}"))
+        PGAL.append(float(f"{0:1.4f}"))
 
     Pointing["Pgw"] = PGW
     Pointing["Pgal"] = PGAL
@@ -539,7 +539,7 @@ def EvolutionPlot(galPointing, tname, ObsArray):
     time = galPointing["Time"]
     NUM_COLORS = len(time)
     hour = []
-    for j in range(0, len(time)):
+    for j in range(len(time)):
         selecttime = time[j].split(" ")
         hour.append(selecttime[1].split(".")[0])
     try:
@@ -555,7 +555,7 @@ def EvolutionPlot(galPointing, tname, ObsArray):
     GWordered = galPointing[np.flipud(np.argsort(galPointing["Pgw"]))]
 
     ax.set_prop_cycle(plt.cycler("color", plt.cm.Accent(np.linspace(0, 1, NUM_COLORS))))
-    for i in range(0, len(ra)):
+    for i in range(len(ra)):
         # x = np.arange(0, len(ra), 1)
         ZENITH = GWordered["Zenith angles in steps"][i]
         x = np.arange(0, len(ZENITH), 1)
@@ -645,7 +645,7 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
     # Sort by PGW in descending order
     try:
         data = data.sort_values(by="PGW", ascending=False).reset_index(drop=True)
-    except Exception:
+    except Exception:  # noqa: BLE001
         data = data.sort_values(by="PGal", ascending=False).reset_index(drop=True)
 
     # Initialize ranked list with the first (highest PGW) entry
@@ -657,7 +657,9 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
         last_entry = ranked[-1]
 
         # Normalize distance and PGW to 0-1 scale
-        distances = data.apply(lambda row: distance(last_entry, row), axis=1)
+        distances = data.apply(
+            lambda row, last_entry=last_entry: distance(last_entry, row), axis=1
+        )
         pgw_values = data["PGW"] if "PGW" in data.columns else data["PGal"]
 
         max_dist = distances.max()
@@ -757,7 +759,7 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
     if obspar.doPlot:
         try:
             prob_column = "PGW" if "PGW" in pre_df.columns else "PGal"
-        except Exception:
+        except Exception:  # noqa: BLE001
             raise ValueError("Neither PGW nor PGal column found")
 
         # Coordinates
@@ -841,7 +843,7 @@ def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
             cluster_data = df[df["Cluster"] == cluster_id].sort_values(
                 by="PGW", ascending=False
             )
-        except Exception:
+        except Exception:  # noqa: BLE001
             cluster_data = df[df["Cluster"] == cluster_id].sort_values(
                 by="PGal", ascending=False
             )
@@ -948,11 +950,11 @@ def map_pixel_availability(pixels_by_time, probs_by_time, times):
             pixel_data[pixel]["probs"].append(prob)
 
     # Aggregate probabilities (e.g., average)
-    for pixel in pixel_data:
-        probs = pixel_data[pixel]["probs"]
+    for value in pixel_data.values():
+        probs = value["probs"]
         avg_prob = sum(probs) / len(probs)
-        pixel_data[pixel]["prob"] = avg_prob
-        del pixel_data[pixel]["probs"]  # Remove raw list to keep only aggregated value
+        value["prob"] = avg_prob
+        del value["probs"]  # Remove raw list to keep only aggregated value
 
     return pixel_data
 

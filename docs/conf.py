@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 # Copyright (C) 2024, tilepy developers
-# Licensed under the GNU license - see ../LICENSE.rst
+# Licensed under the GNU Lesser General Public License v3 or later - see ../LICENSE.rst
 #
 # Inspired by Sphinx_Astropy, Sphinx, m4opt.
 
@@ -17,10 +16,10 @@ import astropy_sphinx_theme  # required for theme detection by Sphinx, even if u
 
 # docs/_pybtex/short_alpha.py:
 sys.path.insert(0, os.path.abspath("_pybtex"))
-import short_alpha  # noqa: F401, E402
+import short_alpha  # noqa: F401
 
 try:
-    from sphinx_astropy.conf.v2 import *  # noqa
+    from sphinx_astropy.conf.v2 import *
 except ImportError:
     print(
         "ERROR: the documentation requires the sphinx-astropy package to be installed"
@@ -56,7 +55,7 @@ try:
     authors = meta.get("authors", [{"name": DEFAULT_AUTHOR}])
     author = authors[0].get("name", DEFAULT_AUTHOR) if authors else DEFAULT_AUTHOR
 
-except Exception:
+except Exception:  # noqa: BLE001
     project = DEFAULT_PROJECT
     author = DEFAULT_AUTHOR
 
@@ -71,7 +70,7 @@ try:
     match = re.match(r"^(\d+\.\d+\.\d+)", release)
     version = match.group(1) if match else release
 
-except Exception:
+except Exception:  # noqa: BLE001
     release = DEFAULT_RELEASE
     version = DEFAULT_RELEASE
 
@@ -117,7 +116,7 @@ highlight_language = "python3"
 # Add only those extensions that are NOT already included in sphinx_astropy.conf.v2
 
 try:
-    extensions  # noqa: F405
+    extensions  # noqa: B018
 except NameError:
     extensions = [
         "sphinx.ext.autodoc",  # Automatic documentation for Python objects (functions, classes, etc.)
@@ -219,7 +218,7 @@ html_context = {
 
 # Theme and Customizations
 try:
-    html_theme  # noqa: F405
+    html_theme  # noqa: B018
 except NameError:
     html_theme = "pydata_sphinx_theme"
 

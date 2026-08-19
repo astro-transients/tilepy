@@ -5,7 +5,7 @@
   "version": "3.0.1",
   "datePublished": "2025-10-02",
   "description": "tilepy is an open-source Python package for scheduling follow-up observations of multi-messenger transient events with large sky localization uncertainties, such as gravitational waves, gamma-ray bursts, and high-energy neutrinos. It supports 2D and 3D (galaxy-catalog-based) tiling strategies and is accessible via a public API and through the Astro-COLIBRI platform.",
-  "license": "https://spdx.org/licenses/LGPL-3.0-only",
+  "license": "https://spdx.org/licenses/LGPL-3.0-or-later.html",
   "codeRepository": "https://github.com/astro-transients/tilepy",
   "url": "https://tilepy.com/tilepy/",
   "downloadUrl": "https://pypi.org/project/tilepy/",

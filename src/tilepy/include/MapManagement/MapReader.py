@@ -108,13 +108,12 @@ def create_map_reader(obspar):
         else:
             raise ValueError(f"Unknown obspar.mode = '{mode}'")
 
-    if hasattr(obspar, "skymap"):
-        if obspar.skymap is not None:
-            filename = os.path.basename(obspar.skymap)
-            if "glg_locprob_all" in filename:
-                return LocProbMapReader(obspar)
-            else:
-                return HealpixMapReader(obspar)
+    if hasattr(obspar, "skymap") and obspar.skymap is not None:
+        filename = os.path.basename(obspar.skymap)
+        if "glg_locprob_all" in filename:
+            return LocProbMapReader(obspar)
+        else:
+            return HealpixMapReader(obspar)
 
     raise ValueError(
         "Unable to determine appropriate MapReader. "
@@ -159,8 +158,7 @@ class MapReader(ABC):
 
         """
 
-        if download_max_nb_try < 1:
-            download_max_nb_try = 1
+        download_max_nb_try = max(download_max_nb_try, 1)
 
         filename = self.url.split("/")[-1]
         logger.info(f"The filename is {filename}")
@@ -185,13 +183,13 @@ class MapReader(ABC):
                 )
                 time.sleep(time_wait_retry)
 
-            except Exception as e:
+            except Exception:
                 if i == (download_max_nb_try - 1):
                     logger.error("Issue to download map from url")
 
                 traceback.print_exc()
                 if not file_exist:
-                    raise e
+                    raise
                 else:
                     logger.warning("The existing file will be used")
 
@@ -281,7 +279,7 @@ class LocProbMapReader(MapReader):
             )
 
         if not os.path.isfile(self.skymap_filename):
-            raise Exception("Map file not found: " + self.skymap_filename)
+            raise FileNotFoundError("Map file not found: " + self.skymap_filename)
 
         self.simulated_map = self._convert_locprob_to_healpix(
             self.skymap_filename, self.nside
@@ -359,7 +357,7 @@ class HealpixMapReader(MapReader):
             )
 
         if not os.path.isfile(self.skymap_filename):
-            raise Exception("Map file not found: " + self.skymap_filename)
+            raise FileNotFoundError("Map file not found: " + self.skymap_filename)
 
         self.fits_map = fits.open(self.skymap_filename)
         self.id_hdu_map = self.getMapHDUId()
@@ -430,12 +428,12 @@ class HealpixMapReader(MapReader):
         }
 
         if mapType not in field_map:
-            raise Exception(f"Unknown or unsupported map type: {mapType}")
+            raise ValueError(f"Unknown or unsupported map type: {mapType}")
 
         field_id, unit, is_density, target_unit = field_map[mapType]
 
         if field_id is None:
-            raise Exception(f"Map type '{mapType}' not available in this FITS file")
+            raise ValueError(f"Map type '{mapType}' not available in this FITS file")
 
         raw_map = mh.HealpixMap.read_map(
             self.skymap_filename,
@@ -445,14 +443,15 @@ class HealpixMapReader(MapReader):
         )
 
         quantity = raw_map.data * unit
-        if not unit.is_equivalent(target_unit):
-            # If unit is dimensionless but we're expecting density, compute manually
-            if unit.is_equivalent(u.dimensionless_unscaled) and target_unit == u.Unit(
-                "1/sr"
-            ):
-                pixarea = raw_map.pixarea()
-                quantity = quantity / pixarea  # Convert to density manually
-                raw_map._density = True
+        # If unit is dimensionless but we're expecting density, compute manually
+        if (
+            not unit.is_equivalent(target_unit)
+            and unit.is_equivalent(u.dimensionless_unscaled)
+            and target_unit == u.Unit("1/sr")
+        ):
+            pixarea = raw_map.pixarea()
+            quantity = quantity / pixarea  # Convert to density manually
+            raw_map._density = True
         raw_map._data = quantity.to_value(target_unit)
         raw_map._unit = target_unit
 
@@ -460,7 +459,7 @@ class HealpixMapReader(MapReader):
 
     def getDistance(self):
         if not self.has3D:
-            raise Exception("No distance information available")
+            raise ValueError("No distance information available")
 
         header = self.fits_map[self.id_hdu_map].header
         return header["DISTMEAN"], header["DISTSTD"]
@@ -469,7 +468,7 @@ class HealpixMapReader(MapReader):
         for i, hdu in enumerate(self.fits_map):
             if hdu.header.get("XTENSION") == "BINTABLE":
                 return i
-        raise Exception("No valid BINTABLE HDU found for HEALPix map")
+        raise ValueError("No valid BINTABLE HDU found for HEALPix map")
 
 
 class MapReaderLegacy:
@@ -514,7 +513,7 @@ class MapReaderLegacy:
             )
 
         if not os.path.isfile(self.skymap_filename):
-            raise Exception("Map file not found: " + self.skymap_filename)
+            raise FileNotFoundError("Map file not found: " + self.skymap_filename)
 
         # Early GBM format — convert to HEALPix
         # its important to have this before the healpix fits map mode,
@@ -641,13 +640,13 @@ class MapReaderLegacy:
                 and self.fits_map[i].header["XTENSION"] == "BINTABLE"
             ):
                 if id_hdu_map != -1:
-                    raise Exception(
+                    raise ValueError(
                         "Multiple map detected, please provide a file with only one map"
                     )
                 else:
                     id_hdu_map = i
         if id_hdu_map == -1:
-            raise Exception("No map detected, please provide a file with a map")
+            raise ValueError("No map detected, please provide a file with a map")
         return id_hdu_map
 
     def identifyColumns(self):
@@ -758,19 +757,19 @@ class MapReaderLegacy:
                 + str(self.fits_map[self.id_hdu_map].header["EVENTID"])
             )
         # if the event if from LVK and the URL is from GraceDB, get the superevent name
-        if "ORIGIN" in self.fits_map[self.id_hdu_map].header.keys():
-            if (
-                "LIGO/Virgo/KAGRA" in self.fits_map[self.id_hdu_map].header["ORIGIN"]
-                and self.is_remote
-            ):
-                if "https://gracedb.ligo.org/api/superevents" in self.url:
-                    name = self.url.split("/")[5]
+        if (
+            "ORIGIN" in self.fits_map[self.id_hdu_map].header
+            and "LIGO/Virgo/KAGRA" in self.fits_map[self.id_hdu_map].header["ORIGIN"]
+            and self.is_remote
+            and "https://gracedb.ligo.org/api/superevents" in self.url
+        ):
+            name = self.url.split("/")[5]
         # if the event if from Fermi-GBM, get the GBM name (i.e. replace GRB with bn)
-        if "TELESCOP" in self.fits_map["PRIMARY"].header.keys():
-            if self.fits_map["PRIMARY"].header["TELESCOP"] == "GLAST":
-                name = (
-                    self.fits_map[self.id_hdu_map].header["OBJECT"].replace("GRB", "bn")
-                )
+        if (
+            "TELESCOP" in self.fits_map["PRIMARY"].header
+            and self.fits_map["PRIMARY"].header["TELESCOP"] == "GLAST"
+        ):
+            name = self.fits_map[self.id_hdu_map].header["OBJECT"].replace("GRB", "bn")
 
         return name
 
@@ -795,8 +794,7 @@ class MapReaderLegacy:
             Name or path of the downloaded file.
         """
 
-        if download_max_nb_try < 1:
-            download_max_nb_try = 1
+        download_max_nb_try = max(download_max_nb_try, 1)
 
         filename = self.url.split("/")[-1]
         logger.info(f"The filename is {filename}")
@@ -821,7 +819,7 @@ class MapReaderLegacy:
                     logger.error("Issue to download map from url")
                     traceback.print_exc()
                     if not file_exist:
-                        raise e
+                        raise
                     else:
                         logger.warning("The existing file will be used")
                 else:
@@ -837,13 +835,13 @@ class MapReaderLegacy:
             if mapType == "prob":
                 return self.simulated_map
             else:
-                raise Exception(
+                raise ValueError(
                     f"Map type '{mapType}' not available in simulated map mode"
                 )
 
         if self.mode == "gaussian":
             if mapType != "prob":
-                raise Exception("Only 'prob' map type supported in gaussian mode.")
+                raise ValueError("Only 'prob' map type supported in gaussian mode.")
             return self.simulated_map
 
         if mapType == "prob":
@@ -893,9 +891,9 @@ class MapReaderLegacy:
         elif not self.has3D and (
             mapType == "distMean" or mapType == "distSigma" or mapType == "distNorm"
         ):
-            raise Exception("No distance information available")
+            raise ValueError("No distance information available")
         else:
-            raise Exception("Unknown type of map")
+            raise ValueError("Unknown type of map")
 
         return raw_map
 
@@ -906,4 +904,4 @@ class MapReaderLegacy:
                 self.fits_map[self.id_hdu_map].header["DISTSTD"],
             )
         else:
-            raise Exception("No distance information available")
+            raise ValueError("No distance information available")

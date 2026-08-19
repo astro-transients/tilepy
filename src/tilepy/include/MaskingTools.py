@@ -31,12 +31,12 @@ import astropy.coordinates as co
 import healpy as hp
 import matplotlib.pyplot as plt
 import numpy as np
-import numpy.ma as ma
 import six
 from astropy import units as u
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord, get_body
 from astropy.table import Table
 from astropy.time import Time
+from numpy import ma
 from six.moves import configparser
 
 from .PointingTools import ComputePGalinFOV, GetSatelliteTime, Tools
@@ -47,17 +47,17 @@ else:
     ConfigParser = configparser.ConfigParser
 
 __all__ = [
-    "ZenithAngleCut",
-    "VisibleAtTime",
     "FulfillsRequirement",
     "FulfillsRequirementGreyObservations",
+    "GetBestGridPos2D",
+    "GetBestGridPos3D",
     "GetEarthOccultedPix",
     "GetMoonOccultedPix",
     "GetSunOccultedPix",
     "OccultationCut",
     "SAA_Times",
-    "GetBestGridPos2D",
-    "GetBestGridPos3D",
+    "VisibleAtTime",
+    "ZenithAngleCut",
 ]
 
 logger = logging.getLogger(__name__)
@@ -329,15 +329,15 @@ def OccultationCut(
     maskOcc = np.zeros(hp.nside2npix(nside), dtype=bool)
     mpixels = []
 
-    mEarth, posEarth = GetEarthOccultedPix(
+    mEarth, _posEarth = GetEarthOccultedPix(
         nside, is_nested, time, 6371, earth_sep, satellitePosition, satelliteLocation
     )
     mpixels.extend(mEarth)
 
-    mSun, posSun = GetSunOccultedPix(nside, is_nested, sun_sep, time)
+    mSun, _posSun = GetSunOccultedPix(nside, is_nested, sun_sep, time)
     mpixels.extend(mSun)
 
-    mMoon, poSMoon = GetMoonOccultedPix(nside, is_nested, moon_sep, time)
+    mMoon, _poSMoon = GetMoonOccultedPix(nside, is_nested, moon_sep, time)
     mpixels.extend(mMoon)
 
     pixlist.extend(mpixels)
@@ -430,7 +430,7 @@ def GetBestGridPos2D(
     newpix = newpix[np.argsort(prob1)[::-1]]
     rotation = 0
 
-    for i in range(0, len(newpix)):
+    for i in range(len(newpix)):
         if n_sides == 0:
             xyzpix = hp.pix2vec(reducedNside, newpix[i], nest=is_nested)
             # xyzpix = np.column_stack(xyzpix1)
@@ -542,7 +542,7 @@ def GetBestGridPos2D(
                 coord="C",
                 linewidth=0.1,
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"{e}: no occulted pix")
 
         hp.visufunc.projplot(
@@ -585,7 +585,7 @@ def GetBestGridPos3D(
     BestGalsDec = []
     # galaxx = []
     cat0 = cat
-    for element in range(0, len(SelectedGals)):
+    for element in range(len(SelectedGals)):
         if element < len(SelectedGals):
             dp_dV_FOV1, galax = ComputePGalinFOV(
                 prob,
@@ -597,7 +597,7 @@ def GetBestGridPos3D(
                 UsePix=True,
             )
         if dp_dV_FOV1 > minProbCut:
-            dp_dV_FOV2, galax2 = ComputePGalinFOV(
+            dp_dV_FOV2, _galax2 = ComputePGalinFOV(
                 prob, cat0, SelectedGals[element], FOV, totaldPdV, n_sides, UsePix=True
             )
             dp_dV_FOV.append(dp_dV_FOV2)
@@ -667,7 +667,7 @@ def GetBestGridPos3D(
                 linewidth=0.1,
             )
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"{e}: No occulted pix")
 
         hp.visufunc.projplot(

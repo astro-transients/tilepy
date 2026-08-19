@@ -88,7 +88,7 @@ ObsArray = ["SWIFT"]
 parameters = []
 
 for i in ObsArray:
-    parameters.append("../config/FollowupParameters_%s.ini" % i)
+    parameters.append(f"../config/FollowupParameters_{i}.ini")
 print(
     "==========================================================================================="
 )

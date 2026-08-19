@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64,<71", "setuptools_scm[toml]>=8"]
+requires = ["setuptools>=77.0.3", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -15,10 +15,10 @@ maintainers = [
     {name = "Fabian Schussler", email = "fabian.schussler@cea.fr"},
     {name = "Mathieu de Bony", email = "mathieu.debony@cea.fr"},
 ]
-license = {file = "LICENSE.rst"}
+license = "LGPL-3.0-or-later"
+license-files = ["LICENSE.rst"]
 classifiers = [
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -34,8 +34,8 @@ dependencies = [
           'astropy',
           'scipy<1.14.0',
           'numpy',
-          'healpy==1.16.2',
-          'ipython',
+          'healpy>=1.16.2,<2',
+          'ipython<9',
           'matplotlib<3.9.0',
           'MOCpy',
           'pandas',
@@ -116,6 +116,18 @@ exclude = [
 [tool.setuptools_scm]
 write_to = "src/tilepy/_version.py"
 
+[tool.ruff.lint]
+ignore = [
+    # Module file names predate this rule and match the project's established
+    # convention; renaming them would break existing imports across the
+    # codebase and downstream users.
+    "N999",
+    # Naive datetimes are used consistently throughout scheduling
+    # calculations; making some timezone-aware without a full audit risks
+    # TypeError when mixed with naive datetimes elsewhere.
+    "DTZ007",
+]
+
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
@@ -177,6 +189,6 @@ ignore-words-list = """
 package = true
 
 override-dependencies = [
-    'healpy>=1.17.0',
+    'healpy>=1.16.2,<2',
     "setuptools>=64,<71",
 ]
