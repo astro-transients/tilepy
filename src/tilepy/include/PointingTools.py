@@ -144,10 +144,8 @@ class Tools:
 
         if sunAlt > SunDown:
             return False
-        if moonAlt > MoonDown:
-            return False
 
-        return True
+        return not (moonAlt > MoonDown)
 
     @classmethod
     def IsGreyness(cls, obsTime, obspar):
@@ -174,9 +172,7 @@ class Tools:
             return False
         if moonAlt > MoonGrey:
             return False
-        if moonPhase > MoonPhase and moonAlt > MoonDown:
-            return False
-        return True
+        return not (moonPhase > MoonPhase and moonAlt > MoonDown)
 
     @classmethod
     def MoonPhase(cls, obsTime, obspar):
@@ -418,12 +414,9 @@ class Tools:
         saa_lon_max = -30.0  # Maximum longitude for the SAA
 
         # Check if the satellite's position falls within the SAA region
-        if (saa_lat_min <= latitude <= saa_lat_max) and (
+        return (saa_lat_min <= latitude <= saa_lat_max) and (
             saa_lon_min <= longitude <= saa_lon_max
-        ):
-            return True
-        else:
-            return False
+        )
 
     @classmethod
     def is_in_saa_opt(cls, satellite, current_time, threshold_nT, datasetDir):
@@ -683,7 +676,7 @@ class Observer:
         self.timescale_converter = load.timescale()
 
     def get_time_window(
-        self, start_time, nb_observation_night, excluded_time_windows=[]
+        self, start_time, nb_observation_night, excluded_time_windows=None
     ):
         """
         Calculate the time window for observations.
@@ -701,6 +694,8 @@ class Observer:
             The start times for each run within the valid time range.
 
         """
+        if excluded_time_windows is None:
+            excluded_time_windows = []
 
         # Compute time interval
         if start_time.tzinfo is None:
@@ -1016,7 +1011,7 @@ class Observer:
             f,
         )
         if len(time) == 0:
-            alt, az, distance = (
+            alt, _az, _distance = (
                 (self.observatory_location + self.eph["earth"])
                 .at(self.timescale_converter.from_datetime(start_time))
                 .observe(self.eph[celestial_body])
@@ -1155,7 +1150,7 @@ def get_lvk_uniq_maps(sky_map, Order, map_names="all"):
         npix = hp.nside2npix(nside)
         bl = order == ii
 
-        for k in maps:
+        for k, value in maps.items():
             a = hp.UNSEEN * np.ones(npix)
             if k == "PROB":
                 a[inds[bl]] = sky_map["PROBDENSITY"][bl]
@@ -1164,14 +1159,14 @@ def get_lvk_uniq_maps(sky_map, Order, map_names="all"):
                 a[inds[bl]] = sky_map[k][bl]
             if ii == Order:
                 bl_ = a != hp.UNSEEN
-                maps[k][bl_] += a[bl_]
+                value[bl_] += a[bl_]
                 del a
             else:
                 a_ = hp.ud_grade(
                     a, nside_out=Nside, order_in="Nested", order_out="Nested"
                 )
                 bl_ = a_ != hp.UNSEEN
-                maps[k][bl_] += a_[bl_]
+                value[bl_] += a_[bl_]
                 del a, a_
 
     maps["PROB"] = (
@@ -1496,7 +1491,7 @@ def ComputeProbability2D(
                         coord="C",
                         linewidth=0.1,
                     )
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     logger.error(f"{e}: no occulted pixel")
 
             plt.savefig(f"{path}/Zoom_Pointing_{counter:g}.png")
@@ -2043,7 +2038,7 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, n_sides, UsePix):
             targetCoord = co.SkyCoord(
                 galpix["PIXRA"], galpix["PIXDEC"], frame="icrs", unit=(u.deg, u.deg)
             )
-        except Exception:
+        except Exception:  # noqa: BLE001
             targetCoord = galpix
     else:
         targetCoord = co.SkyCoord(
@@ -2118,7 +2113,7 @@ def ModifyCatalogue(prob, cat, FOV, totaldPdV, nside):
     dp_dV_FOV = []
     for element in range(len(cat["dp_dV"])):
         if element < len(SelectedGals["dp_dV"]):
-            dp_dV_FOV1, galax = ComputePGalinFOV(
+            dp_dV_FOV1, _galax = ComputePGalinFOV(
                 prob,
                 cat,
                 SelectedGals[element],
@@ -2170,7 +2165,7 @@ def ComputeProbPGALIntegrateFoV(
                 frame="icrs",
                 unit=(u.deg, u.deg),
             )
-        except Exception:
+        except Exception:  # noqa: BLE001
             targetCoord = centerPoint
 
     else:
@@ -2349,7 +2344,7 @@ def IsSourceInside(Pointings, Sources, FOV, nside, is_nested):
             xyz = hp.ang2vec(t, p)
             try:
                 ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(FOV), nest=is_nested)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 ipix_disc = hp.query_disc(
                     nside, xyz[0], np.deg2rad(FOV), nest=is_nested
                 )
@@ -2387,39 +2382,39 @@ def FillSummary(
     totalProb,
     ObsInfo,
 ):
-    f = open(outfilename, "w")
-    f.write(
-        "ID"
-        + " "
-        + "TotalObservations"
-        + " "
-        + "TotalPossible"
-        + " "
-        + "FirstCovered"
-        + " "
-        + "TimesFound"
-        + " "
-        + "TotalProb"
-        + " "
-        + "ObsInfo"
-        + "\n"
-    )
-    f.write(
-        str(ID)
-        + " "
-        + str(doneObservations)
-        + " "
-        + str(totalPoswindow)
-        + " "
-        + str(foundFirst)
-        + " "
-        + str(nP)
-        + " "
-        + str(totalProb)
-        + " "
-        + str(ObsInfo)
-        + "\n"
-    )
+    with open(outfilename, "w") as f:
+        f.write(
+            "ID"
+            + " "
+            + "TotalObservations"
+            + " "
+            + "TotalPossible"
+            + " "
+            + "FirstCovered"
+            + " "
+            + "TimesFound"
+            + " "
+            + "TotalProb"
+            + " "
+            + "ObsInfo"
+            + "\n"
+        )
+        f.write(
+            str(ID)
+            + " "
+            + str(doneObservations)
+            + " "
+            + str(totalPoswindow)
+            + " "
+            + str(foundFirst)
+            + " "
+            + str(nP)
+            + " "
+            + str(totalProb)
+            + " "
+            + str(ObsInfo)
+            + "\n"
+        )
 
 
 class NextWindowTools:

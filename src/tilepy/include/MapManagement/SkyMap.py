@@ -131,7 +131,7 @@ class SkyMap:
             if nside is None
             else f"{fraction_localisation}_{nside}_{self.scheme}"
         )
-        if cache_line in self.pix_id_area_cache.keys():
+        if cache_line in self.pix_id_area_cache:
             return self.pix_id_area_cache[cache_line]
 
         if nside is None:
@@ -182,7 +182,7 @@ class SkyMap:
 
         cache_entry = mapType + "_" + str(nside) + "_" + self.scheme
 
-        if cache_entry in self.rasterized_map_cache.keys():
+        if cache_entry in self.rasterized_map_cache:
             return self.rasterized_map_cache[cache_entry]
 
         if mapType == "prob_density":
@@ -203,7 +203,7 @@ class SkyMap:
                 ra=lon * u.deg, dec=lat * u.deg
             )
         else:
-            raise Exception("Unknown type of map")
+            raise ValueError("Unknown type of map")
 
         return self.rasterized_map_cache[cache_entry]
 

@@ -6,7 +6,7 @@ try:
         from ._dev_version import version
     except ImportError:
         from ._version import version
-except Exception:
+except Exception:  # noqa: BLE001
     import warnings
 
     warnings.warn(

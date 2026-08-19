@@ -55,7 +55,7 @@ try:
     authors = meta.get("authors", [{"name": DEFAULT_AUTHOR}])
     author = authors[0].get("name", DEFAULT_AUTHOR) if authors else DEFAULT_AUTHOR
 
-except Exception:
+except Exception:  # noqa: BLE001
     project = DEFAULT_PROJECT
     author = DEFAULT_AUTHOR
 
@@ -70,7 +70,7 @@ try:
     match = re.match(r"^(\d+\.\d+\.\d+)", release)
     version = match.group(1) if match else release
 
-except Exception:
+except Exception:  # noqa: BLE001
     release = DEFAULT_RELEASE
     version = DEFAULT_RELEASE
 
@@ -116,7 +116,7 @@ highlight_language = "python3"
 # Add only those extensions that are NOT already included in sphinx_astropy.conf.v2
 
 try:
-    extensions
+    extensions  # noqa: B018
 except NameError:
     extensions = [
         "sphinx.ext.autodoc",  # Automatic documentation for Python objects (functions, classes, etc.)
@@ -218,7 +218,7 @@ html_context = {
 
 # Theme and Customizations
 try:
-    html_theme
+    html_theme  # noqa: B018
 except NameError:
     html_theme = "pydata_sphinx_theme"
 

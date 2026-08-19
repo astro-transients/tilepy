@@ -329,15 +329,15 @@ def OccultationCut(
     maskOcc = np.zeros(hp.nside2npix(nside), dtype=bool)
     mpixels = []
 
-    mEarth, posEarth = GetEarthOccultedPix(
+    mEarth, _posEarth = GetEarthOccultedPix(
         nside, is_nested, time, 6371, earth_sep, satellitePosition, satelliteLocation
     )
     mpixels.extend(mEarth)
 
-    mSun, posSun = GetSunOccultedPix(nside, is_nested, sun_sep, time)
+    mSun, _posSun = GetSunOccultedPix(nside, is_nested, sun_sep, time)
     mpixels.extend(mSun)
 
-    mMoon, poSMoon = GetMoonOccultedPix(nside, is_nested, moon_sep, time)
+    mMoon, _poSMoon = GetMoonOccultedPix(nside, is_nested, moon_sep, time)
     mpixels.extend(mMoon)
 
     pixlist.extend(mpixels)
@@ -542,7 +542,7 @@ def GetBestGridPos2D(
                 coord="C",
                 linewidth=0.1,
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"{e}: no occulted pix")
 
         hp.visufunc.projplot(
@@ -597,7 +597,7 @@ def GetBestGridPos3D(
                 UsePix=True,
             )
         if dp_dV_FOV1 > minProbCut:
-            dp_dV_FOV2, galax2 = ComputePGalinFOV(
+            dp_dV_FOV2, _galax2 = ComputePGalinFOV(
                 prob, cat0, SelectedGals[element], FOV, totaldPdV, n_sides, UsePix=True
             )
             dp_dV_FOV.append(dp_dV_FOV2)
@@ -667,7 +667,7 @@ def GetBestGridPos3D(
                 linewidth=0.1,
             )
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"{e}: No occulted pix")
 
         hp.visufunc.projplot(

@@ -93,14 +93,13 @@ def GetSchedule(obspar, task_id=None):
     area_50 = skymap.getArea(0.5).to_value(u.deg * u.deg)
     area_percentage = skymap.getArea(obspar.percentageMOC).to_value(u.deg * u.deg)
 
-    if obspar.locCut is not None:
+    if obspar.locCut is not None and obspar.locCut < area_percentage:
         # FIXME : a repetitive calculation
         # area_90 = skymap.getArea(0.9).to_value(u.deg * u.deg)
-        if obspar.locCut < area_percentage:
-            logger.info(
-                f"The {obspar.percentageMOC * 100:.1f}% area ({area_percentage:.2f} deg^2) is larger than the maximum allowed in the configuration ({obspar.locCut:.2f} deg^2)"
-            )
-            return
+        logger.info(
+            f"The {obspar.percentageMOC * 100:.1f}% area ({area_percentage:.2f} deg^2) is larger than the maximum allowed in the configuration ({obspar.locCut:.2f} deg^2)"
+        )
+        return
 
     # FIXME : Not necessary but could ovoid to have along "==" in the code
     # print("=" * 91)
@@ -201,7 +200,7 @@ def GetSchedule(obspar, task_id=None):
             "===========================================================================================\n"
         )
 
-        SuggestedPointings, t0 = PGWinFoV(
+        SuggestedPointings, _t0 = PGWinFoV(
             skymap, raw_map.name_event, obspar, str(dirName), task_id=task_id
         )
 
