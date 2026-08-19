@@ -1332,7 +1332,7 @@ def PGWinFoV_NObs(
             "FoV",
         ],
     )
-    logger.info("The total probability PGW: ", np.sum(P_GWarray))
+    logger.info(f"The total probability PGW: {np.sum(P_GWarray):.4f}")
 
     return SuggestedPointings, obsparameters
 
