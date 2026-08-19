@@ -27,7 +27,6 @@ from pathlib import Path
 
 import astropy.coordinates as co
 import healpy as hp
-import matplotlib.cm as cm
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,6 +37,7 @@ from astropy.coordinates import AltAz, SkyCoord, get_body
 from astropy.io import ascii
 from astropy.table import Table
 from astropy.time import Time
+from matplotlib import cm
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 from six.moves import configparser
@@ -56,22 +56,22 @@ import re
 # iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 
 __all__ = [
-    "LoadPointingFile",
-    "VisibilityWindow",
+    "EvolutionPlot",
     "GetObservationPeriod",
     "GetVisibility",
-    "ProbabilitiesinPointings3D",
+    "LoadPointingFile",
     "PGGPGalinFOV",
-    "ProbabilitiesinPointings2D",
     "PGinFOV",
-    "Sortingby",
-    "EvolutionPlot",
-    "RankingTimes",
-    "RankingTimes_2D",
     "PlotAccRegionTimePix",
     "PlotAccRegionTimeRadec",
+    "ProbabilitiesinPointings2D",
+    "ProbabilitiesinPointings3D",
+    "RankingTimes",
+    "RankingTimes_2D",
     "Ranking_Space",
     "Ranking_Space_AI",
+    "Sortingby",
+    "VisibilityWindow",
 ]
 
 logger = logging.getLogger(__name__)
@@ -348,7 +348,7 @@ def GetVisibility(time, radecs, maxZenith, obsLoc):
     visibility = []
     altitude = []
 
-    for i in range(0, len(time)):
+    for i in range(len(time)):
         try:
             auxtime = datetime.datetime.strptime(time[i], "%Y-%m-%d %H:%M:%S.%f")
         except ValueError:
@@ -393,12 +393,12 @@ def ProbabilitiesinPointings3D(
     PGAL = []
 
     # bucle
-    for i in range(0, len(ra)):
+    for i in range(len(ra)):
         pgwcircle, pgalcircle = PGGPGalinFOV(
             cat, ra[i], dec[i], prob, is_nested, totaldPdV, FOV, nside
         )
-        PGW.append(float("{:1.4f}".format(pgwcircle)))
-        PGAL.append(float("{:1.4f}".format(pgalcircle)))
+        PGW.append(float(f"{pgwcircle:1.4f}"))
+        PGAL.append(float(f"{pgalcircle:1.4f}"))
 
     galPointing["Pgw"] = PGW
     galPointing["Pgal"] = PGAL
@@ -437,10 +437,10 @@ def ProbabilitiesinPointings2D(Pointing, FOV, prob, is_nested, nside):
     dec = Pointing["DEC[deg]"]
     PGW = []
     PGAL = []
-    for i in range(0, len(ra)):
+    for i in range(len(ra)):
         pgwcircle = PGinFOV(ra[i], dec[i], prob, is_nested, FOV, nside)
-        PGW.append(float("{:1.4f}".format(pgwcircle)))
-        PGAL.append(float("{:1.4f}".format(0)))
+        PGW.append(float(f"{pgwcircle:1.4f}"))
+        PGAL.append(float(f"{0:1.4f}"))
 
     Pointing["Pgw"] = PGW
     Pointing["Pgal"] = PGAL
@@ -539,7 +539,7 @@ def EvolutionPlot(galPointing, tname, ObsArray):
     time = galPointing["Time"]
     NUM_COLORS = len(time)
     hour = []
-    for j in range(0, len(time)):
+    for j in range(len(time)):
         selecttime = time[j].split(" ")
         hour.append(selecttime[1].split(".")[0])
     try:
@@ -555,7 +555,7 @@ def EvolutionPlot(galPointing, tname, ObsArray):
     GWordered = galPointing[np.flipud(np.argsort(galPointing["Pgw"]))]
 
     ax.set_prop_cycle(plt.cycler("color", plt.cm.Accent(np.linspace(0, 1, NUM_COLORS))))
-    for i in range(0, len(ra)):
+    for i in range(len(ra)):
         # x = np.arange(0, len(ra), 1)
         ZENITH = GWordered["Zenith angles in steps"][i]
         x = np.arange(0, len(ZENITH), 1)

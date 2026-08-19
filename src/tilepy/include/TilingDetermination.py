@@ -84,12 +84,12 @@ utc = pytz.UTC
 ############################################
 
 __all__ = [
-    "PGWinFoV",
-    "PGalinFoV",
     "ObservationStartperObs",
+    "PGWinFoV",
     "PGWinFoV_NObs",
-    "PGalinFoV_NObs",
     "PGWinFoV_Space_NObs",
+    "PGalinFoV",
+    "PGalinFoV_NObs",
 ]
 
 logger = logging.getLogger(__name__)
@@ -250,9 +250,9 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
                         )
                     else:
                         Round.append(2)
-                        P_GWarray.append(float("{:1.4f}".format(float(P_GW))))
-                        RAarray.append(float("{:3.4f}".format(float(TC.ra.deg))))
-                        DECarray.append(float("{:3.4f}".format(float(TC.dec.deg))))
+                        P_GWarray.append(float(f"{float(P_GW):1.4f}"))
+                        RAarray.append(float(f"{float(TC.ra.deg):3.4f}"))
+                        DECarray.append(float(f"{float(TC.dec.deg):3.4f}"))
                         ObservationTimearray.append(
                             ObservationTime.strftime("%Y-%m-%d %H:%M:%S")
                         )
@@ -262,9 +262,9 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
                         counter = counter + 1
                 elif P_GW >= obspar.minProbcut:
                     Round.append(1)
-                    P_GWarray.append(float("{:1.4f}".format(float(P_GW))))
-                    RAarray.append(float("{:3.4f}".format(float(TC.ra.deg))))
-                    DECarray.append(float("{:3.4f}".format(float(TC.dec.deg))))
+                    P_GWarray.append(float(f"{float(P_GW):1.4f}"))
+                    RAarray.append(float(f"{float(TC.ra.deg):3.4f}"))
+                    DECarray.append(float(f"{float(TC.dec.deg):3.4f}"))
                     ObservationTimearray.append(
                         ObservationTime.strftime("%Y-%m-%d %H:%M:%S")
                     )
@@ -593,8 +593,8 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                     )
                                 )
                                 Round.append(2)
-                                P_GALarray.append(float("{:1.4f}".format(p_gal)))
-                                P_GWarray.append(float("{:1.4f}".format(p_gw)))
+                                P_GALarray.append(float(f"{p_gal:1.4f}"))
+                                P_GWarray.append(float(f"{p_gw:1.4f}"))
                                 ObservationTimearray.append(
                                     ObservationTime.strftime("%Y-%m-%d %H:%M:%S")
                                 )
@@ -640,8 +640,8 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                     )
                                 )
                                 Round.append(1)
-                                P_GALarray.append(float("{:1.4f}".format(p_gal)))
-                                P_GWarray.append(float("{:1.4f}".format(p_gw)))
+                                P_GALarray.append(float(f"{p_gal:1.4f}"))
+                                P_GWarray.append(float(f"{p_gw:1.4f}"))
                                 ObservationTimearray.append(
                                     ObservationTime.strftime("%Y-%m-%d %H:%M:%S")
                                 )
@@ -683,8 +683,8 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                 float("{:3.4f}".format(float(finalGals["DEJ2000"][:1])))
                             )
                             Round.append(1)
-                            P_GALarray.append(float("{:1.4f}".format(p_gal)))
-                            P_GWarray.append(float("{:1.4f}".format(p_gw)))
+                            P_GALarray.append(float(f"{p_gal:1.4f}"))
+                            P_GWarray.append(float(f"{p_gw:1.4f}"))
                             ObservationTimearray.append(
                                 ObservationTime.strftime("%Y-%m-%d %H:%M:%S")
                             )
@@ -790,8 +790,8 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                     )
                                 )
                                 Round.append(2)
-                                P_GALarray.append(float("{:1.4f}".format(p_gal)))
-                                P_GWarray.append(float("{:1.4f}".format(p_gw)))
+                                P_GALarray.append(float(f"{p_gal:1.4f}"))
+                                P_GWarray.append(float(f"{p_gw:1.4f}"))
                                 ObservationTimearray.append(
                                     ObservationTime.strftime("%Y-%m-%d %H:%M:%S")
                                 )
@@ -833,8 +833,8 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                     )
                                 )
                                 Round.append(1)
-                                P_GALarray.append(float("{:1.4f}".format(p_gal)))
-                                P_GWarray.append(float("{:1.4f}".format(p_gw)))
+                                P_GALarray.append(float(f"{p_gal:1.4f}"))
+                                P_GWarray.append(float(f"{p_gw:1.4f}"))
                                 ObservationTimearray.append(
                                     ObservationTime.strftime("%Y-%m-%d %H:%M:%S")
                                 )
@@ -868,8 +868,8 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                 float("{:3.4f}".format(float(finalGals["DEJ2000"][:1])))
                             )
                             Round.append(1)
-                            P_GALarray.append(float("{:1.4f}".format(p_gal)))
-                            P_GWarray.append(float("{:1.4f}".format(p_gw)))
+                            P_GALarray.append(float(f"{p_gal:1.4f}"))
+                            P_GWarray.append(float(f"{p_gw:1.4f}"))
                             ObservationTimearray.append(
                                 ObservationTime.strftime("%Y-%m-%d %H:%M:%S")
                             )
@@ -1157,7 +1157,7 @@ def PGWinFoV_NObs(
     logger.info(f"------NewActiveObsTime--------\n{NewActiveObs[0].obs_name}")
     while (i < 500) & any(SameNight):
         for j, obs in enumerate(NewActiveObs):
-            obspar = NewActiveObs[j]
+            obspar = obs
             logger.info(f"Observatory: {obspar.obs_name}")
             ObservationTime = NewActiveObsTime[j]
             if ITERATION_OBS == len(obsparameters):
@@ -1233,9 +1233,9 @@ def PGWinFoV_NObs(
                             )
                         else:
                             Round.append(2)
-                            P_GWarray.append(float("{:1.4f}".format(float(P_GW))))
-                            RAarray.append(float("{:3.4f}".format(float(TC.ra.deg))))
-                            DECarray.append(float("{:3.4f}".format(float(TC.dec.deg))))
+                            P_GWarray.append(float(f"{float(P_GW):1.4f}"))
+                            RAarray.append(float(f"{float(TC.ra.deg):3.4f}"))
+                            DECarray.append(float(f"{float(TC.dec.deg):3.4f}"))
                             ObservationTime = str(ObservationTime).split("+")[0]
                             try:
                                 ObservationTime = datetime.datetime.strptime(
@@ -1255,9 +1255,9 @@ def PGWinFoV_NObs(
 
                     elif P_GW >= obspar.minProbcut:
                         Round.append(1)
-                        P_GWarray.append(float("{:1.4f}".format(float(P_GW))))
-                        RAarray.append(float("{:3.4f}".format(float(TC.ra.deg))))
-                        DECarray.append(float("{:3.4f}".format(float(TC.dec.deg))))
+                        P_GWarray.append(float(f"{float(P_GW):1.4f}"))
+                        RAarray.append(float(f"{float(TC.ra.deg):3.4f}"))
+                        DECarray.append(float(f"{float(TC.dec.deg):3.4f}"))
                         ObservationTime = str(ObservationTime).split("+")[0]
                         try:
                             ObservationTime = datetime.datetime.strptime(
@@ -1453,7 +1453,7 @@ def PGalinFoV_NObs(
     couter_per_obs = np.zeros(len(NewActiveObs))
     while (i < 5000) & any(SameNight):
         for j, obs in enumerate(NewActiveObs):
-            obspar = NewActiveObs[j]
+            obspar = obs
             ObservationTime = NewActiveObsTime[j]
             if ITERATION_OBS == len(obsparameters):
                 TIME_MIN_ALL = []
@@ -1558,8 +1558,8 @@ def PGalinFoV_NObs(
                                         )
                                     )
                                     Round.append(2)
-                                    P_GALarray.append(float("{:1.4f}".format(p_gal)))
-                                    P_GWarray.append(float("{:1.4f}".format(p_gw)))
+                                    P_GALarray.append(float(f"{p_gal:1.4f}"))
+                                    P_GWarray.append(float(f"{p_gw:1.4f}"))
                                     ObservationTime = str(ObservationTime).split(".")[0]
                                     try:
                                         ObservationTime = datetime.datetime.strptime(
@@ -1620,8 +1620,8 @@ def PGalinFoV_NObs(
                                     )
                                 )
                                 Round.append(1)
-                                P_GALarray.append(float("{:1.4f}".format(p_gal)))
-                                P_GWarray.append(float("{:1.4f}".format(p_gw)))
+                                P_GALarray.append(float(f"{p_gal:1.4f}"))
+                                P_GWarray.append(float(f"{p_gw:1.4f}"))
                                 ObservationTime = str(ObservationTime).split(".")[0]
                                 try:
                                     ObservationTime = datetime.datetime.strptime(
@@ -1731,8 +1731,8 @@ def PGalinFoV_NObs(
                                         )
                                     )
                                     Round.append(2)
-                                    P_GALarray.append(float("{:1.4f}".format(p_gal)))
-                                    P_GWarray.append(float("{:1.4f}".format(p_gw)))
+                                    P_GALarray.append(float(f"{p_gal:1.4f}"))
+                                    P_GWarray.append(float(f"{p_gw:1.4f}"))
                                     ObservationTimearray.append(
                                         ObservationTime.strftime("%Y-%m-%d %H:%M:%S")
                                     )
@@ -1775,8 +1775,8 @@ def PGalinFoV_NObs(
                                         )
                                     )
                                     Round.append(1)
-                                    P_GALarray.append(float("{:1.4f}".format(p_gal)))
-                                    P_GWarray.append(float("{:1.4f}".format(p_gw)))
+                                    P_GALarray.append(float(f"{p_gal:1.4f}"))
+                                    P_GWarray.append(float(f"{p_gw:1.4f}"))
                                     ObservationTimearray.append(
                                         ObservationTime.strftime("%Y-%m-%d %H:%M:%S")
                                     )
@@ -1819,8 +1819,8 @@ def PGalinFoV_NObs(
                                     )
                                 )
                                 Round.append(1)
-                                P_GALarray.append(float("{:1.4f}".format(p_gal)))
-                                P_GWarray.append(float("{:1.4f}".format(p_gw)))
+                                P_GALarray.append(float(f"{p_gal:1.4f}"))
+                                P_GWarray.append(float(f"{p_gw:1.4f}"))
                                 ObservationTimearray.append(
                                     ObservationTime.strftime("%Y-%m-%d %H:%M:%S")
                                 )
@@ -1930,7 +1930,7 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
             prob,
             obspar.reducedNside,
             obspar.FOV,
-            pixlist,  # noqa: F821
+            pixlist,
         )
         pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
             PointingFile,
@@ -1938,7 +1938,7 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
             skymap.is_nested,
             obspar,
             pixlist,
-            pixlistHR,  # noqa: F821
+            pixlistHR,
             radecs,
         )
 

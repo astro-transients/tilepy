@@ -32,7 +32,6 @@ import healpy as hp
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import numpy.ma as ma
 import pandas as pd
 import pytz
 import six
@@ -43,6 +42,7 @@ from astropy.table import Table
 from astropy.time import Time
 from gdpyc import DustMap
 from ligo.skymap.postprocess import find_greedy_credible_levels
+from numpy import ma
 from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
@@ -54,40 +54,39 @@ else:
     ConfigParser = configparser.ConfigParser
 
 __all__ = [
-    "Tools",
-    "Observer",
-    "LoadPointings",
-    "NextWindowTools",
-    "getdate",
-    "UNIQSkymap_toNested",
-    "get_lvk_uniq_maps",
-    "NightDarkObservation",
-    "NightDarkObservationwithGreyTime",
+    "ComputePGalinFOV",
+    "ComputeProbGalTargeted",
+    "ComputeProbPGALIntegrateFoV",
     "ComputeProbability2D",
-    "SubtractPointings2D",
-    "TransformRADec",
-    "TransformRADecToPix",
-    "TransformPixToRaDec",
-    "FindMatchingPixList",
+    "FillSummary",
     "FindMatchingCoords",
+    "FindMatchingPixList",
+    "GetBestNSIDE",
+    "GetExcludedTimeWindows",
+    "GetRegionPixGal",
+    "GetRegionPixReduced",
+    "GetSatelliteName",
+    "GetSatellitePositions",
+    "GetSatelliteTime",
+    "IsSourceInside",
     "LoadGalaxies",
     "LoadGalaxies_SteMgal",
-    "ComputeProbGalTargeted",
-    "SubtractPointings",
-    "SubtractGalaxiesCircle",
-    "ComputePGalinFOV",
+    "LoadPointings",
     "ModifyCatalogue",
-    "ComputeProbPGALIntegrateFoV",
-    "GetRegionPixReduced",
-    "GetRegionPixGal",
-    "IsSourceInside",
-    "FillSummary",
-    "GetSatelliteName",
-    "GetSatelliteTime",
-    "GetSatellitePositions",
-    "GetBestNSIDE",
-    "FillSummary",
-    "GetExcludedTimeWindows",
+    "NextWindowTools",
+    "NightDarkObservation",
+    "NightDarkObservationwithGreyTime",
+    "Observer",
+    "SubtractGalaxiesCircle",
+    "SubtractPointings",
+    "SubtractPointings2D",
+    "Tools",
+    "TransformPixToRaDec",
+    "TransformRADec",
+    "TransformRADecToPix",
+    "UNIQSkymap_toNested",
+    "get_lvk_uniq_maps",
+    "getdate",
 ]
 
 logger = logging.getLogger(__name__)
@@ -1156,7 +1155,7 @@ def get_lvk_uniq_maps(sky_map, Order, map_names="all"):
         npix = hp.nside2npix(nside)
         bl = order == ii
 
-        for k in maps.keys():
+        for k in maps:
             a = hp.UNSEEN * np.ones(npix)
             if k == "PROB":
                 a[inds[bl]] = sky_map["PROBDENSITY"][bl]
@@ -1364,7 +1363,7 @@ def ComputeProbability2D(
     xyzpix = hp.ang2vec(thetapix, phipix)
 
     # Grid-scheme and the connection between HR and LR
-    for i in range(0, len(cat_pix)):
+    for i in range(len(cat_pix)):
         # Pixels associated to a disk of radius centered in xyzpix[i] for HR NSIDE
         ipix_discfull = hp.query_disc(
             HRnside, xyzpix[i], np.deg2rad(radius), nest=is_nested
@@ -1589,7 +1588,7 @@ def TransformRADec(vra, vdec):
     if "h" in vra[0]:
         ra = []
         dec = []
-        for i in range(0, len(vra)):
+        for i in range(len(vra)):
             coord = SkyCoord(vra[i].split('"')[1], vdec[i].split('"')[0], frame="icrs")
             # print(coord)
             ra.append(coord.ra.deg)
@@ -1807,7 +1806,7 @@ def ComputeProbGalTargeted(
 
     effectiveipix_disc = []
 
-    for j in range(0, len(ipix_disc)):
+    for j in range(len(ipix_disc)):
         if ipix_disc[j] not in talreadysumipixarray:
             effectiveipix_disc.append(ipix_disc[j])
         talreadysumipixarray.append(ipix_disc[j])
@@ -2018,7 +2017,7 @@ def SubtractGalaxiesCircle(
     ipix_disc = hp.query_disc(nside, xyz, np.deg2rad(radius), nest=is_nested)
     effectiveipix_disc = []
 
-    for j in range(0, len(ipix_disc)):
+    for j in range(len(ipix_disc)):
         if ipix_disc[j] not in talreadysumipixarray:
             effectiveipix_disc.append(ipix_disc[j])
         talreadysumipixarray.append(ipix_disc[j])
@@ -2117,7 +2116,7 @@ def ModifyCatalogue(prob, cat, FOV, totaldPdV, nside):
     lengthSG = 100
     SelectedGals = cat[:lengthSG]
     dp_dV_FOV = []
-    for element in range(0, len(cat["dp_dV"])):
+    for element in range(len(cat["dp_dV"])):
         if element < len(SelectedGals["dp_dV"]):
             dp_dV_FOV1, galax = ComputePGalinFOV(
                 prob,
@@ -2210,7 +2209,7 @@ def ComputeProbPGALIntegrateFoV(
 
     effectiveipix_disc = []
 
-    for j in range(0, len(ipix_disc)):
+    for j in range(len(ipix_disc)):
         if ipix_disc[j] not in talreadysumipixarray:
             effectiveipix_disc.append(ipix_disc[j])
         talreadysumipixarray.append(ipix_disc[j])
@@ -2322,7 +2321,7 @@ def GetRegionPixGal(hpxx, percentage, Nside):
     index, _ = min(enumerate(cumsum), key=lambda x: abs(x[1] - percentage))
 
     # finding ipix indices confined in a given percentage
-    index_hpx = range(0, len(hpx))
+    index_hpx = range(len(hpx))
     hpx_index = np.c_[hpx, index_hpx]
 
     sort_2array = sorted(hpx_index, key=lambda x: x[0], reverse=True)
@@ -2331,7 +2330,7 @@ def GetRegionPixGal(hpxx, percentage, Nside):
     j = 1
     table_ipix_contour = []
 
-    for i in range(0, len(value_contour)):
+    for i in range(len(value_contour)):
         ipix_contour = int(value_contour[i][j])
         table_ipix_contour.append(ipix_contour)
     return table_ipix_contour
@@ -2344,7 +2343,7 @@ def IsSourceInside(Pointings, Sources, FOV, nside, is_nested):
     Npoiting = ""
     Found = False
     try:
-        for i in range(0, len(Pointings)):
+        for i in range(len(Pointings)):
             t = 0.5 * np.pi - Pointings[i].dec.rad
             p = Pointings[i].ra.rad
             xyz = hp.ang2vec(t, p)
@@ -2433,7 +2432,7 @@ class NextWindowTools:
             LastItem = len(WindowDurations)
         else:
             logger.info("Window is smaller")
-            for i in range(0, len(WindowDurations)):
+            for i in range(len(WindowDurations)):
                 if Tools.IsDarkness(
                     time + datetime.timedelta(minutes=np.float64(WindowDurations[-i])),
                     obsSite,

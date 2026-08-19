@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (C) 2024, tilepy developers
 # Licensed under the GNU Lesser General Public License v3 or later - see ../LICENSE.rst
 #
@@ -17,10 +16,10 @@ import astropy_sphinx_theme  # required for theme detection by Sphinx, even if u
 
 # docs/_pybtex/short_alpha.py:
 sys.path.insert(0, os.path.abspath("_pybtex"))
-import short_alpha  # noqa: F401, E402
+import short_alpha  # noqa: F401
 
 try:
-    from sphinx_astropy.conf.v2 import *  # noqa
+    from sphinx_astropy.conf.v2 import *
 except ImportError:
     print(
         "ERROR: the documentation requires the sphinx-astropy package to be installed"
@@ -117,7 +116,7 @@ highlight_language = "python3"
 # Add only those extensions that are NOT already included in sphinx_astropy.conf.v2
 
 try:
-    extensions  # noqa: F405
+    extensions
 except NameError:
     extensions = [
         "sphinx.ext.autodoc",  # Automatic documentation for Python objects (functions, classes, etc.)
@@ -219,7 +218,7 @@ html_context = {
 
 # Theme and Customizations
 try:
-    html_theme  # noqa: F405
+    html_theme
 except NameError:
     html_theme = "pydata_sphinx_theme"
 
