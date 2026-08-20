@@ -70,7 +70,8 @@ HEALPix resolution and order
 
 HEALPix is **hierarchical**: the sphere starts as 12 base pixels (order
 :math:`\ell = 0`) and each pixel is recursively split into 4. The **order** (or
-*level*) :math:`\ell` therefore sets the resolution:
+*level*) :math:`\ell` therefore sets the resolution
+:footcite:`Singer_2022_HEALPixAlchemy`:
 
 .. math::
 
@@ -347,7 +348,5 @@ Reading the produced schedule
    * :doc:`../guide/observation_scheduler` for the full description of the modules.
    * The |tilepyGitHub| for examples and advanced configuration (3D mode, galaxy
      catalog, multi-telescope).
-   * :footcite:`Singer_2025_UVEX` for another optimization strategy for
-     scheduling gravitational-wave follow-up observations.
 
 .. footbibliography::
