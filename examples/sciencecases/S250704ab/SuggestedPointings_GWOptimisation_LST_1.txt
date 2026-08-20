@@ -1,0 +1,3 @@
+Time[UTC] RA(deg) DEC(deg) PGW Round ObsName Duration FoV
+"2025-07-17 04:12:3" 81.0 49.897 0.0786 1 LST 28 2.5
+"2025-07-17 04:42:3" 81.0 45.5867 0.6232 2 LST 28 2.5

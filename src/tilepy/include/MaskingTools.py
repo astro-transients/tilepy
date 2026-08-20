@@ -198,7 +198,7 @@ def FulfillsRequirement(theseGals, obspar, UsePix):
     if obspar.strategy == "integrated":
         testedProba = "dp_dV_FOV"
 
-    for minz_aux in range(maxz, 5, -5):
+    for minz_aux in range(int(maxz), 5, -5):
         tmpmask = alt > 90 - (minz_aux)
         tmpGals = theseGals.copy()
 
