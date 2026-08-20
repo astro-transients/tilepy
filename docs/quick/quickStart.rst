@@ -1,19 +1,25 @@
-==========
-Quickstart
-==========
-
-.. button-link:: https://colab.research.google.com/github/astro-transients/tilepy/blob/main/docs/tutorials/quickstart_tilepy.ipynb
-   :color: info
-   :shadow:
-
-   Open the notebook in Colab
+=========================
+Step-by-step walkthrough
+=========================
 
 .. note::
 
-   This page presents the **full workflow** of |tilepy|, from the localization
-   map to the observation schedule: display the sky map, extract the 90% credible
-   region and its pixels, then run the scheduling. The companion notebook (button
-   above) follows exactly these steps and can be run directly.
+   This page is the **pedagogical, step-by-step version** of |tilepy|'s
+   workflow, from the localization map to the observation schedule: display
+   the sky map, extract the 90% credible region and its pixels, then run
+   the scheduling. Every step is explained in prose, with the reasoning
+   spelled out.
+
+.. dropdown:: Prefer the notebook version?
+
+   The same workflow is also available as a Jupyter notebook, with every
+   plot already rendered and a full end-to-end run on a real event.
+
+   * :doc:`Read it here, in the docs <../tutorials/quickstart_tilepy>`, no
+     setup needed.
+   * Or `open it in Google Colab
+     <https://colab.research.google.com/github/astro-transients/tilepy/blob/main/docs/tutorials/quickstart_tilepy.ipynb>`_
+     to run it yourself.
 
 .. admonition:: What you will see
    :class: info
@@ -69,7 +75,7 @@ HEALPix is **hierarchical**: the sphere starts as 12 base pixels (order
 .. math::
 
    \mathrm{NSIDE} = 2^{\ell}, \qquad
-   N_\mathrm{pix} = 12\ \times \mathrm{NSIDE}^2 = 12 \cdot 4^{\ell}.
+   N_\mathrm{pix} = 12\ \times \mathrm{NSIDE}^2 = 12 \times 4^{\ell}.
 
 Every pixel covers the **same** solid angle:
 
@@ -82,7 +88,7 @@ Every pixel covers the **same** solid angle:
 
 **Worked example** (:math:`\ell = 6`):
 :math:`\mathrm{NSIDE} = 2^6 = 64`,
-:math:`N_\mathrm{pix} = 12\cdot64^2 = 49152`,
+:math:`N_\mathrm{pix} = 12 \times 64^2 = 49152`,
 :math:`\Omega_\mathrm{pix} = 41253/49152 \approx 0.84\ \mathrm{deg}^2`,
 :math:`\theta_\mathrm{pix} \approx 58.6/64 \approx 0.92°`.
 
@@ -173,13 +179,13 @@ area of one pixel.
          skymap.getArea(0.9)          # area of the 90% region (deg²)
          skymap.getPixIdArea(0.9)     # indices of the pixels in the region
 
-      And to retrieve the (RA, Dec) coordinates on a reduced grid — this is the
+      And to retrieve the (RA, Dec) coordinates on a reduced grid: this is the
       list of positions the algorithm then scans:
 
       .. code-block:: python
 
          from tilepy.include.PointingTools import GetRegionPixReduced
-         ra, dec, area = GetRegionPixReduced(prob, 0.9, reducedNside)
+         ra, dec, area = GetRegionPixReduced(prob, 0.9, reducedNside, skymap.scheme)
 
 .. seealso::
 
@@ -288,8 +294,8 @@ ground-based telescope.
       .. tab-item:: Fully offline (no download)
 
          tilepy can build a **simulated Gaussian map** in memory with
-         :func:`~tilepy.include.CampaignDefinition.set_gaussian_source` — same
-         scheduling, zero network access.
+         :func:`~tilepy.include.CampaignDefinition.set_gaussian_source`, for the
+         same scheduling with zero network access.
 
          .. code-block:: python
 
@@ -338,8 +344,10 @@ Reading the produced schedule
 
 .. seealso::
 
-   * :doc:`guide/observation_scheduler` for the full description of the modules.
+   * :doc:`../guide/observation_scheduler` for the full description of the modules.
    * The |tilepyGitHub| for examples and advanced configuration (3D mode, galaxy
      catalog, multi-telescope).
+   * :footcite:`Singer_2025_UVEX` for another optimization strategy for
+     scheduling gravitational-wave follow-up observations.
 
 .. footbibliography::
