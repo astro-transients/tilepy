@@ -7,7 +7,7 @@
 # check the installation in the webside of ligo.skymap.plot #
 #############################################################
 
-from math import log
+from math import log2
 
 import healpy as hp
 import numpy as np
@@ -124,7 +124,7 @@ contour_ipix = Table(
 
 # setting MOC order
 
-moc_order = int(log(nside, 2))
+moc_order = int(log2(nside))
 
 # transforming to MOC
 moc1 = MOC.from_lonlat(radecs.ra, radecs.dec, max_norder=moc_order)
@@ -169,7 +169,7 @@ contour_ipix = Table(
 
 # setting MOC order
 
-moc_order = int(log(nside, 2))
+moc_order = int(log2(nside))
 moc2 = MOC.from_lonlat(radecs.ra, radecs.dec, max_norder=moc_order)
 
 

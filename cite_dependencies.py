@@ -1,6 +1,6 @@
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 
 import requests
 
@@ -33,7 +33,7 @@ def get_authors_from_github(repo_path, title, url):
 
         authors.append(full_name)
 
-    today = datetime.today().strftime("%Y-%m-%d")
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     # Fetching the publication year of the version from PyPI
     pypi_url = f"https://pypi.org/pypi/{title}/json"
@@ -99,7 +99,7 @@ for package_name in packages:
 
     data = response.json()
     package_info = data.get("info", {})
-    for key, value in package_info.items():
+    for value in package_info.values():
         if isinstance(value, str):
             match = github_pattern.search(value)
             if match:

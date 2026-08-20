@@ -1,5 +1,5 @@
 # Imports
-from math import log
+from math import log2
 
 import astropy.coordinates as co
 import healpy as hp
@@ -57,7 +57,7 @@ contour_ipix = Table(
 )
 
 # setting MOC order
-moc_order = int(log(nside, 2))
+moc_order = int(log2(nside))
 
 moc1 = MOC.from_lonlat(radecs.ra, radecs.dec, max_norder=moc_order)
 
@@ -104,7 +104,7 @@ contour_ipix = Table(
 )
 
 # setting MOC order
-moc_order = int(log(nside, 2))
+moc_order = int(log2(nside))
 
 moc2 = MOC.from_lonlat(radecs.ra, radecs.dec, max_norder=moc_order)
 
@@ -151,7 +151,7 @@ contour_ipix = Table(
 )
 
 # setting MOC order
-moc_order = int(log(nside, 2))
+moc_order = int(log2(nside))
 
 moc3 = MOC.from_lonlat(radecs.ra, radecs.dec, max_norder=moc_order)
 
@@ -195,7 +195,7 @@ contour_ipix = Table(
 )
 
 # setting MOC order
-moc_order = int(log(nside, 2))
+moc_order = int(log2(nside))
 
 moc4 = MOC.from_lonlat(radecs.ra, radecs.dec, max_norder=moc_order)
 

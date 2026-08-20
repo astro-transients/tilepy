@@ -190,7 +190,7 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
     # frame = co.AltAz(obstime=auxtime, location=observatory)
     timeInitial = auxtime - datetime.timedelta(minutes=obspar.duration)
     for i, s in enumerate(source):
-        NonValidwindow, Stepzenith = GetVisibility(
+        _NonValidwindow, Stepzenith = GetVisibility(
             Pointing["Time"], s, obspar.maxZenith, obspar.location
         )
         window, zenith = GetObservationPeriod(timeInitial, s, obspar, i, dirName, False)
@@ -337,7 +337,7 @@ def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlo
             + "-->"
             + str(ScheduledTimes[-1]).split(".")[0]
         ), msourcealtazs.alt
-    except Exception:
+    except Exception:  # noqa: BLE001
         ScheduledTimesUni = str(ScheduledTimes).split(".")
         ScheduledTimes1 = ScheduledTimesUni[0]
         ScheduledTimes2 = ScheduledTimesUni[-1]
@@ -645,7 +645,7 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
     # Sort by PGW in descending order
     try:
         data = data.sort_values(by="PGW", ascending=False).reset_index(drop=True)
-    except Exception:
+    except Exception:  # noqa: BLE001
         data = data.sort_values(by="PGal", ascending=False).reset_index(drop=True)
 
     # Initialize ranked list with the first (highest PGW) entry
@@ -657,7 +657,9 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
         last_entry = ranked[-1]
 
         # Normalize distance and PGW to 0-1 scale
-        distances = data.apply(lambda row: distance(last_entry, row), axis=1)
+        distances = data.apply(
+            lambda row, last_entry=last_entry: distance(last_entry, row), axis=1
+        )
         pgw_values = data["PGW"] if "PGW" in data.columns else data["PGal"]
 
         max_dist = distances.max()
@@ -757,7 +759,7 @@ def Ranking_Space(dirName, PointingFile, obspar, alphaR, betaR, skymap):
     if obspar.doPlot:
         try:
             prob_column = "PGW" if "PGW" in pre_df.columns else "PGal"
-        except Exception:
+        except Exception:  # noqa: BLE001
             raise ValueError("Neither PGW nor PGal column found")
 
         # Coordinates
@@ -841,7 +843,7 @@ def Ranking_Space_AI(dirName, PointingFile, obspar, skymap):
             cluster_data = df[df["Cluster"] == cluster_id].sort_values(
                 by="PGW", ascending=False
             )
-        except Exception:
+        except Exception:  # noqa: BLE001
             cluster_data = df[df["Cluster"] == cluster_id].sort_values(
                 by="PGal", ascending=False
             )
@@ -948,11 +950,11 @@ def map_pixel_availability(pixels_by_time, probs_by_time, times):
             pixel_data[pixel]["probs"].append(prob)
 
     # Aggregate probabilities (e.g., average)
-    for pixel in pixel_data:
-        probs = pixel_data[pixel]["probs"]
+    for value in pixel_data.values():
+        probs = value["probs"]
         avg_prob = sum(probs) / len(probs)
-        pixel_data[pixel]["prob"] = avg_prob
-        del pixel_data[pixel]["probs"]  # Remove raw list to keep only aggregated value
+        value["prob"] = avg_prob
+        del value["probs"]  # Remove raw list to keep only aggregated value
 
     return pixel_data
 

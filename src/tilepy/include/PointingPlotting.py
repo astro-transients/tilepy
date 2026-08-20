@@ -197,8 +197,8 @@ def LoadPointingsGW(tpointingFile):
     dec = np.atleast_1d(dec)
 
     time = []
-    for i, time1 in enumerate(time1):
-        time.append(time1.split('"')[1] + " " + time2[i].split('"')[0])
+    for i, t1 in enumerate(time1):
+        time.append(t1.split('"')[1] + " " + time2[i].split('"')[0])
 
     ra = ra.astype(float)
     dec = dec.astype(float)
@@ -225,11 +225,11 @@ def LoadPointingsGAL(tpointingFile):
     ra = np.atleast_1d(ra)
     dec = np.atleast_1d(dec)
     time = []
-    for i, time1 in enumerate(time1):
+    for i, t1 in enumerate(time1):
         try:
-            time.append((time1 + " " + time2[i]).split('"')[1])
+            time.append((t1 + " " + time2[i]).split('"')[1])
         except IndexError:
-            time.append((time1 + " " + time2).split('"')[1])
+            time.append((t1 + " " + time2).split('"')[1])
             break
     coordinates = TransformRADec(ra, dec)
     Pgw = Pgw.astype(float)
@@ -547,33 +547,37 @@ def PlotPointings_Pretty(
         decgal = gal["DEJ2000"]
         galprob = gal["dp_dV"]
         logger.info("Plotting galaxies")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"{e}: no galaxies given")
     # Read the pointings file
     tpointingFile = PointingsFile1
     try:
-        time1, time2, ra, dec, pgw, pgal, Round, nametel, duration, fov = np.genfromtxt(
-            tpointingFile,
-            usecols=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
-            skip_header=1,
-            delimiter=" ",
-            unpack=True,
-            dtype="str",
-        )  # ra, dec in degrees
-    except Exception:
-        try:
-            time1, time2, ra, dec, pgw, Round, nametel, duration, fov = np.genfromtxt(
+        _time1, _time2, ra, dec, pgw, pgal, _Round, nametel, _duration, fov = (
+            np.genfromtxt(
                 tpointingFile,
-                usecols=(0, 1, 2, 3, 4, 5, 6, 7, 8),
+                usecols=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
                 skip_header=1,
                 delimiter=" ",
                 unpack=True,
                 dtype="str",
+            )
+        )  # ra, dec in degrees
+    except Exception:  # noqa: BLE001
+        try:
+            _time1, _time2, ra, dec, pgw, _Round, nametel, _duration, fov = (
+                np.genfromtxt(
+                    tpointingFile,
+                    usecols=(0, 1, 2, 3, 4, 5, 6, 7, 8),
+                    skip_header=1,
+                    delimiter=" ",
+                    unpack=True,
+                    dtype="str",
+                )
             )  # ra, dec in degrees
             pgal = pgw
-        except Exception:
+        except Exception:  # noqa: BLE001
             try:
-                time1, time2, ra, dec, pgw, pgal, Round, nametel, duration, fov = (
+                _time1, _time2, ra, dec, pgw, pgal, _Round, nametel, _duration, fov = (
                     np.genfromtxt(
                         tpointingFile,
                         usecols=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
@@ -583,8 +587,8 @@ def PlotPointings_Pretty(
                         dtype="str",
                     )
                 )  # ra, dec in degrees
-            except Exception:
-                time1, time2, ra, dec, pgw, Round, nametel, duration, fov = (
+            except Exception:  # noqa: BLE001
+                _time1, _time2, ra, dec, pgw, _Round, nametel, _duration, fov = (
                     np.genfromtxt(
                         tpointingFile,
                         usecols=(0, 1, 2, 3, 4, 5, 6, 7, 8),
@@ -651,7 +655,7 @@ def PlotPointings_Pretty(
     try:
         vmin_value = np.min(galprob)
         vmax_value = np.max(galprob)
-    except Exception:
+    except Exception:  # noqa: BLE001
         vmin_value = 0.000001
         vmax_value = 0.00001
 
@@ -668,7 +672,7 @@ def PlotPointings_Pretty(
         )
         cbar_inset = plt.colorbar(sc_inset, ax=ax_inset)
         cbar_inset.set_label("Galaxy probability density")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"{e}: no galaxies given for plot 2")
 
     unique_obs_names = np.unique(nametel)
@@ -785,7 +789,7 @@ def PlotAccRegion(skymap, dirName, reducedNside, Occultedpixels, first_values):
             coord="C",
             linewidth=0.1,
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"{e}: no occulted pix.")
 
     hp.visufunc.projplot(
