@@ -18,7 +18,7 @@ Step-by-step walkthrough
    * :doc:`Read it here, in the docs <../tutorials/quickstart_tilepy>`, no
      setup needed.
    * Or `open it in Google Colab
-     <https://colab.research.google.com/github/astro-transients/tilepy/blob/main/docs/tutorials/quickstart_tilepy.ipynb>`_
+     <https://colab.research.google.com/github/astro-transients/tilepy/blob/master/docs/tutorials/quickstart_tilepy.ipynb>`_
      to run it yourself.
 
 .. admonition:: What you will see
