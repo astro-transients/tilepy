@@ -2357,7 +2357,9 @@ def GetRegionPixReduced(hpxx, percentage, Nnside, scheme):
     percentage_list = list(np.where(credible_levels <= percentage)[0])
     area = len(percentage_list) * hp.nside2pixarea(nside, degrees=True)
 
-    theta, phi = hp.pix2ang(nside, percentage_list, nest=(scheme == "NESTED"))
+    # ud_grade is called with order_out="NESTED", so the pixel indices are always
+    # NESTED, whatever the scheme of the input map (RING, NESTED or NUNIQ)
+    theta, phi = hp.pix2ang(nside, percentage_list, nest=True)
 
     # converting these to right ascension and declination in degrees
     ra = np.rad2deg(phi)
