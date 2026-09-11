@@ -131,8 +131,10 @@ You need then to modify your script calling tilepy by adding the following lines
 ```python
 import os
 from astropy.utils import iers
-iers_file = os.path.join(os.path.abspath(
-    os.path.dirname(__file__)), pathToYourReferencefile)
+
+iers_file = os.path.join(
+    os.path.abspath(os.path.dirname(__file__)), pathToYourReferencefile
+)
 iers.IERS.iers_table = iers.IERS_A.open(iers_file)
 ```
 
