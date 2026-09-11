@@ -77,6 +77,7 @@ __all__ = [
     "NightDarkObservation",
     "NightDarkObservationwithGreyTime",
     "Observer",
+    "PointingOverlapsRegion",
     "SubtractGalaxiesCircle",
     "SubtractPointings",
     "SubtractPointings2D",
@@ -1529,8 +1530,46 @@ def ComputeProbability2D(
     return P_GW, targetCoord, ipixlist, ipixlistHR
 
 
+def PointingOverlapsRegion(coord, regionPix, nside, FOV, is_nested):
+    """
+    Check whether the FoV of a pointing overlaps a credible region.
+
+    The region is given as the list of pixel indices covering it (at ``nside``,
+    in the scheme indicated by ``is_nested``), so the test is exact and does not
+    depend on the resolution the pointings were computed at. The FoV is used
+    rather than the centre alone because a pointing centred just outside the
+    region (e.g. on a galaxy of the catalogue) still observes part of it.
+
+    Parameters
+    ----------
+    coord : astropy.coordinates.SkyCoord
+        Centre of the pointing.
+    regionPix : array-like of int
+        Pixel indices covering the credible region.
+    nside : int
+        HEALPix nside the pixels of ``regionPix`` are defined at.
+    FOV : float
+        Radius of the field of view, in degrees.
+    is_nested : bool
+        True if the pixels are in the NESTED scheme.
+
+    Returns
+    -------
+    bool
+        True if the FoV of the pointing overlaps the region.
+
+    """
+    xyz = hp.ang2vec(0.5 * np.pi - coord.dec.rad, coord.ra.rad)
+    # inclusive=True so that a FoV smaller than the pixel size still returns
+    # the pixels it touches
+    ipix_fov = hp.query_disc(
+        nside, xyz, np.deg2rad(FOV), nest=is_nested, inclusive=True
+    )
+    return bool(np.isin(ipix_fov, regionPix).any())
+
+
 def SubtractPointings2D(
-    tpointingFile, prob, is_nested, obspar, pixlist, pixlistHR, radecs
+    tpointingFile, prob, is_nested, obspar, pixlist, pixlistHR, regionPix
 ):
     nside = obspar.reducedNside
     radius = obspar.FOV
@@ -1546,8 +1585,6 @@ def SubtractPointings2D(
     )  # ra, dec in degrees
 
     pointings_subtracted = 0
-    pixel_size = np.rad2deg(hp.nside2resol(nside))
-    max_separation = pixel_size * u.deg
 
     ra = np.atleast_1d(ra)
     dec = np.atleast_1d(dec)
@@ -1566,14 +1603,14 @@ def SubtractPointings2D(
     coordinates = TransformRADec(ra, dec)
     P_GW = []
     for i, _ in enumerate(ra):
-        if not obspar.countSubtractedPointingsOutside:
-            separations = coordinates[i].separation(radecs)
-            if len(separations[separations < max_separation]) == 0:
-                logger.info(
-                    f"Not subtracting RA: {float(ra[i]):.4f} Dec: {float(dec[i]):.4f} as it is outside of the {obspar.percentageMOC * 100}% area"
-                )
-                P_GW.append(0.0)
-                continue
+        if not obspar.countSubtractedPointingsOutside and not PointingOverlapsRegion(
+            coordinates[i], regionPix, nside, radius, is_nested
+        ):
+            logger.info(
+                f"Not subtracting RA: {float(ra[i]):.4f} Dec: {float(dec[i]):.4f} as its FoV does not overlap the {obspar.percentageMOC * 100}% area"
+            )
+            P_GW.append(0.0)
+            continue
         pointings_subtracted += 1
         t = 0.5 * np.pi - coordinates[i].dec.rad
         p = coordinates[i].ra.rad
@@ -1927,7 +1964,7 @@ def SubtractPointings(
     is_nested,
     obspar,
     nside,
-    radecs,
+    regionPix,
 ):
     FOV = obspar.FOV
 
@@ -1947,8 +1984,6 @@ def SubtractPointings(
     )  # ra, dec in degrees
 
     pointings_subtracted = 0
-    pixel_size = np.rad2deg(hp.nside2resol(nside))
-    max_separation = pixel_size * u.deg
 
     rap = np.atleast_1d(rap)
     decP = np.atleast_1d(decP)
@@ -1971,15 +2006,15 @@ def SubtractPointings(
     updatedGalaxies = galaxies
 
     for _, coord in enumerate(coordinates):
-        if not obspar.countSubtractedPointingsOutside:
-            separations = coord.separation(radecs)
-            if len(separations[separations < max_separation]) == 0:
-                logger.info(
-                    f"Not subtracting RA: {coord.ra:.4f} Dec: {coord.dec:.4f} as it is outside of the {obspar.percentageMOC * 100}% area"
-                )
-                PGW.append(0.0)
-                PGAL.append(0.0)
-                continue
+        if not obspar.countSubtractedPointingsOutside and not PointingOverlapsRegion(
+            coord, regionPix, obspar.reducedNside, FOV, is_nested
+        ):
+            logger.info(
+                f"Not subtracting RA: {coord.ra:.4f} Dec: {coord.dec:.4f} as its FoV does not overlap the {obspar.percentageMOC * 100}% area"
+            )
+            PGW.append(0.0)
+            PGAL.append(0.0)
+            continue
 
         pointings_subtracted += 1
 
@@ -2322,7 +2357,9 @@ def GetRegionPixReduced(hpxx, percentage, Nnside, scheme):
     percentage_list = list(np.where(credible_levels <= percentage)[0])
     area = len(percentage_list) * hp.nside2pixarea(nside, degrees=True)
 
-    theta, phi = hp.pix2ang(nside, percentage_list, nest=(scheme == "NESTED"))
+    # ud_grade is called with order_out="NESTED", so the pixel indices are always
+    # NESTED, whatever the scheme of the input map (RING, NESTED or NUNIQ)
+    theta, phi = hp.pix2ang(nside, percentage_list, nest=True)
 
     # converting these to right ascension and declination in degrees
     ra = np.rad2deg(phi)

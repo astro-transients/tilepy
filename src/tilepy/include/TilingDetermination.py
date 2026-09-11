@@ -158,6 +158,9 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
         prob, obspar.percentageMOC, obspar.reducedNside, skymap.scheme
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
+    # Pixels of the percentageMOC region, used to check whether a previously
+    # observed pointing overlaps the region before subtracting it
+    regionPix = skymap.getPixIdArea(obspar.percentageMOC, obspar.reducedNside)
 
     report(
         task_id,
@@ -172,7 +175,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
             "==========================================================================================="
         )
         pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
-            PointingFile, prob, skymap.is_nested, obspar, pixlist, pixlistHR, radecs
+            PointingFile, prob, skymap.is_nested, obspar, pixlist, pixlistHR, regionPix
         )
         if obspar.countPrevious:
             maxRuns = obspar.maxRuns - doneObs
@@ -387,11 +390,9 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
     nside = obspar.HRnside
     prob = skymap.getMap("prob", obspar.HRnside)
 
-    # Create table for 2D probability at percentageMOC containment
-    rapix, decpix, _ = GetRegionPixReduced(
-        prob, obspar.percentageMOC, obspar.reducedNside, skymap.scheme
-    )
-    radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
+    # Pixels of the percentageMOC region, used to check whether a previously
+    # observed pointing overlaps the region before subtracting it
+    regionPix = skymap.getPixIdArea(obspar.percentageMOC, obspar.reducedNside)
 
     if skymap.is3D:
         logger.info("Skymap is 3D")
@@ -441,7 +442,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
             skymap.is_nested,
             obspar,
             nside,
-            radecs,
+            regionPix,
         )
         sumPGW = sum(AlreadyObservedPgw)
         sumPGAL = sum(AlreadyObservedPgal)
@@ -1116,12 +1117,15 @@ def PGWinFoV_NObs(
         prob, obspar.percentageMOC, obspar.reducedNside, skymap.scheme
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
+    # Pixels of the percentageMOC region, used to check whether a previously
+    # observed pointing overlaps the region before subtracting it
+    regionPix = skymap.getPixIdArea(obspar.percentageMOC, obspar.reducedNside)
     maxRuns = obspar.maxRuns
     # Add observed pixels to pixlist
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
         pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
-            PointingFile, prob, skymap.is_nested, obspar, pixlist, pixlistHR, radecs
+            PointingFile, prob, skymap.is_nested, obspar, pixlist, pixlistHR, regionPix
         )
 
         if obspar.countPrevious:
@@ -1359,11 +1363,9 @@ def PGalinFoV_NObs(
     nside = obspar.HRnside
     prob = skymap.getMap("prob", obspar.HRnside)
 
-    # Create table for 2D probability at percentageMOC containment
-    rapix, decpix, _ = GetRegionPixReduced(
-        prob, obspar.percentageMOC, obspar.reducedNside, skymap.scheme
-    )
-    radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
+    # Pixels of the percentageMOC region, used to check whether a previously
+    # observed pointing overlaps the region before subtracting it
+    regionPix = skymap.getPixIdArea(obspar.percentageMOC, obspar.reducedNside)
 
     # load galaxy catalogue
     if not obspar.mangrove:
@@ -1406,7 +1408,7 @@ def PGalinFoV_NObs(
             skymap.is_nested,
             obspar,
             nside,
-            radecs,
+            regionPix,
         )
         maxRuns = obspar.maxRuns - len(ra)
         sumPGW = sum(AlreadyObservedPgw)
@@ -1912,6 +1914,9 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
         prob, obspar.percentageMOC, reducedNside, skymap.scheme
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
+    # Pixels of the percentageMOC region, used to check whether a previously
+    # observed pointing overlaps the region before subtracting it
+    regionPix = skymap.getPixIdArea(obspar.percentageMOC, obspar.reducedNside)
     maxRuns = obspar.maxRuns
 
     doPlot = obspar.doPlot
@@ -1933,7 +1938,7 @@ def GetBestTiles2D(skymap, nameEvent, PointingFile, obsparameters, dirName):
             obspar,
             pixlist,
             pixlistHR,
-            radecs,
+            regionPix,
         )
 
         if obspar.countPrevious:
@@ -2009,6 +2014,9 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
         prob, obspar.percentageMOC, reducedNside, skymap.scheme
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
+    # Pixels of the percentageMOC region, used to check whether a previously
+    # observed pointing overlaps the region before subtracting it
+    regionPix = skymap.getPixIdArea(obspar.percentageMOC, obspar.reducedNside)
     maxRuns = obspar.maxRuns
 
     doPlot = obspar.doPlot
@@ -2034,7 +2042,7 @@ def GetBestTiles3D(skymap, nameEvent, PointingFile, galFile, obsparameters, dirN
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
         pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
-            PointingFile, prob, skymap.is_nested, obspar, pixlist, pixlistHR, radecs
+            PointingFile, prob, skymap.is_nested, obspar, pixlist, pixlistHR, regionPix
         )
 
         if obspar.countPrevious:
@@ -2120,6 +2128,9 @@ def PGWinFoV_Space_NObs(
         prob, obspar.percentageMOC, reducedNside, skymap.scheme
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
+    # Pixels of the percentageMOC region, used to check whether a previously
+    # observed pointing overlaps the region before subtracting it
+    regionPix = skymap.getPixIdArea(obspar.percentageMOC, obspar.reducedNside)
     maxRuns = obspar.maxRuns
 
     doPlot = obspar.doPlot
@@ -2128,7 +2139,7 @@ def PGWinFoV_Space_NObs(
     if PointingFile is not None:
         print(PointingFile, prob, obspar.reducedNside, obspar.FOV, pixlist)
         pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
-            PointingFile, prob, skymap.is_nested, obspar, pixlist, pixlistHR, radecs
+            PointingFile, prob, skymap.is_nested, obspar, pixlist, pixlistHR, regionPix
         )
 
         if obspar.countPrevious:
@@ -2333,6 +2344,9 @@ def PGalinFoV_Space_NObs(
         prob, obspar.percentageMOC, reducedNside, skymap.scheme
     )
     radecs = co.SkyCoord(rapix, decpix, frame="icrs", unit=(u.deg, u.deg))
+    # Pixels of the percentageMOC region, used to check whether a previously
+    # observed pointing overlaps the region before subtracting it
+    regionPix = skymap.getPixIdArea(obspar.percentageMOC, obspar.reducedNside)
     maxRuns = obspar.maxRuns
 
     doPlot = obspar.doPlot
@@ -2358,7 +2372,7 @@ def PGalinFoV_Space_NObs(
     if PointingFile is not None:
         print(PointingFile, prob, reducedNside, radius, pixlist)
         pixlist, pixlistHR, sumPGW, doneObs = SubtractPointings2D(
-            PointingFile, prob, skymap.is_nested, obspar, pixlist, pixlistHR, radecs
+            PointingFile, prob, skymap.is_nested, obspar, pixlist, pixlistHR, regionPix
         )
 
         if obspar.countPrevious:
