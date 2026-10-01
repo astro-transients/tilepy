@@ -42,7 +42,6 @@ from astropy.table import Table
 from astropy.time import Time
 from gdpyc import DustMap
 from ligo.skymap.postprocess import find_greedy_credible_levels
-from numpy import ma
 from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
@@ -1366,28 +1365,23 @@ def ComputeProbability2D(
 
     xyzpix = hp.ang2vec(thetapix, phipix)
 
+    covered_hr = None
+    if ipixlistHR:
+        covered_hr = np.zeros(highres.size, dtype=bool)
+        covered_hr[np.asarray(ipixlistHR, dtype=np.intp)] = True
+
     # Grid-scheme and the connection between HR and LR
     for i in range(len(cat_pix)):
         # Pixels associated to a disk of radius centered in xyzpix[i] for HR NSIDE
         ipix_discfull = hp.query_disc(
             HRnside, xyzpix[i], np.deg2rad(radius), nest=is_nested
         )
-        if len(ipixlistHR) == 0:
+        if covered_hr is None:
             # No mask needed
             HRprob = highres[ipix_discfull].sum()
         else:
-            # Mask the ipix_discfull with the pixels that are already observed. I think the problem is here
-            maskComputeProb = np.isin(ipix_discfull, ipixlistHR, invert=True)
-            # Obtain list of pixel ID after the mask what has been observed already
-            m_ipix_discfull = ma.compressed(
-                ma.masked_array(ipix_discfull, mask=np.logical_not(maskComputeProb))
-            )
-            HRprob = highres[m_ipix_discfull].sum()
-            # HRprob = 0
-            # for j in ipix_discfullNotCovered:
-            #    HRprob = HRprob+highres[j]
-            # print('Length of list of pixels:', m_ipix_discfull, 'vs', ipix_discfull, 'vs', ipixlistHR)
-            # print('Comparison to see if mask is considered: ',HRprob, 'vs',highres[ipix_discfull].sum())
+            uncovered_pixels = ipix_discfull[~covered_hr[ipix_discfull]]
+            HRprob = highres[uncovered_pixels].sum()
         dp_dV_FOV.append(HRprob)
     cat_pix["PIXFOVPROB"] = dp_dV_FOV
 

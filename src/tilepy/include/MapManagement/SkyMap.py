@@ -187,11 +187,28 @@ class SkyMap:
 
         if mapType == "prob_density":
             output_scheme = "NESTED" if self.is_nested else "RING"
-            self.rasterized_map_cache[cache_entry] = (
-                self.raw_map_prob_density.rasterize(
+            raw_map = self.raw_map_prob_density
+
+            # Regular RING-to-RING upsampling is a common path for the
+            # cascade maps. healpy.ud_grade avoids the generic mhealpy
+            # rasterization overhead while preserving density values.
+            if (
+                getattr(raw_map, "is_ring", False)
+                and output_scheme == "RING"
+                and nside > raw_map.nside
+            ):
+                self.rasterized_map_cache[cache_entry] = hp.ud_grade(
+                    raw_map.data,
+                    nside_out=nside,
+                    order_in="RING",
+                    order_out="RING",
+                    power=None,
+                    dtype=np.float64,
+                )
+            else:
+                self.rasterized_map_cache[cache_entry] = raw_map.rasterize(
                     nside=nside, scheme=output_scheme
                 ).data
-            )
         elif mapType == "prob":
             self.rasterized_map_cache[cache_entry] = self.getMap(
                 "prob_density", nside
