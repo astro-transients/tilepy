@@ -194,7 +194,8 @@ class SkyMap:
                 # ligo.skymap rasterizes NUNIQ probability densities directly
                 # to the fixed-order NESTED grid used by the tiling algorithm.
                 moc_data = np.empty(
-                    raw_map.npix, dtype=[("UNIQ", np.int64), ("PROBDENSITY", np.float64)]
+                    raw_map.npix,
+                    dtype=[("UNIQ", np.int64), ("PROBDENSITY", np.float64)],
                 )
                 moc_data["UNIQ"] = raw_map.uniq
                 moc_data["PROBDENSITY"] = raw_map.data
