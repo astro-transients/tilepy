@@ -1652,10 +1652,7 @@ def PGalinFoV_NObs(
                         mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
                         if obspar.useGreytime:
                             maskgrey = FulfillsRequirementGreyObservations(
-                                ObservationTime,
-                                visiGals,
-                                obspar.location,
-                                obspar.minMoonSourceSeparation,
+                                ObservationTime, visiGals, obspar
                             )
                             finalGals = visiGals[mask & maskgrey]
                         if not obspar.useGreytime:
