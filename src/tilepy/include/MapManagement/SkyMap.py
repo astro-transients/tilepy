@@ -23,6 +23,7 @@ import astropy.units as u
 import healpy as hp
 import numpy as np
 from astropy.coordinates import SkyCoord
+from ligo.skymap import moc
 from scipy.stats import norm
 
 # from progress import report
@@ -189,10 +190,22 @@ class SkyMap:
             output_scheme = "NESTED" if self.is_nested else "RING"
             raw_map = self.raw_map_prob_density
 
+            if getattr(raw_map, "is_moc", False):
+                # ligo.skymap rasterizes NUNIQ probability densities directly
+                # to the fixed-order NESTED grid used by the tiling algorithm.
+                moc_data = np.empty(
+                    raw_map.npix,
+                    dtype=[("UNIQ", np.int64), ("PROBDENSITY", np.float64)],
+                )
+                moc_data["UNIQ"] = raw_map.uniq
+                moc_data["PROBDENSITY"] = raw_map.data
+                self.rasterized_map_cache[cache_entry] = moc.rasterize(
+                    moc_data, order=hp.nside2order(nside)
+                )["PROBDENSITY"]
             # Regular RING-to-RING upsampling is a common path for the
             # cascade maps. healpy.ud_grade avoids the generic mhealpy
             # rasterization overhead while preserving density values.
-            if (
+            elif (
                 getattr(raw_map, "is_ring", False)
                 and output_scheme == "RING"
                 and nside > raw_map.nside
