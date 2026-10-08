@@ -18,8 +18,11 @@ Step-by-step walkthrough
    * :doc:`Read it here, in the docs <../tutorials/quickstart_tilepy>`, no
      setup needed.
    * Or `open it in Google Colab
-     <https://colab.research.google.com/github/astro-transients/tilepy/blob/master/docs/tutorials/quickstart_tilepy.ipynb>`_
+     <https://colab.research.google.com/github/astro-transients/tilepy/blob/master/examples/quickstart_tilepy.ipynb>`_
      to run it yourself.
+   * Already cloned the repository? The notebook ships with it, at
+     ``examples/quickstart_tilepy.ipynb`` -- this page renders that very
+     file, so there is no second copy to drift out of date.
 
 .. admonition:: What you will see
    :class: info

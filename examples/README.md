@@ -1,3 +1,12 @@
+**New to tilepy? Start with [quickstart_tilepy.ipynb](quickstart_tilepy.ipynb)**
+in this folder. It is a guided, end-to-end tour: what a localization map looks
+like, how the 90% credible region is extracted, and a full scheduling run on a
+real event (plus GW170817 with a different telescope). Every cell is already
+executed, so it can be read as-is or re-run locally.
+
+The documentation renders this very file, as [Quick start](https://tilepy.readthedocs.io/en/latest/tutorials/quickstart_tilepy.html) — there is a
+single copy, so the two can never drift apart.
+
 The directories in this folder include various examples of how tilepy can be used. These are organized in:
 
 a `./config` folder containing configuration files:
