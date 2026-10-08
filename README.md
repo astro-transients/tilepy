@@ -14,6 +14,8 @@
 [![ApJS Published](https://img.shields.io/badge/ApJS-Published-Green.svg)](https://doi.org/10.3847/1538-4365/ad5bde)
 [![Documentation Status](https://readthedocs.org/projects/tilepy/badge/?version=latest)](https://tilepy.readthedocs.io/en/latest)
 
+### Documentation: [tilepy.readthedocs.io](https://tilepy.readthedocs.io/)
+
 
 </div>
 
@@ -75,9 +77,10 @@ Package including functions to perform GW follow-up scheduling and simulations i
     - tilepy.scripts: Further support scripts
 
 - github/workflows: a series of workflows are enabled and triggered via GitHub Actions.
-- docs: files to create a documentation [dev ongoing]
+- docs: sources of the documentation, published at [tilepy.readthedocs.io](https://tilepy.readthedocs.io/)
 
 - examples: Examples on how to use tilepy, see dedicated <a href="examples/README.md">README</a>
+    - [quickstart_tilepy.ipynb](examples/quickstart_tilepy.ipynb): **start here.** A guided, end-to-end tour, from a localization map to a schedule, on a real event. Every cell is already executed, so it can be read without running anything. The documentation renders this very file, as [Quick start](https://tilepy.readthedocs.io/en/latest/tutorials/quickstart_tilepy.html).
     - launcher: Jupyter notebooks and .py scripts to run observation schedules for various use-cases. We recommend to use the Jupyter notebooks as these are more comprehensive, specially with the inputs given.
     - paperplots: Precise plots of ApJS Series, Volume 274 Number 1 (11pp), 2024 September
     - sciencecases: Support material and extra plots connected to those of the paper ApJS Series, Volume 274 Number 1 (11pp), 2024 September

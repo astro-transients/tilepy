@@ -154,6 +154,7 @@ additional_extensions = [
     "sphinx_astropy.ext.edit_on_github",
     "sphinx.ext.mathjax",
     "nbsphinx",  # To display jupyter notebook
+    "nbsphinx_link",  # To display notebooks living outside docs/ (see *.nblink)
     "sphinx_gallery.gen_gallery",
     "sphinx_design",
 ]
