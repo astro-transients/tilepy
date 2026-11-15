@@ -81,6 +81,7 @@ from .TilingDetermination import (
     PGWinFoV,
     PGWinFoV_NObs,
 )
+from .UserConstraints import EvaluateUserConstraints, LoadUserConstraints
 
 __all__ = [
     "LST",
@@ -90,6 +91,7 @@ __all__ = [
     "ComputeProbGalTargeted",
     "ComputeProbPGALIntegrateFoV",
     "ComputeProbability2D",
+    "EvaluateUserConstraints",
     "EvolutionPlot",
     "FillSummary",
     "FindMatchingCoords",
@@ -116,6 +118,7 @@ __all__ = [
     "LoadPointings",
     "LoadPointingsGAL",
     "LoadPointingsGW",
+    "LoadUserConstraints",
     "MapReader",
     "ModifyCatalogue",
     "NextWindowTools",

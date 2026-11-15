@@ -21,10 +21,14 @@
 
 #####################################################################
 # Packages
+from pathlib import Path
+
 import six
 from astropy import units as u
 from astropy.coordinates import EarthLocation
 from six.moves import configparser
+
+from .UserConstraints import LoadUserConstraints
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -143,6 +147,7 @@ class ObservationParameters:
         betaR=None,
         vetoWindowsFile=None,
         countSubtractedPointingsOutside=False,
+        userConstraints=None,
     ):
         self.obs_name = obs_name
         self.event_name = event_name
@@ -220,7 +225,15 @@ class ObservationParameters:
         self.vetoWindowsFile = vetoWindowsFile
         self.countSubtractedPointingsOutside = countSubtractedPointingsOutside
 
+        # Optional user-defined observability constraints (see UserConstraints)
+        if userConstraints is None:
+            userConstraints = []
+        elif not isinstance(userConstraints, (list, tuple)):
+            userConstraints = [userConstraints]
+        self.userConstraints = list(userConstraints)
+
     def __str__(self):
+        userConstraints = getattr(self, "userConstraints", None)
         return "\n".join(
             [
                 "============== Observation Parameters ======================",
@@ -242,6 +255,11 @@ class ObservationParameters:
                 f"Max Moon Source Separation: {self.maxMoonSourceSeparation}",
                 f"Geomagnetic Threshold for SAA: {self.SAAThreshold}",
                 f"Max Zenith: {self.maxZenith:.1f}, Zenith Weighting: {self.zenithWeighting}",
+                *(
+                    [f"User constraints: {len(userConstraints)}"]
+                    if userConstraints
+                    else []
+                ),
                 f"FoV number of sides: {self.numberSides}, ",
                 f"FoV rotation: {self.FoVRotation},",
                 f"Priority for FoV proximity and Probability: {self.alphaR}, Zenith Weighting: {self.betaR}",
@@ -328,6 +346,12 @@ class ObservationParameters:
             parser.get(section, "maxmoonsourceseparation", fallback=0)
         )  # Max separation in degrees
         self.SAAThreshold = int(parser.get(section, "SAAThreshold", fallback=0))
+        # Optional: only set when present, constraints set in python are kept
+        if parser.has_option(section, "userConstraints"):
+            self.userConstraints = LoadUserConstraints(
+                parser.get(section, "userConstraints", raw=True),
+                baseDir=Path(filepath).resolve().parent,
+            )
 
         section = "operations"
         self.maxZenith = float(parser.get(section, "maxzenith", fallback=0))

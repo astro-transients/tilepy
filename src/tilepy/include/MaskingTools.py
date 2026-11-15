@@ -40,6 +40,7 @@ from numpy import ma
 from six.moves import configparser
 
 from .PointingTools import ComputePGalinFOV, GetSatelliteTime, Tools
+from .UserConstraints import EvaluateUserConstraints
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -178,9 +179,13 @@ def VisibleAtTime(time, galaxies, obspar):
         return False, thisaltaz, galaxies
 
 
-def FulfillsRequirement(theseGals, obspar, UsePix):
+def FulfillsRequirement(theseGals, obspar, UsePix, time=None):
     """
     Apply filter criteria to visible galaxy sample and compares them to get the best option of zenith angle
+
+    If ``time`` is given and user-defined constraints are set in
+    ``obspar.userConstraints``, galaxies not fulfilling them at that time are
+    excluded as well (see `~tilepy.include.UserConstraints.EvaluateUserConstraints`).
     """
 
     maxz = obspar.maxZenith
@@ -195,6 +200,20 @@ def FulfillsRequirement(theseGals, obspar, UsePix):
 
     alt = theseGals["Alt"]
 
+    # Optional user-defined constraints
+    usermask = None
+    if time is not None and getattr(obspar, "userConstraints", None):
+        usermask = EvaluateUserConstraints(
+            time,
+            co.SkyCoord(
+                theseGals["RAJ2000"],
+                theseGals["DEJ2000"],
+                frame="icrs",
+                unit=(u.deg, u.deg),
+            ),
+            obspar,
+        )
+
     if obspar.strategy == "targeted":
         testedProba = "dp_dV"
     if obspar.strategy == "integrated":
@@ -202,6 +221,8 @@ def FulfillsRequirement(theseGals, obspar, UsePix):
 
     for minz_aux in range(int(maxz), 5, -5):
         tmpmask = alt > 90 - (minz_aux)
+        if usermask is not None:
+            tmpmask = tmpmask & usermask
         tmpGals = theseGals.copy()
 
         if len(tmpGals[tmpmask]) > 0:
@@ -220,6 +241,8 @@ def FulfillsRequirement(theseGals, obspar, UsePix):
                 break
     if UsePix:
         mask = alt > 90 - (thisminz + FOV)
+        if usermask is not None:
+            mask = mask & usermask
     return mask, thisminz
 
 

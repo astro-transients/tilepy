@@ -47,6 +47,8 @@ from six.moves import configparser
 from skyfield import almanac
 from skyfield.api import E, N, load, wgs84
 
+from .UserConstraints import EvaluateUserConstraints
+
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
 else:
@@ -1348,6 +1350,15 @@ def ComputeProbability2D(
         # Zenith angle mask
         pix_ra = radecs.ra.value[(thisaltaz.alt.value > 90.0 - maxZenith)]
         pix_dec = radecs.dec.value[thisaltaz.alt.value > 90.0 - maxZenith]
+
+    # Optional user-defined constraints on the remaining candidate pointings
+    if getattr(obspar, "userConstraints", None):
+        usermask = EvaluateUserConstraints(
+            time,
+            co.SkyCoord(pix_ra, pix_dec, frame="icrs", unit=(u.deg, u.deg)),
+            obspar,
+        )
+        pix_ra, pix_dec = pix_ra[usermask], pix_dec[usermask]
 
     phipix = np.deg2rad(pix_ra)
     thetapix = 0.5 * np.pi - np.deg2rad(pix_dec)

@@ -6,3 +6,4 @@ User Manual
    :maxdepth: 2
 
    observation_scheduler
+   user_constraints
