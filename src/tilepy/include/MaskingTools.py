@@ -188,7 +188,9 @@ def FulfillsRequirement(theseGals, obspar, UsePix):
     zenithWeighting = obspar.zenithWeighting
 
     maxp = 1
-    mask = 0
+    # Boolean array (not the integer 0), so that an empty selection yields an
+    # empty table instead of indexing row 0 of the catalogue.
+    mask = np.zeros(len(theseGals), dtype=bool)
     thisminz = 0
 
     alt = theseGals["Alt"]
