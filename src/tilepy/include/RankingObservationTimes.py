@@ -281,7 +281,7 @@ def GetObservationPeriod(inputtime0, msource, obspar):
     msourcealtazs = msource.transform_to(frame)
 
     # Add Moon phase
-    moonPhase = np.full(len(msourcealtazs), Tools.MoonPhase(inputtime0, obspar))
+    currentMoonPhase = np.full(len(msourcealtazs), Tools.MoonPhase(inputtime0, obspar))
 
     MoonDistance = msourcealtazs.separation(moonaltazs)
     ##############################################################################
@@ -292,7 +292,7 @@ def GetObservationPeriod(inputtime0, msource, obspar):
                 msourcealtazs.alt,
                 sunaltazs.alt,
                 moonaltazs.alt,
-                moonPhase,
+                currentMoonPhase,
                 MoonDistance,
                 NightsCounter,
             ],

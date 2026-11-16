@@ -99,6 +99,22 @@ def test_moon_altitude_from_configuration(make_obspar):
     assert end_moon == end
 
 
+def test_grey_time_extends_the_window(make_obspar):
+    start_dark, end_dark = window(make_obspar())
+
+    # Moon phase (70%) below the limit: observations start before the Moon set
+    start, end = window(make_obspar(moonPhase=80, useGreytime=True))
+    assert start < start_dark
+    assert start.startswith("2024-06-16 00:30")
+    assert end == end_dark
+
+    # Moon phase above the limit: dark time only
+    assert window(make_obspar(moonPhase=60, useGreytime=True)) == (
+        start_dark,
+        end_dark,
+    )
+
+
 def test_visibility_window_computes_each_period_once(make_obspar, monkeypatch):
     calls = []
 
