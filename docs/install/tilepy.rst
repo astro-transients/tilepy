@@ -194,6 +194,19 @@ This guide describes the step-by-step process to install **tilepy** and its depe
    2053, and the Sun and Moon rising and setting times obtained with it agree
    with those of DE440 to about a millisecond.
 
+   The Earth orientation parameters needed by Astropy (``finals2000A``) do
+   not require any configuration: if they cannot be downloaded, Astropy uses
+   the table shipped with the ``astropy-iers-data`` package. On a machine that
+   stays offline, update that package from time to time
+   (``pip install -U astropy-iers-data``) and disable the download attempts
+   before importing **tilepy**:
+
+   .. code-block:: python
+
+      from astropy.utils import iers
+
+      iers.conf.auto_download = False
+
 
 
 .. note::
