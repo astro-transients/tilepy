@@ -166,6 +166,35 @@ This guide describes the step-by-step process to install **tilepy** and its depe
    If no error appears and the version number is printed, your installation is correct!
 
 
+.. dropdown:: Ephemeris file (offline or restricted networks)
+
+   The dark-time windows are computed with the JPL planetary ephemeris
+   ``de440s.bsp`` (32 MB). Nothing has to be done on a machine with internet
+   access: the file is downloaded once, into ``~/.skyfield/``, the first time
+   a schedule is computed.
+
+   **tilepy** uses the first of the following that is available:
+
+   1. the ephemeris file (``.bsp``) given by the environment variable
+      ``TILEPY_EPHEMERIS``;
+   2. ``de440s.bsp`` in the current working directory;
+   3. ``de440s.bsp`` in ``~/.skyfield/``;
+   4. a download from the JPL server into ``~/.skyfield/``;
+   5. the DE421 ephemeris shipped with the optional package ``skyfield-data``.
+
+   On a machine that cannot reach the JPL server, either copy
+   `de440s.bsp <https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de440s.bsp>`_ to
+   ``~/.skyfield/``, or install the bundled ephemeris:
+
+   .. code-block:: bash
+
+      pip install "tilepy[offline]"
+
+   A warning is logged when the DE421 ephemeris is used. It is valid until
+   2053, and the Sun and Moon rising and setting times obtained with it agree
+   with those of DE440 to about a millisecond.
+
+
 
 .. note::
 

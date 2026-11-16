@@ -58,6 +58,12 @@ tests = [
     "pytest-doctestplus",
     "tomli",
     "nbmake>=1.5.5",
+    "skyfield-data",
+]
+
+# Bundled planetary ephemeris, for use without access to the JPL servers
+offline = [
+    "skyfield-data",
 ]
 
 docs = [
