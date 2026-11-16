@@ -152,13 +152,14 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
     Parameters
     ----------
     ObservationTime : datetime.datetime
-        The time to compute visibility for.
+        Not used, the windows are computed from the time of the first pointing.
+        Kept for backward compatibility.
     Pointing : astropy.table.Table
         Table with pointing information (columns: 'Time', 'RA[deg]', 'DEC[deg]').
     obspar : object
         Observation parameters (must have 'duration', 'maxZenith', 'location').
     dirName : str
-        Output directory name.
+        Not used. Kept for backward compatibility.
 
     Returns
     -------
@@ -189,29 +190,14 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
 
     # frame = co.AltAz(obstime=auxtime, location=observatory)
     timeInitial = auxtime - datetime.timedelta(minutes=obspar.duration)
-    for i, s in enumerate(source):
+    for s in source:
         _NonValidwindow, Stepzenith = GetVisibility(
             Pointing["Time"], s, obspar.maxZenith, obspar.location
         )
-        window, zenith = GetObservationPeriod(timeInitial, s, obspar, i, dirName, False)
+        window, zenith = GetObservationPeriod(timeInitial, s, obspar)
         window_arr.append(window)
         zenith_arr.append(zenith)
         szenith_arr.append(Stepzenith)
-
-        # At input ObservationTime the night is over, the scheduling has been computed for the next night (with the condition <24h holding)
-        if not Tools.IsGreyness(ObservationTime, obspar):
-            window, zenith = GetObservationPeriod(
-                ObservationTime + datetime.timedelta(hours=12),
-                s,
-                obspar,
-                i,
-                dirName,
-                True,
-            )
-        else:
-            window, zenith = GetObservationPeriod(
-                ObservationTime, s, obspar, i, dirName, True
-            )
 
     Pointing["Observation window"] = window_arr
     Pointing["Array of zenith angles"] = zenith_arr
@@ -220,7 +206,32 @@ def VisibilityWindow(ObservationTime, Pointing, obspar, dirName):
     return Pointing
 
 
-def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlot):
+def GetObservationPeriod(inputtime0, msource, obspar):
+    """
+    Compute the period during which a position can be observed.
+
+    The period starts at the first and ends at the last time, within
+    ``obspar.maxNights`` nights after ``inputtime0``, at which the position is
+    above the zenith angle cut during dark time (and grey time, if
+    ``obspar.useGreytime`` is set), as defined by the visibility parameters of
+    ``obspar``.
+
+    Parameters
+    ----------
+    inputtime0 : datetime.datetime
+        Start of the period to consider.
+    msource : astropy.coordinates.SkyCoord
+        Position to observe.
+    obspar : ObservationParameters
+        Observation parameters.
+
+    Returns
+    -------
+    window : str
+        Observation period, as ``"start-->end"``.
+    altitudes : astropy.coordinates.Latitude
+        Altitude of the position at the sampled times.
+    """
     AltitudeCut = 90.0 - obspar.maxZenith
     nights = obspar.maxNights
     useGreytime = obspar.useGreytime
@@ -237,7 +248,7 @@ def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlo
     ##############################################################################
     suninitial = get_body("sun", inputtime).transform_to(initialframe)
 
-    if suninitial.alt < -18.0 * u.deg:
+    if suninitial.alt < sunDown * u.deg:
         hoursinDay = 12
     else:
         hoursinDay = 24
@@ -297,9 +308,9 @@ def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlo
         )
         # selectedTimes=Altitudes['Time UTC']
         selection = (
-            (Altitudes["AltSun"] < -18.0)
+            (Altitudes["AltSun"] < sunDown)
             & (Altitudes["AltSource"] > AltitudeCut)
-            & (Altitudes["AltMoon"] < -0.5)
+            & (Altitudes["AltMoon"] < moonDown)
         )
         DTaltitudes = Altitudes[selection]
         newtimes = []
@@ -325,9 +336,9 @@ def GetObservationPeriod(inputtime0, msource, obspar, plotnumber, dirName, doPlo
         )
         Times = Altitudes["TimeUTC"]
         selection = (
-            (Altitudes["AltSun"] < -18.0)
+            (Altitudes["AltSun"] < sunDown)
             & (Altitudes["AltSource"] > AltitudeCut)
-            & (Altitudes["AltMoon"] < -0.5)
+            & (Altitudes["AltMoon"] < moonDown)
         )
         ScheduledTimes = Time(Times[selection], format="mjd").iso
 
