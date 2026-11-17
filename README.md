@@ -124,22 +124,20 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - countPrevious: True if you want previous observation to be considered in number to set the max run variable. False else
           - countSubtractedPointingsOutside: False if you do not want to take into account pointings outside of the current percentageMOC area when subtracting pointings, True if you want to subtract them anyway
 
-## Issue with Daily Earth Orientation Parameters Solutions file (finals2000A)
+## Running tilepy offline or behind a firewall
 
-Astropy requires a recent reference file to compute correctly the coordinates. This file is in general downloaded automatically by Astropy but if you are offline, you will be able to run tilepy if you do the following fix in a global variable.
-First you need to download the file, it is available through several sources, IERS, OBSPM, NASA, USNO, .... For a fully offline installation, try to update the file every few month.
+tilepy needs two reference files that are normally obtained automatically. No manual step is required on a machine with internet access.
 
-You need then to modify your script calling tilepy by adding the following lines before importing tilepy. Adapt the path to the file (here pathToYourReferencefile) in order that the system is able to find the file and loaded correctly.
+- **Planetary ephemeris (`de440s.bsp`)**, used to compute the dark-time windows. It is downloaded once from JPL into `~/.skyfield/`. Without access to the JPL server, either copy the file to `~/.skyfield/`, set the environment variable `TILEPY_EPHEMERIS` to the path of an ephemeris file, or install the bundled ephemeris with `pip install "tilepy[offline]"`.
+- **Earth orientation parameters (`finals2000A`)**, used by Astropy for coordinate transformations. Astropy tries to download a recent version and otherwise uses the table shipped with the `astropy-iers-data` package, so nothing has to be configured. On a machine that stays offline, update that package from time to time (`pip install -U astropy-iers-data`), and add the following lines before importing tilepy to skip the download attempts:
 
 ```python
-import os
 from astropy.utils import iers
 
-iers_file = os.path.join(
-    os.path.abspath(os.path.dirname(__file__)), pathToYourReferencefile
-)
-iers.IERS.iers_table = iers.IERS_A.open(iers_file)
+iers.conf.auto_download = False
 ```
+
+See the [installation guide](https://tilepy.readthedocs.io/) for details.
 
 ## Help
 If you find any problem, please open a new issue in the project main page to document it. You can of course also directly create a Pull Request with new features.

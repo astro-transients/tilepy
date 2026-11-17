@@ -22,6 +22,7 @@
 
 import datetime
 import logging
+import os
 from pathlib import Path
 
 #####################################################################
@@ -45,7 +46,8 @@ from ligo.skymap.postprocess import find_greedy_credible_levels
 from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
-from skyfield.api import E, N, load, wgs84
+from skyfield.api import E, Loader, N, load, wgs84
+from skyfield.jpllib import SpiceKernel
 
 if six.PY2:
     ConfigParser = configparser.SafeConfigParser
@@ -68,6 +70,7 @@ __all__ = [
     "GetSatellitePositions",
     "GetSatelliteTime",
     "IsSourceInside",
+    "LoadEphemeris",
     "LoadGalaxies",
     "LoadGalaxies_SteMgal",
     "LoadPointings",
@@ -624,6 +627,96 @@ def get_dipole_field(lat_deg, lon_deg, alt_km, coeffs):
     return B_total
 
 
+# Planetary ephemeris used to compute the Sun and Moon rising and setting times
+EPHEMERIS_NAME = "de440s.bsp"
+EPHEMERIS_ENV = "TILEPY_EPHEMERIS"
+_EPHEMERIS_CACHE = {}
+
+
+def LoadEphemeris():
+    """
+    Load the planetary ephemeris used for the Sun and Moon positions.
+
+    A local copy is used when available, the file is downloaded only if
+    needed, and a bundled ephemeris is used when the download is not possible
+    (e.g. no or restricted network access). The first available option is used:
+
+    1. the kernel file (``.bsp``) given by the environment variable
+       ``TILEPY_EPHEMERIS``;
+    2. ``de440s.bsp`` in the current working directory;
+    3. ``de440s.bsp`` in ``~/.skyfield/``;
+    4. download of ``de440s.bsp`` from JPL into ``~/.skyfield/`` (into the
+       current working directory if it is not writable);
+    5. the DE421 ephemeris of the optional package ``skyfield-data``
+       (``pip install tilepy[offline]``).
+
+    Returns
+    -------
+    ephemeris : skyfield.jpllib.SpiceKernel
+        The ephemeris, opened once per process.
+
+    Raises
+    ------
+    FileNotFoundError
+        If ``TILEPY_EPHEMERIS`` is set but does not point to a file.
+    OSError
+        If no ephemeris is available locally and the download fails.
+    """
+    envPath = os.environ.get(EPHEMERIS_ENV)
+    homeDir = Path.home() / ".skyfield"
+    key = (envPath, str(Path.cwd()), str(homeDir))
+    if key in _EPHEMERIS_CACHE:
+        return _EPHEMERIS_CACHE[key]
+
+    if envPath:
+        path = Path(envPath).expanduser()
+        if not path.is_file():
+            raise FileNotFoundError(
+                f"{EPHEMERIS_ENV} is set to '{envPath}', which is not a file."
+            )
+        ephemeris = SpiceKernel(str(path))
+    else:
+        ephemeris = None
+        for directory in (Path.cwd(), homeDir):
+            path = directory / EPHEMERIS_NAME
+            if path.is_file():
+                ephemeris = SpiceKernel(str(path))
+                break
+        if ephemeris is None:
+            ephemeris = _DownloadEphemeris(homeDir)
+
+    _EPHEMERIS_CACHE[key] = ephemeris
+    return ephemeris
+
+
+def _DownloadEphemeris(homeDir):
+    """Download the ephemeris, or use the one of skyfield-data if not possible."""
+    try:
+        homeDir.mkdir(parents=True, exist_ok=True)
+        directory = homeDir if os.access(homeDir, os.W_OK) else Path.cwd()
+    except OSError:
+        directory = Path.cwd()
+
+    try:
+        return Loader(str(directory))(EPHEMERIS_NAME)
+    except OSError as err:
+        try:
+            from skyfield_data import get_skyfield_data_path
+        except ImportError:
+            raise OSError(
+                f"The ephemeris {EPHEMERIS_NAME} could not be downloaded ({err}). "
+                f"Either copy the file to {homeDir}, set the environment variable "
+                f"{EPHEMERIS_ENV} to the path of an ephemeris file (.bsp), or "
+                "install the bundled ephemeris with 'pip install skyfield-data'."
+            ) from err
+        path = Path(get_skyfield_data_path()) / "de421.bsp"
+        logger.warning(
+            f"The ephemeris {EPHEMERIS_NAME} could not be downloaded ({err}). "
+            f"Using the DE421 ephemeris of skyfield-data instead: {path}"
+        )
+        return SpiceKernel(str(path))
+
+
 class Observer:
     """Class to store information and handle operation related to the observatory used for the observations."""
 
@@ -662,7 +755,7 @@ class Observer:
 
         """
 
-        self.eph = load("de440s.bsp")
+        self.eph = LoadEphemeris()
         self.observatory_location = wgs84.latlon(latitude * N, longitude * E, elevation)
 
         self.max_sun_altitude = max_sun_altitude

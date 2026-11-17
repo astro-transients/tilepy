@@ -51,10 +51,6 @@ else:
     ConfigParser = configparser.ConfigParser
 import re
 
-# iers_file = os.path.join(os.path.abspath(
-#    os.path.dirname(__file__)), '../dataset/finals2000A.all')
-# iers.IERS.iers_table = iers.IERS_A.open(iers_file)
-
 __all__ = [
     "EvolutionPlot",
     "GetObservationPeriod",
