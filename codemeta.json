@@ -16,7 +16,7 @@
     "name": "Python",
     "url": "https://www.python.org/"
   },
-  "runtimePlatform": "Python >= 3.9",
+  "runtimePlatform": "Python >= 3.11",
   "keywords": [
     "astronomy",
     "astrophysics",

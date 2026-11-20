@@ -1,5 +1,4 @@
 import datetime
-from datetime import timezone
 
 import astropy.coordinates as co
 import healpy as hp
@@ -62,7 +61,7 @@ def LocateSource(filename, ra, dec, PercentCov=90):
 
 def VisibilityOverview_forZenithCut(filename, date=None, zenithcut=60):
     if date is None:
-        date = datetime.datetime.now(timezone.utc)
+        date = datetime.datetime.now(datetime.UTC)
     time = getdate(date)
 
     print(
@@ -162,7 +161,7 @@ def Time_DarkTime_GreyTime(
     minDuration=10,
 ):
     if date is None:
-        date = datetime.datetime.now(timezone.utc)
+        date = datetime.datetime.now(datetime.UTC)
     time = getdate(date)
 
     obspar = ObservationParameters()

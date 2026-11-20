@@ -42,10 +42,7 @@ sys.path.insert(0, os.path.abspath("../tilepy/include"))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 try:
-    try:
-        import tomllib  # Python 3.11+
-    except ImportError:
-        import tomli as tomllib  # pip install tomli for <3.11
+    import tomllib
 
     pyproject_path = os.path.join(os.path.dirname("__file__"), "pyproject.toml")
     with open(pyproject_path, "rb") as f:

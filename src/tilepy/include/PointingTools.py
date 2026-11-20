@@ -849,10 +849,10 @@ class Observer:
                     clean_range_interval.append(
                         [
                             consecutive_intervals[num_consecutive][0].datetime.replace(
-                                tzinfo=datetime.timezone.utc
+                                tzinfo=datetime.UTC
                             ),
                             consecutive_intervals[num_consecutive][-1].datetime.replace(
-                                tzinfo=datetime.timezone.utc
+                                tzinfo=datetime.UTC
                             ),
                         ]
                     )
