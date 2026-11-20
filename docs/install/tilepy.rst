@@ -19,7 +19,7 @@ This guide describes the step-by-step process to install **tilepy** and its depe
       :color: info
       :shadow:
 
-      Python >= 3.9
+      Python >= 3.11
 
 .. dropdown:: ⚡ Fastest & simplest install -- uv :bdg-success:`recommended`
 

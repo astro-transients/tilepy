@@ -536,49 +536,127 @@ def Sortingby(galPointing, name, exposure):
     )
 
 
-def EvolutionPlot(galPointing, tname, ObsArray):
+# Colors of the curves of the altitude vs time plot. The order keeps adjacent
+# colors distinguishable with color vision deficiencies.
+EVOLUTION_PLOT_COLORS = [
+    "#2a78d6",  # blue
+    "#eb6834",  # orange
+    "#1baf7a",  # aqua
+    "#eda100",  # yellow
+    "#e87ba4",  # magenta
+    "#008300",  # green
+    "#6250d6",  # violet
+    "#e34948",  # red
+]
+# Line styles, changed after every full cycle of colors
+EVOLUTION_PLOT_LINESTYLES = [
+    "-",
+    (0, (6, 2)),  # dashed
+    (0, (1, 1.5)),  # dotted
+    (0, (6, 2, 1, 2)),  # dash-dot
+    (0, (12, 3)),  # long dashes
+    (0, (6, 2, 1, 2, 1, 2)),  # dash-dot-dot
+]
+# Distinct (color, line style) combinations, solid lines first
+EVOLUTION_PLOT_STYLES = [
+    (color, linestyle)
+    for linestyle in EVOLUTION_PLOT_LINESTYLES
+    for color in EVOLUTION_PLOT_COLORS
+]
+
+
+def EvolutionPlot(galPointing, tname, ObsArray, obspar):
+    """
+    Plot the altitude of each pointing as a function of time.
+
+    The time axis is continuous, from the start of the first pointing to the
+    end of the last one, so that gaps between non-consecutive pointings are
+    shown at their true length. The altitude of every pointing is drawn over
+    the whole interval, and the time slot during which each pointing is
+    scheduled is highlighted on its curve.
+
+    The pointings are ordered by decreasing GW probability, and each one gets
+    a distinct combination of color and line style (8 colors, 6 line styles):
+    the 8 most probable pointings are drawn with solid lines.
+
+    Parameters
+    ----------
+    galPointing : astropy.table.Table
+        Pointings, with columns 'Time', 'RA[deg]', 'DEC[deg]', 'Pgw' and 'Pgal'.
+    tname : str
+        Directory where the plot is saved.
+    ObsArray : str
+        Name of the observatory, used in the name of the plot.
+    obspar : ObservationParameters
+        Observation parameters (must have 'location' and 'duration', the
+        duration of a pointing in minutes).
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure, saved as ``{tname}/AltitudevsTime_{ObsArray}.png``.
+    """
+    # Legend ordered by decreasing GW probability
+    GWordered = galPointing[np.flipud(np.argsort(galPointing["Pgw"]))]
+    sources = SkyCoord(
+        GWordered["RA[deg]"], GWordered["DEC[deg]"], frame="icrs", unit=(u.deg, u.deg)
+    )
+    starts = Time(list(GWordered["Time"]))
+    duration = obspar.duration * u.min
+
+    # Continuous time axis, from the start of the first pointing to the end of
+    # the last one, sampled at least every minute
+    tstart = starts.min()
+    tstop = starts.max() + duration
+    span = (tstop - tstart).to_value(u.min)
+    times = tstart + np.linspace(0, span, int(np.ceil(span)) + 1) * u.min
+    altitudes = (
+        sources[:, np.newaxis]
+        .transform_to(AltAz(obstime=times[np.newaxis, :], location=obspar.location))
+        .alt.deg
+    )
+
+    # Time slot during which each pointing is scheduled
+    slots = starts[:, np.newaxis] + np.linspace(0, 1, 21) * duration
+    slot_altitudes = (
+        sources[:, np.newaxis]
+        .transform_to(AltAz(obstime=slots, location=obspar.location))
+        .alt.deg
+    )
+
     fig = plt.figure(figsize=(18, 10))
     ax = fig.add_axes([0.1, 0.1, 0.6, 0.8])
-    ra = galPointing["RA[deg]"]
-    dec = galPointing["DEC[deg]"]
-    pgw = galPointing["Pgw"]
-    pgal = galPointing["Pgal"]
-    time = galPointing["Time"]
-    NUM_COLORS = len(time)
-    hour = []
-    for j in range(len(time)):
-        selecttime = time[j].split(" ")
-        hour.append(selecttime[1].split(".")[0])
-    try:
-        lasttime = datetime.datetime.strptime(
-            time[len(time) - 1], "%Y-%m-%d %H:%M"
-        ) + datetime.timedelta(minutes=30)
-    except ValueError:
-        lasttime = datetime.datetime.strptime(
-            time[len(time) - 1], "%Y-%m-%d %H:%M"
-        ) + datetime.timedelta(minutes=30)
-
-    hour.append(lasttime.strftime("%H:%M"))
-    GWordered = galPointing[np.flipud(np.argsort(galPointing["Pgw"]))]
-
-    ax.set_prop_cycle(plt.cycler("color", plt.cm.Accent(np.linspace(0, 1, NUM_COLORS))))
-    for i in range(len(ra)):
-        # x = np.arange(0, len(ra), 1)
-        ZENITH = GWordered["Zenith angles in steps"][i]
-        x = np.arange(0, len(ZENITH), 1)
+    for i, row in enumerate(GWordered):
+        color, linestyle = EVOLUTION_PLOT_STYLES[i % len(EVOLUTION_PLOT_STYLES)]
         ax.plot(
-            x,
-            ZENITH,
-            label=f"ra:{ra[i]:.2f} dec:{dec[i]:.2f}- Pgw:{100 * pgw[i]:.3f} - Pgal:{100 * pgal[i]:.3f}",
+            times.datetime,
+            altitudes[i],
+            color=color,
+            linestyle=linestyle,
+            linewidth=2,
+            label=f"{starts[i].strftime('%H:%M')} ra:{row['RA[deg]']:.2f} dec:{row['DEC[deg]']:.2f}"
+            f" - Pgw:{100 * row['Pgw']:.3f} - Pgal:{100 * row['Pgal']:.3f}",
         )
+        ax.plot(slots[i].datetime, slot_altitudes[i], color=color, linewidth=6)
 
-    ax.set_xticks(x)
-    ax.set_xticklabels(hour)
+    locator = mdates.AutoDateLocator()
+    ax.xaxis.set_major_locator(locator)
+    ax.xaxis.set_major_formatter(
+        mdates.ConciseDateFormatter(locator, show_offset=False)
+    )
+    ax.set_xlim(tstart.datetime, tstop.datetime)
     ax.set_ylabel("Altitude (deg)", fontsize=14)
-    ax.set_xlabel("Time", fontsize=14)
+    ax.set_xlabel(f"Time (UTC) from {tstart.strftime('%Y-%m-%d %H:%M')}", fontsize=14)
     ax.grid()
-    ax.legend(bbox_to_anchor=(1.02, 1), loc=2, borderaxespad=0.0)
-    plt.savefig(f"{tname}/AltitudevsTime_{ObsArray}.png")
+    ax.legend(
+        bbox_to_anchor=(1.02, 1),
+        loc=2,
+        borderaxespad=0.0,
+        handlelength=4,
+        title="Start of the pointing (thick line: scheduled observation)",
+    )
+    fig.savefig(f"{tname}/AltitudevsTime_{ObsArray}.png")
+    return fig
 
 
 def RankingTimes(obspar, skymap, cat, dirName, PointingFile):
@@ -603,7 +681,7 @@ def RankingTimes(obspar, skymap, cat, dirName, PointingFile):
         tGals, point, obspar.FOV, sum_dP_dV, prob, skymap.is_nested, nside
     )
     point = VisibilityWindow(ObservationTime, point, obspar, dirName)
-    EvolutionPlot(point, dirName, ObsArray)
+    EvolutionPlot(point, dirName, ObsArray, obspar)
     Sortingby(point, dirName, obspar.duration)
 
 
@@ -626,7 +704,7 @@ def RankingTimes_2D(obspar, prob, is_nested, dirName, PointingFile):
     point = ProbabilitiesinPointings2D(point, obspar.FOV, prob, is_nested, nside)
     point = VisibilityWindow(ObservationTime, point, obspar, dirName)
 
-    EvolutionPlot(point, dirName, ObsArray)
+    EvolutionPlot(point, dirName, ObsArray, obspar)
     Sortingby(point, dirName, obspar.duration)
 
 
