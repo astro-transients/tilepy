@@ -6,19 +6,19 @@ dependencies:
   - pip
   - astropy
   - pytz
-  - scipy<1.14.0
+  - scipy
   - ipython
   - numpy
   - pandas
   - pytz
-  - healpy==1.16.2
+  - healpy>=1.17.3,<2
   - pytables
   - fastparquet
   - skyfield
   - ipykernel
   - ephem
-  - ligo.skymap>=2.0.0
-  - matplotlib<3.9.0
+  - ligo.skymap>=2.4.0
+  - matplotlib
   - mocpy
   - setuptools
   - pytest
