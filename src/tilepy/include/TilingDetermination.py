@@ -581,14 +581,14 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                 RAarray.append(
                                     float(
                                         "{:3.4f}".format(
-                                            float(finalGals2["RAJ2000"][:1])
+                                            float(finalGals2["RAJ2000"][0])
                                         )
                                     )
                                 )
                                 DECarray.append(
                                     float(
                                         "{:3.4f}".format(
-                                            float(finalGals2["DEJ2000"][:1])
+                                            float(finalGals2["DEJ2000"][0])
                                         )
                                     )
                                 )
@@ -627,16 +627,12 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                 )
                                 RAarray.append(
                                     float(
-                                        "{:3.4f}".format(
-                                            float(finalGals["RAJ2000"][:1])
-                                        )
+                                        "{:3.4f}".format(float(finalGals["RAJ2000"][0]))
                                     )
                                 )
                                 DECarray.append(
                                     float(
-                                        "{:3.4f}".format(
-                                            float(finalGals["DEJ2000"][:1])
-                                        )
+                                        "{:3.4f}".format(float(finalGals["DEJ2000"][0]))
                                     )
                                 )
                                 Round.append(1)
@@ -677,10 +673,10 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                             )
 
                             RAarray.append(
-                                float("{:3.4f}".format(float(finalGals["RAJ2000"][:1])))
+                                float("{:3.4f}".format(float(finalGals["RAJ2000"][0])))
                             )
                             DECarray.append(
-                                float("{:3.4f}".format(float(finalGals["DEJ2000"][:1])))
+                                float("{:3.4f}".format(float(finalGals["DEJ2000"][0])))
                             )
                             Round.append(1)
                             P_GALarray.append(float(f"{p_gal:1.4f}"))
@@ -778,14 +774,14 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                 RAarray.append(
                                     float(
                                         "{:3.4f}".format(
-                                            float(finalGals2["RAJ2000"][:1])
+                                            float(finalGals2["RAJ2000"][0])
                                         )
                                     )
                                 )
                                 DECarray.append(
                                     float(
                                         "{:3.4f}".format(
-                                            float(finalGals2["DEJ2000"][:1])
+                                            float(finalGals2["DEJ2000"][0])
                                         )
                                     )
                                 )
@@ -820,16 +816,12 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                 )
                                 RAarray.append(
                                     float(
-                                        "{:3.4f}".format(
-                                            float(finalGals["RAJ2000"][:1])
-                                        )
+                                        "{:3.4f}".format(float(finalGals["RAJ2000"][0]))
                                     )
                                 )
                                 DECarray.append(
                                     float(
-                                        "{:3.4f}".format(
-                                            float(finalGals["DEJ2000"][:1])
-                                        )
+                                        "{:3.4f}".format(float(finalGals["DEJ2000"][0]))
                                     )
                                 )
                                 Round.append(1)
@@ -862,10 +854,10 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                 )
                             )
                             RAarray.append(
-                                float("{:3.4f}".format(float(finalGals["RAJ2000"][:1])))
+                                float("{:3.4f}".format(float(finalGals["RAJ2000"][0])))
                             )
                             DECarray.append(
-                                float("{:3.4f}".format(float(finalGals["DEJ2000"][:1])))
+                                float("{:3.4f}".format(float(finalGals["DEJ2000"][0])))
                             )
                             Round.append(1)
                             P_GALarray.append(float(f"{p_gal:1.4f}"))
@@ -1540,14 +1532,14 @@ def PGalinFoV_NObs(
                                     RAarray.append(
                                         float(
                                             "{:3.4f}".format(
-                                                float(finalGals2["RAJ2000"][:1])
+                                                float(finalGals2["RAJ2000"][0])
                                             )
                                         )
                                     )
                                     DECarray.append(
                                         float(
                                             "{:3.4f}".format(
-                                                float(finalGals2["DEJ2000"][:1])
+                                                float(finalGals2["DEJ2000"][0])
                                             )
                                         )
                                     )
@@ -1601,16 +1593,12 @@ def PGalinFoV_NObs(
                                 )
                                 RAarray.append(
                                     float(
-                                        "{:3.4f}".format(
-                                            float(finalGals["RAJ2000"][:1])
-                                        )
+                                        "{:3.4f}".format(float(finalGals["RAJ2000"][0]))
                                     )
                                 )
                                 DECarray.append(
                                     float(
-                                        "{:3.4f}".format(
-                                            float(finalGals["DEJ2000"][:1])
-                                        )
+                                        "{:3.4f}".format(float(finalGals["DEJ2000"][0]))
                                     )
                                 )
                                 Round.append(1)
@@ -1710,14 +1698,14 @@ def PGalinFoV_NObs(
                                     RAarray.append(
                                         float(
                                             "{:3.4f}".format(
-                                                float(finalGals2["RAJ2000"][:1])
+                                                float(finalGals2["RAJ2000"][0])
                                             )
                                         )
                                     )
                                     DECarray.append(
                                         float(
                                             "{:3.4f}".format(
-                                                float(finalGals2["DEJ2000"][:1])
+                                                float(finalGals2["DEJ2000"][0])
                                             )
                                         )
                                     )
@@ -1754,14 +1742,14 @@ def PGalinFoV_NObs(
                                     RAarray.append(
                                         float(
                                             "{:3.4f}".format(
-                                                float(finalGals["RAJ2000"][:1])
+                                                float(finalGals["RAJ2000"][0])
                                             )
                                         )
                                     )
                                     DECarray.append(
                                         float(
                                             "{:3.4f}".format(
-                                                float(finalGals["DEJ2000"][:1])
+                                                float(finalGals["DEJ2000"][0])
                                             )
                                         )
                                     )
@@ -1797,16 +1785,12 @@ def PGalinFoV_NObs(
                                 )
                                 RAarray.append(
                                     float(
-                                        "{:3.4f}".format(
-                                            float(finalGals["RAJ2000"][:1])
-                                        )
+                                        "{:3.4f}".format(float(finalGals["RAJ2000"][0]))
                                     )
                                 )
                                 DECarray.append(
                                     float(
-                                        "{:3.4f}".format(
-                                            float(finalGals["DEJ2000"][:1])
-                                        )
+                                        "{:3.4f}".format(float(finalGals["DEJ2000"][0]))
                                     )
                                 )
                                 Round.append(1)
