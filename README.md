@@ -91,6 +91,9 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - lat: lat coordinates of the observatory
           - lon: lon coordinates of the observatory
           - height: height of the observatory
+          - base: `ground` or `space`. With `space`, the orbit of the satellite, the Earth occultation and the South Atlantic Anomaly are taken into account
+          - stationsurl: (space) URL of a TLE file with the orbit of the satellite, e.g. https://celestrak.com/NORAD/elements/science.txt; `name` must be the name of the satellite in that file
+          - wobbleOffset: wobble offset in deg (not used yet)
 
         - [visibility]
           - sunDown: altitude of the Sun in deg to define darkness conditions (for astronomic darkness sunDown= -18)
@@ -99,6 +102,8 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - moonPhase: phase of the Moon to define greyness conditions
           - minMoonSourceSeparation: minimum separation Source-Moon in deg to define greyness conditions
           - maxMoonSourceSeparation: max separation Source-Moon in deg to define greyness conditions
+          - EarthDown: (space) margin in deg added around the Earth disc occulting the sky
+          - SAAThreshold: (space) magnetic field strength in nT below which the satellite is considered to be in the South Atlantic Anomaly and does not observe (computed with the IGRF coefficients of the dataset directory; 0 disables the check)
 
         - [operations]
           - maxZenith: max zenith angle which will be considered as accessible sky
@@ -108,6 +113,10 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - duration: standard exposure per tile
           - minDuration: minimal duration of tile if standard exposure is not available (e.g. at the end of the night)
           - useGreytime: flag to schedule greyness observations in addition to darkness
+          - minSlewing: (not used yet)
+          - shape: (not used yet, the shape of the FoV is given by numberSides)
+          - numberSides: 0 for a circular FoV of radius FOV, n > 0 for a regular polygon with n sides and its vertices at FOV from the centre (space scheduling and GetBestTiles2D/3D only)
+          - FoVRotation: rotation of a polygonal FoV (not used yet)
 
         - [tiling]
 
@@ -123,6 +132,16 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - mangrove: flag to use the mangrove method of weighting by the mass of the host galaxy
           - countPrevious: True if you want previous observation to be considered in number to set the max run variable. False else
           - countSubtractedPointingsOutside: False if you do not want to take into account pointings outside of the current percentageMOC area when subtracting pointings, True if you want to subtract them anyway
+          - locCut: maximal area in deg² of the percentageMOC region; no schedule is computed for larger regions (default 99999)
+          - algorithm: `2D` to always use the 2D strategy, `3D` to use the galaxy catalogue when possible (distance information in the map, event closer than distCut, not close to the Galactic plane)
+          - strategy: (3D) `integrated` to use the probability of all the galaxies in the FoV, `targeted` to use the probability of each galaxy
+          - doRank: rank the pointings and produce the ranking files and the altitude vs time plot
+          - alphaR, betaR: (space) weights used to order the pointings: the next one minimizes alphaR × distance − betaR × probability (both normalized)
+
+        - [general]
+          - downloadMaxRetry: number of new attempts if the download of the sky map fails
+          - downloadWaitPeriodRetry: time in seconds between two download attempts
+          - eventName: (optional) name of the event
 
 ## Running tilepy offline or behind a firewall
 
