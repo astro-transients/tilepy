@@ -3,15 +3,20 @@
 All tests are network-free.
 """
 
+import re
+
 import astropy.units as u
+import numpy as np
 import pytest
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import AltAz, SkyCoord
 from astropy.table import Table
+from astropy.time import Time
 
 from tilepy.include import RankingObservationTimes
 from tilepy.include.CampaignDefinition import ObservationParameters
 from tilepy.include.PointingTools import getdate
 from tilepy.include.RankingObservationTimes import (
+    EvolutionPlot,
     GetObservationPeriod,
     VisibilityWindow,
 )
@@ -141,3 +146,43 @@ def test_visibility_window_computes_each_period_once(make_obspar, monkeypatch):
     assert list(result["Observation window"]) == ["start-->end"] * 2
     assert u.allclose(result["Array of zenith angles"], [20.0, 22.0] * u.deg)
     assert "Zenith angles in steps" in result.colnames
+
+
+def test_evolution_plot_time_axis_is_continuous(make_obspar, tmp_path):
+    # The last pointing is not consecutive to the others
+    pointings = Table(
+        {
+            "Pointing": [0, 1, 2],
+            "Time": ["2024-06-16 02:30", "2024-06-16 02:50", "2024-06-16 04:10"],
+            "RA[deg]": [240.0, 243.0, 300.0],
+            "DEC[deg]": [20.0, 22.0, 30.0],
+            "Pgw": [0.02, 0.05, 0.01],
+            "Pgal": [0.03, 0.01, 0.02],
+        }
+    )
+    obspar = make_obspar()
+    fig = EvolutionPlot(pointings, tmp_path, "LST", obspar)
+
+    assert (tmp_path / "AltitudevsTime_LST.png").exists()
+    curves = [line for line in fig.axes[0].get_lines() if line.get_label()[0] != "_"]
+    assert len(curves) == len(pointings)
+
+    for line in curves:
+        times = Time(list(line.get_xdata()))
+        # From the start of the first pointing to the end of the last one,
+        # without jumps over the gap between the pointings
+        assert abs(times[0] - Time("2024-06-16 02:30")) < 1 * u.s
+        assert abs(times[-1] - Time("2024-06-16 04:30")) < 1 * u.s
+        assert np.diff(times.mjd).max() * u.day <= 1 * u.min
+
+        # The curve is the one of the pointing given in its label
+        ra, dec = (
+            float(re.search(rf"{name}:(\S+)", line.get_label()).group(1))
+            for name in ("ra", "dec")
+        )
+        expected = (
+            SkyCoord(ra, dec, unit="deg")
+            .transform_to(AltAz(obstime=times, location=obspar.location))
+            .alt.deg
+        )
+        assert np.allclose(line.get_ydata(), expected)
