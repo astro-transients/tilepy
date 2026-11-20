@@ -115,7 +115,7 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - useGreytime: flag to schedule greyness observations in addition to darkness
           - minSlewing: (not used yet)
           - shape: (not used yet, the shape of the FoV is given by numberSides)
-          - numberSides: 0 for a circular FoV of radius FOV, n > 0 for a regular polygon with n sides and its vertices at FOV from the centre (space scheduling and GetBestTiles2D/3D only)
+          - numberSides: 0 for a circular FoV of radius FOV, n >= 3 for a regular polygon on the sky with n sides and its vertices at FOV from the centre, the first one due east (space scheduling and GetBestTiles2D/3D only; the integrated strategy always uses the circle)
           - FoVRotation: rotation of a polygonal FoV (not used yet)
 
         - [tiling]
