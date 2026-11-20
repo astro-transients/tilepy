@@ -508,9 +508,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                     # select galaxies within the slightly enlarged visibility window
                     visiMask = altaz.alt.value > 90.0 - (obspar.maxZenith + obspar.FOV)
                     visiGals = tGals_aux[visiMask]
-                    visiGals = ModifyCatalogue(
-                        prob, visiGals, obspar.FOV, sum_dP_dV, nside
-                    )
+                    visiGals = ModifyCatalogue(prob, visiGals, obspar.FOV, sum_dP_dV)
                     mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
                     if obspar.useGreytime:
                         maskgrey = FulfillsRequirementGreyObservations(
@@ -541,7 +539,7 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                 )
                                 visiGals2 = tGals_aux2[visiMask]
                                 visiGals2 = ModifyCatalogue(
-                                    prob, visiGals2, obspar.FOV, sum_dP_dV, nside
+                                    prob, visiGals2, obspar.FOV, sum_dP_dV
                                 )
 
                                 mask, minz = FulfillsRequirement(
@@ -1469,7 +1467,7 @@ def PGalinFoV_NObs(
                         )
                         visiGals = tGals_aux[visiMask]
                         visiGals = ModifyCatalogue(
-                            prob, visiGals, obspar.FOV, sum_dP_dV, nside
+                            prob, visiGals, obspar.FOV, sum_dP_dV
                         )
 
                         mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
@@ -1501,7 +1499,7 @@ def PGalinFoV_NObs(
                                     )
                                     visiGals2 = tGals_aux2[visiMask]
                                     visiGals2 = ModifyCatalogue(
-                                        prob, visiGals2, obspar.FOV, sum_dP_dV, nside
+                                        prob, visiGals2, obspar.FOV, sum_dP_dV
                                     )
 
                                     mask, minz = FulfillsRequirement(
