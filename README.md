@@ -47,7 +47,7 @@ pip install .
 
 Requirements of the installation:
 
-- The current version of the package **only** runs with `python>=3.11`. It is tested with Python 3.11 and 3.12. Be careful as well with the versions of matplotlib and healpy, they should be the ones explicitly given in the requirements.yml, otherwise conflicts between them when plotting skymaps will arise.
+- The current version of the package **only** runs with `python>=3.11`. It is tested with Python 3.11 and 3.12. The required versions of the dependencies are given in `pyproject.toml` (and in `environment.yml` for conda).
 - Note that by creating the env from the environment.yml, the libraries and versions needed will be installed automatically.
 - Note that every time we made changes to the package, you should reinstall the package by running ```pip install .``` in the project root directory. The changes will be only applied to the env in which you are working.
 - The package relies on 'curl' to download the localisation map of the multi-messenger events.
