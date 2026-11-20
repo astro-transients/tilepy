@@ -513,6 +513,9 @@ class Tools:
 
         Returns:
         - vertices (np.ndarray): (N, 3) array of unit vectors
+
+        Vertices that would lie beyond a celestial pole are clipped to just
+        short of it, on their own meridian.
         """
         angles = np.linspace(0, 360, n_sides, endpoint=False) + rotation_deg
         ra_offsets = radius_deg * np.cos(np.radians(angles))
@@ -520,6 +523,16 @@ class Tools:
 
         ra_vertices = [(ra_center + d_ra + 360) % 360 for d_ra in ra_offsets]
         dec_vertices = [dec_center + d_dec for d_dec in dec_offsets]
+
+        # The offsets are added in flat RA/Dec, so a polygon centred within one
+        # radius of a pole gets vertices with |dec| > 90 deg, which SkyCoord
+        # rejects. Keep such a vertex on its own meridian, just short of the
+        # pole, so the polygon stays local in RA/Dec as the flat containment
+        # test in ComputePGalinFOV expects (a vertex reflected over the pole to
+        # RA + 180 deg would stretch it across the sky). Polygons clear of the
+        # poles are unchanged.
+        pole_limit = 90 - 1e-6
+        dec_vertices = np.clip(dec_vertices, -pole_limit, pole_limit)
 
         coords = SkyCoord(ra=ra_vertices * u.deg, dec=dec_vertices * u.deg)
         return np.array([coord.cartesian.xyz.value for coord in coords])
