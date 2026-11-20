@@ -109,11 +109,11 @@ This guide describes the step-by-step process to install **tilepy** and its depe
          .. admonition:: Unreleased version
             :class: danger
 
-            Install the current main branch directly from GitHub:
+            Install the current master branch directly from GitHub:
 
             .. code-block:: console
 
-               $ pip install git+https://github.com/astro-transients/tilepy.git@main
+               $ pip install git+https://github.com/astro-transients/tilepy.git@master
 
    .. warning:: Troubleshooting MOCpy
 
@@ -212,7 +212,7 @@ This guide describes the step-by-step process to install **tilepy** and its depe
 .. note::
 
    - **Dependencies** are automatically managed if you use the provided environment.
-   - For advanced usage (simulations, scripts, or examples), check the `examples/ <https://github.com/astro-transients/tilepy/tree/main/examples>`__ directory.
+   - For advanced usage (simulations, scripts, or examples), check the `examples/ <https://github.com/astro-transients/tilepy/tree/master/examples>`__ directory.
 
 
 .. seealso::
