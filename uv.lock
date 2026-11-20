@@ -1802,19 +1802,6 @@ wheels = [
 ]
 
 [[package]]
-name = "ligo-segments"
-version = "1.4.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "six" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/81/60/8de5c89e4e5fc760649cee0c773418ecc920c3dae21ac5656fd3e5e21a9d/ligo-segments-1.4.0.tar.gz", hash = "sha256:e072a844713c5b02efdcaf5bfe4c3a8cd9ef225b08cfd3202a4e185e0f71f5dc", size = 51015, upload-time = "2021-10-18T14:47:39.224Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3a/db/b2de07a032a766d34480e93e6d4ecda5a4d651bb6a5e3286c2624d6c181d/ligo_segments-1.4.0-cp311-cp311-win_amd64.whl", hash = "sha256:da82ae2b839bad0027e0a492b3673344e62360747d41194a265563e6c2903c7d", size = 50007, upload-time = "2022-11-02T16:54:29.221Z" },
-    { url = "https://files.pythonhosted.org/packages/b5/37/c962f26408ce45271a5a3aaa918f7beae74a8e8a6f00bbe5fdf77fd778ca/ligo_segments-1.4.0-cp312-cp312-win_amd64.whl", hash = "sha256:601be6d92e52bdebbb5a82b608ed1ceb781a0ea86b3e5333d61af77575b32664", size = 50555, upload-time = "2023-10-09T11:39:10.788Z" },
-]
-
-[[package]]
 name = "ligo-skymap"
 version = "2.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3330,21 +3317,6 @@ wheels = [
 ]
 
 [[package]]
-name = "python-ligo-lw"
-version = "1.8.4"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "ligo-segments" },
-    { name = "lscsoft-glue" },
-    { name = "numpy" },
-    { name = "python-dateutil" },
-    { name = "pyyaml" },
-    { name = "six" },
-    { name = "tqdm" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/13/b9/bc552b9b2cd0b0bddffae90aa7f1b95229d323dadb742a48576c7a67ab3f/python_ligo_lw-1.8.4.tar.gz", hash = "sha256:1ccaefeeda2a1cddca22b021ec88f550e24f87293a6f9753b3912e41cf0c95d1", size = 2428804, upload-time = "2025-06-30T14:37:58.437Z" }
-
-[[package]]
 name = "pytokens"
 version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
@@ -4415,7 +4387,6 @@ docs = [
     { name = "nbsphinx" },
     { name = "nbsphinx-link" },
     { name = "numpy" },
-    { name = "python-ligo-lw" },
     { name = "setuptools" },
     { name = "sphinx", version = "9.0.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "sphinx", version = "9.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
@@ -4464,7 +4435,6 @@ requires-dist = [
     { name = "pytest-astropy", marker = "extra == 'dev'" },
     { name = "pytest-cov", marker = "extra == 'tests'" },
     { name = "pytest-doctestplus", marker = "extra == 'tests'" },
-    { name = "python-ligo-lw", marker = "extra == 'docs'" },
     { name = "pytz" },
     { name = "scikit-learn", specifier = ">=1.6.1" },
     { name = "scipy" },
