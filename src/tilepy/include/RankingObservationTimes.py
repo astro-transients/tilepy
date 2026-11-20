@@ -536,6 +536,35 @@ def Sortingby(galPointing, name, exposure):
     )
 
 
+# Colors of the curves of the altitude vs time plot. The order keeps adjacent
+# colors distinguishable with color vision deficiencies.
+EVOLUTION_PLOT_COLORS = [
+    "#2a78d6",  # blue
+    "#eb6834",  # orange
+    "#1baf7a",  # aqua
+    "#eda100",  # yellow
+    "#e87ba4",  # magenta
+    "#008300",  # green
+    "#6250d6",  # violet
+    "#e34948",  # red
+]
+# Line styles, changed after every full cycle of colors
+EVOLUTION_PLOT_LINESTYLES = [
+    "-",
+    (0, (6, 2)),  # dashed
+    (0, (1, 1.5)),  # dotted
+    (0, (6, 2, 1, 2)),  # dash-dot
+    (0, (12, 3)),  # long dashes
+    (0, (6, 2, 1, 2, 1, 2)),  # dash-dot-dot
+]
+# Distinct (color, line style) combinations, solid lines first
+EVOLUTION_PLOT_STYLES = [
+    (color, linestyle)
+    for linestyle in EVOLUTION_PLOT_LINESTYLES
+    for color in EVOLUTION_PLOT_COLORS
+]
+
+
 def EvolutionPlot(galPointing, tname, ObsArray, obspar):
     """
     Plot the altitude of each pointing as a function of time.
@@ -545,6 +574,10 @@ def EvolutionPlot(galPointing, tname, ObsArray, obspar):
     shown at their true length. The altitude of every pointing is drawn over
     the whole interval, and the time slot during which each pointing is
     scheduled is highlighted on its curve.
+
+    The pointings are ordered by decreasing GW probability, and each one gets
+    a distinct combination of color and line style (8 colors, 6 line styles):
+    the 8 most probable pointings are drawn with solid lines.
 
     Parameters
     ----------
@@ -593,16 +626,18 @@ def EvolutionPlot(galPointing, tname, ObsArray, obspar):
 
     fig = plt.figure(figsize=(18, 10))
     ax = fig.add_axes([0.1, 0.1, 0.6, 0.8])
-    colors = plt.cm.Accent(np.linspace(0, 1, len(GWordered)))
     for i, row in enumerate(GWordered):
+        color, linestyle = EVOLUTION_PLOT_STYLES[i % len(EVOLUTION_PLOT_STYLES)]
         ax.plot(
             times.datetime,
             altitudes[i],
-            color=colors[i],
+            color=color,
+            linestyle=linestyle,
+            linewidth=2,
             label=f"{starts[i].strftime('%H:%M')} ra:{row['RA[deg]']:.2f} dec:{row['DEC[deg]']:.2f}"
             f" - Pgw:{100 * row['Pgw']:.3f} - Pgal:{100 * row['Pgal']:.3f}",
         )
-        ax.plot(slots[i].datetime, slot_altitudes[i], color=colors[i], linewidth=5)
+        ax.plot(slots[i].datetime, slot_altitudes[i], color=color, linewidth=6)
 
     locator = mdates.AutoDateLocator()
     ax.xaxis.set_major_locator(locator)
@@ -617,6 +652,7 @@ def EvolutionPlot(galPointing, tname, ObsArray, obspar):
         bbox_to_anchor=(1.02, 1),
         loc=2,
         borderaxespad=0.0,
+        handlelength=4,
         title="Start of the pointing (thick line: scheduled observation)",
     )
     fig.savefig(f"{tname}/AltitudevsTime_{ObsArray}.png")

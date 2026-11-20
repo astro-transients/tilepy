@@ -186,3 +186,29 @@ def test_evolution_plot_time_axis_is_continuous(make_obspar, tmp_path):
             .alt.deg
         )
         assert np.allclose(line.get_ydata(), expected)
+
+
+def test_evolution_plot_distinguishes_many_pointings(make_obspar, tmp_path):
+    n = 20
+    pointings = Table(
+        {
+            "Pointing": range(n),
+            "Time": [
+                f"2024-06-16 {2 + i // 6:02d}:{10 * (i % 6):02d}" for i in range(n)
+            ],
+            "RA[deg]": np.linspace(230.0, 260.0, n),
+            "DEC[deg]": np.linspace(10.0, 40.0, n),
+            "Pgw": np.linspace(0.05, 0.01, n),
+            "Pgal": np.full(n, 0.01),
+        }
+    )
+    fig = EvolutionPlot(pointings, tmp_path, "LST", make_obspar())
+    curves = [line for line in fig.axes[0].get_lines() if line.get_label()[0] != "_"]
+
+    # The 8 most probable pointings have distinct colors and solid lines, the
+    # next ones reuse the colors with another line style
+    colors = [line.get_color() for line in curves]
+    assert len(set(colors[:8])) == 8
+    assert all(line.get_linestyle() == "-" for line in curves[:8])
+    assert colors[8:16] == colors[:8]
+    assert all(line.get_linestyle() != "-" for line in curves[8:])
