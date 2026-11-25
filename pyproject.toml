@@ -20,23 +20,22 @@ license-files = ["LICENSE.rst"]
 classifiers = [
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Astronomy",
     "Development Status :: 5 - Production/Stable",
 ]
 
 dynamic = ["version"]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 
 dependencies = [
           'astropy',
-          'scipy<1.14.0',
+          'scipy',
           'numpy',
-          'healpy>=1.16.2,<2',
+          'healpy>=1.17.3,<2',
           'ipython<9',
-          'matplotlib<3.9.0',
+          'matplotlib',
           'MOCpy',
           'pandas',
           'pytz',
@@ -46,7 +45,7 @@ dependencies = [
           'fastparquet',
           'skyfield',
           'mhealpy>=0.3.0,<0.4',
-          'ligo.skymap>=2.0.0',
+          'ligo.skymap>=2.4.0',
           "scikit-learn>=1.6.1",
           "setuptools>=64,<71",
 ]
@@ -56,13 +55,17 @@ tests = [
     "pytest >= 7.0",
     "pytest-cov",
     "pytest-doctestplus",
-    "tomli",
     "nbmake>=1.5.5",
+    "skyfield-data",
+]
+
+# Bundled planetary ephemeris, for use without access to the JPL servers
+offline = [
+    "skyfield-data",
 ]
 
 docs = [
     "numpy<2",
-    "python-ligo-lw",
     "sphinx>=1.6",
     "sphinx-astropy[confv2]",
     "sphinxcontrib-typer",
@@ -190,6 +193,6 @@ ignore-words-list = """
 package = true
 
 override-dependencies = [
-    'healpy>=1.16.2,<2',
+    'healpy>=1.17.3,<2',
     "setuptools>=64,<71",
 ]

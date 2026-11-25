@@ -21,5 +21,5 @@ d. `./visualization` folder contains useful jupyter notebooks for visualization 
 
 e. `./paperplots` folder contains the plots connected with the jupyter notebooks in the visualization.
 
-Run the Jupyter notebook .ipynb or the .py scripts with Python > 3.9
+Run the Jupyter notebook .ipynb or the .py scripts with Python >= 3.11
 The paths are self-contained and the skymap examples are self-downloaded. The only external dataset that the user should download is a galaxy catalog in dataset (see ../README.md for details).

@@ -47,7 +47,7 @@ pip install .
 
 Requirements of the installation:
 
-- The current version of the package **only** runs with `python>=3.9`. Python 3.9 is recommended. Be careful as well with the versions of matplotlib and healpy, they should be the ones explicitly given in the requirements.yml, otherwise conflicts between them when plotting skymaps will arise.
+- The current version of the package **only** runs with `python>=3.11`. It is tested with Python 3.11 and 3.12. The required versions of the dependencies are given in `pyproject.toml` (and in `environment.yml` for conda).
 - Note that by creating the env from the environment.yml, the libraries and versions needed will be installed automatically.
 - Note that every time we made changes to the package, you should reinstall the package by running ```pip install .``` in the project root directory. The changes will be only applied to the env in which you are working.
 - The package relies on 'curl' to download the localisation map of the multi-messenger events.
@@ -91,6 +91,9 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - lat: lat coordinates of the observatory
           - lon: lon coordinates of the observatory
           - height: height of the observatory
+          - base: `ground` or `space`. With `space`, the orbit of the satellite, the Earth occultation and the South Atlantic Anomaly are taken into account
+          - stationsurl: (space) URL of a TLE file with the orbit of the satellite, e.g. https://celestrak.com/NORAD/elements/science.txt; `name` must be the name of the satellite in that file
+          - wobbleOffset: wobble offset in deg (not used yet)
 
         - [visibility]
           - sunDown: altitude of the Sun in deg to define darkness conditions (for astronomic darkness sunDown= -18)
@@ -99,6 +102,8 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - moonPhase: phase of the Moon to define greyness conditions
           - minMoonSourceSeparation: minimum separation Source-Moon in deg to define greyness conditions
           - maxMoonSourceSeparation: max separation Source-Moon in deg to define greyness conditions
+          - EarthDown: (space) margin in deg added around the Earth disc occulting the sky
+          - SAAThreshold: (space) magnetic field strength in nT below which the satellite is considered to be in the South Atlantic Anomaly and does not observe (computed with the IGRF coefficients of the dataset directory; 0 disables the check)
 
         - [operations]
           - maxZenith: max zenith angle which will be considered as accessible sky
@@ -108,6 +113,10 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - duration: standard exposure per tile
           - minDuration: minimal duration of tile if standard exposure is not available (e.g. at the end of the night)
           - useGreytime: flag to schedule greyness observations in addition to darkness
+          - minSlewing: (not used yet)
+          - shape: (not used yet, the shape of the FoV is given by numberSides)
+          - numberSides: 0 for a circular FoV of radius FOV, n >= 3 for a regular polygon on the sky with n sides and its vertices at FOV from the centre, the first one due east (space scheduling and GetBestTiles2D/3D only; the integrated strategy always uses the circle)
+          - FoVRotation: rotation of a polygonal FoV (not used yet)
 
         - [tiling]
 
@@ -123,23 +132,31 @@ Package including functions to perform GW follow-up scheduling and simulations i
           - mangrove: flag to use the mangrove method of weighting by the mass of the host galaxy
           - countPrevious: True if you want previous observation to be considered in number to set the max run variable. False else
           - countSubtractedPointingsOutside: False if you do not want to take into account pointings outside of the current percentageMOC area when subtracting pointings, True if you want to subtract them anyway
+          - locCut: maximal area in deg² of the percentageMOC region; no schedule is computed for larger regions (default 99999)
+          - algorithm: `2D` to always use the 2D strategy, `3D` to use the galaxy catalogue when possible (distance information in the map, event closer than distCut, not close to the Galactic plane)
+          - strategy: (3D) `integrated` to use the probability of all the galaxies in the FoV, `targeted` to use the probability of each galaxy
+          - doRank: rank the pointings and produce the ranking files and the altitude vs time plot
+          - alphaR, betaR: (space) weights used to order the pointings: the next one minimizes alphaR × distance − betaR × probability (both normalized)
 
-## Issue with Daily Earth Orientation Parameters Solutions file (finals2000A)
+        - [general]
+          - downloadMaxRetry: number of new attempts if the download of the sky map fails
+          - downloadWaitPeriodRetry: time in seconds between two download attempts
+          - eventName: (optional) name of the event
 
-Astropy requires a recent reference file to compute correctly the coordinates. This file is in general downloaded automatically by Astropy but if you are offline, you will be able to run tilepy if you do the following fix in a global variable.
-First you need to download the file, it is available through several sources, IERS, OBSPM, NASA, USNO, .... For a fully offline installation, try to update the file every few month.
+## Running tilepy offline or behind a firewall
 
-You need then to modify your script calling tilepy by adding the following lines before importing tilepy. Adapt the path to the file (here pathToYourReferencefile) in order that the system is able to find the file and loaded correctly.
+tilepy needs two reference files that are normally obtained automatically. No manual step is required on a machine with internet access.
+
+- **Planetary ephemeris (`de440s.bsp`)**, used to compute the dark-time windows. It is downloaded once from JPL into `~/.skyfield/`. Without access to the JPL server, either copy the file to `~/.skyfield/`, set the environment variable `TILEPY_EPHEMERIS` to the path of an ephemeris file, or install the bundled ephemeris with `pip install "tilepy[offline]"`.
+- **Earth orientation parameters (`finals2000A`)**, used by Astropy for coordinate transformations. Astropy tries to download a recent version and otherwise uses the table shipped with the `astropy-iers-data` package, so nothing has to be configured. On a machine that stays offline, update that package from time to time (`pip install -U astropy-iers-data`), and add the following lines before importing tilepy to skip the download attempts:
 
 ```python
-import os
 from astropy.utils import iers
 
-iers_file = os.path.join(
-    os.path.abspath(os.path.dirname(__file__)), pathToYourReferencefile
-)
-iers.IERS.iers_table = iers.IERS_A.open(iers_file)
+iers.conf.auto_download = False
 ```
+
+See the [installation guide](https://tilepy.readthedocs.io/) for details.
 
 ## Help
 If you find any problem, please open a new issue in the project main page to document it. You can of course also directly create a Pull Request with new features.

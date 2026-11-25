@@ -178,8 +178,8 @@ class ObservationParameters:
         self.minDuration = minDuration
         self.useGreytime = useGreytime
         self.minSlewing = minSlewing
-        self.shape = (shape,)
-        self.numberSides = (numberSides,)
+        self.shape = shape
+        self.numberSides = numberSides
 
         # Tiling
         self.locCut = locCut
@@ -197,8 +197,8 @@ class ObservationParameters:
         self.strategy = strategy
         self.doRank = doRank
         self.countPrevious = countPrevious
-        self.alphaR = (alphaR,)
-        self.betaR = (betaR,)
+        self.alphaR = alphaR
+        self.betaR = betaR
 
         # Parsed args
         self.skymap = skymap

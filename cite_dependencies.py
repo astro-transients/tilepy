@@ -1,13 +1,9 @@
 import os
 import re
-from datetime import datetime, timezone
+import tomllib
+from datetime import UTC, datetime
 
 import requests
-
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    import tomli as tomllib  # Python 3.9, 3.10
 
 
 def get_authors_from_github(repo_path, title, url):
@@ -33,7 +29,7 @@ def get_authors_from_github(repo_path, title, url):
 
         authors.append(full_name)
 
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
 
     # Fetching the publication year of the version from PyPI
     pypi_url = f"https://pypi.org/pypi/{title}/json"

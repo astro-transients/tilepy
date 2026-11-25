@@ -22,6 +22,7 @@
 
 import datetime
 import logging
+import os
 from pathlib import Path
 
 #####################################################################
@@ -29,7 +30,6 @@ from pathlib import Path
 import astropy.coordinates as co
 import ephem
 import healpy as hp
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -45,7 +45,8 @@ from ligo.skymap.postprocess import find_greedy_credible_levels
 from pytz import timezone
 from six.moves import configparser
 from skyfield import almanac
-from skyfield.api import E, N, load, wgs84
+from skyfield.api import E, Loader, N, load, wgs84
+from skyfield.jpllib import SpiceKernel
 
 from .UserConstraints import EvaluateUserConstraints
 
@@ -70,6 +71,7 @@ __all__ = [
     "GetSatellitePositions",
     "GetSatelliteTime",
     "IsSourceInside",
+    "LoadEphemeris",
     "LoadGalaxies",
     "LoadGalaxies_SteMgal",
     "LoadPointings",
@@ -504,24 +506,82 @@ class Tools:
         """
         Generate a regular polygon's vertices on the celestial sphere.
 
+        Vertex k lies at an angular distance radius_deg from the centre, on the
+        great circle that leaves the centre at the angle
+        360 * k / n_sides + rotation_deg, counted from east towards north (a
+        position angle of 90 deg minus that angle). This is what
+        SkyCoord.directional_offset_by gives, so the polygon has the same size
+        on the sky at every declination and stays well defined across RA 0/360
+        and around the celestial poles. Without rotation, the first vertex is
+        due east of the centre.
+
         Parameters:
         - ra_center, dec_center: center in degrees
-        - radius_deg: angular radius from center to each vertex
-        - n_sides: number of polygon sides
+        - radius_deg: angular radius from center to each vertex, between 0 and
+          90 degrees
+        - n_sides: number of polygon sides, at least 3
         - rotation_deg: optional rotation angle (degrees)
 
         Returns:
         - vertices (np.ndarray): (N, 3) array of unit vectors
         """
-        angles = np.linspace(0, 360, n_sides, endpoint=False) + rotation_deg
-        ra_offsets = radius_deg * np.cos(np.radians(angles))
-        dec_offsets = radius_deg * np.sin(np.radians(angles))
+        if n_sides < 3:
+            raise ValueError(f"A polygonal FoV needs at least 3 sides, got {n_sides}.")
+        if not 0 < radius_deg < 90:
+            raise ValueError(
+                "The radius of a polygonal FoV must be between 0 and 90 deg, "
+                f"got {radius_deg}."
+            )
 
-        ra_vertices = [(ra_center + d_ra + 360) % 360 for d_ra in ra_offsets]
-        dec_vertices = [dec_center + d_dec for d_dec in dec_offsets]
+        ra = np.radians(ra_center)
+        dec = np.radians(dec_center)
+        radius = np.radians(radius_deg)
+        angles = np.radians(np.linspace(0, 360, n_sides, endpoint=False) + rotation_deg)
 
-        coords = SkyCoord(ra=ra_vertices * u.deg, dec=dec_vertices * u.deg)
-        return np.array([coord.cartesian.xyz.value for coord in coords])
+        # Unit vectors of the centre and of the local east and north directions
+        # there. At a pole, east and north follow the meridian of ra_center.
+        center = np.array(
+            [np.cos(dec) * np.cos(ra), np.cos(dec) * np.sin(ra), np.sin(dec)]
+        )
+        east = np.array([-np.sin(ra), np.cos(ra), 0.0])
+        north = np.array(
+            [-np.sin(dec) * np.cos(ra), -np.sin(dec) * np.sin(ra), np.cos(dec)]
+        )
+
+        directions = np.outer(np.cos(angles), east) + np.outer(np.sin(angles), north)
+        return np.cos(radius) * center + np.sin(radius) * directions
+
+    @classmethod
+    def points_in_spherical_polygon(cls, vertices, points):
+        """
+        Tell which points lie inside a convex polygon on the sphere.
+
+        The edges of the polygon are the great-circle arcs between consecutive
+        vertices, as in healpy.query_polygon. A point is inside when it lies on
+        the inner side of the great circle of every edge, so the test does not
+        depend on where RA wraps or on the distance to a pole.
+
+        Parameters:
+        - vertices (np.ndarray): (N, 3) unit vectors of the vertices of a
+          convex polygon smaller than a hemisphere, in either direction
+        - points (np.ndarray): (M, 3) unit vectors
+
+        Returns:
+        - inside (np.ndarray): (M,) boolean array, True for the points inside
+          the polygon or on one of its edges
+        """
+        vertices = np.asarray(vertices, dtype=float)
+        points = np.atleast_2d(np.asarray(points, dtype=float))
+
+        normals = np.cross(vertices, np.roll(vertices, -1, axis=0))
+        normals /= np.linalg.norm(normals, axis=1)[:, None]
+        # Turn every edge normal towards the inside of the polygon.
+        normals *= np.sign(normals @ vertices.sum(axis=0))[:, None]
+
+        # Sine of the angular distance from each point to each edge great
+        # circle, positive on the inner side. The tolerance keeps points that
+        # lie on an edge (to rounding) inside, like the <= of the circle test.
+        return np.all(points @ normals.T >= -1e-12, axis=1)
 
 
 def decimal_year(dt):
@@ -626,6 +686,96 @@ def get_dipole_field(lat_deg, lon_deg, alt_km, coeffs):
     return B_total
 
 
+# Planetary ephemeris used to compute the Sun and Moon rising and setting times
+EPHEMERIS_NAME = "de440s.bsp"
+EPHEMERIS_ENV = "TILEPY_EPHEMERIS"
+_EPHEMERIS_CACHE = {}
+
+
+def LoadEphemeris():
+    """
+    Load the planetary ephemeris used for the Sun and Moon positions.
+
+    A local copy is used when available, the file is downloaded only if
+    needed, and a bundled ephemeris is used when the download is not possible
+    (e.g. no or restricted network access). The first available option is used:
+
+    1. the kernel file (``.bsp``) given by the environment variable
+       ``TILEPY_EPHEMERIS``;
+    2. ``de440s.bsp`` in the current working directory;
+    3. ``de440s.bsp`` in ``~/.skyfield/``;
+    4. download of ``de440s.bsp`` from JPL into ``~/.skyfield/`` (into the
+       current working directory if it is not writable);
+    5. the DE421 ephemeris of the optional package ``skyfield-data``
+       (``pip install tilepy[offline]``).
+
+    Returns
+    -------
+    ephemeris : skyfield.jpllib.SpiceKernel
+        The ephemeris, opened once per process.
+
+    Raises
+    ------
+    FileNotFoundError
+        If ``TILEPY_EPHEMERIS`` is set but does not point to a file.
+    OSError
+        If no ephemeris is available locally and the download fails.
+    """
+    envPath = os.environ.get(EPHEMERIS_ENV)
+    homeDir = Path.home() / ".skyfield"
+    key = (envPath, str(Path.cwd()), str(homeDir))
+    if key in _EPHEMERIS_CACHE:
+        return _EPHEMERIS_CACHE[key]
+
+    if envPath:
+        path = Path(envPath).expanduser()
+        if not path.is_file():
+            raise FileNotFoundError(
+                f"{EPHEMERIS_ENV} is set to '{envPath}', which is not a file."
+            )
+        ephemeris = SpiceKernel(str(path))
+    else:
+        ephemeris = None
+        for directory in (Path.cwd(), homeDir):
+            path = directory / EPHEMERIS_NAME
+            if path.is_file():
+                ephemeris = SpiceKernel(str(path))
+                break
+        if ephemeris is None:
+            ephemeris = _DownloadEphemeris(homeDir)
+
+    _EPHEMERIS_CACHE[key] = ephemeris
+    return ephemeris
+
+
+def _DownloadEphemeris(homeDir):
+    """Download the ephemeris, or use the one of skyfield-data if not possible."""
+    try:
+        homeDir.mkdir(parents=True, exist_ok=True)
+        directory = homeDir if os.access(homeDir, os.W_OK) else Path.cwd()
+    except OSError:
+        directory = Path.cwd()
+
+    try:
+        return Loader(str(directory))(EPHEMERIS_NAME)
+    except OSError as err:
+        try:
+            from skyfield_data import get_skyfield_data_path
+        except ImportError:
+            raise OSError(
+                f"The ephemeris {EPHEMERIS_NAME} could not be downloaded ({err}). "
+                f"Either copy the file to {homeDir}, set the environment variable "
+                f"{EPHEMERIS_ENV} to the path of an ephemeris file (.bsp), or "
+                "install the bundled ephemeris with 'pip install skyfield-data'."
+            ) from err
+        path = Path(get_skyfield_data_path()) / "de421.bsp"
+        logger.warning(
+            f"The ephemeris {EPHEMERIS_NAME} could not be downloaded ({err}). "
+            f"Using the DE421 ephemeris of skyfield-data instead: {path}"
+        )
+        return SpiceKernel(str(path))
+
+
 class Observer:
     """Class to store information and handle operation related to the observatory used for the observations."""
 
@@ -664,7 +814,7 @@ class Observer:
 
         """
 
-        self.eph = load("de440s.bsp")
+        self.eph = LoadEphemeris()
         self.observatory_location = wgs84.latlon(latitude * N, longitude * E, elevation)
 
         self.max_sun_altitude = max_sun_altitude
@@ -758,10 +908,10 @@ class Observer:
                     clean_range_interval.append(
                         [
                             consecutive_intervals[num_consecutive][0].datetime.replace(
-                                tzinfo=datetime.timezone.utc
+                                tzinfo=datetime.UTC
                             ),
                             consecutive_intervals[num_consecutive][-1].datetime.replace(
-                                tzinfo=datetime.timezone.utc
+                                tzinfo=datetime.UTC
                             ),
                         ]
                     )
@@ -2125,38 +2275,16 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, n_sides, UsePix):
         return Pgal_inFoV, cat[targetCoord2.separation(targetCoord).deg > radius]
 
     elif n_sides > 0:
-        vertices_xyz = Tools.get_regular_polygon_vertices(
-            targetCoord.ra.deg, targetCoord.dec.deg, radius, 4, 0
+        # Containment is tested on the sphere, with the same great-circle
+        # polygon that healpy.query_polygon uses for the 2D path. A polygon in
+        # flat RA/Dec breaks across RA 0/360 and near the poles.
+        vertices = Tools.get_regular_polygon_vertices(
+            targetCoord.ra.deg, targetCoord.dec.deg, radius, n_sides, 0
+        )
+        inside_mask = Tools.points_in_spherical_polygon(
+            vertices, targetCoord2.cartesian.xyz.value.T
         )
 
-        # 2. Convert the vertices from Cartesian to RA/Dec degrees
-        coords = SkyCoord(
-            x=vertices_xyz[:, 0],
-            y=vertices_xyz[:, 1],
-            z=vertices_xyz[:, 2],
-            representation_type="cartesian",
-        )
-
-        # Convert to spherical representation (ICRS or default frame) explicitly
-        coords = coords.represent_as("spherical")
-
-        ra_vertices = coords.lon.deg  # .lon is RA equivalent
-        dec_vertices = coords.lat.deg  # .lat is Dec equivalent
-
-        # 3. Build the polygon path in RA/Dec
-        polygon_path = matplotlib.path.Path(
-            np.column_stack((ra_vertices, dec_vertices))
-        )
-
-        # 4. Prepare your galaxies' RA, Dec arrays (in degrees)
-        galaxy_positions = np.column_stack(
-            (targetCoord2.ra.deg, targetCoord2.dec.deg)
-        )  # Replace galaxy_ra, galaxy_dec with your arrays
-
-        # 5. Check which galaxies fall inside the polygon
-        inside_mask = polygon_path.contains_points(galaxy_positions)
-
-        # 6. Calculate fraction inside FoV
         Pgal_inFoV = dp_dV[inside_mask].sum() / totaldPdV
 
         return Pgal_inFoV, cat[~inside_mask]
@@ -2165,10 +2293,15 @@ def ComputePGalinFOV(prob, cat, galpix, FOV, totaldPdV, n_sides, UsePix):
         raise ValueError("Shape must be 'circle' or 'polygon'.")
 
 
-def ModifyCatalogue(prob, cat, FOV, totaldPdV, nside):
+def ModifyCatalogue(prob, cat, FOV, totaldPdV, n_sides=0):
     """
     Computes the integrated Pgal in FoV for a list of values using Pgal in FoV and sorts the catalog
     using that quantity as a criteria
+
+    n_sides is the shape of the FoV used for the ranking, as in
+    ComputePGalinFOV: 0 (the default) for the circle of radius FOV, which is
+    also the region that ComputeProbPGALIntegrateFoV counts and subtracts for
+    the chosen pointing, or n > 0 for a regular polygon.
     """
     lengthSG = 100
     SelectedGals = cat[:lengthSG]
@@ -2181,7 +2314,7 @@ def ModifyCatalogue(prob, cat, FOV, totaldPdV, nside):
                 SelectedGals[element],
                 FOV,
                 totaldPdV,
-                nside,
+                n_sides,
                 UsePix=False,
             )
             dp_dV_FOV.append(dp_dV_FOV1)

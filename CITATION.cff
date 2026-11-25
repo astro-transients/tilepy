@@ -7,8 +7,8 @@ abstract: >
   such as gravitational waves, gamma-ray bursts, and high-energy neutrinos.
   It supports 2D and 3D (galaxy-catalog-based) tiling strategies and is
   accessible via a public API and through the Astro-COLIBRI platform.
-version: "3.0.1"
-date-released: "2025-10-02"
+version: "3.1.0"
+date-released: "2026-11-20"
 license: LGPL-3.0-or-later
 repository-code: "https://github.com/astro-transients/tilepy"
 url: "https://tilepy.com/tilepy/"
