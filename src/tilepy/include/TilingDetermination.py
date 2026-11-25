@@ -262,7 +262,7 @@ def PGWinFoV(skymap, nameEvent, obspar, dirName, task_id=None):
                         Duration.append(obspar.duration)
                         Fov_obs.append(obspar.FOV)
                         counter = counter + 1
-                elif P_GW >= obspar.minProbcut:
+                elif TC is not None and P_GW >= obspar.minProbcut:
                     Round.append(1)
                     P_GWarray.append(float(f"{float(P_GW):1.4f}"))
                     RAarray.append(float(f"{float(TC.ra.deg):3.4f}"))
@@ -509,7 +509,9 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                     visiMask = altaz.alt.value > 90.0 - (obspar.maxZenith + obspar.FOV)
                     visiGals = tGals_aux[visiMask]
                     visiGals = ModifyCatalogue(prob, visiGals, obspar.FOV, sum_dP_dV)
-                    mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
+                    mask, minz = FulfillsRequirement(
+                        visiGals, obspar, UsePix=False, time=ObservationTime
+                    )
                     if obspar.useGreytime:
                         maskgrey = FulfillsRequirementGreyObservations(
                             ObservationTime, visiGals, obspar
@@ -543,7 +545,10 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                 )
 
                                 mask, minz = FulfillsRequirement(
-                                    visiGals2, obspar, UsePix=False
+                                    visiGals2,
+                                    obspar,
+                                    UsePix=False,
+                                    time=ObservationTime,
                                 )
 
                                 if obspar.useGreytime:
@@ -553,7 +558,9 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                     finalGals2 = visiGals2[mask & maskgrey]
                                 if not obspar.useGreytime:
                                     finalGals2 = visiGals2[mask]
-
+                                # No round-2 candidate left: fall back to round 1
+                                visible = len(finalGals2) > 0
+                            if visible:
                                 p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = (
                                     ComputeProbPGALIntegrateFoV(
                                         prob,
@@ -711,7 +718,9 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                     # select galaxies within the slightly enlarged visibility window
                     visiMask = altaz.alt.value > 90.0 - (obspar.maxZenith + obspar.FOV)
                     visiGals = tGals_aux[visiMask]
-                    mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
+                    mask, minz = FulfillsRequirement(
+                        visiGals, obspar, UsePix=False, time=ObservationTime
+                    )
                     if obspar.useGreytime:
                         maskgrey = FulfillsRequirementGreyObservations(
                             ObservationTime, visiGals, obspar
@@ -741,7 +750,10 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                 )
                                 visiGals2 = tGals_aux2[visiMask]
                                 mask, minz = FulfillsRequirement(
-                                    visiGals2, obspar, UsePix=False
+                                    visiGals2,
+                                    obspar,
+                                    UsePix=False,
+                                    time=ObservationTime,
                                 )
 
                                 if obspar.useGreytime:
@@ -751,6 +763,9 @@ def PGalinFoV(skymap, nameEvent, galFile, obspar, dirName, task_id=None):
                                     finalGals2 = visiGals2[mask & maskgrey]
                                 if not obspar.useGreytime:
                                     finalGals2 = visiGals2[mask]
+                                # No round-2 candidate left: fall back to round 1
+                                visible = len(finalGals2) > 0
+                            if visible:
                                 p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = (
                                     ComputeProbGalTargeted(
                                         prob,
@@ -1201,9 +1216,10 @@ def PGWinFoV_NObs(
                         # print('The minimum probability cut being', minProbcut * 100, '% is, unfortunately, not reached.')
                         yprob1 = highres
                         P_GW, TC, pixlist1, pixlistHR1 = ComputeProbability2D(
+                            obspar,
                             prob,
-                            yprob1,
                             skymap.is_nested,
+                            yprob1,
                             radecs,
                             ObservationTime,
                             pixlist1,
@@ -1239,7 +1255,7 @@ def PGWinFoV_NObs(
                             Duration.append(obspar.duration)
                             Fov_obs.append(obspar.FOV)
 
-                    elif P_GW >= obspar.minProbcut:
+                    elif TC is not None and P_GW >= obspar.minProbcut:
                         Round.append(1)
                         P_GWarray.append(float(f"{float(P_GW):1.4f}"))
                         RAarray.append(float(f"{float(TC.ra.deg):3.4f}"))
@@ -1462,7 +1478,9 @@ def PGalinFoV_NObs(
                             prob, visiGals, obspar.FOV, sum_dP_dV
                         )
 
-                        mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
+                        mask, minz = FulfillsRequirement(
+                            visiGals, obspar, UsePix=False, time=ObservationTime
+                        )
                         if obspar.useGreytime:
                             maskgrey = FulfillsRequirementGreyObservations(
                                 ObservationTime, visiGals, obspar
@@ -1471,7 +1489,11 @@ def PGalinFoV_NObs(
                         if not obspar.useGreytime:
                             finalGals = visiGals[mask]
 
-                        if finalGals["dp_dV_FOV"][0] > obspar.minProbcut:
+                        if not len(finalGals):
+                            logger.info(
+                                f"Condition not met at {ObservationTime}: no surviving galaxies."
+                            )
+                        elif finalGals["dp_dV_FOV"][0] > obspar.minProbcut:
                             # final galaxies within the FoV
                             # print(f"Condition met at {ObservationTime}: dp/dV_FOV = {finalGals['dp_dV_FOV'][0]} is greater than {obspar.minProbcut}")
                             if (
@@ -1495,7 +1517,10 @@ def PGalinFoV_NObs(
                                     )
 
                                     mask, minz = FulfillsRequirement(
-                                        visiGals2, obspar, UsePix=False
+                                        visiGals2,
+                                        obspar,
+                                        UsePix=False,
+                                        time=ObservationTime,
                                     )
 
                                     if obspar.useGreytime:
@@ -1505,7 +1530,9 @@ def PGalinFoV_NObs(
                                         finalGals2 = visiGals2[mask & maskgrey]
                                     if not obspar.useGreytime:
                                         finalGals2 = visiGals2[mask]
-
+                                    # No round-2 candidate left: fall back to round 1
+                                    visible = len(finalGals2) > 0
+                                if visible:
                                     p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = (
                                         ComputeProbPGALIntegrateFoV(
                                             prob,
@@ -1635,7 +1662,9 @@ def PGalinFoV_NObs(
                             obspar.maxZenith + obspar.FOV
                         )
                         visiGals = tGals_aux[visiMask]
-                        mask, minz = FulfillsRequirement(visiGals, obspar, UsePix=False)
+                        mask, minz = FulfillsRequirement(
+                            visiGals, obspar, UsePix=False, time=ObservationTime
+                        )
                         if obspar.useGreytime:
                             maskgrey = FulfillsRequirementGreyObservations(
                                 ObservationTime, visiGals, obspar
@@ -1644,7 +1673,11 @@ def PGalinFoV_NObs(
                         if not obspar.useGreytime:
                             finalGals = visiGals[mask]
                         # print('finalGals', finalGals,tGals['dp_dV'][:1]*obspar.minProbcut)
-                        if (
+                        if not len(finalGals):
+                            logger.info(
+                                f"Condition not met at {ObservationTime}: no surviving galaxies."
+                            )
+                        elif (
                             finalGals["dp_dV"][0]
                             > tGals["dp_dV"][:1] * obspar.minProbcut
                         ):
@@ -1665,7 +1698,10 @@ def PGalinFoV_NObs(
                                     )
                                     visiGals2 = tGals_aux2[visiMask]
                                     mask, minz = FulfillsRequirement(
-                                        visiGals2, obspar, UsePix=False
+                                        visiGals2,
+                                        obspar,
+                                        UsePix=False,
+                                        time=ObservationTime,
                                     )
 
                                     if obspar.useGreytime:
@@ -1675,6 +1711,9 @@ def PGalinFoV_NObs(
                                         finalGals2 = visiGals2[mask & maskgrey]
                                     if not obspar.useGreytime:
                                         finalGals2 = visiGals2[mask]
+                                    # No round-2 candidate left: fall back to round 1
+                                    visible = len(finalGals2) > 0
+                                if visible:
                                     p_gal, p_gw, tGals_aux2, alreadysumipixarray2 = (
                                         ComputeProbGalTargeted(
                                             prob,

@@ -124,7 +124,7 @@ def input_files(tmp_path_factory):
     return directory, skymap_file, galaxy_file
 
 
-def make_obspar(tmp_path, input_files, strategy, second_round):
+def make_obspar(tmp_path, input_files, strategy, second_round, constraints=None):
     directory, skymap_file, galaxy_file = input_files
     cfg = tmp_path / "config.ini"
     cfg.write_text(CONFIG.format(strategy=strategy, second_round=second_round))
@@ -139,11 +139,12 @@ def make_obspar(tmp_path, input_files, strategy, second_round):
         str(tmp_path),
         None,
     )
+    obspar.userConstraints = list(constraints or [])
     return obspar
 
 
-def run_pgalinfov(tmp_path, input_files, strategy, second_round):
-    obspar = make_obspar(tmp_path, input_files, strategy, second_round)
+def run_pgalinfov(tmp_path, input_files, strategy, second_round, constraints=None):
+    obspar = make_obspar(tmp_path, input_files, strategy, second_round, constraints)
     skymap = SkyMap(obspar, create_map_reader(obspar))
     assert skymap.is3D
     pointings, _ = PGalinFoV(
@@ -152,8 +153,8 @@ def run_pgalinfov(tmp_path, input_files, strategy, second_round):
     return pointings
 
 
-def run_pgalinfov_nobs(tmp_path, input_files, strategy, second_round):
-    obspar = make_obspar(tmp_path, input_files, strategy, second_round)
+def run_pgalinfov_nobs(tmp_path, input_files, strategy, second_round, constraints=None):
+    obspar = make_obspar(tmp_path, input_files, strategy, second_round, constraints)
     skymap = SkyMap(obspar, create_map_reader(obspar))
     assert skymap.is3D
     pointings, _, _ = PGalinFoV_NObs(
@@ -193,3 +194,49 @@ def test_schedule_points_at_catalogue_galaxies(
         assert 2 in pointings["Round"]
     else:
         assert set(pointings["Round"]) == {1}
+
+
+# ---------------------------------------------------------------------------
+# Optional user-defined constraints (issue #147)
+# ---------------------------------------------------------------------------
+
+
+def outside_central_group(time, coords, obspar):
+    """Forbid the three galaxies at the centre of the map."""
+    separation = hp.rotator.angdist(
+        [SOURCE_RA, SOURCE_DEC], [coords.ra.deg, coords.dec.deg], lonlat=True
+    )
+    return np.degrees(separation) > 1.0
+
+
+@pytest.mark.parametrize("strategy", ["integrated", "targeted"])
+@pytest.mark.parametrize(
+    "scheduler",
+    [run_pgalinfov, run_pgalinfov_nobs],
+    ids=["PGalinFoV", "PGalinFoV_NObs"],
+)
+def test_user_constraint_excludes_galaxies(tmp_path, input_files, scheduler, strategy):
+    # Without constraint the schedule starts with the central group (see above)
+    pointings = scheduler(
+        tmp_path, input_files, strategy, False, [outside_central_group]
+    )
+
+    # Only the outlying galaxy is left: it is scheduled, the others never
+    outlier = tuple(float(f"{x:3.4f}") for x in GALAXIES[3])
+    assert len(pointings) >= 1
+    for row in pointings:
+        assert (float(row["RA[deg]"]), float(row["DEC[deg]"])) == outlier
+
+
+@pytest.mark.parametrize("strategy", ["integrated", "targeted"])
+@pytest.mark.parametrize(
+    "scheduler",
+    [run_pgalinfov, run_pgalinfov_nobs],
+    ids=["PGalinFoV", "PGalinFoV_NObs"],
+)
+def test_user_constraint_vetoing_everything(tmp_path, input_files, scheduler, strategy):
+    pointings = scheduler(
+        tmp_path, input_files, strategy, False, [lambda t, c, o: False]
+    )
+
+    assert len(pointings) == 0

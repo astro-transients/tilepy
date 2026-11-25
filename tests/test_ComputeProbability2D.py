@@ -131,3 +131,75 @@ def test_no_crash_when_all_pixels_masked(setup):
     assert targetCoord is None
     assert ipixlist == []
     assert ipixlistHR == []
+
+
+# ---------------------------------------------------------------------------
+# Optional user-defined constraints (issue #147)
+# ---------------------------------------------------------------------------
+
+
+def _run(setup, constraints=None):
+    obspar, prob, highres, radecs, is_nested = setup
+    obspar.userConstraints = constraints or []
+    return ComputeProbability2D(
+        obspar,
+        prob,
+        is_nested,
+        highres,
+        radecs,
+        getdate("2024-06-16 02:12:17"),
+        [],
+        [],
+        0,
+        ".",  # dirName, unused because doPlot=False
+    )
+
+
+def test_user_constraint_always_true_changes_nothing(setup):
+    P_GW0, target0, ipixlist0, ipixlistHR0 = _run(setup)
+    P_GW1, target1, ipixlist1, ipixlistHR1 = _run(setup, [lambda t, c, o: True])
+
+    assert P_GW1 == P_GW0
+    assert target1.ra.deg == target0.ra.deg
+    assert target1.dec.deg == target0.dec.deg
+    assert list(ipixlist1) == list(ipixlist0)
+    assert list(ipixlistHR1) == list(ipixlistHR0)
+
+
+def test_user_constraint_vetoing_everything(setup):
+    P_GW, targetCoord, ipixlist, ipixlistHR = _run(setup, [lambda t, c, o: False])
+
+    assert P_GW == 0.0
+    assert targetCoord is None
+    assert ipixlist == []
+    assert ipixlistHR == []
+
+
+def test_user_constraint_moves_the_target(setup):
+    P_GW0, target0, _, _ = _run(setup)
+
+    def away_from_best(time, coords, obspar):
+        return coords.separation(target0) > 3 * u.deg
+
+    P_GW1, target1, _, _ = _run(setup, [away_from_best])
+
+    assert target1 is not None
+    assert target1.separation(target0) > 3 * u.deg
+    assert 0 < P_GW1 < P_GW0
+
+
+def test_astroplan_constraint_is_fulfilled_by_the_target(setup):
+    astroplan = pytest.importorskip("astroplan")
+    from astropy.time import Time
+
+    obspar = setup[0]
+    time = Time(getdate("2024-06-16 02:12:17"), scale="utc")
+    frame = co.AltAz(obstime=time, location=obspar.location)
+
+    _, target0, _, _ = _run(setup)
+    # Tighter than the altitude of the unconstrained best pointing
+    min_alt = target0.transform_to(frame).alt + 2 * u.deg
+    _, target1, _, _ = _run(setup, [astroplan.AltitudeConstraint(min=min_alt)])
+
+    assert target1 is not None
+    assert target1.transform_to(frame).alt >= min_alt
