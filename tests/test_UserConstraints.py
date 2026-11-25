@@ -82,7 +82,7 @@ def test_constraint_receives_utc_time_coords_and_obspar():
         return True
 
     obspar = make_obspar([spy])
-    utc = datetime.timezone.utc
+    utc = datetime.UTC
     plus2 = datetime.timezone(datetime.timedelta(hours=2))
     for time in (
         OBSTIME,  # naive, interpreted as UTC
